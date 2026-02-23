@@ -683,5 +683,236 @@ function renderLogo(){
   }
 }
 </script>
+<script>
+/* CollectorConnector – Bulk Photo Upload + Thumbnails + Modal
+   Drop-in enhancer: injects upload control, adds items with photos,
+   and augments the Items table to render clickable thumbnails.
+*/
+(() => {
+  // --- Guards: require existing app primitives ---
+  if (typeof updateActive !== 'function' || typeof renderAll !== 'function' || typeof normaliseCategory !== 'function') {
+    console.warn('[PhotoEnhance] Required app functions not found. Aborting enhancer.');
+    return;
+  }
+
+  // --- Inject minimal CSS (hidden utility, thumbnails, modal) once ---
+  (function injectStyle(){
+    if (document.getElementById('cc-photo-enhance-style')) return;
+    const css = `
+      .hidden { display:none !important; }
+      .thumb { width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid var(--border, #e5e7eb); cursor:pointer; }
+      #photoModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999; }
+      #photoModal img { max-width:92%; max-height:92%; border-radius:10px; box-shadow:0 0 24px rgba(0,0,0,0.6); }
+    `.trim();
+    const s = document.createElement('style');
+    s.id = 'cc-photo-enhance-style';
+    s.textContent = css;
+    document.head.appendChild(s);
+  })();
+
+  // --- Inject Modal if missing ---
+  function ensureModal(){
+    let modal = document.getElementById('photoModal');
+    let modalImg = document.getElementById('modalImage');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'photoModal';
+      modal.className = 'hidden';
+      modal.innerHTML = `<img id="modalImage" alt="Preview">`;
+      document.body.appendChild(modal);
+      modalImg = modal.querySelector('#modalImage');
+    }
+    const open = (src) => {
+      modalImg.src = src;
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    };
+    const close = () => {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+      modalImg.src = '';
+    };
+    modal.addEventListener('click', close);
+    return { open, close };
+  }
+  const modal = ensureModal();
+
+  // --- Helper: File -> data URL ---
+  function fileToDataURL(file){
+    return new Promise((resolve,reject)=>{
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result || ""));
+      fr.onerror = () => reject(new Error("Failed to read file"));
+      fr.readAsDataURL(file);
+    });
+  }
+
+  // (Optional) Downscale & compress to keep localStorage healthy
+  async function compressDataURL(dataURL, {maxW=900, maxH=900, mime="image/webp", quality=0.82}={}){
+    const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("Image decode failed")); i.src=dataURL; });
+    let w = img.width, h = img.height;
+    if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+    if (h > maxH) { w = Math.round(w * (maxH / h)); h = maxH; }
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, w);
+    canvas.height = Math.max(1, h);
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    let out = canvas.toDataURL(mime, quality);
+    if (out === "data:,") out = canvas.toDataURL("image/png"); // rare fallback
+    return out;
+  }
+
+  // --- Simple heuristics from filename ---
+  function autoNameFromFilename(filename){
+    return filename.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  }
+  function autoCategoryFromFilename(filename){
+    const lower = filename.toLowerCase();
+    if (lower.includes("jordan") || lower.includes("lebron") || lower.includes("psa") || lower.includes("rc")) return "NBA";
+    if (lower.includes("charizard") || lower.includes("pikachu") || lower.includes("pokemon") || lower.includes("pkmn")) return "Pokemon";
+    if (lower.includes("asm") || lower.includes("spider-man") || lower.includes("batman") || lower.includes("marvel") || lower.includes("dc")) return "Comics";
+    if (lower.includes("yeezy") || lower.includes("jordan1") || lower.includes("dunk") || lower.includes("airmax") || lower.includes("aj1")) return "Sneakers";
+    if (lower.includes("funko") || lower.includes("pop")) return "Figures / Toys";
+    return "Uncategorised";
+  }
+
+  // --- Inject "Bulk Upload Photos" control near the Add Item form if missing ---
+  function ensureUploadControl(){
+    let input = document.getElementById('bulkPhotoUpload');
+    if (input) return input;
+    // Try to place it right after #addForm, or at end of .container as fallback
+    const addForm = document.getElementById('addForm');
+    const host = addForm ? addForm.parentElement : document.querySelector('.container') || document.body;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'actions';
+    wrap.style.marginTop = '8px';
+
+    const label = document.createElement('label');
+    label.setAttribute('for', 'bulkPhotoUpload');
+    label.className = 'secondary';
+    label.style.cssText = 'cursor:pointer;padding:10px 12px;border:1px solid var(--border);border-radius:8px;';
+    label.textContent = 'Bulk Upload Photos';
+
+    input = document.createElement('input');
+    input.type = 'file';
+    input.id = 'bulkPhotoUpload';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.style.display = 'none';
+
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    host.appendChild(wrap);
+    return input;
+  }
+  const uploadInput = ensureUploadControl();
+
+  // --- Upload handler: create Items in the active collection with photo ---
+  uploadInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    for (const file of files){
+      try{
+        const raw = await fileToDataURL(file);
+        // Optionally compress to save quota; enable if needed:
+        // const photo = await compressDataURL(raw, { maxW: 900, maxH: 900, mime: "image/webp", quality: 0.8 });
+        const photo = raw;
+
+        const name = autoNameFromFilename(file.name);
+        const category = normaliseCategory(autoCategoryFromFilename(file.name));
+
+        updateActive(c => c.addItem({
+          name,
+          category,
+          gradeBrand: 'RAW',
+          gradeValue: '',
+          condition: 'Mint',
+          notes: '',
+          photo
+        }));
+      } catch(err){
+        console.error('[PhotoEnhance] File failed:', err);
+        alert("Failed to process one of the files: " + (err.message || String(err)));
+      }
+    }
+    renderAll();
+    e.target.value = '';
+  });
+
+  // --- Augment the Items table rendering to include thumbnails + click-to-zoom ---
+  // We monkey-patch renderItems to post-process rows and inject a thumbnail cell fragment
+  const _origRenderItems = window.renderItems;
+  if (typeof _origRenderItems === 'function') {
+    window.renderItems = function(){
+      _origRenderItems();
+
+      const body = document.getElementById('itemsBody');
+      if (!body) return;
+
+      // Insert thumbnails into the "Name" column if a photo exists
+      // We find each row and if its item has a photo, prepend a thumbnail before the name text.
+      // To map rows -> items, we can read the id from the meta div (already rendered by your template).
+      const rows = Array.from(body.querySelectorAll('tr'));
+      rows.forEach(tr => {
+        const nameCell = tr.cells && tr.cells[0];
+        if (!nameCell) return;
+
+        const idMeta = nameCell.querySelector('.meta');
+        if (!idMeta) return;
+        const id = idMeta.textContent.trim();
+        // Find item by id from active collection
+        try {
+          // 'active' is defined in your app; we access items safely
+          const it = (window.active && Array.isArray(window.active.items))
+            ? window.active.items.find(x => String(x.id) === id)
+            : null;
+          if (!it || !it.photo) return;
+
+          // Avoid duplicate injection
+          if (nameCell.querySelector('img.thumb')) return;
+
+          const rowWrap = nameCell.querySelector('div') || nameCell;
+          // Build a small inline fragment with image + original block
+          const flex = document.createElement('div');
+          flex.style.display = 'flex';
+          flex.style.alignItems = 'center';
+          flex.style.gap = '8px';
+
+          const img = document.createElement('img');
+          img.src = it.photo;
+          img.className = 'thumb';
+          img.alt = 'Item photo';
+          img.addEventListener('click', () => modal.open(it.photo));
+
+          // Move existing content into a wrapper next to the image
+          const contentWrap = document.createElement('div');
+          while (rowWrap.firstChild) contentWrap.appendChild(rowWrap.firstChild);
+          flex.appendChild(img);
+          flex.appendChild(contentWrap);
+          rowWrap.appendChild(flex);
+        } catch(e) {
+          // Non-fatal if structure differs
+        }
+      });
+
+      // Also ensure any explicitly placed thumbnails get modal behavior
+      body.querySelectorAll('img.thumb').forEach(img => {
+        if (img.dataset._modalBound) return;
+        img.dataset._modalBound = '1';
+        img.addEventListener('click', () => modal.open(img.getAttribute('src')));
+      });
+    };
+    // Re-render now to apply augmentation if the table is currently visible
+    try { window.renderItems(); } catch {}
+  } else {
+    console.warn('[PhotoEnhance] Could not patch renderItems; thumbnails will not auto-inject.');
+  }
+})();
+</script>
+
 </body>
 </html>

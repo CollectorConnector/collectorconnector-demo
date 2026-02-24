@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Fonts -->
-  https://fonts.googleapis.com
-  https://fonts.gstatic.com
-  https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
@@ -87,10 +87,10 @@
 
     .brand-text{ display:flex; flex-direction:column; gap:2px; }
     .brand-name{ font-size:.98rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
-    .brand-tagline{ font-size:.78rem; color:var(--muted); }
+    .brand-tagline{ font-size:.78rem; color:#a9a9a9; }
 
     .header-right{
-      display:flex; align-items:center; gap:12px; color:var(--muted); font-size:.8rem;
+      display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.8rem;
       padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
       background: #0f0f0f;
     }
@@ -110,12 +110,11 @@
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
     /* Header social icons */
-    .social-links{
-      display:flex; align-items:center; gap:10px; margin-left:6px;
-    }
+    .social-links{ display:flex; align-items:center; gap:8px; margin:0 6px; }
     .social-link{
       width:28px; height:28px; border-radius:8px;
-      display:inline-flex; align-items:center; justify-content:center;
+      display:none; /* hidden until URL is set */
+      align-items:center; justify-content:center;
       background:#111; border:1px solid rgba(255,255,255,0.12);
       color:#fff; text-decoration:none;
       transition: background var(--t-fast), border-color var(--t-fast), opacity var(--t-fast);
@@ -136,8 +135,7 @@
       box-shadow: var(--shadow-soft);
     }
 
-    .card-left,
-    .card-right{ padding:32px; }
+    .card-left, .card-right{ padding:32px; }
 
     .card-left{
       flex:1; border-right:1px solid var(--border);
@@ -150,7 +148,6 @@
       max-width:260px;
       display:block;
       margin-bottom:10px;
-      filter: none;
     }
 
     .welcome-title{ font-size:2rem; font-weight:600; margin-bottom:6px; }
@@ -181,13 +178,11 @@
     .login-left{
       flex:1 1 320px; padding:28px; border-right:1px solid rgba(255,255,255,0.06);
       display:flex; flex-direction:column; gap:10px; justify-content:center;
-      background:#101010;
-      min-width: 280px;
+      background:#101010; min-width:280px;
     }
     .login-right{
       flex:1 1 320px; padding:28px; display:flex; flex-direction:column; justify-content:center; gap:14px;
-      background:#0e0e0e;
-      min-width: 280px;
+      background:#0e0e0e; min-width:280px;
     }
 
     .field-label{
@@ -380,7 +375,7 @@
         <header class="app-header" role="banner">
           <div class="brand-left">
             <div class="brand-icon">
-              ./CCLogoSML.png
+              <img src="./CCLogoSML.png" alt="Collector Connector icon">
             </div>
             <div class="brand-text">
               <div class="brand-name">CollectorConnector</div>
@@ -392,22 +387,20 @@
             <div class="beta-pill">Demo</div>
             <div class="version-tag">v0.5</div>
 
-            <!-- Header social icons (appear only when URL is saved) -->
+            <!-- Header social icons (shown when links are set) -->
             <nav class="social-links" aria-label="Social profiles">
-              <a id="link-ebay" class="social-link" href="#" target="_blank" rel="noopener noreferrer" title="eBay" style="display:none" aria-label="eBay">
-                <!-- eBay simple 'e' glyph -->
+              <a id="link-ebay" class="social-link" href="#" target="_blank" rel="noopener noreferrer" aria-label="eBay">
+                <!-- simple eBay 'e' glyph -->
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M3 12c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9-9-4.03-9-9zm6.6 1.1c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41H11.38z"/>
                 </svg>
               </a>
-              <a id="link-instagram" class="social-link" href="#" target="_blank" rel="noopener noreferrer" title="Instagram" style="display:none" aria-label="Instagram">
-                <!-- Instagram glyph -->
+              <a id="link-instagram" class="social-link" href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zm0 2a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm5-2.3a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
                 </svg>
               </a>
-              <a id="link-facebook" class="social-link" href="#" target="_blank" rel="noopener noreferrer" title="Facebook" style="display:none" aria-label="Facebook">
-                <!-- Facebook glyph -->
+              <a id="link-facebook" class="social-link" href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M13 22v-7h2.5l.5-3H13V9.5c0-.87.28-1.5 1.7-1.5H16V5.2c-.3-.04-1.2-.1-2.3-.1-2.3 0-3.7 1.2-3.7 3.9V12H7v3h3v7h3z"/>
                 </svg>
@@ -415,7 +408,7 @@
             </nav>
 
             <div class="avatar" aria-label="Profile photo">
-              ./CCLogoSML.png
+              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile photo">
             </div>
           </div>
         </header>
@@ -426,7 +419,7 @@
             <!-- LEFT -->
             <section class="card-left" aria-label="Welcome">
               <div class="left-logo">
-                ./CC-mainlogo.jpg
+                <img src="./CC-mainlogo.jpg" alt="Collector Connector">
               </div>
               <h1 class="welcome-title">Welcome back</h1>
               <p class="welcome-subtitle">
@@ -465,7 +458,6 @@
                         <input id="remember" type="checkbox" />
                         <label for="remember" style="text-transform:none;letter-spacing:0;">Remember me</label>
                       </div>
-                      #Forgot password?</a>
                     </div>
 
                     <button id="login-button" class="btn-primary" type="submit">
@@ -554,7 +546,7 @@
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg">
-                      ./CCLogoSML.png
+                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview">
                     </div>
                     <div class="inline-actions">
                       <label class="btn-small" for="profile-file">Upload profile photo</label>
@@ -633,16 +625,13 @@
       const loginView = document.getElementById("login-view");
       const dashboardView = document.getElementById("dashboard-view");
 
-      // Avatars (header + profile large)
-      const headerAvatarImg = document.getElementById("header-avatar"); // may be null; fallback handled
-      const profileAvatarLgImg = document.getElementById("profile-avatar-lg"); // may be null; fallback handled
-      // The markup uses text fallbacks; we'll create <img> dynamically
-      const headerAvatarContainer = document.querySelector(".avatar");
-      const profileAvatarContainer = document.querySelector(".profile-avatar-lg");
-
+      // Avatars
+      const headerAvatar = document.getElementById("header-avatar");
+      const profileAvatarLg = document.getElementById("profile-avatar-lg");
       const profileFile = document.getElementById("profile-file");
       const clearProfileBtn = document.getElementById("clear-profile");
 
+      // Gallery
       const galleryInput = document.getElementById("gallery-files");
       const clearGalleryBtn = document.getElementById("clear-gallery");
       const galleryGrid = document.getElementById("gallery-grid");
@@ -651,8 +640,8 @@
       const urlEbay      = document.getElementById("url-ebay");
       const urlInstagram = document.getElementById("url-instagram");
       const urlFacebook  = document.getElementById("url-facebook");
-      const saveSocial   = document.getElementById("save-social");
-      const clearSocial  = document.getElementById("clear-social");
+      const saveSocialBtn   = document.getElementById("save-social");
+      const clearSocialBtn  = document.getElementById("clear-social");
 
       const linkEbay      = document.getElementById("link-ebay");
       const linkInstagram = document.getElementById("link-instagram");
@@ -736,30 +725,11 @@
       }
 
       // --- Profile image: save/render
-      function ensureImg(container){
-        let img = container.querySelector("img");
-        if (!img){
-          img = document.createElement("img");
-          container.innerHTML = "";
-          container.appendChild(img);
-        }
-        return img;
-      }
-
       function renderProfile(src){
         const fallback = "./CCLogoSML.png";
         const useSrc = src || fallback;
-
-        if (headerAvatarContainer){
-          const img = ensureImg(headerAvatarContainer);
-          img.src = useSrc;
-          img.alt = "Profile photo";
-        }
-        if (profileAvatarContainer){
-          const img = ensureImg(profileAvatarContainer);
-          img.src = useSrc;
-          img.alt = "Profile photo preview";
-        }
+        if (headerAvatar) headerAvatar.src = useSrc;
+        if (profileAvatarLg) profileAvatarLg.src = useSrc;
       }
 
       function saveProfile(src){
@@ -813,12 +783,11 @@
         if (!val) return "";
         let v = String(val).trim();
         if (!v) return "";
-        // Add protocol if missing
         if (!/^https?:\/\//i.test(v)) v = "https://" + v;
         return v;
       }
 
-      function getSocial(){
+      function getSocialLinks(){
         try {
           const raw = localStorage.getItem(SOCIAL_KEY);
           return raw ? JSON.parse(raw) : { ebay:"", instagram:"", facebook:"" };
@@ -827,12 +796,12 @@
         }
       }
 
-      function saveSocial(obj){
+      function saveSocialLinks(obj){
         try { localStorage.setItem(SOCIAL_KEY, JSON.stringify(obj)); } catch(e){}
       }
 
-      function renderSocial(){
-        const { ebay, instagram, facebook } = getSocial();
+      function renderSocialLinks(){
+        const { ebay, instagram, facebook } = getSocialLinks();
 
         function setLink(anchor, url){
           if (!anchor) return;
@@ -861,15 +830,9 @@
           showDashboard();
         });
       }
-      if (loginButton) {
-        loginButton.addEventListener("click", () => showDashboard());
-      }
-      if (skipButton) {
-        skipButton.addEventListener("click", () => showDashboard());
-      }
-      if (logoutButton) {
-        logoutButton.addEventListener("click", showLogin);
-      }
+      if (loginButton)  loginButton.addEventListener("click", () => showDashboard());
+      if (skipButton)    skipButton.addEventListener("click", () => showDashboard());
+      if (logoutButton)  logoutButton.addEventListener("click", showLogin);
 
       if (profileFile) {
         profileFile.addEventListener("change", async (e)=>{
@@ -886,11 +849,7 @@
         });
       }
 
-      if (clearProfileBtn) {
-        clearProfileBtn.addEventListener("click", ()=>{
-          saveProfile("");
-        });
-      }
+      if (clearProfileBtn) clearProfileBtn.addEventListener("click", ()=> saveProfile(""));
 
       if (galleryInput) {
         galleryInput.addEventListener("change", async (e)=>{
@@ -902,7 +861,7 @@
               const raw = await readFileAsDataURL(f);
               const resized = await resizeImageDataURL(raw, 1280, 0.85);
               existing.push(resized);
-            } catch(err){ /* skip file */ }
+            } catch(err){ /* skip */ }
           }
           saveGallery(existing);
           renderGallery();
@@ -932,21 +891,21 @@
         });
       }
 
-      if (saveSocial){
-        saveSocial.addEventListener("click", ()=>{
+      if (saveSocialBtn){
+        saveSocialBtn.addEventListener("click", ()=>{
           const ebay = normalizeUrl(urlEbay?.value || "");
           const instagram = normalizeUrl(urlInstagram?.value || "");
           const facebook = normalizeUrl(urlFacebook?.value || "");
-          saveSocial({ ebay, instagram, facebook });
-          renderSocial();
+          saveSocialLinks({ ebay, instagram, facebook });
+          renderSocialLinks();
           alert("Social links saved.");
         });
       }
 
-      if (clearSocial){
-        clearSocial.addEventListener("click", ()=>{
-          saveSocial({ ebay:"", instagram:"", facebook:"" });
-          renderSocial();
+      if (clearSocialBtn){
+        clearSocialBtn.addEventListener("click", ()=>{
+          saveSocialLinks({ ebay:"", instagram:"", facebook:"" });
+          renderSocialLinks();
         });
       }
 
@@ -954,11 +913,10 @@
       let wasLogged = false;
       try { wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY) === "1"; } catch(e){}
       if(wasLogged) { showDashboard(); } else { showLogin(); }
-      loadProfile();
+      renderProfile(localStorage.getItem("cc-demo-profile-image") || "");
       renderGallery();
-      renderSocial();
+      renderSocialLinks();
     })();
   </script>
 </body>
 </html>
-``

@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  https://fonts.googleapis.com
+  https://fonts.gstatic.com
+  https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap
 
   <style>
     :root{
@@ -109,6 +109,21 @@
     }
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
+    /* Header social icons */
+    .social-links{
+      display:flex; align-items:center; gap:10px; margin-left:6px;
+    }
+    .social-link{
+      width:28px; height:28px; border-radius:8px;
+      display:inline-flex; align-items:center; justify-content:center;
+      background:#111; border:1px solid rgba(255,255,255,0.12);
+      color:#fff; text-decoration:none;
+      transition: background var(--t-fast), border-color var(--t-fast), opacity var(--t-fast);
+      opacity:.95;
+    }
+    .social-link:hover{ background:#151515; border-color:rgba(255,255,255,0.2); }
+    .social-link svg{ width:18px; height:18px; display:block; }
+
     /* Main card (Option B) */
     .card{
       margin:16px;
@@ -207,6 +222,12 @@
     }
     .btn-secondary:hover{ background:rgba(255,255,255,0.06); }
 
+    .btn-small{
+      padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.25);
+      background:transparent; color:#fff; font-size:.82rem; cursor:pointer;
+    }
+    .btn-small:hover{ background:rgba(255,255,255,0.06); }
+
     .or-divider{ display:flex; align-items:center; gap:10px; margin:8px 0; color:#a0a0a0; font-size:.8rem; }
     .or-divider span{ flex:1; height:1px; background:var(--border); }
 
@@ -277,11 +298,6 @@
     .profile-avatar-lg img{ width:100%; height:100%; object-fit:cover; display:block; }
 
     .inline-actions{ display:flex; gap:8px; flex-wrap:wrap; }
-    .btn-small{
-      padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.25);
-      background:transparent; color:#fff; font-size:.82rem; cursor:pointer;
-    }
-    .btn-small:hover{ background:rgba(255,255,255,0.06); }
 
     .hint{ font-size:.8rem; color:#9a9a9a; margin-top:8px; }
 
@@ -345,6 +361,14 @@
       .grid-3{ grid-template-columns:1fr; }
       .gallery-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
     }
+
+    /* Simple inputs for social panel */
+    .social-form .input-row { display:flex; gap:8px; align-items:center; margin:6px 0; }
+    .social-form .input-row input {
+      flex:1; padding:9px 11px; border-radius:10px;
+      border:1px solid rgba(255,255,255,0.18); background:#0b0b0b; color:#fff;
+      font-size:.88rem;
+    }
   </style>
 </head>
 <body>
@@ -356,7 +380,7 @@
         <header class="app-header" role="banner">
           <div class="brand-left">
             <div class="brand-icon">
-              <img src="./CCLogoSML.png" alt="CollectorConnector icon">
+              ./CCLogoSML.png
             </div>
             <div class="brand-text">
               <div class="brand-name">CollectorConnector</div>
@@ -366,9 +390,32 @@
 
           <div class="header-right">
             <div class="beta-pill">Demo</div>
-            <div class="version-tag">v0.4</div>
+            <div class="version-tag">v0.5</div>
+
+            <!-- Header social icons (appear only when URL is saved) -->
+            <nav class="social-links" aria-label="Social profiles">
+              <a id="link-ebay" class="social-link" href="#" target="_blank" rel="noopener noreferrer" title="eBay" style="display:none" aria-label="eBay">
+                <!-- eBay simple 'e' glyph -->
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M3 12c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9-9-4.03-9-9zm6.6 1.1c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41H11.38z"/>
+                </svg>
+              </a>
+              <a id="link-instagram" class="social-link" href="#" target="_blank" rel="noopener noreferrer" title="Instagram" style="display:none" aria-label="Instagram">
+                <!-- Instagram glyph -->
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zm0 2a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm5-2.3a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+              </a>
+              <a id="link-facebook" class="social-link" href="#" target="_blank" rel="noopener noreferrer" title="Facebook" style="display:none" aria-label="Facebook">
+                <!-- Facebook glyph -->
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M13 22v-7h2.5l.5-3H13V9.5c0-.87.28-1.5 1.7-1.5H16V5.2c-.3-.04-1.2-.1-2.3-.1-2.3 0-3.7 1.2-3.7 3.9V12H7v3h3v7h3z"/>
+                </svg>
+              </a>
+            </nav>
+
             <div class="avatar" aria-label="Profile photo">
-              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile">
+              ./CCLogoSML.png
             </div>
           </div>
         </header>
@@ -379,7 +426,7 @@
             <!-- LEFT -->
             <section class="card-left" aria-label="Welcome">
               <div class="left-logo">
-                <img src="./CC-mainlogo.jpg" alt="CollectorConnector">
+                ./CC-mainlogo.jpg
               </div>
               <h1 class="welcome-title">Welcome back</h1>
               <p class="welcome-subtitle">
@@ -418,7 +465,7 @@
                         <input id="remember" type="checkbox" />
                         <label for="remember" style="text-transform:none;letter-spacing:0;">Remember me</label>
                       </div>
-                      <a href="#" class="link">Forgot password?</a>
+                      #Forgot password?</a>
                     </div>
 
                     <button id="login-button" class="btn-primary" type="submit">
@@ -500,14 +547,14 @@
                   </div>
                 </div>
 
-                <!-- Profile + Gallery Section -->
+                <!-- Profile + Gallery + Social Section -->
                 <div class="panel-section" aria-label="Profile and Collection Photos">
                   <!-- Profile panel -->
                   <section class="profile-panel" aria-labelledby="profileTitle">
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg">
-                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile large">
+                      ./CCLogoSML.png
                     </div>
                     <div class="inline-actions">
                       <label class="btn-small" for="profile-file">Upload profile photo</label>
@@ -515,6 +562,30 @@
                       <button id="clear-profile" class="btn-small" type="button">Remove profile photo</button>
                     </div>
                     <p class="hint">Tip: square images look best. We’ll auto‑fit and lightly compress to keep it fast.</p>
+
+                    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08); margin:14px 0;" />
+
+                    <h3 class="section-title" style="margin-top:2px;">Social Links</h3>
+                    <p class="section-sub">Add your profiles — we’ll show icons in the header.</p>
+                    <form class="social-form" id="social-form" autocomplete="off">
+                      <div class="input-row">
+                        <label for="url-ebay" class="field-label" style="min-width:72px;">eBay</label>
+                        <input id="url-ebay" type="url" placeholder="https://www.ebay.co.uk/usr/yourname" inputmode="url" />
+                      </div>
+                      <div class="input-row">
+                        <label for="url-instagram" class="field-label" style="min-width:72px;">Instagram</label>
+                        <input id="url-instagram" type="url" placeholder="https://www.instagram.com/yourname" inputmode="url" />
+                      </div>
+                      <div class="input-row">
+                        <label for="url-facebook" class="field-label" style="min-width:72px;">Facebook</label>
+                        <input id="url-facebook" type="url" placeholder="https://www.facebook.com/yourname" inputmode="url" />
+                      </div>
+                      <div class="inline-actions" style="margin-top:8px;">
+                        <button id="save-social" class="btn-small" type="button">Save links</button>
+                        <button id="clear-social" class="btn-small" type="button">Clear links</button>
+                      </div>
+                      <p class="hint">Links are stored locally in your browser for the demo.</p>
+                    </form>
                   </section>
 
                   <!-- Gallery panel -->
@@ -562,8 +633,13 @@
       const loginView = document.getElementById("login-view");
       const dashboardView = document.getElementById("dashboard-view");
 
-      const headerAvatarImg = document.getElementById("header-avatar");
-      const profileAvatarLgImg = document.getElementById("profile-avatar-lg");
+      // Avatars (header + profile large)
+      const headerAvatarImg = document.getElementById("header-avatar"); // may be null; fallback handled
+      const profileAvatarLgImg = document.getElementById("profile-avatar-lg"); // may be null; fallback handled
+      // The markup uses text fallbacks; we'll create <img> dynamically
+      const headerAvatarContainer = document.querySelector(".avatar");
+      const profileAvatarContainer = document.querySelector(".profile-avatar-lg");
+
       const profileFile = document.getElementById("profile-file");
       const clearProfileBtn = document.getElementById("clear-profile");
 
@@ -571,10 +647,22 @@
       const clearGalleryBtn = document.getElementById("clear-gallery");
       const galleryGrid = document.getElementById("gallery-grid");
 
+      // Social inputs + header links
+      const urlEbay      = document.getElementById("url-ebay");
+      const urlInstagram = document.getElementById("url-instagram");
+      const urlFacebook  = document.getElementById("url-facebook");
+      const saveSocial   = document.getElementById("save-social");
+      const clearSocial  = document.getElementById("clear-social");
+
+      const linkEbay      = document.getElementById("link-ebay");
+      const linkInstagram = document.getElementById("link-instagram");
+      const linkFacebook  = document.getElementById("link-facebook");
+
       // --- Storage keys
       const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
       const PROFILE_IMG_KEY  = "cc-demo-profile-image";
       const GALLERY_KEY      = "cc-demo-gallery-images";
+      const SOCIAL_KEY       = "cc-demo-social-links";
 
       // --- Helpers: image load & resize
       function readFileAsDataURL(file){
@@ -599,7 +687,6 @@
         const img = await loadImage(dataUrl);
         let {width, height} = img;
 
-        // Determine new size keeping aspect ratio
         if (width > height && width > maxSize){
           const ratio = maxSize / width;
           width = maxSize; height = Math.round(height * ratio);
@@ -618,7 +705,6 @@
 
       async function processProfileImage(file){
         const dataUrl = await readFileAsDataURL(file);
-        // Smaller cap for avatars
         return resizeImageDataURL(dataUrl, 512, 0.9);
       }
 
@@ -650,11 +736,30 @@
       }
 
       // --- Profile image: save/render
+      function ensureImg(container){
+        let img = container.querySelector("img");
+        if (!img){
+          img = document.createElement("img");
+          container.innerHTML = "";
+          container.appendChild(img);
+        }
+        return img;
+      }
+
       function renderProfile(src){
         const fallback = "./CCLogoSML.png";
         const useSrc = src || fallback;
-        if (headerAvatarImg) headerAvatarImg.src = useSrc;
-        if (profileAvatarLgImg) profileAvatarLgImg.src = useSrc;
+
+        if (headerAvatarContainer){
+          const img = ensureImg(headerAvatarContainer);
+          img.src = useSrc;
+          img.alt = "Profile photo";
+        }
+        if (profileAvatarContainer){
+          const img = ensureImg(profileAvatarContainer);
+          img.src = useSrc;
+          img.alt = "Profile photo preview";
+        }
       }
 
       function saveProfile(src){
@@ -690,21 +795,63 @@
         items.forEach((src, idx)=>{
           const wrap = document.createElement("div");
           wrap.className = "gallery-item";
-
           const img = document.createElement("img");
           img.src = src; img.alt = `Collection photo ${idx+1}`;
-
           const del = document.createElement("button");
-          del.className = "delete-btn";
-          del.type = "button";
-          del.setAttribute("data-index", String(idx));
+          del.className = "delete-btn"; del.type = "button";
+          del.dataset.index = String(idx);
           del.setAttribute("aria-label", `Remove photo ${idx+1}`);
           del.textContent = "Delete";
-
           wrap.appendChild(img);
           wrap.appendChild(del);
           galleryGrid.appendChild(wrap);
         });
+      }
+
+      // --- Social links: save/render
+      function normalizeUrl(val){
+        if (!val) return "";
+        let v = String(val).trim();
+        if (!v) return "";
+        // Add protocol if missing
+        if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+        return v;
+      }
+
+      function getSocial(){
+        try {
+          const raw = localStorage.getItem(SOCIAL_KEY);
+          return raw ? JSON.parse(raw) : { ebay:"", instagram:"", facebook:"" };
+        } catch(e){
+          return { ebay:"", instagram:"", facebook:"" };
+        }
+      }
+
+      function saveSocial(obj){
+        try { localStorage.setItem(SOCIAL_KEY, JSON.stringify(obj)); } catch(e){}
+      }
+
+      function renderSocial(){
+        const { ebay, instagram, facebook } = getSocial();
+
+        function setLink(anchor, url){
+          if (!anchor) return;
+          if (url){
+            anchor.href = url;
+            anchor.style.display = "inline-flex";
+          } else {
+            anchor.removeAttribute("href");
+            anchor.style.display = "none";
+          }
+        }
+
+        setLink(linkEbay, ebay);
+        setLink(linkInstagram, instagram);
+        setLink(linkFacebook, facebook);
+
+        if (urlEbay)      urlEbay.value = ebay || "";
+        if (urlInstagram) urlInstagram.value = instagram || "";
+        if (urlFacebook)  urlFacebook.value = facebook || "";
       }
 
       // --- Event wiring
@@ -749,16 +896,13 @@
         galleryInput.addEventListener("change", async (e)=>{
           const files = Array.from(e.target.files || []);
           if (!files.length) return;
-
           const existing = getGallery();
           for (const f of files){
             try {
               const raw = await readFileAsDataURL(f);
               const resized = await resizeImageDataURL(raw, 1280, 0.85);
               existing.push(resized);
-            } catch(err){
-              // Skip problematic file
-            }
+            } catch(err){ /* skip file */ }
           }
           saveGallery(existing);
           renderGallery();
@@ -779,12 +923,30 @@
         galleryGrid.addEventListener("click", (e)=>{
           const btn = e.target.closest(".delete-btn");
           if (!btn) return;
-          const idx = parseInt(btn.getAttribute("data-index"), 10);
+          const idx = parseInt(btn.dataset.index || "-1", 10);
           if (Number.isNaN(idx)) return;
           const items = getGallery();
           items.splice(idx, 1);
           saveGallery(items);
           renderGallery();
+        });
+      }
+
+      if (saveSocial){
+        saveSocial.addEventListener("click", ()=>{
+          const ebay = normalizeUrl(urlEbay?.value || "");
+          const instagram = normalizeUrl(urlInstagram?.value || "");
+          const facebook = normalizeUrl(urlFacebook?.value || "");
+          saveSocial({ ebay, instagram, facebook });
+          renderSocial();
+          alert("Social links saved.");
+        });
+      }
+
+      if (clearSocial){
+        clearSocial.addEventListener("click", ()=>{
+          saveSocial({ ebay:"", instagram:"", facebook:"" });
+          renderSocial();
         });
       }
 
@@ -794,7 +956,9 @@
       if(wasLogged) { showDashboard(); } else { showLogin(); }
       loadProfile();
       renderGallery();
+      renderSocial();
     })();
   </script>
 </body>
 </html>
+``

@@ -6,12 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Favicon -->
-  ./CCLogoSML.png
+  <link rel="icon" href="./CCLogoSML.png" type="image/png" />
 
-  <!-- Google Fonts -->
-  https://fonts.googleapis.com
-  https://fonts.gstatic.com
-  https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap
+  <!-- Google Fonts (preconnect + stylesheet) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
@@ -342,7 +342,7 @@
         <header class="app-header" role="banner">
           <div class="brand-left">
             <div class="brand-icon" aria-hidden="true">
-              ./CCLogoSML.png
+              <img src="./CCLogoSML.png" alt="CollectorConnector icon">
             </div>
             <div class="brand-text">
               <div class="brand-name">CollectorConnector</div>
@@ -378,19 +378,18 @@
 
             <!-- Always-visible quick links -->
             <nav class="quick-links" aria-label="Marketplaces">
-              https://www.ebay.co.uk/
+              <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer" title="eBay UK">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
                 eBay
               </a>
-
-              https://www.psacard.com/
+              <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener noreferrer" title="PSA">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l8 4v6c0 5.25-3.75 8.78-8 10-4.25-1.22-8-4.75-8-10V6l8-4zm-1.8 6.9h5.3c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45h-3.9v1.3h4.1c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45H10.2V8.9z"/></svg>
                 PSA
               </a>
             </nav>
 
             <div class="avatar" aria-label="Profile photo">
-              ./CCLogoSML.png
+              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile photo">
             </div>
           </div>
         </header>
@@ -474,7 +473,7 @@
                       <div class="card-tag">Personal</div>
                     </div>
                     <div class="card-body">
-                      <!-- NEW: Favourite piece photo -->
+                      <!-- Favourite piece photo -->
                       <div class="fav-photo">
                         <div class="fav-thumb">
                           <img id="favpiece-img" src="./CCLogoSML.png" alt="Favourite piece photo preview">
@@ -506,7 +505,7 @@
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg">
-                      ./CCLogoSML.png
+                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview">
                     </div>
                     <div class="inline-actions">
                       <label class="btn-small" for="profile-file">Upload profile photo</label>
@@ -814,7 +813,7 @@
           const li=document.createElement("li");
           li.className="feed-item";
           li.innerHTML = `
-            <div class="feed-thumb">./CCLogoSML.png</div>
+            <div class="feed-thumb"><img src="./CCLogoSML.png" alt=""></div>
             <div class="feed-text">
               <div>No activity yet.</div>
               <div class="feed-meta">Upload some photos to see updates here.</div>
@@ -824,7 +823,7 @@
         }
         list.forEach(ev=>{
           const li=document.createElement("li"); li.className="feed-item";
-          const thumbSrc = ev.details?.thumb || "./CCLogoSML.png";
+          const thumbUrl = ev.details?.thumb || "./CCLogoSML.png";
           let text = "";
           if(ev.type === "photos-added"){
             const n = ev.details?.count || 0;
@@ -842,7 +841,7 @@
             text = ev.details?.text || "Activity";
           }
           li.innerHTML = `
-            <div class="feed-thumb">${thumbSrc}</div>
+            <div class="feed-thumb"><img src="${thumbUrl}" alt=""></div>
             <div class="feed-text">
               <div>${text}</div>
               <div class="feed-meta">${formatWhen(ev.at)}</div>
@@ -880,7 +879,7 @@
           const raw = localStorage.getItem(SOCIAL_USERS_KEY);
           if(!raw) return {};
           const data = JSON.parse(raw);
-          // Migration support
+          // Migration support (from simple strings)
           if (data && typeof data === "object" && typeof data.ebay === "string"){
             const migrated = {};
             PLATFORMS.forEach(p=>{
@@ -948,7 +947,7 @@
         const url = buildUrl(p, v);
         if(prevEls[p]){
           prevEls[p].innerHTML = url
-            ? `${url}${url}</a>`
+            ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
             : "";
         }
       }
@@ -1003,7 +1002,7 @@
           try{
             const processed = await resizeImageDataURL(await readFileAsDataURL(file), 800, 0.9);
             saveFavpiece(processed);
-            addFeedEvent("favpiece-updated", { thumb: `<img src="${processed}" alt="Favourite piece">` });
+            addFeedEvent("favpiece-updated", { thumb: processed });
           }catch(err){ alert("Sorry, that image could not be processed."); }
           finally{ favFile.value=""; }
         });
@@ -1032,7 +1031,7 @@
           renderGallery();
           galleryInput.value="";
           if (addedImages.length){
-            addFeedEvent("photos-added", { count: addedImages.length, thumb: `<img src="${addedImages[0]}" alt="New photo">` });
+            addFeedEvent("photos-added", { count: addedImages.length, thumb: addedImages[0] });
           }
         });
       }

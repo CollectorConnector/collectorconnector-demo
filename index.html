@@ -2,916 +2,1003 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Collector Connector – Where Collectors Meet</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CollectorConnector — Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="preconnect" href="https://urldefense.com/v3/__https://fonts.googleapis.com__;!!PueBjVrnR72GDHWe!QVfPVFqWyD51MmJL-mIydCEAyft8TNTXlyymDjJnt1zpNdFHaZGBvJjBFnjnhji_Cu2b3nfg3iOyZQMoJ-EDn5f97oAc-L0o2XI$">
+  <link rel="preconnect" href="https://urldefense.com/v3/__https://fonts.gstatic.com__;!!PueBjVrnR72GDHWe!QVfPVFqWyD51MmJL-mIydCEAyft8TNTXlyymDjJnt1zpNdFHaZGBvJjBFnjnhji_Cu2b3nfg3iOyZQMoJ-EDn5f97oAcyJmLxXw$" crossorigin>
+  <link href="https://urldefense.com/v3/__https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair*Display:wght@500;600;700&display=swap__;Kw!!PueBjVrnR72GDHWe!QVfPVFqWyD51MmJL-mIydCEAyft8TNTXlyymDjJnt1zpNdFHaZGBvJjBFnjnhji_Cu2b3nfg3iOyZQMoJ-EDn5f97oAco5Bgihs$" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #000000;
-      --fg: #ffffff;
-      --accent: #f5f5f5;
-      --muted: #888888;
-      --card-bg: #111111;
-      --border: #222222;
-      --button-bg: #ffffff;
-      --button-fg: #000000;
-      --button-muted-bg: #333333;
-      --button-muted-fg: #ffffff;
-      --link: #ffffff;
+      --bg-main: #050505;
+      --bg-elevated: #101010;
+      --bg-elevated-soft: #151515;
+      --border-subtle: #262626;
+      --text-main: #ffffff;
+      --text-muted: #a0a0a0;
+      --accent: #ffffff;
+      --accent-soft: rgba(255,255,255,0.08);
+      --accent-strong: rgba(255,255,255,0.18);
+      --danger: #ff4b4b;
+      --radius-card: 18px;
+      --radius-soft: 12px;
+      --shadow-soft: 0 18px 40px rgba(0,0,0,0.65);
+      --transition-fast: 0.18s ease-out;
+      --transition-med: 0.28s ease-out;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
     }
 
     body {
-      background-color: var(--bg);
-      color: var(--fg);
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #181818 0, #050505 45%, #000000 100%);
+      color: var(--text-main);
       min-height: 100vh;
       display: flex;
-      align-items: stretch;
+      align-items: center;
       justify-content: center;
+      padding: 24px;
+    }
+
+    h1, h2, h3 {
+      font-family: "Playfair Display", "Times New Roman", serif;
+      letter-spacing: 0.02em;
     }
 
     .app-shell {
       width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      padding: 24px 16px;
+      max-width: 1120px;
+      min-height: 620px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      position: relative;
+      backdrop-filter: blur(18px);
     }
 
-    /* HEADER */
-    header {
+    .app-inner {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .app-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24px;
+      padding: 18px 24px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 55%);
     }
 
     .brand-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand-icon {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .brand-logo-full {
-      height: 36px;          /* Keep header wordmark neat */
-      max-width: 280px;
-      overflow: hidden;
-      display: block;
-    }
-
-    .brand-icon img,
-    .brand-logo-full img {
-      width: auto;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-    }
-
-    .header-right {
+      border-radius: 9px;
+      background: radial-gradient(circle at 30% 20%, #ffffff 0, #d0d0d0 18%, #000000 60%, #000000 100%);
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 0.8rem;
-      color: var(--muted);
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 18px rgba(255,255,255,0.18);
     }
 
-    .pill {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 4px 10px;
-      display: inline-flex;
+    .brand-icon::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.45), transparent 55%);
+      mix-blend-mode: screen;
+      opacity: 0.9;
+    }
+
+    .brand-icon-symbol {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1.4px solid #000000;
+      background: rgba(255,255,255,0.9);
+      display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
+      justify-content: center;
     }
 
-    .pill-icon {
-      width: 16px;
-      height: 16px;
+    .brand-icon-symbol::before,
+    .brand-icon-symbol::after {
+      content: "";
+      position: absolute;
+      width: 11px;
+      height: 11px;
       border-radius: 4px;
-      overflow: hidden;
-      flex-shrink: 0;
+      border: 1.2px solid #000000;
+      background: rgba(255,255,255,0.9);
     }
 
-    .pill-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
+    .brand-icon-symbol::before {
+      left: -7px;
+      top: 3px;
     }
 
-    /* MAIN CARD */
-    main {
-      flex: 1;
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
+    .brand-icon-symbol::after {
+      right: -7px;
+      bottom: 3px;
     }
 
-    .card {
-      background-color: var(--card-bg);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      display: flex;
-      flex: 1;
-      max-width: 1000px;
-      min-height: 480px;
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
-    }
-
-    .card-left,
-    .card-right {
-      padding: 32px;
-    }
-
-    .card-left {
-      flex: 1;
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;  /* we control spacing with margins */
-      gap: 16px;
-      background: radial-gradient(circle at top left, #222 0, #000 55%);
-    }
-
-    /* Left logo above Welcome Back */
-    .left-logo {
-      width: 100%;
-      text-align: left;
-    }
-    .left-logo img {
-      width: 55%;
-      max-width: 260px;
-      opacity: 0.95;
-      display: block;
-      margin-bottom: 8px;  /* small breathing room before eyebrow */
-    }
-
-    .welcome-block {
-      max-width: 420px; /* give the text a little more width under the logo */
-    }
-
-    .welcome-eyebrow {
-      font-size: 0.75rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    .welcome-title {
-      font-size: 2rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .welcome-subtitle {
-      font-size: 0.9rem;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    /* RIGHT (Login + Dashboard) */
-    .card-right {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 24px;
-    }
-
-    .login-title {
-      font-size: 1.4rem;
-      margin-bottom: 4px;
-    }
-
-    .login-subtitle {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    label {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-    }
-
-    input[type="text"],
-    input[type="password"] {
-      margin-top: 4px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background-color: #050505;
-      color: var(--fg);
-      font-size: 0.9rem;
-    }
-
-    input::placeholder {
-      color: #555;
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .row-left {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    input[type="checkbox"] {
-      width: 14px;
-      height: 14px;
-      accent-color: #ffffff;
-    }
-
-    .link {
-      color: var(--link);
-      text-decoration: none;
-      font-size: 0.8rem;
-    }
-
-    .link:hover {
-      text-decoration: underline;
-    }
-
-    .btn-primary,
-    .btn-secondary {
-      margin-top: 8px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: none;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
-
-    .btn-primary {
-      background-color: var(--button-bg);
-      color: var(--button-fg);
-    }
-
-    .btn-secondary {
-      background-color: var(--button-muted-bg);
-      color: var(--button-muted-fg);
-    }
-
-    .btn-primary:hover {
-      background-color: #e5e5e5;
-    }
-
-    .btn-secondary:hover {
-      background-color: #444444;
-    }
-
-    .or-divider {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 8px 0;
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-    }
-
-    .or-divider span {
-      flex: 1;
-      height: 1px;
-      background-color: var(--border);
-    }
-
-    /* Dashboard */
-    .dashboard {
-      display: none;
-      flex-direction: column;
-      gap: 24px;
-      animation: fadeIn 0.6s ease forwards;
-    }
-
-    .dashboard-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .dashboard-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .dashboard-title-block {
+    .brand-text {
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
 
-    .dashboard-title {
-      font-size: 1.3rem;
-      font-weight: 500;
+    .brand-name {
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .dashboard-subtitle {
-      font-size: 0.8rem;
-      color: var(--muted);
+    .brand-tagline {
+      font-size: 0.78rem;
+      color: var(--text-muted);
     }
 
-    .dashboard-actions {
+    .header-right {
       display: flex;
       align-items: center;
       gap: 10px;
-    }
-
-    .btn-ghost {
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--fg);
       font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      color: var(--text-muted);
     }
 
-    .btn-ghost:hover {
-      background-color: #111111;
-    }
-
-    .chip {
-      border-radius: 999px;
-      border: 1px solid var(--border);
+    .beta-pill {
       padding: 4px 10px;
-      font-size: 0.7rem;
-      text-transform: uppercase;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.6);
+      font-size: 0.72rem;
       letter-spacing: 0.12em;
-      color: var(--muted);
-      display: inline-flex;
+      text-transform: uppercase;
+    }
+
+    .version-tag {
+      opacity: 0.8;
+    }
+
+    .profile-frame {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #141414, #050505);
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: 0 0 14px rgba(0,0,0,0.8), 0 0 18px rgba(255,255,255,0.12);
+      display: flex;
       align-items: center;
-      gap: 6px;
-    }
-
-    .chip-icon {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
+      justify-content: center;
+      position: relative;
       overflow: hidden;
-      flex-shrink: 0;
     }
 
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 2fr 1.5fr;
+    .profile-frame::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(from 210deg, rgba(255,255,255,0.18), transparent 40%, transparent 70%, rgba(255,255,255,0.22));
+      opacity: 0.4;
+      mix-blend-mode: screen;
+    }
+
+    .profile-silhouette {
+      position: relative;
+      width: 22px;
+      height: 22px;
+      display: block;
+      fill: #ffffff;
+      opacity: 0.96;
+    }
+
+    .app-body {
+      flex: 1;
+      display: flex;
+      padding: 18px 18px 16px;
       gap: 16px;
     }
 
     .panel {
-      background-color: #050505;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      padding: 16px 18px;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(0,0,0,0.96));
+      border-radius: var(--radius-card);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel-login {
+      display: flex;
+      width: 100%;
+    }
+
+    .login-left {
+      flex: 1.1;
+      padding: 32px 28px;
+      border-right: 1px solid rgba(255,255,255,0.06);
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      justify-content: center;
+      gap: 14px;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.12), rgba(0,0,0,0.98));
     }
 
-    .panel-header {
+    .login-right {
+      flex: 0.9;
+      padding: 32px 26px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+      background: radial-gradient(circle at bottom right, rgba(255,255,255,0.08), rgba(0,0,0,0.98));
     }
 
-    .panel-title {
-      font-size: 0.9rem;
+    .welcome-title {
+      font-size: 1.9rem;
+      line-height: 1.2;
+    }
+
+    .welcome-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      max-width: 320px;
+    }
+
+    .welcome-hero {
+      margin-top: 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .welcome-footnote {
+      margin-top: 18px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      max-width: 320px;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .field-label {
+      font-size: 0.78rem;
       text-transform: uppercase;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
     }
 
-    .panel-subtitle {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .panel-icon {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .panel-icon img {
+    .field-input {
+      margin-top: 4px;
       width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
+      padding: 9px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.7);
+      color: var(--text-main);
+      font-size: 0.86rem;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
     }
 
-    .panel-body {
-      font-size: 0.8rem;
-      color: var(--muted);
-      line-height: 1.5;
+    .field-input::placeholder {
+      color: rgba(255,255,255,0.35);
     }
 
-    .stats-row {
-      display: flex;
-      gap: 10px;
+    .field-input:focus {
+      border-color: rgba(255,255,255,0.6);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.35);
+      background: rgba(0,0,0,0.9);
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+      border-radius: 999px;
+      padding: 9px 14px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .btn-primary {
+      background: #ffffff;
+      color: #000000;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.85);
+      background: #f5f5f5;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-main);
+      border: 1px solid rgba(255,255,255,0.35);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.7);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.06);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.85);
+    }
+
+    .login-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
       margin-top: 6px;
     }
 
-    .stat-pill {
-      flex: 1;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 6px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 0.75rem;
-      color: var(--fg);
+    .login-meta span {
+      opacity: 0.9;
     }
 
-    .stat-label {
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      font-size: 0.7rem;
-    }
-
-    .stat-value {
+    .login-meta strong {
       font-weight: 500;
+      color: #ffffff;
     }
 
-    /* FOOTER */
-    footer {
-      margin-top: 24px;
-      font-size: 0.7rem;
-      color: var(--muted);
+    .app-footer {
+      padding: 10px 20px 14px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: radial-gradient(circle at bottom, rgba(255,255,255,0.06), transparent 55%);
     }
 
     .footer-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
-    .footer-logo {
-      width: 120px;
-      height: 28px;
-      overflow: hidden;
+    .footer-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #3ddc84;
+      box-shadow: 0 0 10px rgba(61,220,132,0.9);
     }
 
-    .footer-logo img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
+    .footer-right {
+      opacity: 0.85;
     }
 
-    /* Animations & helpers */
-    @keyframes fadeOut {
-      from { opacity: 1; transform: translateY(0); }
-      to   { opacity: 0; transform: translateY(8px); }
+    .view-hidden {
+      display: none;
+    }
+
+    .fade-in {
+      animation: fadeIn var(--transition-med) forwards;
+    }
+
+    .fade-out {
+      animation: fadeOut var(--transition-med) forwards;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .fade-out { animation: fadeOut 0.4s ease forwards; }
-    #login-view.fading { will-change: opacity, transform; }
-    .hidden { display: none !important; }
-
-    /* Visible focus for keyboard users */
-    .btn-primary:focus-visible,
-    .btn-secondary:focus-visible,
-    .btn-ghost:focus-visible,
-    .link:focus-visible,
-    input:focus-visible {
-      outline: 2px solid #ffffff;
-      outline-offset: 2px;
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(6px); }
     }
 
-    /* Responsive */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.95fr;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .dash-main {
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(0,0,0,0.98));
+      border-radius: var(--radius-card);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 18px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dash-main::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 55%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .dash-main-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .dash-header-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .dash-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .dash-title {
+      font-size: 1.4rem;
+    }
+
+    .dash-subtitle {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      max-width: 360px;
+    }
+
+    .dash-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+    }
+
+    .pill-soft {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    .pill-soft strong {
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .pill-outline {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px dashed rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .card {
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: radial-gradient(circle at top, rgba(255,255,255,0.06), rgba(0,0,0,0.98));
+      padding: 10px 11px 11px;
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.9);
+      border-color: rgba(255,255,255,0.22);
+      background: radial-gradient(circle at top, rgba(255,255,255,0.09), rgba(0,0,0,0.98));
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .card-tag {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .card-body {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .metric-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .metric-value {
+      font-size: 0.98rem;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .metric-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .metric-pill strong {
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .fav-piece-title {
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .fav-piece-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .fav-piece-note {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .shimmer {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shimmer::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 40%, transparent 80%);
+      transform: translateX(-120%);
+      animation: shimmerMove 2.4s infinite;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    @keyframes shimmerMove {
+      0% { transform: translateX(-120%); }
+      60% { transform: translateX(120%); }
+      100% { transform: translateX(120%); }
+    }
+
+    .dash-secondary {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-secondary {
+      background: radial-gradient(circle at top right, rgba(255,255,255,0.06), rgba(0,0,0,0.98));
+      border-radius: var(--radius-card);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 14px 14px 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .panel-secondary-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .panel-secondary-title {
+      font-size: 0.98rem;
+      font-family: "Playfair Display", "Times New Roman", serif;
+    }
+
+    .panel-secondary-tag {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    .families-list,
+    .coming-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .families-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .families-name {
+      font-size: 0.82rem;
+      color: #ffffff;
+    }
+
+    .families-meta {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .coming-item-title {
+      font-size: 0.82rem;
+      color: #ffffff;
+    }
+
+    .coming-item-note {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .why-block {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .why-lead {
+      font-size: 0.86rem;
+      color: #ffffff;
+    }
+
+    .why-inline {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .why-inline strong {
+      color: #ffffff;
+      font-weight: 500;
+    }
+
     @media (max-width: 900px) {
-      .card {
+      .app-shell {
+        max-width: 100%;
+        border-radius: 0;
+      }
+      .app-body {
         flex-direction: column;
       }
-      .card-left {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-      }
-      .dashboard-grid {
+      .dashboard-layout {
         grid-template-columns: 1fr;
       }
-      .left-logo img {
-        width: 60%;
-        max-width: 260px;
+      .panel-login {
+        flex-direction: column;
+      }
+      .login-left {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
       }
     }
 
-    @media (max-width: 600px) {
-      .card-left,
-      .card-right {
-        padding: 20px;
+    @media (max-width: 640px) {
+      body {
+        padding: 0;
       }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+      .app-header {
+        padding: 14px 14px 10px;
       }
-      .header-right {
-        align-self: flex-end;
+      .app-body {
+        padding: 12px;
       }
-      .left-logo img {
-        width: 70%;
-        max-width: 260px;
+      .login-left,
+      .login-right {
+        padding: 22px 18px;
+      }
+      .dash-main {
+        padding: 14px 12px 12px;
+      }
+      .panel-secondary {
+        padding: 12px 11px 10px;
       }
     }
   </style>
 </head>
 <body>
   <div class="app-shell">
-    <!-- HEADER -->
-    <header>
-      <div class="brand-left">
-        <div class="brand-icon">
-          <img src="./CCLogoSML.png" alt="Collector Connector Icon" />
-        </div>
-        <div class="brand-logo-full">
-          <img src="./CC-mainlogo.jpg" alt="Collector Connector – Where Collectors Meet" />
-        </div>
-      </div>
+    <div class="app-inner">
 
-      <div class="header-right">
-        <div class="pill">
-          <div class="pill-icon">
-            <img src="./CCLogoSML.png" alt="CC Icon" />
+      <header class="app-header">
+        <div class="brand-left">
+          <div class="brand-icon">
+            <div class="brand-icon-symbol"></div>
           </div>
-          <span>Where Collectors Meet</span>
+          <div class="brand-text">
+            <div class="brand-name">CollectorConnector</div>
+            <div class="brand-tagline">A home for collectors</div>
+          </div>
         </div>
-      </div>
-    </header>
 
-    <!-- MAIN -->
-    <main>
-      <div class="card">
-        <!-- LEFT SIDE -->
-        <div class="card-left">
-          <!-- Full logo above Welcome Back -->
-          <div class="left-logo">
-            <img src="./CC-mainlogo.jpg" alt="Collector Connector" />
+        <div class="header-right">
+          <div class="beta-pill">Demo</div>
+          <div class="version-tag">v0.3</div>
+          <div class="profile-frame">
+            <svg class="profile-silhouette" viewBox="0 0 24 24">
+              <path d="M12 12.2c2.3 0 4.1-1.9 4.1-4.2S14.3 3.8 12 3.8 7.9 5.7 7.9 8s1.8 4.2 4.1 4.2zm0 2.1c-3 0-9 1.5-9 4.6v1.3h18v-1.3c0-3.1-6-4.6-9-4.6z"/>
+            </svg>
+          </div>
+        </div>
+      </header>
+
+      <div class="app-body">
+
+        <!-- LOGIN VIEW -->
+        <div id="loginView" class="panel panel-login fade-in">
+          <div class="login-left">
+            <h1 class="welcome-title">Welcome back</h1>
+            <p class="welcome-subtitle">Sign in to continue building your world of collections.</p>
+            <p class="welcome-hero">Your collection deserves a home.</p>
+            <p class="welcome-footnote">CollectorConnector is where identity, culture, and belonging come together through the pieces you love.</p>
           </div>
 
-          <div class="welcome-block">
-            <div class="welcome-eyebrow">Collector Connector</div>
-            <div class="welcome-title">Welcome Back!</div>
-            <div class="welcome-subtitle">
-              Log in to step back into your world of collections, connections,
-              and stories. Your profile is where your pieces finally feel at home.
+          <div class="login-right">
+            <div class="login-form">
+              <label class="field-label">Email</label>
+              <input class="field-input" type="email" placeholder="you@example.com">
+
+              <label class="field-label">Password</label>
+              <input class="field-input" type="password" placeholder="••••••••">
+
+              <button class="btn-primary" onclick="enterDashboard()">Sign In</button>
+              <button class="btn-secondary" onclick="skipToDemo()">Skip to Demo</button>
+            </div>
+
+            <div class="login-meta">
+              <span>By continuing, you agree to our</span> <strong>Terms</strong>.
             </div>
           </div>
         </div>
 
-        <!-- RIGHT SIDE (LOGIN + DASHBOARD) -->
-        <div class="card-right">
-          <!-- LOGIN VIEW -->
-          <section id="login-view" aria-hidden="false" aria-live="polite">
-            <div class="login-title">Log in</div>
-            <div class="login-subtitle">
-              This login is visual only for your demo. Click “Log in” or press Enter to fade
-              into your dashboard.
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboardView" class="view-hidden fade-in">
+          <div class="dashboard-layout">
+
+            <!-- MAIN PANEL -->
+            <div class="dash-main shimmer">
+              <div class="dash-main-inner">
+
+                <div class="dash-header-row">
+                  <div class="dash-title-block">
+                    <h2 class="dash-title">Your Dashboard</h2>
+                    <p class="dash-subtitle">A calm overview of your world of pieces.</p>
+                  </div>
+
+                  <div class="dash-pills">
+                    <div class="pill-soft"><strong>3</strong> Collections</div>
+                    <div class="pill-soft"><strong>18</strong> Pieces</div>
+                    <div class="pill-outline">Private</div>
+                  </div>
+                </div>
+
+                <div class="grid-3">
+
+                  <!-- COLLECTIONS CARD -->
+                  <div class="card">
+                    <div class="card-header">
+                      <div class="card-title">Collections</div>
+                      <div class="card-tag">Overview</div>
+                    </div>
+                    <div class="card-body">
+                      <div class="metric-row">
+                        <div class="metric-label">Total</div>
+                        <div class="metric-value">3</div>
+                      </div>
+                      <div class="metric-row">
+                        <div class="metric-label">Most Active</div>
+                        <div class="metric-pill"><strong>Watches</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- PIECES CARD -->
+                  <div class="card">
+                    <div class="card-header">
+                      <div class="card-title">Pieces</div>
+                      <div class="card-tag">Inventory</div>
+                    </div>
+                    <div class="card-body">
+                      <div class="metric-row">
+                        <div class="metric-label">Total</div>
+                        <div class="metric-value">18</div>
+                      </div>
+                      <div class="metric-row">
+                        <div class="metric-label">Latest Added</div>
+                        <div class="metric-pill"><strong>Omega Seamaster</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- FAVOURITE PIECE CARD -->
+                  <div class="card">
+                    <div class="card-header">
+                      <div class="card-title">Favourite Piece</div>
+                      <div class="card-tag">Personal</div>
+                    </div>
+                    <div class="card-body">
+                      <div class="fav-piece-title">Rolex Submariner (1998)</div>
+                      <div class="fav-piece-meta">Your most meaningful piece</div>
+                      <div class="fav-piece-note">A reminder of where your collecting journey began.</div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
             </div>
 
-            <form id="login-form">
-              <div>
-                <label for="username">Username</label>
-                <input
-                  id="username"
-                  type="text"
-                  placeholder="stacy.collector"
-                  autocomplete="off"
-                />
-              </div>
+            <!-- SECONDARY PANELS -->
+            <div class="dash-secondary">
 
-              <div>
-                <label for="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  autocomplete="off"
-                />
-              </div>
-
-              <div class="row">
-                <div class="row-left">
-                  <input id="remember" type="checkbox" />
-                  <label for="remember" style="text-transform:none;letter-spacing:0;">
-                    Remember me
-                  </label>
+              <!-- NICHE FAMILIES -->
+              <div class="panel-secondary shimmer">
+                <div class="panel-secondary-header">
+                  <h3 class="panel-secondary-title">Niche Families</h3>
+                  <div class="panel-secondary-tag">Culture</div>
                 </div>
-                <a href="#" class="link">Forgot password?</a>
-              </div>
 
-              <button id="login-button" class="btn-primary" type="submit">
-                <span>Log in</span>
-                <span>→</span>
-              </button>
-
-              <div class="or-divider">
-                <span></span>
-                OR
-                <span></span>
-              </div>
-
-              <button class="btn-secondary" type="button">
-                <span>Sign up</span>
-              </button>
-            </form>
-          </section>
-
-          <!-- DASHBOARD VIEW -->
-          <section id="dashboard-view" class="dashboard" aria-hidden="true" aria-live="polite">
-            <div class="dashboard-header">
-              <div class="dashboard-left">
-                <div class="brand-icon">
-                  <img src="./CCLogoSML.png" alt="Collector Connector Icon" />
-                </div>
-                <div class="dashboard-title-block">
-                  <div class="dashboard-title">Your Collector Dashboard</div>
-                  <div class="dashboard-subtitle">
-                    A clear, calm overview of your collections, presence, and
-                    connections.
+                <div class="families-list">
+                  <div class="families-row">
+                    <div class="families-name">Dive Watches</div>
+                    <div class="families-meta">6 pieces</div>
+                  </div>
+                  <div class="families-row">
+                    <div class="families-name">Vintage Posters</div>
+                    <div class="families-meta">4 pieces</div>
+                  </div>
+                  <div class="families-row">
+                    <div class="families-name">Signed Memorabilia</div>
+                    <div class="families-meta">3 pieces</div>
                   </div>
                 </div>
               </div>
-              <div class="dashboard-actions">
-                <button class="btn-ghost" type="button">
-                  <span>New piece</span>
-                </button>
-                <button id="logout-button" class="btn-ghost" type="button">
-                  <span>Log out</span>
-                </button>
-              </div>
-            </div>
 
-            <div class="dashboard-grid">
-              <!-- PANEL: Profile & Collections -->
-              <div class="panel">
-                <div class="panel-header">
+              <!-- COMING SOON -->
+              <div class="panel-secondary shimmer">
+                <div class="panel-secondary-header">
+                  <h3 class="panel-secondary-title">Coming Soon</h3>
+                  <div class="panel-secondary-tag">Roadmap</div>
+                </div>
+
+                <div class="coming-list">
                   <div>
-                    <div class="panel-title">Profile &amp; Collections</div>
-                    <div class="panel-subtitle">
-                      Make your profile feel like your collection’s true home.
-                    </div>
+                    <div class="coming-item-title">Community Profiles</div>
+                    <div class="coming-item-note">Connect with collectors who share your passions.</div>
                   </div>
-                  <div class="panel-icon">
-                    <img src="./CCLogoSML.png" alt="Profile Icon" />
-                  </div>
-                </div>
-                <div class="panel-body">
-                  This is where your profile, story, and favourite pieces live.
-                  In the full product, this panel would let you:
-                  <ul style="margin-top:6px;padding-left:18px;">
-                    <li>Upload and organise your collections</li>
-                    <li>Highlight your favourite piece</li>
-                    <li>Control what the world sees</li>
-                  </ul>
-                  <div class="stats-row">
-                    <div class="stat-pill">
-                      <div>
-                        <div class="stat-label">Pieces</div>
-                        <div class="stat-value">128</div>
-                      </div>
-                      <div class="stat-label">Curated</div>
-                    </div>
-                    <div class="stat-pill">
-                      <div>
-                        <div class="stat-label">Categories</div>
-                        <div class="stat-value">7</div>
-                      </div>
-                      <div class="stat-label">Organised</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- PANEL: Connections -->
-              <div class="panel">
-                <div class="panel-header">
                   <div>
-                    <div class="panel-title">Connections</div>
-                    <div class="panel-subtitle">
-                      Where collectors meet, trade, and recognise each other.
-                    </div>
+                    <div class="coming-item-title">Collection Sharing</div>
+                    <div class="coming-item-note">Showcase your world with curated public views.</div>
                   </div>
-                  <div class="panel-icon">
-                    <img src="./CCLogoSML.png" alt="Connections Icon" />
-                  </div>
-                </div>
-                <div class="panel-body">
-                  In the full version, this is where you’d see:
-                  <ul style="margin-top:6px;padding-left:18px;">
-                    <li>New followers and messages</li>
-                    <li>Invites to connect or trade</li>
-                    <li>Signals from people who love your pieces</li>
-                  </ul>
-                  <div class="stats-row">
-                    <div class="stat-pill">
-                      <div>
-                        <div class="stat-label">Connections</div>
-                        <div class="stat-value">42</div>
-                      </div>
-                      <div class="stat-label">Active</div>
-                    </div>
-                    <div class="stat-pill">
-                      <div>
-                        <div class="stat-label">Messages</div>
-                        <div class="stat-value">9</div>
-                      </div>
-                      <div class="stat-label">Unread</div>
-                    </div>
+                  <div>
+                    <div class="coming-item-title">Piece Provenance</div>
+                    <div class="coming-item-note">Track history, authenticity, and ownership.</div>
                   </div>
                 </div>
               </div>
+
+              <!-- WHY COLLECTORCONNECTOR -->
+              <div class="panel-secondary shimmer">
+                <div class="panel-secondary-header">
+                  <h3 class="panel-secondary-title">Why CollectorConnector?</h3>
+                  <div class="panel-secondary-tag">Purpose</div>
+                </div>
+
+                <div class="why-block">
+                  <div class="why-lead">Collectors deserve a platform built for identity, belonging, and the stories behind every piece.</div>
+                  <div class="why-inline">Your collections are more than items — they’re <strong>chapters of your life</strong>, and they deserve a home that reflects that.</div>
+                </div>
+              </div>
+
             </div>
-
-            <!-- PANEL: Coming Soon (replaces Brand Presence) -->
-            <div class="panel">
-              <div class="panel-header">
-                <div>
-                  <div class="panel-title">Coming Soon</div>
-                  <div class="panel-subtitle">
-                    Features we’re actively building to empower collectors.
-                  </div>
-                </div>
-                <div class="panel-icon">
-                  <img src="./CCLogoSML.png" alt="Coming Soon Icon" />
-                </div>
-              </div>
-              <div class="panel-body">
-                <ul style="margin-top:6px;padding-left:18px;">
-                  <li>Activity feed and notifications</li>
-                  <li>Collection analytics & insights</li>
-                  <li>Trade requests & safe escrow</li>
-                  <li>Discovery & explore mode</li>
-                </ul>
-              </div>
-            </div>
-
-          </section>
+          </div>
         </div>
-      </div>
-    </main>
 
-    <!-- FOOTER -->
-    <footer>
-      <div class="footer-left">
-        <div class="footer-logo">
-          <img src="./CC-mainlogo.jpg" alt="Collector Connector" />
-        </div>
-        <span>Where collectors meet, remember, and get seen.</span>
       </div>
-      <span>Demo build – visual login only, no real auth.</span>
-    </footer>
+
+      <footer class="app-footer">
+        <div class="footer-left">
+          <div class="footer-dot"></div>
+          <div>CollectorConnector Demo</div>
+        </div>
+        <div class="footer-right">Crafted with intention</div>
+      </footer>
+
+    </div>
   </div>
 
-  <!-- JS -->
   <script>
-    (function () {
-      const loginForm = document.getElementById("login-form");
-      const loginButton = document.getElementById("login-button");
-      const logoutButton = document.getElementById("logout-button");
-      const loginView = document.getElementById("login-view");
-      const dashboardView = document.getElementById("dashboard-view");
+    function enterDashboard() {
+      const login = document.getElementById("loginView");
+      const dash = document.getElementById("dashboardView");
 
-      const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
+      login.classList.add("fade-out");
+      setTimeout(() => {
+        login.classList.add("view-hidden");
+        dash.classList.remove("view-hidden");
+        dash.classList.add("fade-in");
+      }, 260);
+    }
 
-      function setHidden(el, hidden) {
-        if (!el) return;
-        el.setAttribute("aria-hidden", hidden ? "true" : "false");
-        try { el.inert = !!hidden; } catch (e) { /* ignore */ }
-      }
-
-      function showDashboard({ withFade = true } = {}) {
-        if (!loginView || !dashboardView) return;
-
-        // Update accessibility first
-        setHidden(loginView, true);
-        setHidden(dashboardView, false);
-
-        if (withFade) {
-          loginView.classList.add("fade-out", "fading");
-          setTimeout(() => {
-            loginView.classList.add("hidden");
-            loginView.classList.remove("fading");
-            dashboardView.style.display = "flex";
-          }, 400);
-        } else {
-          loginView.classList.add("hidden");
-          loginView.classList.remove("fade-out", "fading");
-          dashboardView.style.display = "flex";
-        }
-
-        try { sessionStorage.setItem(VISUAL_LOGIN_KEY, "1"); } catch (e) {}
-      }
-
-      function showLogin() {
-        if (!loginView || !dashboardView) return;
-
-        dashboardView.style.display = "none";
-        loginView.classList.remove("hidden", "fade-out", "fading");
-
-        setHidden(loginView, false);
-        setHidden(dashboardView, true);
-
-        try { sessionStorage.removeItem(VISUAL_LOGIN_KEY); } catch (e) {}
-      }
-
-      // Submit via Enter or button
-      if (loginForm) {
-        loginForm.addEventListener("submit", (e) => {
-          e.preventDefault();
-          showDashboard({ withFade: true });
-        });
-      }
-
-      // Also wire explicit click handlers (defensive)
-      if (loginButton) {
-        loginButton.addEventListener("click", () => showDashboard({ withFade: true }));
-      }
-      if (logoutButton) {
-        logoutButton.addEventListener("click", showLogin);
-      }
-
-      // Restore visual state on load
-      let wasLogged = false;
-      try { wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY) === "1"; } catch (e) {}
-
-      if (wasLogged) {
-        if (loginView) loginView.classList.add("hidden");
-        if (dashboardView) dashboardView.style.display = "flex";
-        setHidden(loginView, true);
-        setHidden(dashboardView, false);
-      } else {
-        if (dashboardView) dashboardView.style.display = "none";
-        setHidden(loginView, false);
-        setHidden(dashboardView, true);
-      }
-    })();
+    function skipToDemo() {
+      enterDashboard();
+    }
   </script>
+
 </body>
 </html>

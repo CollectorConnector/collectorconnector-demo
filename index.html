@@ -9,9 +9,9 @@
   <link rel="icon" href="./CCLogoSML.png" type="image/png" />
 
   <!-- Google Fonts (preconnect + stylesheet) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
 
   <style>
     :root{
@@ -228,9 +228,7 @@
     .metric-pill strong{ color:#fff; }
 
     /* Favourite Piece photo */
-    .fav-photo{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-    }
+    .fav-photo{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .fav-thumb{
       width:84px; height:84px; border-radius:12px; overflow:hidden;
       border:1px solid rgba(255,255,255,0.12); background:#0b0b0b;
@@ -330,6 +328,7 @@
     @media (max-width: 640px){
       .grid-3{ grid-template-columns:1fr; }
       .gallery-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .card-right{ padding:20px; }
     }
   </style>
 </head>
@@ -342,7 +341,7 @@
         <header class="app-header" role="banner">
           <div class="brand-left">
             <div class="brand-icon" aria-hidden="true">
-              <img src="./CCLogoSML.png" alt="CollectorConnector icon">
+              <img src="./CCLogoSML.png" alt="CollectorConnector icon" />
             </div>
             <div class="brand-text">
               <div class="brand-name">CollectorConnector</div>
@@ -376,7 +375,7 @@
               </a>
             </nav>
 
-            <!-- Always-visible quick links -->
+            <!-- Quick links (valid anchors) -->
             <nav class="quick-links" aria-label="Marketplaces">
               <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer" title="eBay UK">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
@@ -389,7 +388,7 @@
             </nav>
 
             <div class="avatar" aria-label="Profile photo">
-              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile photo">
+              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile avatar" />
             </div>
           </div>
         </header>
@@ -473,10 +472,9 @@
                       <div class="card-tag">Personal</div>
                     </div>
                     <div class="card-body">
-                      <!-- Favourite piece photo -->
                       <div class="fav-photo">
                         <div class="fav-thumb">
-                          <img id="favpiece-img" src="./CCLogoSML.png" alt="Favourite piece photo preview">
+                          <img id="favpiece-img" src="./CCLogoSML.png" alt="Favourite piece photo preview" />
                         </div>
                         <div class="fav-actions">
                           <label class="btn-small" for="favpiece-file">Upload photo</label>
@@ -505,7 +503,7 @@
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg">
-                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview">
+                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview" />
                     </div>
                     <div class="inline-actions">
                       <label class="btn-small" for="profile-file">Upload profile photo</label>
@@ -556,7 +554,7 @@
         <!-- FOOTER -->
         <footer class="app-footer" role="contentinfo">
           <div class="footer-left">
-            <div class="footer-dot"></div>
+            <div class="footer-dot" style="width:6px;height:6px;border-radius:999px;background:#3ddc84;"></div>
             <div>CollectorConnector Demo</div>
           </div>
           <span>Where collectors meet, remember, and get seen.</span>
@@ -752,7 +750,7 @@
       function saveProfile(src){ try{localStorage.setItem(PROFILE_IMG_KEY, src||"");}catch(e){} renderProfile(src); }
       function loadProfile(){ let s=""; try{s=localStorage.getItem(PROFILE_IMG_KEY)||"";}catch(e){} renderProfile(s||""); }
 
-      // Image utilities
+      // Image utils
       function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
       function loadImage(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
       async function resizeImageDataURL(dataUrl, maxSize=1280, quality=0.85){
@@ -766,10 +764,7 @@
       }
 
       // Favourite piece photo
-      function renderFavpiece(src){
-        const fallback = "./CCLogoSML.png";
-        favImg.src = src || fallback;
-      }
+      function renderFavpiece(src){ favImg.src = src || "./CCLogoSML.png"; }
       function saveFavpiece(src){
         try{ localStorage.setItem(FAVPIECE_IMG_KEY, src||""); }catch(e){}
         renderFavpiece(src);
@@ -793,7 +788,7 @@
         });
       }
 
-      // FEED (live activity)
+      // FEED (live activity) — thumbnails use URL only, rendered as <img>
       function getFeed(){ try{ const raw=localStorage.getItem(FEED_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
       function saveFeed(list){ try{ localStorage.setItem(FEED_KEY, JSON.stringify(list)); }catch(e){} }
       function addFeedEvent(type, details){
@@ -813,7 +808,7 @@
           const li=document.createElement("li");
           li.className="feed-item";
           li.innerHTML = `
-            <div class="feed-thumb"><img src="./CCLogoSML.png" alt=""></div>
+            <div class="feed-thumb"><img src="./CCLogoSML.png" alt="No activity yet" /></div>
             <div class="feed-text">
               <div>No activity yet.</div>
               <div class="feed-meta">Upload some photos to see updates here.</div>
@@ -823,7 +818,7 @@
         }
         list.forEach(ev=>{
           const li=document.createElement("li"); li.className="feed-item";
-          const thumbUrl = ev.details?.thumb || "./CCLogoSML.png";
+          const thumbUrl = ev.details?.thumb || "./CCLogoSML.png"; // URL or dataURL
           let text = "";
           if(ev.type === "photos-added"){
             const n = ev.details?.count || 0;
@@ -841,7 +836,7 @@
             text = ev.details?.text || "Activity";
           }
           li.innerHTML = `
-            <div class="feed-thumb"><img src="${thumbUrl}" alt=""></div>
+            <div class="feed-thumb"><img src="${thumbUrl}" alt="Activity thumbnail" /></div>
             <div class="feed-text">
               <div>${text}</div>
               <div class="feed-meta">${formatWhen(ev.at)}</div>
@@ -879,7 +874,7 @@
           const raw = localStorage.getItem(SOCIAL_USERS_KEY);
           if(!raw) return {};
           const data = JSON.parse(raw);
-          // Migration support (from simple strings)
+          // Migrate from string-only format if needed
           if (data && typeof data === "object" && typeof data.ebay === "string"){
             const migrated = {};
             PLATFORMS.forEach(p=>{
@@ -942,12 +937,13 @@
         return out;
       }
 
+      // FIX: safe, clickable preview link
       function updatePreview(p){
         const v = valInputs[p]?.value || "";
         const url = buildUrl(p, v);
         if(prevEls[p]){
           prevEls[p].innerHTML = url
-            ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+            ? `${url}${url}</a>`
             : "";
         }
       }
@@ -972,7 +968,7 @@
         });
       }
       // Live preview while typing / toggling
-      ["ebay","instagram","facebook","tiktok","x","youtube"].forEach(p=>{
+      PLATFORMS.forEach(p=>{
         const inp = valInputs[p];
         if(inp){ inp.addEventListener("input", ()=> updatePreview(p)); }
         const chk = showInputs[p];
@@ -988,14 +984,16 @@
       if(profileFile){
         profileFile.addEventListener("change", async (e)=>{
           const file = e.target.files && e.target.files[0]; if(!file) return;
-          try{ const processed = await resizeImageDataURL(await readFileAsDataURL(file), 512, 0.9); saveProfile(processed); }
-          catch(err){ alert("Sorry, that image could not be processed."); }
+          try{
+            const processed = await resizeImageDataURL(await readFileAsDataURL(file), 512, 0.9);
+            saveProfile(processed);
+          }catch(err){ alert("Sorry, that image could not be processed."); }
           finally{ profileFile.value=""; }
         });
       }
       if(clearProfileBtn){ clearProfileBtn.addEventListener("click", ()=> saveProfile("")); }
 
-      // Favourite piece upload/remove
+      // Favourite piece upload/remove (URL-only to feed)
       if(favFile){
         favFile.addEventListener("change", async (e)=>{
           const file = e.target.files && e.target.files[0]; if(!file) return;

@@ -9,9 +9,9 @@
   <link rel="icon" href="./CCLogoSML.png" />
 
   <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
@@ -123,28 +123,14 @@
     }
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-    /* Main card (Option B) */
+    /* Main card (single column) */
     .card{
       margin:16px; background:#0b0b0b; border:1px solid var(--border);
-      border-radius:16px; display:flex; min-height:480px; overflow:hidden; box-shadow: var(--shadow-soft);
+      border-radius:16px; display:block; min-height:480px; overflow:hidden; box-shadow: var(--shadow-soft);
     }
-
-    .card-left, .card-right{ padding:32px; }
-
-    .card-left{
-      flex:1; border-right:1px solid var(--border);
-      display:flex; flex-direction:column; gap:12px; justify-content:center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-    }
-    .left-logo img{ width:55%; max-width:260px; display:block; margin-bottom:10px; height:auto; }
-
-    .welcome-title{ font-size:2rem; font-weight:600; margin-bottom:6px; }
-    .welcome-subtitle{ font-size:.95rem; color:#b8b8b8; line-height:1.5; max-width:460px; }
-    .welcome-hero{ margin-top:10px; font-size:1rem; font-weight:500; color:#fff; }
-    .welcome-footnote{ margin-top:16px; font-size:.82rem; color:#9a9a9a; max-width:480px; }
-
     .card-right{
-      flex:1; display:flex; flex-direction:column; justify-content:center;
+      width:100%; padding:32px;
+      display:flex; flex-direction:column; justify-content:center;
       background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
     }
 
@@ -181,6 +167,8 @@
 
     .row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .row-left{ display:flex; align-items:center; gap:6px; }
+    .link{ color:#fff; text-decoration:none; font-size:.82rem; }
+    .link:hover{ text-decoration:underline; }
 
     .btn-primary, .btn-secondary{
       margin-top:8px; padding:10px 14px; width:100%; border-radius:999px; border:none;
@@ -324,8 +312,6 @@
 
     /* Responsive */
     @media (max-width: 900px){
-      .card{ flex-direction:column; }
-      .card-left{ border-right:none; border-bottom:1px solid var(--border); }
       .grid-3{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
       .panel-section{ grid-template-columns: 1fr; }
     }
@@ -343,8 +329,8 @@
         <!-- HEADER -->
         <header class="app-header" role="banner">
           <div class="brand-left">
-            <div class="brand-icon">
-              <img src="./CCLogoSML.png" alt="CC icon" />
+            <div class="brand-icon" aria-hidden="true">
+              <img src="./CCLogoSML.png" alt="">
             </div>
             <div class="brand-text">
               <div class="brand-name">CollectorConnector</div>
@@ -378,11 +364,13 @@
               </a>
             </nav>
 
+            <!-- Always-visible quick links -->
             <nav class="quick-links" aria-label="Marketplaces">
               <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer" title="eBay UK">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
                 eBay
               </a>
+
               <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener noreferrer" title="PSA">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l8 4v6c0 5.25-3.75 8.78-8 10-4.25-1.22-8-4.75-8-10V6l8-4zm-1.8 6.9h5.3c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45h-3.9v1.3h4.1c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45H10.2V8.9z"/></svg>
                 PSA
@@ -390,7 +378,7 @@
             </nav>
 
             <div class="avatar" aria-label="Profile photo">
-              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile photo" />
+              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile photo">
             </div>
           </div>
         </header>
@@ -398,23 +386,7 @@
         <!-- MAIN -->
         <main>
           <div class="card">
-            <!-- LEFT -->
-            <section class="card-left" aria-label="Welcome">
-              <div class="left-logo">
-                <img src="./CC-mainlogo.jpg" alt="CollectorConnector" />
-              </div>
-              <h1 class="welcome-title">Welcome back</h1>
-              <p class="welcome-subtitle">
-                Sign in to continue building your world of collections. Your collections
-                deserve a home that reflects the stories behind each piece.
-              </p>
-              <p class="welcome-hero">Your collection deserves a home.</p>
-              <p class="welcome-footnote">
-                CollectorConnector is where identity, culture, and belonging come together through the pieces you love.
-              </p>
-            </section>
-
-            <!-- RIGHT -->
+            <!-- RIGHT: Authentication + Dashboard ONLY -->
             <section class="card-right" aria-label="Authentication and dashboard">
               <!-- LOGIN VIEW -->
               <div id="login-view" class="panel panel-login" aria-hidden="false" aria-live="polite">
@@ -501,7 +473,7 @@
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg">
-                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview" />
+                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview">
                     </div>
                     <div class="inline-actions">
                       <label class="btn-small" for="profile-file">Upload profile photo</label>
@@ -513,7 +485,7 @@
                     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08); margin:14px 0;" />
 
                     <h3 class="section-title" style="margin-top:2px;">Social Links</h3>
-                    <p class="section-sub">Choose which to show on your profile. You can add these during setup or edit anytime.</p>
+                    <p class="section-sub">Choose which to show on your profile during setup, or edit anytime.</p>
                     <div class="inline-actions">
                       <button id="open-social-setup" class="btn-small" type="button">Edit social links</button>
                     </div>
@@ -710,7 +682,7 @@
       const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
       const PROFILE_IMG_KEY  = "cc-demo-profile-image";
       const GALLERY_KEY      = "cc-demo-gallery-images";
-      const SOCIAL_USERS_KEY = "cc-demo-social-usernames"; // now stores {platform: {enabled, value}}
+      const SOCIAL_USERS_KEY = "cc-demo-social-usernames"; // stores {platform: {enabled, value}}
       const FEED_KEY         = "cc-demo-feed";
 
       // Helpers
@@ -788,8 +760,12 @@
         if(!list.length){
           const li=document.createElement("li");
           li.className="feed-item";
-          li.innerHTML = `<div class="feed-thumb"><img src="./CCLogoSML.png" alt="" /></div>
-                          <div class="feed-text"><div>No activity yet.</div><div class="feed-meta">Upload some photos to see updates here.</div></div>`;
+          li.innerHTML = `
+            <div class="feed-thumb"><img src="./CCLogoSML.png" alt=""></div>
+            <div class="feed-text">
+              <div>No activity yet.</div>
+              <div class="feed-meta">Upload some photos to see updates here.</div>
+            </div>`;
           feedList.appendChild(li);
           return;
         }
@@ -809,7 +785,7 @@
             text = ev.details?.text || "Activity";
           }
           li.innerHTML = `
-            <div class="feed-thumb"><img src="${thumbSrc}" alt="" /></div>
+            <div class="feed-thumb"><img src="${thumbSrc}" alt=""></div>
             <div class="feed-text">
               <div>${text}</div>
               <div class="feed-meta">${formatWhen(ev.at)}</div>
@@ -841,25 +817,23 @@
         }
       }
 
-      // Storage format migration:
-      // Old: {platform: "username"} -> migrate to {platform: {enabled:boolean, value:string}}
+      // Storage format: {platform: {enabled:boolean, value:string}}
       function getSocial(){
         try{
           const raw = localStorage.getItem(SOCIAL_USERS_KEY);
           if(!raw) return {};
           const data = JSON.parse(raw);
-          // If already new format, return
-          if (data && typeof data === "object" && data.ebay && typeof data.ebay === "object" && "value" in data.ebay){
-            return data;
+          // Support migrating an older string-based format:
+          if (data && typeof data === "object" && typeof data.ebay === "string"){
+            const migrated = {};
+            PLATFORMS.forEach(p=>{
+              const v = (data && data[p]) || "";
+              migrated[p] = { enabled: !!v, value: String(v||"") };
+            });
+            saveSocial(migrated);
+            return migrated;
           }
-          // migrate strings -> objects
-          const migrated = {};
-          PLATFORMS.forEach(p=>{
-            const v = (data && data[p]) || "";
-            migrated[p] = { enabled: !!v, value: String(v||"") };
-          });
-          saveSocial(migrated);
-          return migrated;
+          return data || {};
         }catch(e){ return {}; }
       }
       function saveSocial(obj){
@@ -875,7 +849,7 @@
           const url = buildUrl(p, cfg[p]?.value || "");
           const ok = enabled && !!url;
           a.style.display = ok ? "inline-flex" : "none";
-          if (ok) a.href = url; else a.removeAttribute("href");
+          if (ok) { a.href = url; } else { a.removeAttribute("href"); }
         });
       }
 
@@ -916,7 +890,9 @@
         const v = valInputs[p]?.value || "";
         const url = buildUrl(p, v);
         if(prevEls[p]){
-          prevEls[p].innerHTML = url ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>` : "";
+          prevEls[p].innerHTML = url
+            ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+            : "";
         }
       }
 
@@ -939,16 +915,12 @@
           closeSocialModal();
         });
       }
-      // Live preview while typing
-      PLATFORMS.forEach(p=>{
+      // Live preview while typing / toggling
+      ["ebay","instagram","facebook","tiktok","x","youtube"].forEach(p=>{
         const inp = valInputs[p];
-        if(inp){
-          inp.addEventListener("input", ()=> updatePreview(p));
-        }
+        if(inp){ inp.addEventListener("input", ()=> updatePreview(p)); }
         const chk = showInputs[p];
-        if(chk){
-          chk.addEventListener("change", ()=> updatePreview(p));
-        }
+        if(chk){ chk.addEventListener("change", ()=> updatePreview(p)); }
       });
 
       // Wire events (login + profile + gallery)

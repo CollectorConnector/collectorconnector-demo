@@ -5,13 +5,13 @@
   <title>CollectorConnector — Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Optional favicon (uses your small logo) -->
+  <!-- Favicon -->
   <link rel="icon" href="./CCLogoSML.png" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
 
   <style>
     :root{
@@ -91,11 +91,11 @@
     }
     .version-tag{ opacity:.9; }
 
-    /* Header: social icons (appear when usernames saved) */
+    /* Header: social icons (appear when enabled + valid link) */
     .social-links{ display:flex; align-items:center; gap:8px; margin:0 6px; }
     .social-link{
       width:28px; height:28px; border-radius:8px;
-      display:none; /* shown when username saved or previewed */
+      display:none; /* shown when enabled + valid URL */
       align-items:center; justify-content:center;
       background:#111; border:1px solid rgba(255,255,255,0.12);
       color:#fff; text-decoration:none; opacity:.95;
@@ -181,8 +181,6 @@
 
     .row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .row-left{ display:flex; align-items:center; gap:6px; }
-    .link{ color:#fff; text-decoration:none; font-size:.82rem; }
-    .link:hover{ text-decoration:underline; }
 
     .btn-primary, .btn-secondary{
       margin-top:8px; padding:10px 14px; width:100%; border-radius:999px; border:none;
@@ -279,18 +277,7 @@
     }
     .delete-btn:hover{ background: rgba(255,255,255,0.12); }
 
-    /* Social form rows (prefix + username field) */
-    .social-form .input-row{ display:flex; gap:8px; align-items:center; margin:6px 0; flex-wrap:wrap; }
-    .social-form .prefix{
-      user-select:none; color:#bdbdbd; font-size:.88rem; min-width:max-content;
-      background:#0b0b0b; border:1px solid rgba(255,255,255,0.16); padding:9px 11px; border-radius:10px;
-    }
-    .social-form input[type="text"]{
-      flex:1; padding:9px 11px; border-radius:10px; border:1px solid rgba(255,255,255,0.18);
-      background:#0b0b0b; color:#fff; font-size:.88rem;
-    }
-
-    /* Live Feed panel */
+    /* Live Feed */
     .feed-panel{
       margin: 0 16px 20px;
       background:#0f0f0f; border:1px solid rgba(255,255,255,0.12);
@@ -303,26 +290,35 @@
     .feed-text{ display:flex; flex-direction:column; gap:3px; font-size:.9rem; }
     .feed-meta{ font-size:.78rem; color:#a9a9a9; }
 
-    /* Footer */
-    .app-footer{
-      padding:12px 16px; font-size:.75rem; color:#a0a0a0; display:flex; align-items:center; justify-content:space-between;
-      border-top:1px solid rgba(255,255,255,0.06); background:#0f0f0f;
+    /* Modal */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,0.6);
+      display:none; align-items:center; justify-content:center; z-index:1000;
     }
-    .footer-left{ display:flex; align-items:center; gap:10px; text-transform:uppercase; letter-spacing:.16em; }
-    .footer-dot{ width:6px; height:6px; border-radius:999px; background:#3ddc84; }
-
-    /* Collapse left column on main view */
-    .logged-in .card-left { display:none !important; }
-    .logged-in .card     { display:block; }
-    .logged-in .card-right{ width:100%; padding:32px; }
-    .logged-in .panel-section{ margin-left:16px; margin-right:16px; }
-
-    @media (min-width: 1200px){
-      .logged-in .grid-3{ grid-template-columns:repeat(4, minmax(0,1fr)); }
+    .modal-backdrop.show{ display:flex; }
+    .modal{
+      width:min(720px, 92vw); background:#101010; color:#fff; border-radius:16px;
+      border:1px solid rgba(255,255,255,0.12); box-shadow: var(--shadow-soft);
+      overflow:hidden;
     }
+    .modal-header{ padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between; }
+    .modal-title{ font-size:1.1rem; font-weight:600; }
+    .modal-body{ padding:14px 16px; display:flex; flex-direction:column; gap:12px; }
+    .modal-row{ display:grid; grid-template-columns: 86px 1fr; gap:10px; align-items:center; }
+    .modal-row .row-cols{ display:grid; grid-template-columns: 18px 1fr; gap:8px; align-items:center; }
+    .modal-row input[type="text"]{
+      width:100%; padding:9px 11px; border-radius:10px; border:1px solid rgba(255,255,255,0.18);
+      background:#0b0b0b; color:#fff; font-size:.88rem;
+    }
+    .modal-row .preview{
+      font-size:.82rem; color:#bdbdbd; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .modal-footer{ padding:12px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:8px; justify-content:flex-end; }
+    .modal-close{ background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.25); padding:8px 12px; border-radius:999px; cursor:pointer; }
+    .modal-save{ background:#fff; color:#000; border:0; padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:600; }
 
     /* Accessibility focus */
-    .btn-primary:focus-visible, .btn-secondary:focus-visible, .btn-small:focus-visible, .link:focus-visible, input:focus-visible{
+    .btn-primary:focus-visible, .btn-secondary:focus-visible, .btn-small:focus-visible, .link:focus-visible, input:focus-visible, .modal-close:focus-visible, .modal-save:focus-visible{
       outline:2px solid #fff; outline-offset:2px;
     }
 
@@ -348,7 +344,7 @@
         <header class="app-header" role="banner">
           <div class="brand-left">
             <div class="brand-icon">
-              <img src="./CCLogoSML.png" alt="CC icon">
+              <img src="./CCLogoSML.png" alt="CC icon" />
             </div>
             <div class="brand-text">
               <div class="brand-name">CollectorConnector</div>
@@ -357,50 +353,44 @@
           </div>
 
           <div class="header-right">
-            <div class="beta-pill">Demo</div>
-            <div class="version-tag">v0.7</div>
+            <div class="beta-pill" aria-label="This is a demo build">Demo</div>
+            <div class="version-tag" aria-label="Version">v0.7</div>
 
-            <!-- Social icons (appear when username saved or previewed) -->
+            <!-- Social icons (enabled + valid link) -->
             <nav class="social-links" aria-label="Social profiles">
-              <a id="link-ebay" class="social-link" target="_blank" rel="noopener noreferrer" title="eBay">
+              <a id="link-ebay" class="social-link" target="_blank" rel="noopener noreferrer" title="eBay" aria-label="eBay profile">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
               </a>
-              <a id="link-instagram" class="social-link" target="_blank" rel="noopener noreferrer" title="Instagram">
+              <a id="link-instagram" class="social-link" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Instagram profile">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zm5-2.3a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
               </a>
-              <a id="link-facebook" class="social-link" target="_blank" rel="noopener noreferrer" title="Facebook">
+              <a id="link-facebook" class="social-link" target="_blank" rel="noopener noreferrer" title="Facebook" aria-label="Facebook profile">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 22v-7h2.5l.5-3H13V9.5c0-.87.28-1.5 1.7-1.5H16V5.2c-.3-.04-1.2-.1-2.3-.1-2.3 0-3.7 1.2-3.7 3.9V12H7v3h3v7h3z"/></svg>
               </a>
-              <a id="link-tiktok" class="social-link" target="_blank" rel="noopener noreferrer" title="TikTok">
+              <a id="link-tiktok" class="social-link" target="_blank" rel="noopener noreferrer" title="TikTok" aria-label="TikTok profile">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 3h2c.2 1.5 1.2 2.9 2.5 3.7 1 .6 2 .9 3.1.9v2.1c-1.7 0-3.3-.6-4.7-1.6v6.8c0 3-2.4 5.4-5.4 5.4S6.1 17.9 6.1 15c0-2.8 2-5 4.7-5 .6 0 1.2.1 1.7.3V12c-.5-.3-1.1-.5-1.7-.5-1.5 0-2.7 1.2-2.7 2.7S9.3 17 10.8 17s2.7-1.2 2.7-2.7V3z"/></svg>
               </a>
-              <a id="link-x" class="social-link" target="_blank" rel="noopener noreferrer" title="X">
+              <a id="link-x" class="social-link" target="_blank" rel="noopener noreferrer" title="X" aria-label="X profile">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 4l6.7 8.1L5.2 20H8l4.6-5.7L17.6 20H21l-6.6-8 6-7.9h-2.8l-4.4 5.8L8.6 4H5z"/></svg>
               </a>
-              <a id="link-youtube" class="social-link" target="_blank" rel="noopener noreferrer" title="YouTube">
+              <a id="link-youtube" class="social-link" target="_blank" rel="noopener noreferrer" title="YouTube" aria-label="YouTube channel">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23 12s0-3.4-.4-5.1c-.2-.9-1-1.7-2-1.9C18.8 4.5 12 4.5 12 4.5s-6.8 0-8.6.5c-1 .2-1.8 1-2 1.9C1 8.6 1 12 1 12s0 3.4.4 5.1c.2.9 1 1.7 2 1.9 1.8.5 8.6.5 8.6.5s6.8 0 8.6-.5c1-.2 1.8-1 2-1.9.4-1.7.4-5.1.4-5.1zM9.8 8.8l6.1 3.2-6.1 3.2V8.8z"/></svg>
               </a>
             </nav>
 
-            <!-- Always-visible quick links -->
             <nav class="quick-links" aria-label="Marketplaces">
               <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer" title="eBay UK">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/>
-                </svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
                 eBay
               </a>
-
               <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener noreferrer" title="PSA">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M12 2l8 4v6c0 5.25-3.75 8.78-8 10-4.25-1.22-8-4.75-8-10V6l8-4zm-1.8 6.9h5.3c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45h-3.9v1.3h4.1c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45H10.2V8.9z"/>
-                </svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l8 4v6c0 5.25-3.75 8.78-8 10-4.25-1.22-8-4.75-8-10V6l8-4zm-1.8 6.9h5.3c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45h-3.9v1.3h4.1c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45H10.2V8.9z"/></svg>
                 PSA
               </a>
             </nav>
 
             <div class="avatar" aria-label="Profile photo">
-              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile photo">
+              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile photo" />
             </div>
           </div>
         </header>
@@ -411,7 +401,7 @@
             <!-- LEFT -->
             <section class="card-left" aria-label="Welcome">
               <div class="left-logo">
-                <img src="./CC-mainlogo.jpg" alt="CollectorConnector">
+                <img src="./CC-mainlogo.jpg" alt="CollectorConnector" />
               </div>
               <h1 class="welcome-title">Welcome back</h1>
               <p class="welcome-subtitle">
@@ -504,14 +494,14 @@
                   </div>
                 </div>
 
-                <!-- Profile + Gallery + Social Section -->
+                <!-- Profile + Gallery Section -->
                 <div class="panel-section" aria-label="Profile and Collection Photos">
                   <!-- Profile panel -->
                   <section class="profile-panel" aria-labelledby="profileTitle">
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg">
-                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview">
+                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview" />
                     </div>
                     <div class="inline-actions">
                       <label class="btn-small" for="profile-file">Upload profile photo</label>
@@ -523,38 +513,11 @@
                     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08); margin:14px 0;" />
 
                     <h3 class="section-title" style="margin-top:2px;">Social Links</h3>
-                    <p class="section-sub">Type only your username (or paste a full URL). We’ll build the links and show icons in the header.</p>
-                    <form class="social-form" id="social-form" autocomplete="off">
-                      <div class="input-row">
-                        <span class="prefix">https://www.ebay.co.uk/usr/</span>
-                        <input id="user-ebay" type="text" placeholder="yourname or full URL" />
-                      </div>
-                      <div class="input-row">
-                        <span class="prefix">https://www.instagram.com/</span>
-                        <input id="user-instagram" type="text" placeholder="yourname or full URL" />
-                      </div>
-                      <div class="input-row">
-                        <span class="prefix">https://www.facebook.com/</span>
-                        <input id="user-facebook" type="text" placeholder="yourname or full URL" />
-                      </div>
-                      <div class="input-row">
-                        <span class="prefix">https://www.tiktok.com/@</span>
-                        <input id="user-tiktok" type="text" placeholder="yourname or full URL" />
-                      </div>
-                      <div class="input-row">
-                        <span class="prefix">https://x.com/</span>
-                        <input id="user-x" type="text" placeholder="yourname or full URL" />
-                      </div>
-                      <div class="input-row">
-                        <span class="prefix">https://www.youtube.com/@</span>
-                        <input id="user-youtube" type="text" placeholder="yourname, @handle, or full URL" />
-                      </div>
-                      <div class="inline-actions" style="margin-top:8px;">
-                        <button id="save-social" class="btn-small" type="button">Save links</button>
-                        <button id="clear-social" class="btn-small" type="button">Clear links</button>
-                      </div>
-                      <p class="hint">Saved locally in your browser for this demo.</p>
-                    </form>
+                    <p class="section-sub">Choose which to show on your profile. You can add these during setup or edit anytime.</p>
+                    <div class="inline-actions">
+                      <button id="open-social-setup" class="btn-small" type="button">Edit social links</button>
+                    </div>
+                    <p class="hint">Saved locally in your browser for this demo.</p>
                   </section>
 
                   <!-- Gallery panel -->
@@ -578,9 +541,7 @@
                 <section class="feed-panel" aria-labelledby="feedTitle">
                   <h3 id="feedTitle" class="section-title">Recent Activity</h3>
                   <p class="section-sub">Automatically updates when you add or remove collection photos (local to this browser).</p>
-                  <ul id="feed-list" class="feed-list" aria-live="polite" aria-relevant="additions text">
-                    <!-- Feed items injected here -->
-                  </ul>
+                  <ul id="feed-list" class="feed-list" aria-live="polite" aria-relevant="additions text"></ul>
                 </section>
 
               </div> <!-- /dashboard-view -->
@@ -597,6 +558,87 @@
           <span>Where collectors meet, remember, and get seen.</span>
           <div class="footer-right">Demo build – visual login only</div>
         </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCIAL SETUP MODAL -->
+  <div id="social-modal-backdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="socialModalTitle">
+      <div class="modal-header">
+        <div id="socialModalTitle" class="modal-title">Setup Social Links</div>
+        <button id="social-close" class="modal-close" type="button" aria-label="Close">Close</button>
+      </div>
+      <div class="modal-body">
+        <!-- One row per platform -->
+        <div class="modal-row">
+          <div>eBay</div>
+          <div>
+            <div class="row-cols">
+              <input id="show-ebay" type="checkbox" aria-label="Show eBay" />
+              <input id="val-ebay" type="text" placeholder="yourname or full URL (e.g. https://www.ebay.co.uk/usr/yourname)" />
+            </div>
+            <div id="prev-ebay" class="preview"></div>
+          </div>
+        </div>
+
+        <div class="modal-row">
+          <div>Instagram</div>
+          <div>
+            <div class="row-cols">
+              <input id="show-instagram" type="checkbox" aria-label="Show Instagram" />
+              <input id="val-instagram" type="text" placeholder="yourname or full URL (e.g. https://instagram.com/yourname)" />
+            </div>
+            <div id="prev-instagram" class="preview"></div>
+          </div>
+        </div>
+
+        <div class="modal-row">
+          <div>Facebook</div>
+          <div>
+            <div class="row-cols">
+              <input id="show-facebook" type="checkbox" aria-label="Show Facebook" />
+              <input id="val-facebook" type="text" placeholder="yourname or full URL (e.g. https://facebook.com/yourname)" />
+            </div>
+            <div id="prev-facebook" class="preview"></div>
+          </div>
+        </div>
+
+        <div class="modal-row">
+          <div>TikTok</div>
+          <div>
+            <div class="row-cols">
+              <input id="show-tiktok" type="checkbox" aria-label="Show TikTok" />
+              <input id="val-tiktok" type="text" placeholder="@yourname or full URL (e.g. https://www.tiktok.com/@yourname)" />
+            </div>
+            <div id="prev-tiktok" class="preview"></div>
+          </div>
+        </div>
+
+        <div class="modal-row">
+          <div>X</div>
+          <div>
+            <div class="row-cols">
+              <input id="show-x" type="checkbox" aria-label="Show X" />
+              <input id="val-x" type="text" placeholder="@yourname or full URL (e.g. https://x.com/yourname)" />
+            </div>
+            <div id="prev-x" class="preview"></div>
+          </div>
+        </div>
+
+        <div class="modal-row">
+          <div>YouTube</div>
+          <div>
+            <div class="row-cols">
+              <input id="show-youtube" type="checkbox" aria-label="Show YouTube" />
+              <input id="val-youtube" type="text" placeholder="@handle, channel/ABC..., or full URL (e.g. https://youtube.com/@yourhandle)" />
+            </div>
+            <div id="prev-youtube" class="preview"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="social-save" class="modal-save" type="button">Save</button>
       </div>
     </div>
   </div>
@@ -623,19 +665,7 @@
 
       const feedList = document.getElementById("feed-list");
 
-      // Social usernames inputs
-      const userInputs = {
-        ebay:      document.getElementById("user-ebay"),
-        instagram: document.getElementById("user-instagram"),
-        facebook:  document.getElementById("user-facebook"),
-        tiktok:    document.getElementById("user-tiktok"),
-        x:         document.getElementById("user-x"),
-        youtube:   document.getElementById("user-youtube"),
-      };
-      const saveSocialBtn  = document.getElementById("save-social");
-      const clearSocialBtn = document.getElementById("clear-social");
-
-      // Header links
+      // Social header link elements
       const linkEls = {
         ebay:      document.getElementById("link-ebay"),
         instagram: document.getElementById("link-instagram"),
@@ -645,11 +675,42 @@
         youtube:   document.getElementById("link-youtube"),
       };
 
+      // Modal elements
+      const socialBackdrop = document.getElementById("social-modal-backdrop");
+      const btnSocialClose = document.getElementById("social-close");
+      const btnSocialSave  = document.getElementById("social-save");
+      const btnOpenSocial  = document.getElementById("open-social-setup");
+
+      const showInputs = {
+        ebay:      document.getElementById("show-ebay"),
+        instagram: document.getElementById("show-instagram"),
+        facebook:  document.getElementById("show-facebook"),
+        tiktok:    document.getElementById("show-tiktok"),
+        x:         document.getElementById("show-x"),
+        youtube:   document.getElementById("show-youtube"),
+      };
+      const valInputs = {
+        ebay:      document.getElementById("val-ebay"),
+        instagram: document.getElementById("val-instagram"),
+        facebook:  document.getElementById("val-facebook"),
+        tiktok:    document.getElementById("val-tiktok"),
+        x:         document.getElementById("val-x"),
+        youtube:   document.getElementById("val-youtube"),
+      };
+      const prevEls = {
+        ebay:      document.getElementById("prev-ebay"),
+        instagram: document.getElementById("prev-instagram"),
+        facebook:  document.getElementById("prev-facebook"),
+        tiktok:    document.getElementById("prev-tiktok"),
+        x:         document.getElementById("prev-x"),
+        youtube:   document.getElementById("prev-youtube"),
+      };
+
       // Storage keys
       const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
       const PROFILE_IMG_KEY  = "cc-demo-profile-image";
       const GALLERY_KEY      = "cc-demo-gallery-images";
-      const SOCIAL_USERS_KEY = "cc-demo-social-usernames";
+      const SOCIAL_USERS_KEY = "cc-demo-social-usernames"; // now stores {platform: {enabled, value}}
       const FEED_KEY         = "cc-demo-feed";
 
       // Helpers
@@ -661,6 +722,7 @@
         loginView.style.display = "none"; dashboardView.style.display = "flex";
         document.body.classList.add("logged-in");
         try { sessionStorage.setItem(VISUAL_LOGIN_KEY, "1"); } catch(e){}
+        maybeShowSocialOnboarding();
       }
       function showLogin(){
         if(!loginView || !dashboardView) return;
@@ -693,10 +755,9 @@
       }
       async function processProfileImage(file){ const dataUrl=await readFileAsDataURL(file); return resizeImageDataURL(dataUrl, 512, 0.9); }
 
-      // Gallery persistence
+      // Gallery
       function getGallery(){ try{ const raw=localStorage.getItem(GALLERY_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
       function saveGallery(arr){ try{ localStorage.setItem(GALLERY_KEY, JSON.stringify(arr)); }catch(e){} }
-
       function renderGallery(){
         const items=getGallery();
         galleryGrid.innerHTML=""; if(!items.length) return;
@@ -711,21 +772,15 @@
       // FEED (live activity)
       function getFeed(){ try{ const raw=localStorage.getItem(FEED_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
       function saveFeed(list){ try{ localStorage.setItem(FEED_KEY, JSON.stringify(list)); }catch(e){} }
-
       function addFeedEvent(type, details){
         const list = getFeed();
         const ev = { id: Date.now() + "-" + Math.random().toString(36).slice(2,8), type, details: details||{}, at: Date.now() };
         list.push(ev);
-        // keep last 50
         if(list.length > 50) list.splice(0, list.length - 50);
         saveFeed(list);
         renderFeed();
       }
-
-      function formatWhen(ts){
-        try { return new Date(ts).toLocaleString(); } catch(e){ return ""; }
-      }
-
+      function formatWhen(ts){ try { return new Date(ts).toLocaleString(); } catch(e){ return ""; } }
       function renderFeed(){
         if(!feedList) return;
         const list = getFeed().slice().sort((a,b)=>b.at - a.at);
@@ -733,7 +788,7 @@
         if(!list.length){
           const li=document.createElement("li");
           li.className="feed-item";
-          li.innerHTML = `<div class="feed-thumb"><img src="./CCLogoSML.png" alt=""></div>
+          li.innerHTML = `<div class="feed-thumb"><img src="./CCLogoSML.png" alt="" /></div>
                           <div class="feed-text"><div>No activity yet.</div><div class="feed-meta">Upload some photos to see updates here.</div></div>`;
           feedList.appendChild(li);
           return;
@@ -754,7 +809,7 @@
             text = ev.details?.text || "Activity";
           }
           li.innerHTML = `
-            <div class="feed-thumb">${thumbSrc ? `<img src="${thumbSrc}" alt="">` : ""}</div>
+            <div class="feed-thumb"><img src="${thumbSrc}" alt="" /></div>
             <div class="feed-text">
               <div>${text}</div>
               <div class="feed-meta">${formatWhen(ev.at)}</div>
@@ -763,23 +818,17 @@
         });
       }
 
-      // Social usernames
+      // SOCIAL LINKS (username OR full URL) + enable/disable
+      const PLATFORMS = ["ebay","instagram","facebook","tiktok","x","youtube"];
+
       function sanitizeUsername(u){
         if(!u) return "";
-        // Trim, remove leading @, and trim slashes at both ends (keep inner path intact)
         return String(u).trim().replace(/^@+/, "").replace(/^\/+|\/+$/g, "");
       }
-      function getSocialUsers(){
-        try{ const raw=localStorage.getItem(SOCIAL_USERS_KEY); return raw?JSON.parse(raw):{ebay:"",instagram:"",facebook:"",tiktok:"",x:"",youtube:""}; }
-        catch(e){ return {ebay:"",instagram:"",facebook:"",tiktok:"",x:"",youtube:""}; }
-      }
-      function saveSocialUsers(obj){ try{ localStorage.setItem(SOCIAL_USERS_KEY, JSON.stringify(obj)); }catch(e){} }
-
-      // Accept full URLs or plain usernames
-      function buildUrl(platform, username){
-        const raw = String(username||"").trim();
+      function buildUrl(platform, value){
+        const raw = String(value||"").trim();
         if(!raw) return "";
-        if (/^https?:\/\//i.test(raw)) return raw; // full URL pasted
+        if(/^https?:\/\//i.test(raw)) return raw; // full URL pasted
         const u = sanitizeUsername(raw);
         switch(platform){
           case "ebay":      return `https://www.ebay.co.uk/usr/${u}`;
@@ -787,45 +836,122 @@
           case "facebook":  return `https://www.facebook.com/${u}`;
           case "tiktok":    return `https://www.tiktok.com/@${u}`;
           case "x":         return `https://x.com/${u}`;
-          case "youtube":   return `https://www.youtube.com/@${u}`; // supports @handle
+          case "youtube":   return u.startsWith("@") ? `https://www.youtube.com/${u}` : `https://www.youtube.com/@${u}`;
           default: return "";
         }
       }
 
-      // If overrideUsers is provided, we preview links without writing inputs
-      function renderSocialLinks(overrideUsers){
-        const users = overrideUsers || getSocialUsers();
-
-        // Set header anchors visibility + hrefs
-        Object.keys(linkEls).forEach((key)=>{
-          const a = linkEls[key];
-          const url = buildUrl(key, users[key] || "");
-          if (a){
-            if (url){ a.href = url; a.style.display = "inline-flex"; }
-            else { a.removeAttribute("href"); a.style.display = "none"; }
+      // Storage format migration:
+      // Old: {platform: "username"} -> migrate to {platform: {enabled:boolean, value:string}}
+      function getSocial(){
+        try{
+          const raw = localStorage.getItem(SOCIAL_USERS_KEY);
+          if(!raw) return {};
+          const data = JSON.parse(raw);
+          // If already new format, return
+          if (data && typeof data === "object" && data.ebay && typeof data.ebay === "object" && "value" in data.ebay){
+            return data;
           }
-        });
-
-        // Only fill inputs from storage (not during live preview)
-        if (!overrideUsers) {
-          Object.keys(userInputs).forEach((key)=>{
-            if (userInputs[key]) userInputs[key].value = users[key] || "";
+          // migrate strings -> objects
+          const migrated = {};
+          PLATFORMS.forEach(p=>{
+            const v = (data && data[p]) || "";
+            migrated[p] = { enabled: !!v, value: String(v||"") };
           });
+          saveSocial(migrated);
+          return migrated;
+        }catch(e){ return {}; }
+      }
+      function saveSocial(obj){
+        try{ localStorage.setItem(SOCIAL_USERS_KEY, JSON.stringify(obj || {})); }catch(e){}
+      }
+
+      function renderHeaderSocial(){
+        const cfg = getSocial();
+        PLATFORMS.forEach(p=>{
+          const a = linkEls[p];
+          if(!a) return;
+          const enabled = !!cfg[p]?.enabled;
+          const url = buildUrl(p, cfg[p]?.value || "");
+          const ok = enabled && !!url;
+          a.style.display = ok ? "inline-flex" : "none";
+          if (ok) a.href = url; else a.removeAttribute("href");
+        });
+      }
+
+      // Modal open/close
+      function openSocialModal(){
+        if(!socialBackdrop) return;
+        socialBackdrop.classList.add("show");
+        socialBackdrop.setAttribute("aria-hidden","false");
+        populateModalFromStorage();
+      }
+      function closeSocialModal(){
+        if(!socialBackdrop) return;
+        socialBackdrop.classList.remove("show");
+        socialBackdrop.setAttribute("aria-hidden","true");
+      }
+
+      function populateModalFromStorage(){
+        const cfg = getSocial();
+        PLATFORMS.forEach(p=>{
+          if(showInputs[p]) showInputs[p].checked = !!cfg[p]?.enabled;
+          if(valInputs[p])  valInputs[p].value   = cfg[p]?.value || "";
+          updatePreview(p);
+        });
+      }
+
+      function collectFromModal(){
+        const out = {};
+        PLATFORMS.forEach(p=>{
+          out[p] = {
+            enabled: !!showInputs[p]?.checked,
+            value:   valInputs[p]?.value || ""
+          };
+        });
+        return out;
+      }
+
+      function updatePreview(p){
+        const v = valInputs[p]?.value || "";
+        const url = buildUrl(p, v);
+        if(prevEls[p]){
+          prevEls[p].innerHTML = url ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>` : "";
         }
       }
 
-      function collectUsersFromForm(){
-        return {
-          ebay:      userInputs.ebay?.value || "",
-          instagram: userInputs.instagram?.value || "",
-          facebook:  userInputs.facebook?.value || "",
-          tiktok:    userInputs.tiktok?.value || "",
-          x:         userInputs.x?.value || "",
-          youtube:   userInputs.youtube?.value || "",
-        };
+      // Onboarding: show once if no social config stored
+      function maybeShowSocialOnboarding(){
+        try{
+          const raw = localStorage.getItem(SOCIAL_USERS_KEY);
+          if(!raw){ openSocialModal(); }
+        }catch(e){}
       }
 
-      // Wire events
+      // Wire up modal events
+      if(btnOpenSocial) btnOpenSocial.addEventListener("click", openSocialModal);
+      if(btnSocialClose) btnSocialClose.addEventListener("click", closeSocialModal);
+      if(btnSocialSave){
+        btnSocialSave.addEventListener("click", ()=>{
+          const cfg = collectFromModal();
+          saveSocial(cfg);
+          renderHeaderSocial();
+          closeSocialModal();
+        });
+      }
+      // Live preview while typing
+      PLATFORMS.forEach(p=>{
+        const inp = valInputs[p];
+        if(inp){
+          inp.addEventListener("input", ()=> updatePreview(p));
+        }
+        const chk = showInputs[p];
+        if(chk){
+          chk.addEventListener("change", ()=> updatePreview(p));
+        }
+      });
+
+      // Wire events (login + profile + gallery)
       if(loginForm){ loginForm.addEventListener("submit", (e)=>{ e.preventDefault(); showDashboard(); }); }
       if(loginButton) loginButton.addEventListener("click", ()=> showDashboard());
       if(skipButton)  skipButton.addEventListener("click", ()=> showDashboard());
@@ -880,38 +1006,13 @@
         });
       }
 
-      // Social save/clear buttons
-      if(saveSocialBtn){
-        saveSocialBtn.addEventListener("click", ()=>{
-          const users = collectUsersFromForm();
-          saveSocialUsers(users);
-          renderSocialLinks(); // from storage
-          alert("Social links saved.");
-        });
-      }
-      if(clearSocialBtn){
-        clearSocialBtn.addEventListener("click", ()=>{
-          const empty = {ebay:"",instagram:"",facebook:"",tiktok:"",x:"",youtube:""};
-          saveSocialUsers(empty);
-          renderSocialLinks(); // from storage
-        });
-      }
-
-      // LIVE PREVIEW social icons while typing (no save required to preview)
-      Object.values(userInputs).forEach(el=>{
-        if(!el) return;
-        el.addEventListener("input", ()=>{
-          renderSocialLinks(collectUsersFromForm());
-        });
-      });
-
       // Restore state
       let wasLogged=false; try{ wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY)==="1"; }catch(e){}
       if(wasLogged) showDashboard(); else showLogin();
       loadProfile();
       renderGallery();
       renderFeed();
-      renderSocialLinks(); // from storage
+      renderHeaderSocial();
     })();
   </script>
 </body>

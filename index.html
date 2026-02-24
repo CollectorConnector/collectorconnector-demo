@@ -153,7 +153,7 @@
       background: radial-gradient(circle at top left, #222 0, #000 55%);
     }
 
-    /* NEW: left logo above Welcome Back */
+    /* Left logo above Welcome Back */
     .left-logo {
       width: 100%;
       text-align: left;
@@ -530,17 +530,9 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .fade-out {
-      animation: fadeOut 0.4s ease forwards;
-    }
-
-    #login-view.fading {
-      will-change: opacity, transform;
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    .fade-out { animation: fadeOut 0.4s ease forwards; }
+    #login-view.fading { will-change: opacity, transform; }
+    .hidden { display: none !important; }
 
     /* Visible focus for keyboard users */
     .btn-primary:focus-visible,
@@ -618,9 +610,9 @@
       <div class="card">
         <!-- LEFT SIDE -->
         <div class="card-left">
-          <!-- NEW: Full logo above Welcome Back -->
+          <!-- Full logo above Welcome Back -->
           <div class="left-logo">
-            <img src="./CC-mainlogo.jpg" alt="Collector Connector Logo" />
+            <img src="./CC-mainlogo.jpg" alt="Collector Connector" />
           </div>
 
           <div class="welcome-block">
@@ -631,7 +623,6 @@
               and stories. Your profile is where your pieces finally feel at home.
             </div>
           </div>
-          <!-- (Removed the 'Strong, tasteful branding.' block as requested) -->
         </div>
 
         <!-- RIGHT SIDE (LOGIN + DASHBOARD) -->
@@ -718,6 +709,7 @@
             </div>
 
             <div class="dashboard-grid">
+              <!-- PANEL: Profile & Collections -->
               <div class="panel">
                 <div class="panel-header">
                   <div>
@@ -757,6 +749,7 @@
                 </div>
               </div>
 
+              <!-- PANEL: Connections -->
               <div class="panel">
                 <div class="panel-header">
                   <div>
@@ -796,29 +789,29 @@
               </div>
             </div>
 
+            <!-- PANEL: Coming Soon (replaces Brand Presence) -->
             <div class="panel">
               <div class="panel-header">
                 <div>
-                  <div class="panel-title">Brand presence</div>
+                  <div class="panel-title">Coming Soon</div>
                   <div class="panel-subtitle">
-                    Strong, tasteful branding — your identity, consistently
-                    present.
+                    Features we’re actively building to empower collectors.
                   </div>
                 </div>
                 <div class="panel-icon">
-                  <img src="./CC-mainlogo.jpg" alt="Collector Connector Logo" />
+                  <img src="./CCLogoSML.png" alt="Coming Soon Icon" />
                 </div>
               </div>
               <div class="panel-body">
-                This section exists to show YC (and you) how the brand carries
-                through the product:
                 <ul style="margin-top:6px;padding-left:18px;">
-                  <li>Full logo in key moments (login, header, footer)</li>
-                  <li>Icon used as a subtle, confident accent</li>
-                  <li>Black + white palette that lets collections shine</li>
+                  <li>Activity feed and notifications</li>
+                  <li>Collection analytics & insights</li>
+                  <li>Trade requests & safe escrow</li>
+                  <li>Discovery & explore mode</li>
                 </ul>
               </div>
             </div>
+
           </section>
         </div>
       </div>
@@ -850,9 +843,7 @@
       function setHidden(el, hidden) {
         if (!el) return;
         el.setAttribute("aria-hidden", hidden ? "true" : "false");
-        try {
-          el.inert = !!hidden; // prevent focus in hidden region (where supported)
-        } catch (e) { /* ignore */ }
+        try { el.inert = !!hidden; } catch (e) { /* ignore */ }
       }
 
       function showDashboard({ withFade = true } = {}) {
@@ -875,9 +866,7 @@
           dashboardView.style.display = "flex";
         }
 
-        try {
-          sessionStorage.setItem(VISUAL_LOGIN_KEY, "1");
-        } catch (e) { /* ignore */ }
+        try { sessionStorage.setItem(VISUAL_LOGIN_KEY, "1"); } catch (e) {}
       }
 
       function showLogin() {
@@ -889,9 +878,7 @@
         setHidden(loginView, false);
         setHidden(dashboardView, true);
 
-        try {
-          sessionStorage.removeItem(VISUAL_LOGIN_KEY);
-        } catch (e) { /* ignore */ }
+        try { sessionStorage.removeItem(VISUAL_LOGIN_KEY); } catch (e) {}
       }
 
       // Submit via Enter or button
@@ -912,22 +899,14 @@
 
       // Restore visual state on load
       let wasLogged = false;
-      try {
-        wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY) === "1";
-      } catch (e) {
-        wasLogged = false;
-      }
+      try { wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY) === "1"; } catch (e) {}
 
       if (wasLogged) {
-        // Immediately show dashboard without playing fade
         if (loginView) loginView.classList.add("hidden");
-        if (dashboardView) {
-          dashboardView.style.display = "flex";
-        }
+        if (dashboardView) dashboardView.style.display = "flex";
         setHidden(loginView, true);
         setHidden(dashboardView, false);
       } else {
-        // Initial: login visible, dashboard hidden
         if (dashboardView) dashboardView.style.display = "none";
         setHidden(loginView, false);
         setHidden(dashboardView, true);
@@ -936,7 +915,3 @@
   </script>
 </body>
 </html>
-
-
-
-

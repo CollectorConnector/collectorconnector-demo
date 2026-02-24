@@ -5,7 +5,7 @@
   <title>CollectorConnector — Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Fonts -->
+  <!-- Fonts (clean) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -22,7 +22,6 @@
       --radius-card: 18px;
       --shadow-soft: 0 10px 24px rgba(0,0,0,0.45);
       --t-fast: .18s ease-out;
-      --t-med: .28s ease-out;
     }
 
     * { box-sizing: border-box; margin:0; padding:0; }
@@ -32,10 +31,7 @@
       background: radial-gradient(circle at top, #171717 0, #080808 45%, #000 100%);
       color: var(--fg);
       font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
+      /* Let the page scroll naturally */
     }
 
     h1,h2,h3{
@@ -44,24 +40,26 @@
     }
 
     /* Shell */
+    .page-wrap{
+      max-width: 1140px;
+      margin: 24px auto 40px;
+      padding: 0 16px;
+    }
+
     .app-shell{
       width:100%;
-      max-width:1120px;
-      min-height:620px;
       background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
       border-radius:28px;
       border:1px solid rgba(255,255,255,0.08);
       box-shadow: var(--shadow-soft);
       overflow:hidden;
-      position:relative;
       backdrop-filter: blur(14px);
     }
 
     .app-inner{
       display:flex;
       flex-direction:column;
-      height:100%;
-      padding:16px;
+      width:100%;
     }
 
     /* Header */
@@ -93,7 +91,7 @@
     .brand-tagline{ font-size:.78rem; color:var(--muted); }
 
     .header-right{
-      display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.8rem;
+      display:flex; align-items:center; gap:12px; color:var(--muted); font-size:.8rem;
       padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
       background: #0f0f0f;
     }
@@ -104,7 +102,15 @@
     }
     .version-tag{ opacity:.9; }
 
-    /* Main card */
+    .avatar{
+      width:36px; height:36px; border-radius:50%;
+      border:1px solid rgba(255,255,255,0.25);
+      overflow:hidden; background:#0d0d0d;
+      display:inline-flex; align-items:center; justify-content:center;
+    }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* Main card (Option B) */
     .card{
       margin:16px;
       background:#0b0b0b;
@@ -130,7 +136,7 @@
       max-width:260px;
       display:block;
       margin-bottom:10px;
-      filter: none; /* ensure no glow */
+      filter: none;
     }
 
     .welcome-title{ font-size:2rem; font-weight:600; margin-bottom:6px; }
@@ -157,15 +163,17 @@
       position: relative;
     }
 
-    .panel-login{ display:flex; width:100%; }
+    .panel-login{ display:flex; width:100%; flex-wrap:wrap; }
     .login-left{
-      flex:1.1; padding:28px; border-right:1px solid rgba(255,255,255,0.06);
+      flex:1 1 320px; padding:28px; border-right:1px solid rgba(255,255,255,0.06);
       display:flex; flex-direction:column; gap:10px; justify-content:center;
       background:#101010;
+      min-width: 280px;
     }
     .login-right{
-      flex:.9; padding:28px; display:flex; flex-direction:column; justify-content:center; gap:14px;
+      flex:1 1 320px; padding:28px; display:flex; flex-direction:column; justify-content:center; gap:14px;
       background:#0e0e0e;
+      min-width: 280px;
     }
 
     .field-label{
@@ -190,7 +198,7 @@
       font-size:.92rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px;
       transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
       letter-spacing:.06em; text-transform:uppercase;
-      box-shadow:none; /* no glow */
+      box-shadow:none;
     }
     .btn-primary{ background:#fff; color:#000; }
     .btn-primary:hover{ background:#f1f1f1; }
@@ -204,13 +212,13 @@
     .or-divider span{ flex:1; height:1px; background:var(--border); }
 
     /* Dashboard */
-    .dashboard{ display:none; flex-direction:column; gap:16px; }
-    .dash-header-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; }
+    .dashboard{ display:none; flex-direction:column; gap:16px; margin-top:16px; }
+    .dash-header-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; flex-wrap:wrap; }
     .dash-title-block{ display:flex; flex-direction:column; gap:4px; }
     .dash-title{ font-size:1.4rem; }
     .dash-subtitle{ font-size:.88rem; color:#b0b0b0; max-width:360px; }
 
-    .dash-pills{ display:flex; align-items:center; gap:8px; font-size:.75rem; }
+    .dash-pills{ display:flex; align-items:center; gap:8px; font-size:.75rem; flex-wrap:wrap; }
     .pill-soft{
       padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18);
       background: #0b0b0b; color:#cfcfcf; text-transform:uppercase; letter-spacing:.12em;
@@ -224,11 +232,11 @@
     .grid-3{
       display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px;
     }
+
     .dash-card{
       border-radius:14px; border:1px solid rgba(255,255,255,0.12);
       background:#0f0f0f;
       padding:12px; position:relative; overflow:hidden;
-      /* Subtle only; no lift */
       transition: background var(--t-fast), border-color var(--t-fast);
     }
     .dash-card:hover{ border-color:rgba(255,255,255,0.18); background:#121212; }
@@ -243,6 +251,67 @@
     .metric-pill{ padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:.76rem; color:#cfcfcf; }
     .metric-pill strong{ color:#fff; }
 
+    /* Profile + Gallery panels */
+    .panel-section{
+      margin: 12px 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 16px;
+    }
+    .profile-panel, .gallery-panel{
+      background:#0f0f0f;
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:16px;
+      padding:16px;
+    }
+    .section-title{
+      font-size:1.1rem; font-weight:600; margin-bottom:8px; letter-spacing:.08em;
+    }
+    .section-sub{ font-size:.9rem; color:#b0b0b0; margin-bottom:12px; }
+
+    .profile-avatar-lg{
+      width:120px; height:120px; border-radius:50%; overflow:hidden;
+      border:1px solid rgba(255,255,255,0.25);
+      background:#111; display:flex; align-items:center; justify-content:center;
+      margin-bottom:12px;
+    }
+    .profile-avatar-lg img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .inline-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .btn-small{
+      padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.25);
+      background:transparent; color:#fff; font-size:.82rem; cursor:pointer;
+    }
+    .btn-small:hover{ background:rgba(255,255,255,0.06); }
+
+    .hint{ font-size:.8rem; color:#9a9a9a; margin-top:8px; }
+
+    .uploader{
+      padding:12px; border:1px dashed rgba(255,255,255,0.25); border-radius:12px;
+      background:#0c0c0c;
+    }
+    .uploader label{ font-size:.88rem; color:#dcdcdc; display:block; margin-bottom:8px; }
+    .uploader input{ display:block; }
+
+    .gallery-grid{
+      margin-top:12px;
+      display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:10px;
+    }
+    .gallery-item{
+      position:relative; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.12);
+      background:#0b0b0b;
+      aspect-ratio: 1 / 1;
+    }
+    .gallery-item img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .delete-btn{
+      position:absolute; top:6px; right:6px;
+      background: rgba(0,0,0,0.55);
+      color:#fff; border:1px solid rgba(255,255,255,0.35);
+      border-radius:999px; font-size:.78rem; padding:4px 8px; cursor:pointer;
+    }
+    .delete-btn:hover{ background: rgba(255,255,255,0.12); }
+
     /* Footer */
     .app-footer{
       padding:12px 16px; font-size:.75rem; color:#a0a0a0; display:flex; align-items:center; justify-content:space-between;
@@ -250,209 +319,307 @@
       background: #0f0f0f;
     }
     .footer-left{ display:flex; align-items:center; gap:10px; text-transform:uppercase; letter-spacing:.16em; }
-    .footer-dot{ width:6px; height:6px; border-radius:999px; background:#3ddc84; box-shadow:none; }
-    .footer-right{ opacity:.9; }
-
-    /* Reduce or disable motion for everyone (static feel) */
-    .fade-in, .fade-out { animation: none !important; }
-
-    /* Focus */
-    .btn-primary:focus-visible, .btn-secondary:focus-visible, .link:focus-visible, input:focus-visible{
-      outline:2px solid #fff; outline-offset:2px;
-    }
+    .footer-dot{ width:6px; height:6px; border-radius:999px; background:#3ddc84; }
 
     /* Responsive */
     @media (max-width: 900px){
       .card{ flex-direction:column; }
       .card-left{ border-right:none; border-bottom:1px solid var(--border); }
+      .grid-3{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .panel-section{ grid-template-columns: 1fr; }
     }
     @media (max-width: 640px){
-      body{ padding:0; }
-      .app-shell{ border-radius:0; max-width:100%; }
-      .app-header{ padding:14px 14px 10px; flex-direction:column; align-items:flex-start; gap:8px; }
-      .card{ margin:12px; }
-      .card-left, .card-right{ padding:22px 18px; }
-      .left-logo img{ width:70%; }
+      .grid-3{ grid-template-columns:1fr; }
+      .gallery-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
     }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <div class="app-inner">
+  <div class="page-wrap">
+    <div class="app-shell">
+      <div class="app-inner">
 
-      <!-- HEADER -->
-      <header class="app-header" role="banner">
-        <div class="brand-left">
-          <div class="brand-icon">
-            <img src="./CCLogoSML.png" alt="Collector Connector Icon" />
-          </div>
-          <div class="brand-text">
-            <div class="brand-name">CollectorConnector</div>
-            <div class="brand-tagline">A home for collectors</div>
-          </div>
-        </div>
-
-        <div class="header-right">
-          <div class="beta-pill">Demo</div>
-          <div class="version-tag">v0.3</div>
-        </div>
-      </header>
-
-      <!-- MAIN -->
-      <main style="flex:1">
-        <div class="card">
-
-          <!-- LEFT -->
-          <section class="card-left" aria-label="Welcome">
-            <div class="left-logo">
-              <img src="./CC-mainlogo.jpg" alt="Collector Connector" />
+        <!-- HEADER -->
+        <header class="app-header" role="banner">
+          <div class="brand-left">
+            <div class="brand-icon">
+              <img src="./CCLogoSML.png" alt="Collector Connector Icon" />
             </div>
-            <h1 class="welcome-title">Welcome back</h1>
-            <p class="welcome-subtitle">
-              Sign in to continue building your world of collections. Your collections
-              deserve a home that reflects the stories behind each piece.
-            </p>
-            <p class="welcome-hero">Your collection deserves a home.</p>
-            <p class="welcome-footnote">
-              CollectorConnector is where identity, culture, and belonging come together through the pieces you love.
-            </p>
-          </section>
-
-          <!-- RIGHT -->
-          <section class="card-right" aria-label="Authentication and dashboard">
-            <!-- LOGIN VIEW -->
-            <div id="login-view" class="panel panel-login" aria-hidden="false" aria-live="polite">
-              <div class="login-left">
-                <div class="login-title">Log in</div>
-                <div class="login-subtitle">
-                  This login is visual only for your demo. Click “Log in” or press Enter to switch to your dashboard.
-                </div>
-                <div class="or-divider"><span></span> OR <span></span></div>
-                <button class="btn-secondary" type="button" id="skip-button">Skip to Demo</button>
-              </div>
-
-              <div class="login-right">
-                <form id="login-form" autocomplete="off" novalidate>
-                  <label class="field-label" for="email">Email</label>
-                  <input id="email" class="field-input" type="email" placeholder="you@example.com" />
-
-                  <label class="field-label" for="password">Password</label>
-                  <input id="password" class="field-input" type="password" placeholder="••••••••" />
-
-                  <div class="row">
-                    <div class="row-left">
-                      <input id="remember" type="checkbox" />
-                      <label for="remember" style="text-transform:none;letter-spacing:0;">Remember me</label>
-                    </div>
-                    <a href="#" class="link">Forgot password?</a>
-                  </div>
-
-                  <button id="login-button" class="btn-primary" type="submit">
-                    <span>Log in</span><span>→</span>
-                  </button>
-                </form>
-              </div>
+            <div class="brand-text">
+              <div class="brand-name">CollectorConnector</div>
+              <div class="brand-tagline">A home for collectors</div>
             </div>
+          </div>
 
-            <!-- DASHBOARD VIEW -->
-            <div id="dashboard-view" class="dashboard" aria-hidden="true" aria-live="polite">
-              <div class="dash-header-row">
-                <div class="dash-title-block">
-                  <h2 class="dash-title">Your Dashboard</h2>
-                  <p class="dash-subtitle">A calm overview of your world of pieces.</p>
-                  <div class="dash-pills">
-                    <div class="pill-soft"><strong>3</strong> Collections</div>
-                    <div class="pill-soft"><strong>18</strong> Pieces</div>
-                    <div class="pill-outline">Private</div>
+          <div class="header-right">
+            <div class="beta-pill">Demo</div>
+            <div class="version-tag">v0.4</div>
+            <div class="avatar" aria-label="Profile photo">
+              <img id="header-avatar" src="./CCLogoSML.png" alt="Your profile photo" />
+            </div>
+          </div>
+        </header>
+
+        <!-- MAIN -->
+        <main>
+          <div class="card">
+            <!-- LEFT -->
+            <section class="card-left" aria-label="Welcome">
+              <div class="left-logo">
+                <img src="./CC-mainlogo.jpg" alt="Collector Connector — Where Collectors Meet" />
+              </div>
+              <h1 class="welcome-title">Welcome back</h1>
+              <p class="welcome-subtitle">
+                Sign in to continue building your world of collections. Your collections
+                deserve a home that reflects the stories behind each piece.
+              </p>
+              <p class="welcome-hero">Your collection deserves a home.</p>
+              <p class="welcome-footnote">
+                CollectorConnector is where identity, culture, and belonging come together through the pieces you love.
+              </p>
+            </section>
+
+            <!-- RIGHT -->
+            <section class="card-right" aria-label="Authentication and dashboard">
+              <!-- LOGIN VIEW -->
+              <div id="login-view" class="panel panel-login" aria-hidden="false" aria-live="polite">
+                <div class="login-left">
+                  <div class="login-title">Log in</div>
+                  <div class="login-subtitle">
+                    This login is visual only for your demo. Click “Log in” or press Enter to switch to your dashboard.
                   </div>
+                  <div class="or-divider"><span></span> OR <span></span></div>
+                  <button class="btn-secondary" type="button" id="skip-button">Skip to Demo</button>
                 </div>
-                <button id="logout-button" class="btn-secondary" type="button">Log out</button>
+
+                <div class="login-right">
+                  <form id="login-form" autocomplete="off" novalidate>
+                    <label class="field-label" for="email">Email</label>
+                    <input id="email" class="field-input" type="email" placeholder="you@example.com" />
+
+                    <label class="field-label" for="password">Password</label>
+                    <input id="password" class="field-input" type="password" placeholder="••••••••" />
+
+                    <div class="row">
+                      <div class="row-left">
+                        <input id="remember" type="checkbox" />
+                        <label for="remember" style="text-transform:none;letter-spacing:0;">Remember me</label>
+                      </div>
+                      <a class="link" href="#" aria-disabled="true">Forgot password?</a>
+                    </div>
+
+                    <button id="login-button" class="btn-primary" type="submit">
+                      <span>Log in</span><span>→</span>
+                    </button>
+                  </form>
+                </div>
               </div>
 
-              <div class="grid-3" style="margin-top:10px;">
-                <!-- Collections -->
-                <div class="dash-card">
-                  <div class="card-header">
-                    <div class="card-title">Collections</div>
-                    <div class="card-tag">Overview</div>
-                  </div>
-                  <div class="card-body">
-                    <div class="metric-row">
-                      <div class="metric-label">Total</div>
-                      <div class="metric-value">3</div>
+              <!-- DASHBOARD VIEW -->
+              <div id="dashboard-view" class="dashboard" aria-hidden="true" aria-live="polite">
+                <div class="dash-header-row">
+                  <div class="dash-title-block">
+                    <h2 class="dash-title">Your Dashboard</h2>
+                    <p class="dash-subtitle">A calm overview of your world of pieces.</p>
+                    <div class="dash-pills">
+                      <div class="pill-soft"><strong>3</strong> Collections</div>
+                      <div class="pill-soft"><strong>18</strong> Pieces</div>
+                      <div class="pill-outline">Private</div>
                     </div>
-                    <div class="metric-row">
-                      <div class="metric-label">Most Active</div>
-                      <div class="metric-pill"><strong>Watches</strong></div>
+                  </div>
+                  <button id="logout-button" class="btn-secondary" type="button">Log out</button>
+                </div>
+
+                <div class="grid-3" style="margin-top:10px;">
+                  <!-- Collections -->
+                  <div class="dash-card">
+                    <div class="card-header">
+                      <div class="card-title">Collections</div>
+                      <div class="card-tag">Overview</div>
+                    </div>
+                    <div class="card-body">
+                      <div class="metric-row">
+                        <div class="metric-label">Total</div>
+                        <div class="metric-value">3</div>
+                      </div>
+                      <div class="metric-row">
+                        <div class="metric-label">Most Active</div>
+                        <div class="metric-pill"><strong>Watches</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Pieces -->
+                  <div class="dash-card">
+                    <div class="card-header">
+                      <div class="card-title">Pieces</div>
+                      <div class="card-tag">Inventory</div>
+                    </div>
+                    <div class="card-body">
+                      <div class="metric-row">
+                        <div class="metric-label">Total</div>
+                        <div class="metric-value">18</div>
+                      </div>
+                      <div class="metric-row">
+                        <div class="metric-label">Latest Added</div>
+                        <div class="metric-pill"><strong>Omega Seamaster</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Favourite Piece -->
+                  <div class="dash-card">
+                    <div class="card-header">
+                      <div class="card-title">Favourite Piece</div>
+                      <div class="card-tag">Personal</div>
+                    </div>
+                    <div class="card-body">
+                      <div class="metric-row" style="justify-content:flex-start; gap:10px;">
+                        <div class="metric-pill"><strong>Rolex Submariner (1998)</strong></div>
+                      </div>
+                      <div class="metric-row" style="justify-content:flex-start;">
+                        <div class="metric-label">Your most meaningful piece</div>
+                      </div>
+                      <div class="metric-row" style="justify-content:flex-start;">
+                        <div class="metric-label">A reminder of where your collecting journey began.</div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Pieces -->
-                <div class="dash-card">
-                  <div class="card-header">
-                    <div class="card-title">Pieces</div>
-                    <div class="card-tag">Inventory</div>
-                  </div>
-                  <div class="card-body">
-                    <div class="metric-row">
-                      <div class="metric-label">Total</div>
-                      <div class="metric-value">18</div>
+                <!-- Profile + Gallery Section (below the dashboard cards) -->
+                <div class="panel-section" aria-label="Profile and Collection Photos">
+                  <!-- Profile panel -->
+                  <section class="profile-panel" aria-labelledby="profileTitle">
+                    <h3 id="profileTitle" class="section-title">Profile Photo</h3>
+                    <p class="section-sub">Upload a picture to appear in your header and profile.</p>
+                    <div class="profile-avatar-lg">
+                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile preview" />
                     </div>
-                    <div class="metric-row">
-                      <div class="metric-label">Latest Added</div>
-                      <div class="metric-pill"><strong>Omega Seamaster</strong></div>
+                    <div class="inline-actions">
+                      <label class="btn-small" for="profile-file">Upload profile photo</label>
+                      <input id="profile-file" type="file" accept="image/*" style="display:none" />
+                      <button id="clear-profile" class="btn-small" type="button">Remove profile photo</button>
                     </div>
-                  </div>
-                </div>
+                    <p class="hint">Tip: square images look best. We’ll auto‑fit and lightly compress to keep it fast.</p>
+                  </section>
 
-                <!-- Favourite Piece -->
-                <div class="dash-card">
-                  <div class="card-header">
-                    <div class="card-title">Favourite Piece</div>
-                    <div class="card-tag">Personal</div>
-                  </div>
-                  <div class="card-body">
-                    <div class="metric-row" style="justify-content:flex-start; gap:10px;">
-                      <div class="metric-pill"><strong>Rolex Submariner (1998)</strong></div>
+                  <!-- Gallery panel -->
+                  <section class="gallery-panel" aria-labelledby="galleryTitle">
+                    <h3 id="galleryTitle" class="section-title">Your Collection Photos</h3>
+                    <p class="section-sub">Add photos of your pieces. This demo keeps them locally in your browser.</p>
+                    <div class="uploader">
+                      <label for="gallery-files">Upload images (you can select multiple):</label>
+                      <input id="gallery-files" type="file" accept="image/*" multiple />
+                      <p class="hint">Images are compressed to max 1280px for performance. Stored locally (no server).</p>
+                      <div class="inline-actions" style="margin-top:8px;">
+                        <button id="clear-gallery" class="btn-small" type="button">Clear all photos</button>
+                      </div>
                     </div>
-                    <div class="metric-row" style="justify-content:flex-start;">
-                      <div class="metric-label">Your most meaningful piece</div>
-                    </div>
-                    <div class="metric-row" style="justify-content:flex-start;">
-                      <div class="metric-label">A reminder of where your collecting journey began.</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div> <!-- /dashboard-view -->
-          </section>
-        </div>
-      </main>
 
-      <!-- FOOTER -->
-      <footer class="app-footer" role="contentinfo">
-        <div class="footer-left">
-          <div class="footer-dot"></div>
-          <div>CollectorConnector Demo</div>
-        </div>
-        <span>Where collectors meet, remember, and get seen.</span>
-        <div class="footer-right">Demo build – visual login only</div>
-      </footer>
+                    <div id="gallery-grid" class="gallery-grid" aria-live="polite"></div>
+                  </section>
+                </div>
+              </div> <!-- /dashboard-view -->
+            </section>
+          </div>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="app-footer" role="contentinfo">
+          <div class="footer-left">
+            <div class="footer-dot"></div>
+            <div>CollectorConnector Demo</div>
+          </div>
+          <span>Where collectors meet, remember, and get seen.</span>
+          <div class="footer-right">Demo build – visual login only</div>
+        </footer>
+      </div>
     </div>
   </div>
 
   <!-- JS -->
   <script>
     (function(){
+      // --- Elements
       const loginForm = document.getElementById("login-form");
       const loginButton = document.getElementById("login-button");
       const skipButton = document.getElementById("skip-button");
       const logoutButton = document.getElementById("logout-button");
       const loginView = document.getElementById("login-view");
       const dashboardView = document.getElementById("dashboard-view");
-      const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
 
+      const headerAvatar = document.getElementById("header-avatar");
+      const profileAvatarLg = document.getElementById("profile-avatar-lg");
+      const profileFile = document.getElementById("profile-file");
+      const clearProfileBtn = document.getElementById("clear-profile");
+
+      const galleryInput = document.getElementById("gallery-files");
+      const clearGalleryBtn = document.getElementById("clear-gallery");
+      const galleryGrid = document.getElementById("gallery-grid");
+
+      // --- Storage keys
+      const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
+      const PROFILE_IMG_KEY = "cc-demo-profile-image";
+      const GALLERY_KEY = "cc-demo-gallery-images";
+
+      // --- Helpers: image resize & load
+      function readFileAsDataURL(file){
+        return new Promise((resolve, reject)=>{
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function loadImage(src){
+        return new Promise((resolve, reject)=>{
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = src;
+        });
+      }
+
+      async function resizeImageDataURL(dataUrl, maxSize=1280, quality=0.85){
+        const img = await loadImage(dataUrl);
+        let {width, height} = img;
+
+        if (width <= maxSize && height <= maxSize) {
+          // No resize needed; maybe still recompress
+          const canvas = document.createElement("canvas");
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          return canvas.toDataURL("image/jpeg", quality);
+        }
+
+        // Scale down keeping aspect ratio
+        if (width > height){
+          const ratio = maxSize / width;
+          width = maxSize; height = Math.round(height * ratio);
+        } else {
+          const ratio = maxSize / height;
+          height = maxSize; width = Math.round(width * ratio);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        return canvas.toDataURL("image/jpeg", quality);
+      }
+
+      // Profile image often suits a smaller cap
+      async function processProfileImage(file){
+        const dataUrl = await readFileAsDataURL(file);
+        // Resize to a modest square cap to keep size low
+        return resizeImageDataURL(dataUrl, 512, 0.9);
+      }
+
+      // --- UI state toggles
       function setHidden(el, hidden){
         if(!el) return;
         el.setAttribute("aria-hidden", hidden ? "true" : "false");
@@ -477,37 +644,146 @@
         try { sessionStorage.removeItem(VISUAL_LOGIN_KEY); } catch(e){}
       }
 
-      // Submit via Enter or button
-      if(loginForm){
+      // --- Profile image: load/save/render
+      function renderProfile(src){
+        const fallback = "./CCLogoSML.png";
+        const useSrc = src || fallback;
+        if (headerAvatar) headerAvatar.src = useSrc;
+        if (profileAvatarLg) profileAvatarLg.src = useSrc;
+      }
+
+      function saveProfile(src){
+        try { localStorage.setItem(PROFILE_IMG_KEY, src || ""); } catch(e){}
+        renderProfile(src);
+      }
+
+      function loadProfile(){
+        let stored = "";
+        try { stored = localStorage.getItem(PROFILE_IMG_KEY) || ""; } catch(e){}
+        renderProfile(stored || "");
+      }
+
+      // --- Gallery: load/save/render
+      function getGallery(){
+        try {
+          const raw = localStorage.getItem(GALLERY_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch(e){
+          return [];
+        }
+      }
+
+      function saveGallery(arr){
+        try { localStorage.setItem(GALLERY_KEY, JSON.stringify(arr)); } catch(e){}
+      }
+
+      function renderGallery(){
+        const items = getGallery();
+        galleryGrid.innerHTML = "";
+        if (!items.length) return;
+
+        items.forEach((src, idx)=>{
+          const wrap = document.createElement("div");
+          wrap.className = "gallery-item";
+          wrap.innerHTML = `
+            <img src="${src}" alt="Collection photo ${idx+1}" />
+            <button class="delete-btn" type="button" data-index="${idx}" aria-label="Remove photo ${idx+1}">Delete</button>
+          `;
+          galleryGrid.appendChild(wrap);
+        });
+      }
+
+      // --- Event wiring
+      if (loginForm) {
         loginForm.addEventListener("submit", (e) => {
           e.preventDefault();
           showDashboard();
         });
       }
-      if(loginButton){
+      if (loginButton) {
         loginButton.addEventListener("click", () => showDashboard());
       }
-      if(skipButton){
+      if (skipButton) {
         skipButton.addEventListener("click", () => showDashboard());
       }
-      if(logoutButton){
+      if (logoutButton) {
         logoutButton.addEventListener("click", showLogin);
       }
 
-      // Restore visual state on load
+      if (profileFile) {
+        profileFile.addEventListener("change", async (e)=>{
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          try {
+            const processed = await processProfileImage(file);
+            saveProfile(processed);
+          } catch(err){
+            alert("Sorry, that image could not be processed.");
+          } finally {
+            profileFile.value = "";
+          }
+        });
+      }
+
+      if (clearProfileBtn) {
+        clearProfileBtn.addEventListener("click", ()=>{
+          saveProfile("");
+        });
+      }
+
+      if (galleryInput) {
+        galleryInput.addEventListener("change", async (e)=>{
+          const files = Array.from(e.target.files || []);
+          if (!files.length) return;
+
+          const existing = getGallery();
+          for (const f of files){
+            try {
+              const raw = await readFileAsDataURL(f);
+              const resized = await resizeImageDataURL(raw, 1280, 0.85);
+              existing.push(resized);
+            } catch(err){
+              // Skip problematic file
+            }
+          }
+          saveGallery(existing);
+          renderGallery();
+          galleryInput.value = "";
+        });
+      }
+
+      if (clearGalleryBtn) {
+        clearGalleryBtn.addEventListener("click", ()=>{
+          if (confirm("Remove all collection photos from this browser?")) {
+            saveGallery([]);
+            renderGallery();
+          }
+        });
+      }
+
+      if (galleryGrid) {
+        galleryGrid.addEventListener("click", (e)=>{
+          const btn = e.target.closest(".delete-btn");
+          if (!btn) return;
+          const idx = parseInt(btn.getAttribute("data-index"), 10);
+          if (Number.isNaN(idx)) return;
+          const items = getGallery();
+          items.splice(idx, 1);
+          saveGallery(items);
+          renderGallery();
+        });
+      }
+
+      // --- Restore state on load
       let wasLogged = false;
       try { wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY) === "1"; } catch(e){}
-      if(wasLogged){
-        loginView.style.display = "none";
-        dashboardView.style.display = "flex";
-        setHidden(loginView, true);
-        setHidden(dashboardView, false);
+      if(wasLogged) {
+        showDashboard();
       } else {
-        loginView.style.display = "block";
-        dashboardView.style.display = "none";
-        setHidden(loginView, false);
-        setHidden(dashboardView, true);
+        showLogin();
       }
+      loadProfile();
+      renderGallery();
     })();
   </script>
 </body>

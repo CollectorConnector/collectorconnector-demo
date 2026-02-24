@@ -5,10 +5,10 @@
   <title>CollectorConnector — Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Fonts (clean) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
@@ -31,7 +31,6 @@
       background: radial-gradient(circle at top, #171717 0, #080808 45%, #000 100%);
       color: var(--fg);
       font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-      /* Let the page scroll naturally */
     }
 
     h1,h2,h3{
@@ -39,7 +38,7 @@
       letter-spacing:.02em;
     }
 
-    /* Shell */
+    /* Layout shell */
     .page-wrap{
       max-width: 1140px;
       margin: 24px auto 40px;
@@ -321,6 +320,20 @@
     .footer-left{ display:flex; align-items:center; gap:10px; text-transform:uppercase; letter-spacing:.16em; }
     .footer-dot{ width:6px; height:6px; border-radius:999px; background:#3ddc84; }
 
+    /* ---- Fill left space on main page (collapse left column when logged in) ---- */
+    .logged-in .card-left { display: none !important; }
+    .logged-in .card { display: block; }
+    .logged-in .card-right { width: 100%; padding: 32px; }
+    .logged-in .panel-section { margin-left:16px; margin-right:16px; }
+    @media (min-width: 1200px){
+      .logged-in .grid-3{ grid-template-columns:repeat(4, minmax(0,1fr)); }
+    }
+
+    /* Accessibility focus */
+    .btn-primary:focus-visible, .btn-secondary:focus-visible, .btn-small:focus-visible, .link:focus-visible, input:focus-visible{
+      outline:2px solid #fff; outline-offset:2px;
+    }
+
     /* Responsive */
     @media (max-width: 900px){
       .card{ flex-direction:column; }
@@ -343,7 +356,7 @@
         <header class="app-header" role="banner">
           <div class="brand-left">
             <div class="brand-icon">
-              <img src="./CCLogoSML.png" alt="Collector Connector Icon" />
+              <img src="./CCLogoSML.png" alt="CollectorConnector icon">
             </div>
             <div class="brand-text">
               <div class="brand-name">CollectorConnector</div>
@@ -355,7 +368,7 @@
             <div class="beta-pill">Demo</div>
             <div class="version-tag">v0.4</div>
             <div class="avatar" aria-label="Profile photo">
-              <img id="header-avatar" src="./CCLogoSML.png" alt="Your profile photo" />
+              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile">
             </div>
           </div>
         </header>
@@ -366,7 +379,7 @@
             <!-- LEFT -->
             <section class="card-left" aria-label="Welcome">
               <div class="left-logo">
-                <img src="./CC-mainlogo.jpg" alt="Collector Connector — Where Collectors Meet" />
+                <img src="./CC-mainlogo.jpg" alt="CollectorConnector">
               </div>
               <h1 class="welcome-title">Welcome back</h1>
               <p class="welcome-subtitle">
@@ -405,7 +418,7 @@
                         <input id="remember" type="checkbox" />
                         <label for="remember" style="text-transform:none;letter-spacing:0;">Remember me</label>
                       </div>
-                      <a class="link" href="#" aria-disabled="true">Forgot password?</a>
+                      <a href="#" class="link">Forgot password?</a>
                     </div>
 
                     <button id="login-button" class="btn-primary" type="submit">
@@ -487,14 +500,14 @@
                   </div>
                 </div>
 
-                <!-- Profile + Gallery Section (below the dashboard cards) -->
+                <!-- Profile + Gallery Section -->
                 <div class="panel-section" aria-label="Profile and Collection Photos">
                   <!-- Profile panel -->
                   <section class="profile-panel" aria-labelledby="profileTitle">
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg">
-                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile preview" />
+                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile large">
                     </div>
                     <div class="inline-actions">
                       <label class="btn-small" for="profile-file">Upload profile photo</label>
@@ -549,8 +562,8 @@
       const loginView = document.getElementById("login-view");
       const dashboardView = document.getElementById("dashboard-view");
 
-      const headerAvatar = document.getElementById("header-avatar");
-      const profileAvatarLg = document.getElementById("profile-avatar-lg");
+      const headerAvatarImg = document.getElementById("header-avatar");
+      const profileAvatarLgImg = document.getElementById("profile-avatar-lg");
       const profileFile = document.getElementById("profile-file");
       const clearProfileBtn = document.getElementById("clear-profile");
 
@@ -560,10 +573,10 @@
 
       // --- Storage keys
       const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
-      const PROFILE_IMG_KEY = "cc-demo-profile-image";
-      const GALLERY_KEY = "cc-demo-gallery-images";
+      const PROFILE_IMG_KEY  = "cc-demo-profile-image";
+      const GALLERY_KEY      = "cc-demo-gallery-images";
 
-      // --- Helpers: image resize & load
+      // --- Helpers: image load & resize
       function readFileAsDataURL(file){
         return new Promise((resolve, reject)=>{
           const reader = new FileReader();
@@ -586,20 +599,11 @@
         const img = await loadImage(dataUrl);
         let {width, height} = img;
 
-        if (width <= maxSize && height <= maxSize) {
-          // No resize needed; maybe still recompress
-          const canvas = document.createElement("canvas");
-          canvas.width = width; canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-          return canvas.toDataURL("image/jpeg", quality);
-        }
-
-        // Scale down keeping aspect ratio
-        if (width > height){
+        // Determine new size keeping aspect ratio
+        if (width > height && width > maxSize){
           const ratio = maxSize / width;
           width = maxSize; height = Math.round(height * ratio);
-        } else {
+        } else if (height >= width && height > maxSize){
           const ratio = maxSize / height;
           height = maxSize; width = Math.round(width * ratio);
         }
@@ -612,14 +616,13 @@
         return canvas.toDataURL("image/jpeg", quality);
       }
 
-      // Profile image often suits a smaller cap
       async function processProfileImage(file){
         const dataUrl = await readFileAsDataURL(file);
-        // Resize to a modest square cap to keep size low
+        // Smaller cap for avatars
         return resizeImageDataURL(dataUrl, 512, 0.9);
       }
 
-      // --- UI state toggles
+      // --- View toggles
       function setHidden(el, hidden){
         if(!el) return;
         el.setAttribute("aria-hidden", hidden ? "true" : "false");
@@ -632,6 +635,7 @@
         setHidden(dashboardView, false);
         loginView.style.display = "none";
         dashboardView.style.display = "flex";
+        document.body.classList.add("logged-in");  // collapse left column
         try { sessionStorage.setItem(VISUAL_LOGIN_KEY, "1"); } catch(e){}
       }
 
@@ -641,15 +645,16 @@
         loginView.style.display = "block";
         setHidden(loginView, false);
         setHidden(dashboardView, true);
+        document.body.classList.remove("logged-in"); // restore two-column
         try { sessionStorage.removeItem(VISUAL_LOGIN_KEY); } catch(e){}
       }
 
-      // --- Profile image: load/save/render
+      // --- Profile image: save/render
       function renderProfile(src){
         const fallback = "./CCLogoSML.png";
         const useSrc = src || fallback;
-        if (headerAvatar) headerAvatar.src = useSrc;
-        if (profileAvatarLg) profileAvatarLg.src = useSrc;
+        if (headerAvatarImg) headerAvatarImg.src = useSrc;
+        if (profileAvatarLgImg) profileAvatarLgImg.src = useSrc;
       }
 
       function saveProfile(src){
@@ -685,10 +690,19 @@
         items.forEach((src, idx)=>{
           const wrap = document.createElement("div");
           wrap.className = "gallery-item";
-          wrap.innerHTML = `
-            <img src="${src}" alt="Collection photo ${idx+1}" />
-            <button class="delete-btn" type="button" data-index="${idx}" aria-label="Remove photo ${idx+1}">Delete</button>
-          `;
+
+          const img = document.createElement("img");
+          img.src = src; img.alt = `Collection photo ${idx+1}`;
+
+          const del = document.createElement("button");
+          del.className = "delete-btn";
+          del.type = "button";
+          del.setAttribute("data-index", String(idx));
+          del.setAttribute("aria-label", `Remove photo ${idx+1}`);
+          del.textContent = "Delete";
+
+          wrap.appendChild(img);
+          wrap.appendChild(del);
           galleryGrid.appendChild(wrap);
         });
       }
@@ -777,11 +791,7 @@
       // --- Restore state on load
       let wasLogged = false;
       try { wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY) === "1"; } catch(e){}
-      if(wasLogged) {
-        showDashboard();
-      } else {
-        showLogin();
-      }
+      if(wasLogged) { showDashboard(); } else { showLogin(); }
       loadProfile();
       renderGallery();
     })();

@@ -6,12 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Favicon -->
-  <link rel="icon" href="./CCLogoSML.png" />
+  ./CCLogoSML.png
 
   <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  https://fonts.googleapis.com
+  https://fonts.gstatic.com
+  https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap
 
   <style>
     :root{
@@ -104,7 +104,7 @@
     .social-link:hover{ background:#151515; border-color:rgba(255,255,255,0.2); }
     .social-link svg{ width:18px; height:18px; display:block; }
 
-    /* Header: always-visible quick links (eBay + PSA) */
+    /* Header: quick links */
     .quick-links { display:flex; align-items:center; gap:8px; margin:0 6px; }
     .quick-link{
       display:inline-flex; align-items:center; gap:6px;
@@ -220,12 +220,24 @@
     .card-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
     .card-title{ font-size:.92rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
     .card-tag{ font-size:.72rem; color:#b0b0b0; text-transform:uppercase; letter-spacing:.12em; }
-    .card-body{ font-size:.85rem; color:#bdbdbd; display:flex; flex-direction:column; gap:4px; }
+    .card-body{ font-size:.85rem; color:#bdbdbd; display:flex; flex-direction:column; gap:8px; }
     .metric-row{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
     .metric-label{ font-size:.8rem; color:#b0b0b0; }
     .metric-value{ font-size:1rem; font-weight:600; color:#fff; }
     .metric-pill{ padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:.76rem; color:#cfcfcf; }
     .metric-pill strong{ color:#fff; }
+
+    /* Favourite Piece photo */
+    .fav-photo{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .fav-thumb{
+      width:84px; height:84px; border-radius:12px; overflow:hidden;
+      border:1px solid rgba(255,255,255,0.12); background:#0b0b0b;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .fav-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .fav-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 
     /* Profile + Gallery panels */
     .panel-section{
@@ -330,7 +342,7 @@
         <header class="app-header" role="banner">
           <div class="brand-left">
             <div class="brand-icon" aria-hidden="true">
-              <img src="./CCLogoSML.png" alt="">
+              ./CCLogoSML.png
             </div>
             <div class="brand-text">
               <div class="brand-name">CollectorConnector</div>
@@ -366,19 +378,19 @@
 
             <!-- Always-visible quick links -->
             <nav class="quick-links" aria-label="Marketplaces">
-              <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer" title="eBay UK">
+              https://www.ebay.co.uk/
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
                 eBay
               </a>
 
-              <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener noreferrer" title="PSA">
+              https://www.psacard.com/
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l8 4v6c0 5.25-3.75 8.78-8 10-4.25-1.22-8-4.75-8-10V6l8-4zm-1.8 6.9h5.3c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45h-3.9v1.3h4.1c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45H10.2V8.9z"/></svg>
                 PSA
               </a>
             </nav>
 
             <div class="avatar" aria-label="Profile photo">
-              <img id="header-avatar" src="./CCLogoSML.png" alt="Profile photo">
+              ./CCLogoSML.png
             </div>
           </div>
         </header>
@@ -457,11 +469,32 @@
 
                   <!-- Favourite Piece -->
                   <div class="dash-card">
-                    <div class="card-header"><div class="card-title">Favourite Piece</div><div class="card-tag">Personal</div></div>
+                    <div class="card-header">
+                      <div class="card-title">Favourite Piece</div>
+                      <div class="card-tag">Personal</div>
+                    </div>
                     <div class="card-body">
-                      <div class="metric-row" style="justify-content:flex-start; gap:10px;"><div class="metric-pill"><strong>Rolex Submariner (1998)</strong></div></div>
-                      <div class="metric-row" style="justify-content:flex-start;"><div class="metric-label">Your most meaningful piece</div></div>
-                      <div class="metric-row" style="justify-content:flex-start;"><div class="metric-label">A reminder of where your collecting journey began.</div></div>
+                      <!-- NEW: Favourite piece photo -->
+                      <div class="fav-photo">
+                        <div class="fav-thumb">
+                          <img id="favpiece-img" src="./CCLogoSML.png" alt="Favourite piece photo preview">
+                        </div>
+                        <div class="fav-actions">
+                          <label class="btn-small" for="favpiece-file">Upload photo</label>
+                          <input id="favpiece-file" type="file" accept="image/*" style="display:none" />
+                          <button id="favpiece-clear" class="btn-small" type="button">Remove photo</button>
+                        </div>
+                      </div>
+
+                      <div class="metric-row" style="justify-content:flex-start; gap:10px;">
+                        <div class="metric-pill"><strong>Rolex Submariner (1998)</strong></div>
+                      </div>
+                      <div class="metric-row" style="justify-content:flex-start;">
+                        <div class="metric-label">Your most meaningful piece</div>
+                      </div>
+                      <div class="metric-row" style="justify-content:flex-start;">
+                        <div class="metric-label">A reminder of where your collecting journey began.</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -473,7 +506,7 @@
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg">
-                      <img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview">
+                      ./CCLogoSML.png
                     </div>
                     <div class="inline-actions">
                       <label class="btn-small" for="profile-file">Upload profile photo</label>
@@ -637,6 +670,11 @@
 
       const feedList = document.getElementById("feed-list");
 
+      // Favourite piece elements
+      const favImg = document.getElementById("favpiece-img");
+      const favFile = document.getElementById("favpiece-file");
+      const favClear = document.getElementById("favpiece-clear");
+
       // Social header link elements
       const linkEls = {
         ebay:      document.getElementById("link-ebay"),
@@ -684,6 +722,7 @@
       const GALLERY_KEY      = "cc-demo-gallery-images";
       const SOCIAL_USERS_KEY = "cc-demo-social-usernames"; // stores {platform: {enabled, value}}
       const FEED_KEY         = "cc-demo-feed";
+      const FAVPIECE_IMG_KEY = "cc-demo-favpiece-image";
 
       // Helpers
       function setHidden(el, hidden){ if(!el) return; el.setAttribute("aria-hidden", hidden?"true":"false"); try{el.inert=!!hidden;}catch(e){} }
@@ -714,6 +753,7 @@
       function saveProfile(src){ try{localStorage.setItem(PROFILE_IMG_KEY, src||"");}catch(e){} renderProfile(src); }
       function loadProfile(){ let s=""; try{s=localStorage.getItem(PROFILE_IMG_KEY)||"";}catch(e){} renderProfile(s||""); }
 
+      // Image utilities
       function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
       function loadImage(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
       async function resizeImageDataURL(dataUrl, maxSize=1280, quality=0.85){
@@ -725,7 +765,20 @@
         c.getContext("2d").drawImage(img,0,0,width,height);
         return c.toDataURL("image/jpeg", quality);
       }
-      async function processProfileImage(file){ const dataUrl=await readFileAsDataURL(file); return resizeImageDataURL(dataUrl, 512, 0.9); }
+
+      // Favourite piece photo
+      function renderFavpiece(src){
+        const fallback = "./CCLogoSML.png";
+        favImg.src = src || fallback;
+      }
+      function saveFavpiece(src){
+        try{ localStorage.setItem(FAVPIECE_IMG_KEY, src||""); }catch(e){}
+        renderFavpiece(src);
+      }
+      function loadFavpiece(){
+        let s=""; try{ s = localStorage.getItem(FAVPIECE_IMG_KEY) || ""; }catch(e){}
+        renderFavpiece(s||"");
+      }
 
       // Gallery
       function getGallery(){ try{ const raw=localStorage.getItem(GALLERY_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
@@ -761,7 +814,7 @@
           const li=document.createElement("li");
           li.className="feed-item";
           li.innerHTML = `
-            <div class="feed-thumb"><img src="./CCLogoSML.png" alt=""></div>
+            <div class="feed-thumb">./CCLogoSML.png</div>
             <div class="feed-text">
               <div>No activity yet.</div>
               <div class="feed-meta">Upload some photos to see updates here.</div>
@@ -781,11 +834,15 @@
           } else if (ev.type === "gallery-cleared"){
             const n = ev.details?.count || 0;
             text = `Cleared ${n} photo${n===1?"":"s"} from collection`;
+          } else if (ev.type === "favpiece-updated"){
+            text = `Updated favourite piece photo`;
+          } else if (ev.type === "favpiece-cleared"){
+            text = `Removed favourite piece photo`;
           } else {
             text = ev.details?.text || "Activity";
           }
           li.innerHTML = `
-            <div class="feed-thumb"><img src="${thumbSrc}" alt=""></div>
+            <div class="feed-thumb">${thumbSrc}</div>
             <div class="feed-text">
               <div>${text}</div>
               <div class="feed-meta">${formatWhen(ev.at)}</div>
@@ -823,7 +880,7 @@
           const raw = localStorage.getItem(SOCIAL_USERS_KEY);
           if(!raw) return {};
           const data = JSON.parse(raw);
-          // Support migrating an older string-based format:
+          // Migration support
           if (data && typeof data === "object" && typeof data.ebay === "string"){
             const migrated = {};
             PLATFORMS.forEach(p=>{
@@ -891,7 +948,7 @@
         const url = buildUrl(p, v);
         if(prevEls[p]){
           prevEls[p].innerHTML = url
-            ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
+            ? `${url}${url}</a>`
             : "";
         }
       }
@@ -932,12 +989,31 @@
       if(profileFile){
         profileFile.addEventListener("change", async (e)=>{
           const file = e.target.files && e.target.files[0]; if(!file) return;
-          try{ const processed = await processProfileImage(file); saveProfile(processed); }
+          try{ const processed = await resizeImageDataURL(await readFileAsDataURL(file), 512, 0.9); saveProfile(processed); }
           catch(err){ alert("Sorry, that image could not be processed."); }
           finally{ profileFile.value=""; }
         });
       }
       if(clearProfileBtn){ clearProfileBtn.addEventListener("click", ()=> saveProfile("")); }
+
+      // Favourite piece upload/remove
+      if(favFile){
+        favFile.addEventListener("change", async (e)=>{
+          const file = e.target.files && e.target.files[0]; if(!file) return;
+          try{
+            const processed = await resizeImageDataURL(await readFileAsDataURL(file), 800, 0.9);
+            saveFavpiece(processed);
+            addFeedEvent("favpiece-updated", { thumb: `<img src="${processed}" alt="Favourite piece">` });
+          }catch(err){ alert("Sorry, that image could not be processed."); }
+          finally{ favFile.value=""; }
+        });
+      }
+      if(favClear){
+        favClear.addEventListener("click", ()=>{
+          saveFavpiece("");
+          addFeedEvent("favpiece-cleared", {});
+        });
+      }
 
       if(galleryInput){
         galleryInput.addEventListener("change", async (e)=>{
@@ -956,7 +1032,7 @@
           renderGallery();
           galleryInput.value="";
           if (addedImages.length){
-            addFeedEvent("photos-added", { count: addedImages.length, thumb: addedImages[0] });
+            addFeedEvent("photos-added", { count: addedImages.length, thumb: `<img src="${addedImages[0]}" alt="New photo">` });
           }
         });
       }
@@ -982,6 +1058,7 @@
       let wasLogged=false; try{ wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY)==="1"; }catch(e){}
       if(wasLogged) showDashboard(); else showLogin();
       loadProfile();
+      loadFavpiece();
       renderGallery();
       renderFeed();
       renderHeaderSocial();

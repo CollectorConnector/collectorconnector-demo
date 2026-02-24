@@ -1,918 +1,972 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>CollectorConnector (Instagram API + Logo • Profile Header • Compressed Logo)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>Collector Connector – Where Collectors Meet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    :root { --fg:#111; --muted:#666; --border:#e5e7eb; --bg:#fff; --brand:#0ea5e9; --accent:#10b981; --danger:#ef4444; --chip:#f1f5f9; }
-    *{ box-sizing:border-box }
-    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin:0; color:var(--fg); background:var(--bg) }
-    .container{ max-width:1100px; margin:24px auto; padding:0 16px }
-    header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px }
-    h1{ font-size:1.6rem; margin:0 }
-    section{ background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px; margin:12px 0 }
-    .row{ display:flex; gap:8px; flex-wrap:wrap }
-    input, select, button, textarea { padding:10px 12px; border-radius:8px; border:1px solid var(--border); font:inherit }
-    button{ background:#f3f4f6; color:#111; border:1px solid var(--border); cursor:pointer }
-    button.primary{ background:linear-gradient(90deg,var(--brand),var(--accent)); color:#fff; border:none }
-    button.secondary{ background:#f8fafc; }
-    button.ok{ background:var(--accent); color:#fff; border-color:var(--accent) }
-    button.danger{ background:var(--danger); color:#fff }
-    table{ width:100%; border-collapse:collapse }
-    th,td{ text-align:left; padding:8px; border-bottom:1px solid var(--border); vertical-align:top }
-    .meta{ color:var(--muted); font-size:.9rem }
-    .actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-    .pill{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:.78rem; border:1px solid #e0e7ff }
-    .right{ text-align:right }
-    .grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:8px }
-    .box{ border:1px dashed var(--border); border-radius:8px; padding:8px }
-    details summary{ cursor:pointer; }
-    details{ background:#fafafa; border:1px dashed var(--border); border-radius:8px; padding:8px; margin-bottom:8px }
-    textarea { width:100%; min-height: 140px; resize: vertical; }
-    /* Logo visuals */
-    .logoFrame{ width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:8px; background:#fff; overflow:hidden }
-    .logoImg{ width:40px; height:40px; object-fit:contain; border-radius:8px }
+    :root {
+      --bg: #000000;
+      --fg: #ffffff;
+      --accent: #f5f5f5;
+      --muted: #888888;
+      --card-bg: #111111;
+      --border: #222222;
+      --button-bg: #ffffff;
+      --button-fg: #000000;
+      --button-muted-bg: #333333;
+      --button-muted-fg: #ffffff;
+      --link: #ffffff;
+    }
 
-    /* Profile header strip */
-    .profile{ display:grid; grid-template-columns:96px 1fr auto; gap:16px; align-items:center }
-    .avatar{ width:96px; height:96px; border-radius:50%; border:2px solid var(--border); object-fit:cover; background:#fff }
-    .profile__name{ font-size:1.3rem; font-weight:700; margin:0 }
-    .chips{ display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 }
-    .chip{ padding:6px 10px; border-radius:999px; background:var(--chip); border:1px solid var(--border); font-size:.9rem }
-    .profile__meta{ color:var(--muted); font-size:.92rem }
-    @media (max-width:860px){ .profile{ grid-template-columns:72px 1fr; } .profile__controls{ grid-column:1/-1 } }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-full {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-tagline {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .brand-icon img,
+    .brand-logo-full img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .pill {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .pill-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex: 1;
+      max-width: 1000px;
+      min-height: 480px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
+    }
+
+    .card-left,
+    .card-right {
+      padding: 32px;
+    }
+
+    .card-left {
+      flex: 1;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: radial-gradient(circle at top left, #222 0, #000 55%);
+    }
+
+    .card-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .welcome-block {
+      max-width: 320px;
+    }
+
+    .welcome-eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .welcome-title {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .welcome-subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .left-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .left-footer span strong {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    .mini-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .login-title {
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+
+    .login-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      margin-top: 4px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: #050505;
+      color: var(--fg);
+      font-size: 0.9rem;
+    }
+
+    input::placeholder {
+      color: #555;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .row-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: #ffffff;
+    }
+
+    .link {
+      color: var(--link);
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      margin-top: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .btn-primary {
+      background-color: var(--button-bg);
+      color: var(--button-fg);
+    }
+
+    .btn-secondary {
+      background-color: var(--button-muted-bg);
+      color: var(--button-muted-fg);
+    }
+
+    .btn-primary:hover {
+      background-color: #e5e5e5;
+    }
+
+    .btn-secondary:hover {
+      background-color: #444444;
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .or-divider span {
+      flex: 1;
+      height: 1px;
+      background-color: var(--border);
+    }
+
+    /* Dashboard */
+
+    .dashboard {
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .dashboard-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dashboard-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dashboard-title {
+      font-size: 1.3rem;
+      font-weight: 500;
+    }
+
+    .dashboard-subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .dashboard-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-ghost {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--fg);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-ghost:hover {
+      background-color: #111111;
+    }
+
+    .chip {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background-color: #050505;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .panel-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .panel-body {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .stat-pill {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--fg);
+    }
+
+    .stat-label {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+
+    .stat-value {
+      font-weight: 500;
+    }
+
+    footer {
+      margin-top: 24px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-logo {
+      width: 80px;
+      height: 20px;
+      overflow: hidden;
+    }
+
+    .footer-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(8px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-out {
+      animation: fadeOut 0.4s ease forwards;
+    }
+    /* Keep layout stable during fade */
+    #login-view.fading {
+      will-change: opacity, transform;
+    }
+    .fade-in-once {
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Visible focus for keyboard users */
+    .btn-primary:focus-visible,
+    .btn-secondary:focus-visible,
+    .btn-ghost:focus-visible,
+    .link:focus-visible,
+    input:focus-visible {
+      outline: 2px solid #ffffff;
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 900px) {
+      .card {
+        flex-direction: column;
+      }
+      .card-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .card-left,
+      .card-right {
+        padding: 20px;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .header-right {
+        align-self: flex-end;
+      }
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <div class="brand" style="display:flex;align-items:center;gap:10px">
-      <div id="logoBox" class="logoFrame" title="CollectorConnector logo"></div>
-      <h1>CollectorConnector</h1>
-    </div>
-    <div class="actions">
-      <button id="setLogoBtn" class="secondary">Set Logo</button>
-      <button id="clearLogoBtn" class="secondary">Clear Logo</button>
-      <input id="logoFile" type="file" accept="image/*,image/svg+xml" style="display:none" />
-      <button id="importMockBtn" class="secondary">Import Mock Items</button>
-      <button id="clearAllBtn" class="secondary" title="Clear ALL data">Clear All</button>
-    </div>
-  </header>
-
-  <!-- PROFILE HEADER -->
-  <section>
-    <div class="profile">
-      <img id="avatar" class="avatar" alt="Avatar" src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=400&auto=format&fit=crop"/>
-      <div>
-        <h2 class="profile__name" id="profileName">Stacy’s Collection</h2>
-        <div class="chips">
-          <span class="chip" id="chipItems">0 items</span>
-          <span class="chip" id="chipValue">£0 est</span>
-          <span class="chip" id="chipNiche">Main niche: <b id="chipNicheVal">Sports cards</b></span>
+  <div class="app-shell">
+    <header>
+      <div class="brand-left">
+        <div class="brand-icon">
+          <!-- Icon (SVG fallback embedded as data URI) -->
+          <img
+            src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23fff'/><path d='M11 20a9 9 0 0 1 9-9h1.5v3H20a6 6 0 1 0 0 12h1.5v3H20a9 9 0 0 1-9-9Z' fill='%23000'/><path d='M29 20a9 9 0 0 0-9-9h-1.5v3H20a6 6 0 1 1 0 12h-1.5v3H20a9 9 0 0 0 9-9Z' fill='%23000' opacity='.7'/></svg>"
+            alt="Collector Connector Icon"
+          />
         </div>
-        <div class="profile__meta" id="profileBio">Instagram → Collection in one click. Photos + captions → structured items. Shareable export.</div>
-      </div>
-      <div class="profile__controls">
-        <div class="row" style="justify-content:flex-end">
-          <button id="igImportBtn_profile" class="primary">Import from Instagram</button>
-          <button id="tryDemoBtn_profile" class="secondary" style="display:none">Try demo import</button>
+        <div class="brand-logo-full">
+          <!-- Full logo (SVG fallback) -->
+          <img
+            src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 36'><rect width='200' height='36' rx='6' fill='%23fff'/><text x='16' y='24' font-size='14' fill='%23000' letter-spacing='.04em'>COLLECTOR%20CONNECTOR</text></svg>"
+            alt="Collector Connector – Where Collectors Meet"
+          />
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- ORIGINAL APP CONTENT -->
-  <section>
-    <h2>Collections & Profile</h2>
-    <div class="row" style="align-items:center">
-      <select id="collectionSelect" title="Switch collection" style="min-width:220px;"></select>
-      <button id="newCollectionBtn" class="secondary">New Collection</button>
-      <button id="renameCollectionBtn" class="secondary">Rename</button>
-      <button id="deleteCollectionBtn" class="danger">Delete</button>
-    </div>
-    <p class="meta" id="profileText" style="margin-top:8px">Loading…</p>
-    <div class="row">
-      <input id="ownerNameInput" placeholder="Owner name e.g. Stacy" />
-      <input id="nicheInput" placeholder="Main niche e.g. Sports cards" />
-      <button id="saveProfileBtn">Save Profile</button>
-    </div>
-  </section>
-
-  <section>
-    <h2>Add Item</h2>
-    <form id="addForm" class="grid">
-      <input id="itemName" placeholder="Item name e.g. Tom Brady Auto" />
-      <input id="itemCategory" placeholder="Category e.g. NFL" />
-      <div class="row" style="gap:8px; align-items:center">
-        <select id="gradeBrand">
-          <option value="RAW">Grade: RAW</option>
-          <option value="PSA">Grade: PSA</option>
-          <option value="BGS">Grade: BGS</option>
-          <option value="SGC">Grade: SGC</option>
-        </select>
-        <input id="gradeValue" type="number" step="0.5" min="1" max="10" placeholder="Grade value (1–10)" style="width:160px" />
-      </div>
-      <select id="conditionSelect">
-        <option value="Mint">Condition: Mint</option>
-        <option value="Gem Mint">Condition: Gem Mint</option>
-        <option value="Near Mint">Condition: Near Mint</option>
-        <option value="Excellent">Condition: Excellent</option>
-        <option value="Very Good">Condition: Very Good</option>
-        <option value="Good">Condition: Good</option>
-        <option value="Fair">Condition: Fair</option>
-        <option value="Poor">Condition: Poor</option>
-      </select>
-      <textarea id="notesInput" placeholder="Notes (centering, surface, provenance, etc.)"></textarea>
-      <div class="actions" style="grid-column:1/-1">
-        <button type="submit" class="ok">Add Item</button>
-      </div>
-    </form>
-  </section>
-
-  <section>
-    <h2>Bulk Import (Instagram / CSV)</h2>
-    <details>
-      <summary>How it works</summary>
-      <ul>
-        <li><strong>Instagram:</strong> Paste captions or one item per line below, click <em>Parse Instagram Text</em>, review the preview, then <em>Add All</em>.</li>
-        <li><strong>Fetch from Instagram (API):</strong> If you deployed the tiny proxy, set <code>window.IG_API_BASE</code> and click the button to auto-load your media.</li>
-        <li><strong>CSV:</strong> Upload with headers <code>name,category,gradeBrand,gradeValue,condition,notes</code>.</li>
-      </ul>
-    </details>
-
-    <textarea id="bulkInput" placeholder="Paste Instagram captions or one item per line. Example:\nLeBron James Rookie #NBA #Rookie PSA 10\nCharizard Holo #Pokemon #Numbered /99\nTom Brady Auto #NFL PSA 9"></textarea>
-
-    <div class="actions" style="margin-top:8px">
-      <button id="bulkParseBtn" class="ok">Parse Instagram Text</button>
-      <input id="bulkCsvFile" type="file" accept=".csv,text/csv,application/vnd.ms-excel" />
-      <button id="bulkCsvImportBtn" class="secondary">Import CSV</button>
-      <button id="igFetchBtn" class="secondary">Fetch from Instagram (API)</button>
-    </div>
-
-    <div id="bulkPreviewWrap" class="hidden" style="margin-top:12px">
-      <h3>Preview</h3>
-      <div style="overflow-x:auto">
-        <table>
-          <thead>
-            <tr>
-              <th>Photo</th>
-              <th style="min-width:220px">Name</th>
-              <th>Category</th>
-              <th>Grade</th>
-              <th>Condition</th>
-              <th>Notes</th>
-              <th>Est. £</th>
-            </tr>
-          </thead>
-          <tbody id="bulkPreviewBody"></tbody>
-        </table>
-      </div>
-      <div class="actions" style="margin-top:8px">
-        <button id="bulkAddAllBtn" class="ok">Add All</button>
-        <button id="bulkClearBtn" class="secondary">Clear Preview</button>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>Items</h2>
-    <div class="row" style="margin-bottom:12px">
-      <input id="searchInput" placeholder="Search items" style="flex:2;" />
-      <select id="sortSelect" style="flex:1; min-width:220px;">
-        <option value="added_desc">Sort: Newest first</option>
-        <option value="added_asc">Sort: Oldest first</option>
-        <option value="name_asc">Sort: Name A→Z</option>
-        <option value="name_desc">Sort: Name Z→A</option>
-        <option value="value_desc">Sort: Value High→Low</option>
-        <option value="value_asc">Sort: Value Low→High</option>
-      </select>
-    </div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead>
-          <tr>
-            <th style="min-width:260px;">Name</th>
-            <th>Category</th>
-            <th>Grade</th>
-            <th>Condition</th>
-            <th>Est. £</th>
-            <th>Added</th>
-            <th class="right">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="itemsBody"><tr><td colspan="7" class="meta">Loading…</td></tr></tbody>
-      </table>
-    </div>
-  </section>
-
-  <section>
-    <h2>Stats</h2>
-    <div class="grid">
-      <div class="box">
-        <canvas id="chartCount" width="500" height="240"></canvas>
-        <div class="meta">Items by Category</div>
-      </div>
-      <div class="box">
-        <canvas id="chartValue" width="500" height="240"></canvas>
-        <div class="meta">Estimated Value by Category (£)</div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>Profile Summary & Export</h2>
-    <textarea id="summaryBox" readonly>Loading…</textarea>
-    <div class="actions" style="margin-top:8px">
-      <button id="copySummaryBtn" class="secondary">Copy Summary</button>
-      <button id="downloadJsonBtn" class="secondary">Download JSON</button>
-      <button id="downloadCsvBtn" class="secondary">Download CSV</button>
-      <button id="printSummaryBtn" class="secondary">Print / Save as PDF</button>
-    </div>
-  </section>
-</div>
-
-<!-- Set your serverless domain here (no trailing slash) -->
-<script>
-  window.IG_API_BASE = window.IG_API_BASE || '';
-</script>
-
-<script>
-// ===== Storage (v2 with multi-collection) =====
-const V2_COLLECTIONS_KEY = "cc.v2.collections";
-const V2_ACTIVE_KEY = "cc.v2.activeId";
-
-const uid = () => Math.random().toString(36).slice(2, 10);
-const $ = (id) => document.getElementById(id);
-const toTitle = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
-
-const normaliseCategory = (category) => {
-  const clean = String(category ?? "").trim().toLowerCase();
-  const map = {
-    nba:"NBA", basketball:"NBA",
-    nfl:"NFL", football:"NFL",
-    mlb:"MLB", baseball:"MLB",
-    nhl:"NHL", hockey:"NHL",
-    pokemon:"Pokemon", pkmn:"Pokemon",
-    yugioh:"YuGiOh", "yu-gi-oh":"YuGiOh",
-    funko:"Funko", "funko pop":"Funko"
-  };
-  return map[clean] ?? (category ? toTitle(category) : "Uncategorised");
-};
-
-const rarityScore = (name) => {
-  const n = String(name ?? "").toLowerCase();
-  let score = 1;
-  if (n.includes("rookie") || n.includes(" rc ") || /^rc\b/i.test(n)) score = Math.max(score, 5);
-  if (n.includes("auto") || n.includes("autograph") || n.includes("signed")) score = Math.max(score, 4);
-  if (n.includes("patch") || n.includes("jersey") || n.includes("relic")) score = Math.max(score, 3);
-  if (n.includes("numbered") || n.match(/#\d+/) || n.match(/\b\d+\/\d+\b/)) score = Math.max(score, 2);
-  if (n.includes("1/1") || n.includes("one of one")) score = Math.max(score, 5);
-  return score;
-};
-const gradeMultiplier = (brand, value) => {
-  const v = Number(value || 0);
-  if (brand === "RAW" || !v) return 1.0;
-  if (v >= 10) return 2.0;
-  if (v >= 9.5) return 1.7;
-  if (v >= 9) return 1.5;
-  if (v >= 8.5) return 1.3;
-  if (v >= 8) return 1.2;
-  if (v >= 7) return 1.1;
-  return 1.0;
-};
-const conditionMultiplier = (cond) => ({
-  "Gem Mint":1.25, "Mint":1.15, "Near Mint":1.08, "Excellent":1.03,
-  "Very Good":1.00, "Good":0.92, "Fair":0.85, "Poor":0.75
-}[cond] ?? 1.0);
-const keywordMultiplier = (name) => {
-  const n = String(name ?? "").toLowerCase();
-  const stars = [
-    ["michael jordan",1.8],["lebron",1.6],["kobe",1.5],["brady",1.6],
-    ["mahomes",1.5],["ronaldo",1.4],["messi",1.6],["gretzky",1.6],
-    ["wembanyama",1.5],["luka doncic",1.4]
-  ];
-  for (const [k,m] of stars){ if (n.includes(k)) return m; }
-  return 1.0;
-};
-const estimateValue = (item) => {
-  const base = rarityScore(item.name) * 25;
-  const mult = gradeMultiplier(item.gradeBrand, item.gradeValue)
-            * conditionMultiplier(item.condition)
-            * keywordMultiplier(item.name);
-  return Math.round(base * mult);
-};
-
-class Item {
-  constructor({ name, category, gradeBrand="RAW", gradeValue="", condition="Mint", notes="", photo=null }){
-    this.id = uid();
-    this.name = name;
-    this.category = normaliseCategory(category);
-    this.gradeBrand = gradeBrand;
-    this.gradeValue = gradeValue;
-    this.condition = condition;
-    this.notes = notes;
-    this.photo = photo;
-    this.addedAt = new Date().toISOString();
-    this.estimatedValue = estimateValue(this);
-  }
-}
-class WishlistItem {
-  constructor({ name, targetPrice=0, priority="Medium", notes="" }){
-    this.id = uid();
-    this.name = name; this.targetPrice = Number(targetPrice||0);
-    this.priority = priority; this.notes = notes; this.addedAt = new Date().toISOString();
-  }
-}
-class Collection {
-  constructor({ id=uid(), name="My Collection", ownerName="Stacy", mainNiche="Sports cards", items=[], wishlist=[], logo=null }={}){
-    this.id = id; this.name = name; this.ownerName = ownerName; this.mainNiche = mainNiche; this.logo = logo;
-    this.items = items.map(raw => Object.assign(new Item({
-      name: raw.name, category: raw.category, gradeBrand: raw.gradeBrand ?? "RAW",
-      gradeValue: raw.gradeValue ?? "", condition: raw.condition ?? "Mint", notes: raw.notes ?? "",
-      photo: raw.photo ?? null
-    }), raw, { category: normaliseCategory(raw.category) }));
-    this.wishlist = wishlist.map(w => Object.assign(new WishlistItem(w), w));
-  }
-  get totalItems(){ return this.items.length; }
-  get totalEstimatedValue(){ return this.items.reduce((s,i)=> s + (i.estimatedValue||0), 0); }
-  addItem(data){ const it = new Item(data); this.items.push(it); return it; }
-  removeItemById(id){ const n=this.items.length; this.items = this.items.filter(i=>i.id!==id); return n!==this.items.length; }
-  addWishlist(data){ const w = new WishlistItem(data); this.wishlist.push(w); return w; }
-  removeWishlistById(id){ const n=this.wishlist.length; this.wishlist = this.wishlist.filter(i=>i.id!==id); return n!==this.wishlist.length; }
-  groupByCategory(){ return this.items.reduce((acc,i)=>{ (acc[i.category]??=[]).push(i); return acc; },{}); }
-  summaryText(){ const lines=[
-    `Collector: ${this.ownerName}`, `Main Niche: ${this.mainNiche}`,
-    `Total Items: ${this.totalItems}`, `Estimated Collection Value: £${this.totalEstimatedValue.toFixed(2)}`,
-    "","Items:", ...this.items.map(i=>`- ${i.name} (${i.category}) • ${i.gradeBrand}${i.gradeValue?" "+i.gradeValue:""} • ${i.condition} • est £${i.estimatedValue} • added ${i.addedAt}${i.notes?" • "+i.notes:""}`)
-  ]; if (this.wishlist.length){ lines.push("","Wishlist:",...this.wishlist.map(w=>`- ${w.name} • target £${w.targetPrice} • ${w.priority}${w.notes?" • "+w.notes:""}`)); }
-  return lines.join("\n"); }
-}
-
-function loadCollections(){ const raw = localStorage.getItem(V2_COLLECTIONS_KEY); if (!raw) return []; try{ return JSON.parse(raw).map(c=>new Collection(c)); }catch{ return []; } }
-function saveCollections(cols){ localStorage.setItem(V2_COLLECTIONS_KEY, JSON.stringify(cols)); }
-function getActiveId(){ return localStorage.getItem(V2_ACTIVE_KEY); }
-function setActiveId(id){ localStorage.setItem(V2_ACTIVE_KEY, id); }
-
-let collections = []; let active = null; let ui = { search:"", sort:"added_desc" };
-function setActiveById(id){ const found = collections.find(c=>c.id===id); if (!found) return; active = found; setActiveId(id); renderAll(); }
-function updateActive(mutator){ const idx = collections.findIndex(c=>c.id===active.id); mutator(active); collections[idx]=active; saveCollections(collections); renderAll(); }
-
-function renderCollectionsSelect(){ const sel=$("collectionSelect"); sel.innerHTML = collections.map(c=>`<option value="${c.id}">${c.name}</option>`).join(""); sel.value=active?.id||""; sel.onchange=()=> setActiveById(sel.value); }
-function renderProfile(){ const totalValueFmt = `£${(active.totalEstimatedValue||0).toFixed(2)}`; $("profileText").textContent = `${active.ownerName} · ${active.mainNiche} · Items: ${active.totalItems} · Estimated value: ${totalValueFmt}`; $("ownerNameInput").value = active.ownerName||""; $("nicheInput").value = active.mainNiche||""; }
-function sortItems(items,mode){ const a=items.slice(); switch(mode){ case"added_asc":a.sort((x,y)=>new Date(x.addedAt)-new Date(y.addedAt));break; case"name_asc":a.sort((x,y)=>x.name.localeCompare(y.name));break; case"name_desc":a.sort((x,y)=>y.name.localeCompare(x.name));break; case"value_asc":a.sort((x,y)=>(x.estimatedValue||0)-(y.estimatedValue||0));break; case"value_desc":a.sort((x,y)=>(y.estimatedValue||0)-(x.estimatedValue||0));break; default:a.sort((x,y)=>new Date(y.addedAt)-new Date(x.addedAt)); } return a; }
-
-function renderItems(){ const body=$("itemsBody"); let items=active.items; if (ui.search){ const q=ui.search.toLowerCase(); items=items.filter(i=> i.name.toLowerCase().includes(q)|| i.category.toLowerCase().includes(q)|| (i.notes||"").toLowerCase().includes(q)); } items=sortItems(items, ui.sort); if (!items.length){ body.innerHTML = `<tr><td colspan="7" class="meta">No items yet.</td></tr>`; return; }
-  body.innerHTML = items.map(i=>`
-    <tr>
-      <td><div>${i.name}</div><div class="meta">${i.id}</div></td>
-      <td><span class="pill">${i.category}</span></td>
-      <td>${i.gradeBrand}${i.gradeValue?" "+i.gradeValue:""}</td>
-      <td>${i.condition||""}</td>
-      <td>£${i.estimatedValue||0}</td>
-      <td>${new Date(i.addedAt).toLocaleString()}</td>
-      <td class="right"><button class="secondary danger" data-del="${i.id}">Delete</button></td>
-    </tr>
-  `).join("");
-  body.querySelectorAll('[data-del]').forEach(btn=> btn.addEventListener('click',()=> updateActive(c=> c.removeItemById(btn.getAttribute('data-del')))) );
-}
-
-function renderSummary(){ $("summaryBox").value = active.summaryText(); }
-function renderGroups(){ const ctx1=$("chartCount").getContext('2d'); const ctx2=$("chartValue").getContext('2d');
-  function drawBar(ctx, labels, values, color){ const W=ctx.canvas.width,H=ctx.canvas.height,p=28,g=10; ctx.clearRect(0,0,W,H); ctx.strokeStyle="#e5e7eb"; ctx.beginPath(); ctx.moveTo(p,H-p); ctx.lineTo(W-p,H-p); ctx.moveTo(p,H-p); ctx.lineTo(p,p); ctx.stroke(); const maxV=Math.max(1,...values); const cw=W-p*2, ch=H-p*2-10; const n=labels.length||1; const bw=Math.max(18,(cw-g*(n-1))/n); labels.forEach((lab,idx)=>{ const v=values[idx]||0; const x=p+idx*(bw+g); const h=Math.round((v/maxV)*ch); const y=H-p-h; ctx.fillStyle=color; ctx.fillRect(x,y,bw,h); ctx.fillStyle="#666"; ctx.font="10px system-ui"; const t=String(lab).slice(0,8); ctx.save(); ctx.translate(x+bw/2,H-p+12); ctx.rotate(-Math.PI/8); ctx.fillText(t,-ctx.measureText(t).width/2,0); ctx.restore(); ctx.fillStyle="#111"; const vt=String(v); ctx.fillText(vt, x+bw/2-ctx.measureText(vt).width/2, y-2); }); }
-  const groups = active.groupByCategory(); const labels = Object.keys(groups); const counts = labels.map(k=>groups[k].length); const values = labels.map(k=>groups[k].reduce((s,i)=>s+(i.estimatedValue||0),0));
-  drawBar(ctx1, labels, counts, "#0ea5e9");
-  drawBar(ctx2, labels, values, "#10b981");
-}
-
-function renderAll(){ renderCollectionsSelect(); renderProfile(); renderItems(); renderSummary(); renderGroups(); renderProfileHeader(); }
-
-// ----- Boot -----
-function boot(){
-  let cols = loadCollections();
-  if (!cols.length){
-    const seed = new Collection({ name:"My Collection", ownerName:"Stacy", mainNiche:"Sports cards" });
-    seed.addItem({ name:"Michael Jordan Rookie", category:"NBA" });
-    seed.addItem({ name:"Tom Brady Auto", category:"NFL" });
-    saveCollections([seed]);
-    cols = loadCollections();
-  }
-  collections = cols; active = collections[0]; setActiveId(active.id); renderAll();
-}
-boot();
-
-// ----- Profile/Collections events -----
-$("newCollectionBtn").addEventListener('click', ()=>{ const name=prompt('Name for new collection:','My Collection'); if(!name) return; const col=new Collection({ name }); collections.push(col); saveCollections(collections); setActiveById(col.id); });
-$("renameCollectionBtn").addEventListener('click', ()=>{ const name=prompt('Rename collection:', active.name); if(!name) return; updateActive(c=> c.name=name); });
-$("deleteCollectionBtn").addEventListener('click', ()=>{ if(!confirm(`Delete collection "${active.name}"? This cannot be undone.`)) return; collections = collections.filter(c=>c.id!==active.id); if(!collections.length){ const col=new Collection({ name:'My Collection' }); collections.push(col); } saveCollections(collections); setActiveById(collections[0].id); });
-$("saveProfileBtn").addEventListener('click', ()=>{ const ownerName=$("ownerNameInput").value.trim(); const mainNiche=$("nicheInput").value.trim(); updateActive(c=>{ if(ownerName) c.ownerName=ownerName; if(mainNiche) c.mainNiche=mainNiche; }); });
-
-// ----- Robust Logo Uploader: compress raster + inline SVG -----
-(function() {
-  const logoFile = document.getElementById("logoFile");
-  const setBtn   = document.getElementById("setLogoBtn");
-  const clearBtn = document.getElementById("clearLogoBtn");
-
-  if (!logoFile || !setBtn || !clearBtn) return;
-
-  setBtn.addEventListener("click", () => logoFile.click());
-  clearBtn.addEventListener("click", () => {
-    try { updateActive(c => { c.logo = null; }); } catch(e){ alert("Could not clear logo: "+(e.message||String(e))); }
-  });
-
-  logoFile.addEventListener("change", async () => {
-    const file = logoFile.files && logoFile.files[0];
-    if (!file) return;
-    try {
-      const type = (file.type || "").toLowerCase();
-      // SVG → store inline
-      if (type === "image/svg+xml" || /\.svg$/i.test(file.name)) {
-        const text = await file.text();
-        const svg = text.trim();
-        if (!svg.startsWith("<svg")) { alert("This SVG doesn't look valid (no <svg> root)."); return; }
-        if (svg.length > 750000) { alert("SVG is very large. Please optimise it and try again."); return; }
-        updateActive(c => { c.logo = svg; });
-        return;
-      }
-      // Raster → compress to webp 400×400
-      if (!/^image\//.test(type)) { alert("Please choose an image file (PNG, JPG, SVG)."); return; }
-      const dataURL = await fileToDataURL(file);
-      const compressed = await compressImageDataURL(dataURL, { maxW: 400, maxH: 400, quality: 0.82, mime: "image/webp" });
-      const approxBytes = Math.ceil((compressed.length * 3) / 4);
-      if (approxBytes > 220*1024) { alert("Logo is still too large after compression (~"+ Math.round(approxBytes/1024) +" KB). Please choose a smaller image."); return; }
-      try { updateActive(c => { c.logo = compressed; }); }
-      catch(e){ alert("Storage limit reached. Please remove a few large photos or choose a smaller logo."); }
-    } catch(err){ console.error(err); alert("Could not set logo: "+(err.message||String(err))); }
-    finally { logoFile.value = ""; }
-  });
-
-  function fileToDataURL(file){
-    return new Promise((resolve,reject)=>{ const fr=new FileReader(); fr.onerror=()=>reject(new Error("Failed to read file")); fr.onload=()=>resolve(String(fr.result||"")); fr.readAsDataURL(file); });
-  }
-  async function compressImageDataURL(dataURL,{maxW,maxH,quality,mime}){
-    const img = await loadImage(dataURL);
-    const {w,h} = fit(img.width,img.height,maxW,maxH);
-    const canvas = document.createElement("canvas"); canvas.width=w; canvas.height=h;
-    const ctx=canvas.getContext("2d"); ctx.clearRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
-    return canvas.toDataURL(mime,quality);
-  }
-  function loadImage(src){ return new Promise((resolve,reject)=>{ const i=new Image(); i.onload=()=>resolve(i); i.onerror=()=>reject(new Error("Image decode failed")); i.src=src; }); }
-  function fit(w,h,maxW,maxH){ let rw=w,rh=h; if(rw>maxW){ rh=Math.round((maxW/rw)*rh); rw=maxW; } if(rh>maxH){ rw=Math.round((maxH/rh)*rw); rh=maxH; } return {w:Math.max(1,rw),h:Math.max(1,rh)}; }
-})();
-
-// ----- Add Item -----
-$("addForm").addEventListener('submit', (e)=>{ e.preventDefault(); const name=$("itemName").value.trim(); const category=$("itemCategory").value.trim(); const gradeBrand=$("gradeBrand").value; const gradeValue=$("gradeValue").value||""; const condition=$("conditionSelect").value; const notes=$("notesInput").value.trim(); if(!name||!category) return alert('Name and Category are required.'); updateActive(c=> c.addItem({ name, category, gradeBrand, gradeValue, condition, notes })); $("itemName").value=""; $("itemCategory").value=""; $("gradeBrand").value="RAW"; $("gradeValue").value=""; $("conditionSelect").value="Mint"; $("notesInput").value=""; });
-
-// ----- Bulk Import: Instagram text parsing -----
-const bulkState = { items: [] };
-function normaliseCat(c){ return normaliseCategory(c); }
-function guessCategoryFromText(t){
-  const s = (t||"").toLowerCase();
-  if (/#nba\b/.test(s) || /\bnba\b/.test(s)) return 'NBA';
-  if (/#nfl\b/.test(s) || /\bnfl\b/.test(s) || /\bfootball\b/.test(s)) return 'NFL';
-  if (/#mlb\b/.test(s) || /\bmlb\b/.test(s) || /\bbaseball\b/.test(s)) return 'MLB';
-  if (/#nhl\b/.test(s) || /\bnhl\b/.test(s) || /\bhockey\b/.test(s)) return 'NHL';
-  if (/#pokemon\b/.test(s) || /\bpokemon\b/.test(s) || /#charizard\b/.test(s)) return 'Pokemon';
-  if (/#yugioh\b/.test(s) || /\byugioh\b/.test(s) || /yu-gi-oh/.test(s)) return 'YuGiOh';
-  if (/#funko\b/.test(s) || /\bfunko\b/.test(s)) return 'Funko';
-  return 'Uncategorised';
-}
-function guessNameFromText(t){
-  const firstPart = String(t||'').split('#')[0].split('\n')[0];
-  let s = firstPart.replace(/\b(PSA|BGS|SGC)\s*\d{1,2}(?:\.\d)?/gi,'').trim();
-  s = s.replace(/[|•·\-,:]+\s*$/,'').trim();
-  if (!s) s = (String(t||'').match(/[A-Z][a-z]+\s+[A-Z][a-z]+/)||[''])[0];
-  return s || 'Unnamed Item';
-}
-function guessGrade(text){
-  const m = String(text||'').match(/\b(PSA|BGS|SGC)\s*(10|9\.5|9|8\.5|8|7|6|5|4|3|2|1)\b/i);
-  if (m) return { brand: m[1].toUpperCase(), value: m[2] };
-  return { brand:'RAW', value:'' };
-}
-function parseInstagramText(raw){
-  const chunks = String(raw||'').trim().split(/\n\s*\n|\r\n\r\n|\n(?=[A-Z0-9#])/g).filter(Boolean);
-  const items = [];
-  chunks.forEach(line=>{
-    const name = guessNameFromText(line);
-    const category = guessCategoryFromText(line);
-    const { brand, value } = guessGrade(line);
-    let condition = 'Mint';
-    if (/\bgem mint\b/i.test(line)) condition = 'Gem Mint';
-    if (/\bnear mint\b/i.test(line)) condition = 'Near Mint';
-    if (/\bexcellent\b/i.test(line)) condition = 'Excellent';
-    if (/\bvery good\b/i.test(line)) condition = 'Very Good';
-    if (/\bgood\b/i.test(line)) condition = 'Good';
-    if (/\bfair\b/i.test(line)) condition = 'Fair';
-    if (/\bpoor\b/i.test(line)) condition = 'Poor';
-    const notes = line.trim();
-    const draft = { name, category, gradeBrand:brand, gradeValue:value, condition, notes };
-    draft.category = normaliseCat(draft.category);
-    draft.estimatedValue = estimateValue(draft);
-    items.push(draft);
-  });
-  return items;
-}
-function renderBulkPreview(){
-  const wrap = $("bulkPreviewWrap"); const body = $("bulkPreviewBody");
-  if (!bulkState.items.length){ wrap.classList.add('hidden'); body.innerHTML=''; return; }
-  wrap.classList.remove('hidden');
-  body.innerHTML = bulkState.items.map((it, idx)=> `
-    <tr data-i="${idx}">
-      <td>${it.photo? `<img src="${it.photo}" style=\"width:48px;height:48px;object-fit:cover;border:1px solid #e5e7eb;border-radius:6px\">` : '<span class="meta">(no photo)</span>'}</td>
-      <td><input class="inline-input b-name" value="${it.name||''}"></td>
-      <td><input class="inline-input b-cat" value="${it.category||''}"></td>
-      <td>
-        <div class="row" style="gap:6px">
-          <select class="inline-input b-brand" style="max-width:120px">
-            <option ${it.gradeBrand==='RAW'?'selected':''}>RAW</option>
-            <option ${it.gradeBrand==='PSA'?'selected':''}>PSA</option>
-            <option ${it.gradeBrand==='BGS'?'selected':''}>BGS</option>
-            <option ${it.gradeBrand==='SGC'?'selected':''}>SGC</option>
-          </select>
-          <input class="inline-input b-gval" type="number" step="0.5" min="1" max="10" placeholder="value" value="${it.gradeValue||''}" style="max-width:100px">
+      <div class="header-right">
+        <div class="pill">
+          <div class="pill-icon">
+            <img
+              src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23fff'/><path d='M11 20a9 9 0 0 1 9-9h1.5v3H20a6 6 0 1 0 0 12h1.5v3H20a9 9 0 0 1-9-9Z' fill='%23000'/><path d='M29 20a9 9 0 0 0-9-9h-1.5v3H20a6 6 0 1 1 0 12h-1.5v3H20a9 9 0 0 0 9-9Z' fill='%23000' opacity='.7'/></svg>"
+              alt="CC Icon"
+            />
+          </div>
+          <span>Where Collectors Meet</span>
         </div>
-      </td>
-      <td>
-        <select class="inline-input b-cond">
-          ${["Gem Mint","Mint","Near Mint","Excellent","Very Good","Good","Fair","Poor"].map(c=>`<option ${it.condition===c?'selected':''}>${c}</option>`).join('')}
-        </select>
-      </td>
-      <td><input class="inline-input b-notes" value="${(it.notes||'').replace(/"/g,'&quot;')}"></td>
-      <td class="meta b-est">£${it.estimatedValue||0}</td>
-    </tr>
-  `).join('');
-  body.querySelectorAll('tr[data-i]').forEach(tr=>{
-    const idx = Number(tr.getAttribute('data-i'));
-    const qs = sel => tr.querySelector(sel);
-    const recompute = ()=>{
-      const draft = bulkState.items[idx] = {
-        ...bulkState.items[idx],
-        name: qs('.b-name').value.trim(),
-        category: normaliseCat(qs('.b-cat').value.trim()),
-        gradeBrand: qs('.b-brand').value,
-        gradeValue: qs('.b-gval').value,
-        condition: qs('.b-cond').value,
-        notes: qs('.b-notes').value.trim()
-      };
-      draft.estimatedValue = estimateValue(draft);
-      qs('.b-est').textContent = '£' + (draft.estimatedValue||0);
-    };
-    ['input','change'].forEach(ev=>{
-      qs('.b-name').addEventListener(ev, recompute);
-      qs('.b-cat').addEventListener(ev, recompute);
-      qs('.b-brand').addEventListener(ev, recompute);
-      qs('.b-gval').addEventListener(ev, recompute);
-      qs('.b-cond').addEventListener(ev, recompute);
-      qs('.b-notes').addEventListener(ev, recompute);
-    });
-  });
-}
+      </div>
+    </header>
 
-$("bulkParseBtn").addEventListener('click', ()=>{ const raw=$("bulkInput").value; const items=parseInstagramText(raw); if(!items.length) return alert('No items detected.'); bulkState.items=items; renderBulkPreview(); renderProfileHeader(); });
-$("bulkClearBtn").addEventListener('click', ()=>{ bulkState.items=[]; renderBulkPreview(); });
-$("bulkAddAllBtn").addEventListener('click', ()=>{ if(!bulkState.items.length) return; updateActive(c=> bulkState.items.forEach(d=> c.addItem(d))); bulkState.items=[]; renderBulkPreview(); alert('All items added.'); renderProfileHeader(); });
+    <main>
+      <div class="card">
+        <!-- LEFT SIDE (BRAND / WELCOME) -->
+        <div class="card-left">
+          <div class="welcome-block">
+            <div class="welcome-eyebrow">Collector Connector</div>
+            <div class="welcome-title">Welcome Back!</div>
+            <div class="welcome-subtitle">
+              Log in to step back into your world of collections, connections,
+              and stories. Your profile is where your pieces finally feel at
+              home.
+            </div>
+          </div>
 
-// CSV import
-function parseCSV(text){
-  const rows = text.split(/\r?\n/).filter(r=>r.trim().length>0);
-  if (!rows.length) return [];
-  const headers = rows[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
-  const idx = (name)=> headers.findIndex(h=> h.toLowerCase()===name.toLowerCase());
-  const iName=idx('name'), iCat=idx('category'), iBrand=idx('gradeBrand'), iVal=idx('gradeValue'), iCond=idx('condition'), iNotes=idx('notes');
-  const out = [];
-  for (let r=1;r<rows.length;r++){
-    const cols = rows[r].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c=> c.replace(/^"|"$/g,'').replace(/""/g,'"'));
-    const draft = {
-      name: cols[iName]||'Unnamed Item',
-      category: normaliseCat(cols[iCat]||'Uncategorised'),
-      gradeBrand: cols[iBrand]||'RAW',
-      gradeValue: cols[iVal]||'',
-      condition: cols[iCond]||'Mint',
-      notes: cols[iNotes]||''
-    };
-    draft.estimatedValue = estimateValue(draft);
-    out.push(draft);
-  }
-  return out;
-}
-$("bulkCsvImportBtn").addEventListener('click', ()=>{ const file=$("bulkCsvFile").files[0]; if(!file) return alert('Choose a CSV file first.'); const fr=new FileReader(); fr.onload=()=>{ try{ const items=parseCSV(fr.result||''); if(!items.length) return alert('CSV parsed but no rows found.'); bulkState.items=items; renderBulkPreview(); }catch(err){ alert('Failed to parse CSV: '+err.message); } }; fr.readAsText(file); });
+          <div class="left-footer">
+            <span>
+              <strong>Strong, tasteful branding.</strong><br />
+              Your identity, everywhere it matters.
+            </span>
+            <div class="mini-icon">
+              <img
+                src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23fff'/><path d='M11 20a9 9 0 0 1 9-9h1.5v3H20a6 6 0 1 0 0 12h1.5v3H20a9 9 0 0 1-9-9Z' fill='%23000'/><path d='M29 20a9 9 0 0 0-9-9h-1.5v3H20a6 6 0 1 1 0 12h-1.5v3H20a9 9 0 0 0 9-9Z' fill='%23000' opacity='.7'/></svg>"
+                alt="Collector Connector Icon"
+              />
+            </div>
+          </div>
+        </div>
 
-// Instagram API fetch bridge from profile header
-(function(){
-  const profileBtn = document.getElementById('igImportBtn_profile');
-  if (profileBtn){
-    profileBtn.addEventListener('click', ()=>{
-      const btn = document.getElementById('igFetchBtn');
-      if (btn) btn.click();
-      else alert('Import button not found on page.');
-    });
-  }
-  const tryDemoBtn = document.getElementById('tryDemoBtn_profile');
-  if (tryDemoBtn){
-    const apiBase = (window.IG_API_BASE||'').trim();
-    if (!apiBase) tryDemoBtn.style.display='inline-flex';
-    tryDemoBtn.addEventListener('click', ()=>{ alert('Demo import placeholder. (Configure window.IG_API_BASE for live import.)'); });
-  }
-})();
+        <!-- RIGHT SIDE (LOGIN + DASHBOARD) -->
+        <div class="card-right">
+          <!-- LOGIN VIEW -->
+          <section id="login-view" aria-hidden="false" aria-live="polite">
+            <div class="login-title">Log in</div>
+            <div class="login-subtitle">
+              This login is visual only for your demo. Click “Log in” or press Enter to fade
+              into your dashboard.
+            </div>
 
-// Instagram API fetch (existing button logic)
-$("igFetchBtn").addEventListener('click', async ()=>{
-  const API_BASE=(window.IG_API_BASE||'').replace(/\/$/,'');
-  if(!API_BASE){ alert("Set window.IG_API_BASE first (e.g., window.IG_API_BASE='https://your-project.vercel.app')"); return; }
-  const btn=$("igFetchBtn"); btn.disabled=true; const label=btn.textContent; btn.textContent='Fetching…';
-  try{
-    const res=await fetch(`${API_BASE}/api/ig-media?limit=50`);
-    const data=await res.json();
-    if(!res.ok) throw new Error((data&&data.error)||`HTTP ${res.status}`);
-    const items=(data.items||[]).map(m=>({
-      name: (m.caption? m.caption.split('#')[0].trim(): '') || 'Unnamed Item',
-      category: (function(){ const s=(m.caption||'').toLowerCase(); if(/#nba\b|\bnba\b/.test(s)) return 'NBA'; if(/#nfl\b|\bnfl\b|\bfootball\b/.test(s)) return 'NFL'; if(/#mlb\b|\bmlb\b|\bbaseball\b/.test(s)) return 'MLB'; if(/#nhl\b|\bnhl\b|\bhockey\b/.test(s)) return 'NHL'; if(/#pokemon\b|\bpokemon\b|#charizard\b/.test(s)) return 'Pokemon'; if(/#yugioh\b|\byugioh\b|yu-gi-oh/.test(s)) return 'YuGiOh'; if(/#funko\b|\bfunko\b/.test(s)) return 'Funko'; return 'Uncategorised'; })(),
-      gradeBrand:'RAW', gradeValue:'', condition:'Mint',
-      notes: m.caption || '',
-      photo: (m.media_type==='IMAGE'||m.media_type==='CAROUSEL_ALBUM') ? (m.media_url||m.thumbnail_url) : (m.thumbnail_url||null)
-    }));
-    bulkState.items=items.map(d=> ({...d, estimatedValue: estimateValue(d)}));
-    renderBulkPreview();
-  }catch(e){ alert('Import failed: '+(e.message||String(e))); }
-  finally{ btn.disabled=false; btn.textContent=label; }
-});
+            <form id="login-form">
+              <div>
+                <label for="username">Username</label>
+                <input
+                  id="username"
+                  type="text"
+                  placeholder="stacy.collector"
+                  autocomplete="off"
+                />
+              </div>
 
-// Search/Sort, Summary/Export, Mock/Clear
-$("searchInput").addEventListener('input', e=>{ ui.search=e.target.value; renderItems(); });
-$("sortSelect").addEventListener('change', e=>{ ui.sort=e.target.value; renderItems(); });
-$("copySummaryBtn").addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText($("summaryBox").value); alert('Summary copied.'); }catch{ alert('Copy failed.'); } });
-$("downloadJsonBtn").addEventListener('click', ()=>{ const blob=new Blob([JSON.stringify(active,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${active.name.replace(/\s+/g,'_')}.json`; a.click(); URL.revokeObjectURL(url); });
-$("downloadCsvBtn").addEventListener('click', ()=>{ const headers=["id","name","category","gradeBrand","gradeValue","condition","estimatedValue","addedAt","notes"]; const rows=active.items.map(i=> headers.map(h=> (i[h]??"")).map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")); const csv=[headers.join(","),...rows].join("\n"); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${active.name.replace(/\s+/g,'_')}.csv`; a.click(); URL.revokeObjectURL(url); });
-$("printSummaryBtn").addEventListener('click', ()=> window.print());
-$("importMockBtn").addEventListener('click', ()=>{ updateActive(c=>{ [
-  { name:"LeBron James Rookie", category:"NBA" },
-  { name:"Charizard Holo", category:"Pokemon" },
-  { name:"Tom Brady Auto", category:"NFL" }
-].forEach(x=> c.addItem(x)); }); });
-$("clearAllBtn").addEventListener('click', ()=>{ if(!confirm('This will remove ALL collections and data. Continue?')) return; localStorage.removeItem(V2_COLLECTIONS_KEY); localStorage.removeItem(V2_ACTIVE_KEY); location.reload(); });
+              <div>
+                <label for="password">Password</label>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  autocomplete="off"
+                />
+              </div>
 
-// === Render profile header (logo + chips) ===
-function renderProfileHeader(){
-  if (!active) return;
-  const items = active.totalItems || (active.items? active.items.length:0);
-  const total = (typeof active.totalEstimatedValue!=='undefined') ? active.totalEstimatedValue : (active.items||[]).reduce((s,i)=> s+(i.estimatedValue||0),0);
-  const niche = active.mainNiche || 'Sports cards';
-  const name  = active.name || 'My Collection';
-  const bio   = 'Instagram → Collection in one click. Photos + captions → structured items. Shareable export.';
-  const nEl = document.getElementById('profileName'); if(nEl) nEl.textContent = name;
-  const iEl = document.getElementById('chipItems'); if(iEl) iEl.textContent = `${items} item${items===1?'':'s'}`;
-  const vEl = document.getElementById('chipValue'); if(vEl) vEl.textContent = `£${Number(total||0).toLocaleString()} est`;
-  const cEl = document.getElementById('chipNicheVal'); if(cEl) cEl.textContent = niche;
-  const bEl = document.getElementById('profileBio'); if(bEl) bEl.textContent = bio;
-  renderLogo();
-}
+              <div class="row">
+                <div class="row-left">
+                  <input id="remember" type="checkbox" />
+                  <label for="remember" style="text-transform:none;letter-spacing:0;">
+                    Remember me
+                  </label>
+                </div>
+                <a href="#" class="link">Forgot password?</a>
+              </div>
 
-// Ensure renderLogo exists (set #logoBox from active.logo)
-function renderLogo(){
-  const box=document.getElementById('logoBox'); if(!box) return; const logo = active && active.logo;
-  if(logo){ const val=String(logo).trim();
-    if(val.startsWith('<svg')){ box.innerHTML = val; }
-    else { box.innerHTML = `<img src="${val}" alt="logo" class="logoImg">`; }
-  } else {
-    box.innerHTML = `
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px">
-        <defs><linearGradient id="ccg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0ea5e9" offset="0"/><stop stop-color="#10b981" offset="1"/></linearGradient></defs>
-        <rect x="2" y="2" width="60" height="60" rx="12" fill="url(#ccg)"/>
-        <text x="32" y="40" font-size="28" font-family="system-ui, Segoe UI, Roboto, sans-serif" text-anchor="middle" fill="#fff" font-weight="700">CC</text>
-      </svg>`;
-  }
-}
-</script>
-<script>
-/* CollectorConnector – Bulk Photo Upload + Thumbnails + Modal
-   Drop-in enhancer: injects upload control, adds items with photos,
-   and augments the Items table to render clickable thumbnails.
-*/
-(() => {
-  // --- Guards: require existing app primitives ---
-  if (typeof updateActive !== 'function' || typeof renderAll !== 'function' || typeof normaliseCategory !== 'function') {
-    console.warn('[PhotoEnhance] Required app functions not found. Aborting enhancer.');
-    return;
-  }
+              <button id="login-button" class="btn-primary" type="submit">
+                <span>Log in</span>
+                <span>→</span>
+              </button>
 
-  // --- Inject minimal CSS (hidden utility, thumbnails, modal) once ---
-  (function injectStyle(){
-    if (document.getElementById('cc-photo-enhance-style')) return;
-    const css = `
-      .hidden { display:none !important; }
-      .thumb { width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid var(--border, #e5e7eb); cursor:pointer; }
-      #photoModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:9999; }
-      #photoModal img { max-width:92%; max-height:92%; border-radius:10px; box-shadow:0 0 24px rgba(0,0,0,0.6); }
-    `.trim();
-    const s = document.createElement('style');
-    s.id = 'cc-photo-enhance-style';
-    s.textContent = css;
-    document.head.appendChild(s);
-  })();
+              <div class="or-divider">
+                <span></span>
+                OR
+                <span></span>
+              </div>
 
-  // --- Inject Modal if missing ---
-  function ensureModal(){
-    let modal = document.getElementById('photoModal');
-    let modalImg = document.getElementById('modalImage');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'photoModal';
-      modal.className = 'hidden';
-      modal.innerHTML = `<img id="modalImage" alt="Preview">`;
-      document.body.appendChild(modal);
-      modalImg = modal.querySelector('#modalImage');
-    }
-    const open = (src) => {
-      modalImg.src = src;
-      modal.classList.remove('hidden');
-      modal.style.display = 'flex';
-    };
-    const close = () => {
-      modal.classList.add('hidden');
-      modal.style.display = 'none';
-      modalImg.src = '';
-    };
-    modal.addEventListener('click', close);
-    return { open, close };
-  }
-  const modal = ensureModal();
+              <button class="btn-secondary" type="button">
+                <span>Sign up</span>
+              </button>
+            </form>
+          </section>
 
-  // --- Helper: File -> data URL ---
-  function fileToDataURL(file){
-    return new Promise((resolve,reject)=>{
-      const fr = new FileReader();
-      fr.onload = () => resolve(String(fr.result || ""));
-      fr.onerror = () => reject(new Error("Failed to read file"));
-      fr.readAsDataURL(file);
-    });
-  }
+          <!-- DASHBOARD VIEW -->
+          <section id="dashboard-view" class="dashboard" aria-hidden="true" aria-live="polite">
+            <div class="dashboard-header">
+              <div class="dashboard-left">
+                <div class="brand-icon">
+                  <img
+                    src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23fff'/><path d='M11 20a9 9 0 0 1 9-9h1.5v3H20a6 6 0 1 0 0 12h1.5v3H20a9 9 0 0 1-9-9Z' fill='%23000'/><path d='M29 20a9 9 0 0 0-9-9h-1.5v3H20a6 6 0 1 1 0 12h-1.5v3H20a9 9 0 0 0 9-9Z' fill='%23000' opacity='.7'/></svg>"
+                    alt="Collector Connector Icon"
+                  />
+                </div>
+                <div class="dashboard-title-block">
+                  <div class="dashboard-title">Your Collector Dashboard</div>
+                  <div class="dashboard-subtitle">
+                    A clear, calm overview of your collections, presence, and
+                    connections.
+                  </div>
+                </div>
+              </div>
+              <div class="dashboard-actions">
+                <button class="btn-ghost" type="button">
+                  <span>New piece</span>
+                </button>
+                <button id="logout-button" class="btn-ghost" type="button">
+                  <span>Log out</span>
+                </button>
+              </div>
+            </div>
 
-  // (Optional) Downscale & compress to keep localStorage healthy
-  async function compressDataURL(dataURL, {maxW=900, maxH=900, mime="image/webp", quality=0.82}={}){
-    const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("Image decode failed")); i.src=dataURL; });
-    let w = img.width, h = img.height;
-    if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
-    if (h > maxH) { w = Math.round(w * (maxH / h)); h = maxH; }
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, w);
-    canvas.height = Math.max(1, h);
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    let out = canvas.toDataURL(mime, quality);
-    if (out === "data:,") out = canvas.toDataURL("image/png"); // rare fallback
-    return out;
-  }
+            <div class="dashboard-grid">
+              <div class="panel">
+                <div class="panel-header">
+                  <div>
+                    <div class="panel-title">Profile &amp; Collections</div>
+                    <div class="panel-subtitle">
+                      Make your profile feel like your collection’s true home.
+                    </div>
+                  </div>
+                  <div class="panel-icon">
+                    <img
+                      src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23fff'/><path d='M11 20a9 9 0 0 1 9-9h1.5v3H20a6 6 0 1 0 0 12h1.5v3H20a9 9 0 0 1-9-9Z' fill='%23000'/><path d='M29 20a9 9 0 0 0-9-9h-1.5v3H20a6 6 0 1 1 0 12h-1.5v3H20a9 9 0 0 0 9-9Z' fill='%23000' opacity='.7'/></svg>"
+                      alt="Profile Icon"
+                    />
+                  </div>
+                </div>
+                <div class="panel-body">
+                  This is where your profile, story, and favourite pieces live.
+                  In the full product, this panel would let you:
+                  <ul style="margin-top:6px;padding-left:18px;">
+                    <li>Upload and organise your collections</li>
+                    <li>Highlight your favourite piece</li>
+                    <li>Control what the world sees</li>
+                  </ul>
+                  <div class="stats-row">
+                    <div class="stat-pill">
+                      <div>
+                        <div class="stat-label">Pieces</div>
+                        <div class="stat-value">128</div>
+                      </div>
+                      <div class="stat-label">Curated</div>
+                    </div>
+                    <div class="stat-pill">
+                      <div>
+                        <div class="stat-label">Categories</div>
+                        <div class="stat-value">7</div>
+                      </div>
+                      <div class="stat-label">Organised</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-  // --- Simple heuristics from filename ---
-  function autoNameFromFilename(filename){
-    return filename.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-  }
-  function autoCategoryFromFilename(filename){
-    const lower = filename.toLowerCase();
-    if (lower.includes("jordan") || lower.includes("lebron") || lower.includes("psa") || lower.includes("rc")) return "NBA";
-    if (lower.includes("charizard") || lower.includes("pikachu") || lower.includes("pokemon") || lower.includes("pkmn")) return "Pokemon";
-    if (lower.includes("asm") || lower.includes("spider-man") || lower.includes("batman") || lower.includes("marvel") || lower.includes("dc")) return "Comics";
-    if (lower.includes("yeezy") || lower.includes("jordan1") || lower.includes("dunk") || lower.includes("airmax") || lower.includes("aj1")) return "Sneakers";
-    if (lower.includes("funko") || lower.includes("pop")) return "Figures / Toys";
-    return "Uncategorised";
-  }
+              <div class="panel">
+                <div class="panel-header">
+                  <div>
+                    <div class="panel-title">Connections</div>
+                    <div class="panel-subtitle">
+                      Where collectors meet, trade, and recognise each other.
+                    </div>
+                  </div>
+                  <div class="panel-icon">
+                    <img
+                      src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='%23fff'/><path d='M11 20a9 9 0 0 1 9-9h1.5v3H20a6 6 0 1 0 0 12h1.5v3H20a9 9 0 0 1-9-9Z' fill='%23000'/><path d='M29 20a9 9 0 0 0-9-9h-1.5v3H20a6 6 0 1 1 0 12h-1.5v3H20a9 9 0 0 0 9-9Z' fill='%23000' opacity='.7'/></svg>"
+                      alt="Connections Icon"
+                    />
+                  </div>
+                </div>
+                <div class="panel-body">
+                  In the full version, this is where you’d see:
+                  <ul style="margin-top:6px;padding-left:18px;">
+                    <li>New followers and messages</li>
+                    <li>Invites to connect or trade</li>
+                    <li>Signals from people who love your pieces</li>
+                  </ul>
+                  <div class="stats-row">
+                    <div class="stat-pill">
+                      <div>
+                        <div class="stat-label">Connections</div>
+                        <div class="stat-value">42</div>
+                      </div>
+                      <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat-pill">
+                      <div>
+                        <div class="stat-label">Messages</div>
+                        <div class="stat-value">9</div>
+                      </div>
+                      <div class="stat-label">Unread</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-  // --- Inject "Bulk Upload Photos" control near the Add Item form if missing ---
-  function ensureUploadControl(){
-    let input = document.getElementById('bulkPhotoUpload');
-    if (input) return input;
-    // Try to place it right after #addForm, or at end of .container as fallback
-    const addForm = document.getElementById('addForm');
-    const host = addForm ? addForm.parentElement : document.querySelector('.container') || document.body;
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="panel-title">Brand presence</div>
+                  <div class="panel-subtitle">
+                    Strong, tasteful branding — your identity, consistently
+                    present.
+                  </div>
+                </div>
+                <div class="panel-icon">
+                  <img
+                    src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 36'><rect width='200' height='36' rx='6' fill='%23fff'/><text x='16' y='24' font-size='14' fill='%23000' letter-spacing='.04em'>COLLECTOR%20CONNECTOR</text></svg>"
+                    alt="Collector Connector Logo"
+                  />
+                </div>
+              </div>
+              <div class="panel-body">
+                This section exists to show YC (and you) how the brand carries
+                through the product:
+                <ul style="margin-top:6px;padding-left:18px;">
+                  <li>Full logo in key moments (login, header, footer)</li>
+                  <li>Icon used as a subtle, confident accent</li>
+                  <li>Black + white palette that lets collections shine</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
 
-    const wrap = document.createElement('div');
-    wrap.className = 'actions';
-    wrap.style.marginTop = '8px';
+    <footer>
+      <div class="footer-left">
+        <div class="footer-logo">
+          <img
+            src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 36'><rect width='200' height='36' rx='6' fill='%23fff'/><text x='16' y='24' font-size='14' fill='%23000' letter-spacing='.04em'>COLLECTOR%20CONNECTOR</text></svg>"
+            alt="Collector Connector"
+          />
+        </div>
+        <span>Where collectors meet, remember, and get seen.</span>
+      </div>
+      <span>Demo build – visual login only, no real auth.</span>
+    </footer>
+  </div>
 
-    const label = document.createElement('label');
-    label.setAttribute('for', 'bulkPhotoUpload');
-    label.className = 'secondary';
-    label.style.cssText = 'cursor:pointer;padding:10px 12px;border:1px solid var(--border);border-radius:8px;';
-    label.textContent = 'Bulk Upload Photos';
+  <script>
+    (function () {
+      const loginForm = document.getElementById("login-form");
+      const loginButton = document.getElementById("login-button");
+      const logoutButton = document.getElementById("logout-button");
+      const loginView = document.getElementById("login-view");
+      const dashboardView = document.getElementById("dashboard-view");
 
-    input = document.createElement('input');
-    input.type = 'file';
-    input.id = 'bulkPhotoUpload';
-    input.accept = 'image/*';
-    input.multiple = true;
-    input.style.display = 'none';
+      const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
 
-    wrap.appendChild(label);
-    wrap.appendChild(input);
-    host.appendChild(wrap);
-    return input;
-  }
-  const uploadInput = ensureUploadControl();
-
-  // --- Upload handler: create Items in the active collection with photo ---
-  uploadInput.addEventListener('change', async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-
-    for (const file of files){
-      try{
-        const raw = await fileToDataURL(file);
-        // Optionally compress to save quota; enable if needed:
-        // const photo = await compressDataURL(raw, { maxW: 900, maxH: 900, mime: "image/webp", quality: 0.8 });
-        const photo = raw;
-
-        const name = autoNameFromFilename(file.name);
-        const category = normaliseCategory(autoCategoryFromFilename(file.name));
-
-        updateActive(c => c.addItem({
-          name,
-          category,
-          gradeBrand: 'RAW',
-          gradeValue: '',
-          condition: 'Mint',
-          notes: '',
-          photo
-        }));
-      } catch(err){
-        console.error('[PhotoEnhance] File failed:', err);
-        alert("Failed to process one of the files: " + (err.message || String(err)));
-      }
-    }
-    renderAll();
-    e.target.value = '';
-  });
-
-  // --- Augment the Items table rendering to include thumbnails + click-to-zoom ---
-  // We monkey-patch renderItems to post-process rows and inject a thumbnail cell fragment
-  const _origRenderItems = window.renderItems;
-  if (typeof _origRenderItems === 'function') {
-    window.renderItems = function(){
-      _origRenderItems();
-
-      const body = document.getElementById('itemsBody');
-      if (!body) return;
-
-      // Insert thumbnails into the "Name" column if a photo exists
-      // We find each row and if its item has a photo, prepend a thumbnail before the name text.
-      // To map rows -> items, we can read the id from the meta div (already rendered by your template).
-      const rows = Array.from(body.querySelectorAll('tr'));
-      rows.forEach(tr => {
-        const nameCell = tr.cells && tr.cells[0];
-        if (!nameCell) return;
-
-        const idMeta = nameCell.querySelector('.meta');
-        if (!idMeta) return;
-        const id = idMeta.textContent.trim();
-        // Find item by id from active collection
+      function setHidden(el, hidden) {
+        if (!el) return;
+        el.setAttribute("aria-hidden", hidden ? "true" : "false");
         try {
-          // 'active' is defined in your app; we access items safely
-          const it = (window.active && Array.isArray(window.active.items))
-            ? window.active.items.find(x => String(x.id) === id)
-            : null;
-          if (!it || !it.photo) return;
-
-          // Avoid duplicate injection
-          if (nameCell.querySelector('img.thumb')) return;
-
-          const rowWrap = nameCell.querySelector('div') || nameCell;
-          // Build a small inline fragment with image + original block
-          const flex = document.createElement('div');
-          flex.style.display = 'flex';
-          flex.style.alignItems = 'center';
-          flex.style.gap = '8px';
-
-          const img = document.createElement('img');
-          img.src = it.photo;
-          img.className = 'thumb';
-          img.alt = 'Item photo';
-          img.addEventListener('click', () => modal.open(it.photo));
-
-          // Move existing content into a wrapper next to the image
-          const contentWrap = document.createElement('div');
-          while (rowWrap.firstChild) contentWrap.appendChild(rowWrap.firstChild);
-          flex.appendChild(img);
-          flex.appendChild(contentWrap);
-          rowWrap.appendChild(flex);
-        } catch(e) {
-          // Non-fatal if structure differs
+          // Prevent focus into hidden region (supported in modern browsers)
+          el.inert = !!hidden;
+        } catch (e) {
+          /* ignore */
         }
-      });
+      }
 
-      // Also ensure any explicitly placed thumbnails get modal behavior
-      body.querySelectorAll('img.thumb').forEach(img => {
-        if (img.dataset._modalBound) return;
-        img.dataset._modalBound = '1';
-        img.addEventListener('click', () => modal.open(img.getAttribute('src')));
-      });
-    };
-    // Re-render now to apply augmentation if the table is currently visible
-    try { window.renderItems(); } catch {}
-  } else {
-    console.warn('[PhotoEnhance] Could not patch renderItems; thumbnails will not auto-inject.');
-  }
-})();
-</script>
+      function showDashboard({ withFade = true } = {}) {
+        if (!loginView || !dashboardView) return;
 
+        // Update accessibility first
+        setHidden(loginView, true);
+        setHidden(dashboardView, false);
+
+        if (withFade) {
+          loginView.classList.add("fade-out", "fading");
+          setTimeout(() => {
+            loginView.classList.add("hidden");
+            loginView.classList.remove("fading");
+            dashboardView.style.display = "flex";
+          }, 400);
+        } else {
+          loginView.classList.add("hidden");
+          loginView.classList.remove("fade-out", "fading");
+          dashboardView.style.display = "flex";
+        }
+
+        try {
+          sessionStorage.setItem(VISUAL_LOGIN_KEY, "1");
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      function showLogin() {
+        if (!loginView || !dashboardView) return;
+
+        dashboardView.style.display = "none";
+        loginView.classList.remove("hidden", "fade-out", "fading");
+
+        setHidden(loginView, false);
+        setHidden(dashboardView, true);
+
+        try {
+          sessionStorage.removeItem(VISUAL_LOGIN_KEY);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      // Submit via Enter or button
+      if (loginForm) {
+        loginForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          showDashboard({ withFade: true });
+        });
+      }
+
+      // Also wire explicit click handlers (defensive)
+      if (loginButton) {
+        loginButton.addEventListener("click", () => showDashboard({ withFade: true }));
+      }
+      if (logoutButton) {
+        logoutButton.addEventListener("click", showLogin);
+      }
+
+      // Restore visual state on load
+      let wasLogged = false;
+      try {
+        wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY) === "1";
+      } catch (e) {
+        wasLogged = false;
+      }
+
+      if (wasLogged) {
+        // Immediately show dashboard without playing fade
+        loginView && loginView.classList.add("hidden");
+        if (dashboardView) {
+          dashboardView.style.display = "flex";
+        }
+        setHidden(loginView, true);
+        setHidden(dashboardView, false);
+      } else {
+        // Initial: login visible, dashboard hidden
+        if (dashboardView) dashboardView.style.display = "none";
+        setHidden(loginView, false);
+        setHidden(dashboardView, true);
+      }
+    })();
+  </script>
 </body>
 </html>
+

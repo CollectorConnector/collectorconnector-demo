@@ -4,25 +4,31 @@
   <meta charset="UTF-8" />
   <title>CollectorConnector — Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Favicon -->
+  <meta name="description" content="CollectorConnector is a home for collectors — a calm space to showcase pieces, tell stories, and connect." />
+
+  <!-- Favicon / Social -->
   <link rel="icon" href="./CCLogoSML.png" type="image/png" />
-  <!-- Google Fonts -->
+  <meta property="og:title" content="CollectorConnector — Demo" />
+  <meta property="og:description" content="Every piece tells a story. This is where they live." />
+  <meta property="og:image" content="./CCLogoSML.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="CollectorConnector — Demo" />
+  <meta name="twitter:description" content="Every piece tells a story. This is where they live." />
+  <meta name="twitter:image" content="./CCLogoSML.png" />
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+
   <style>
     :root{
-      --bg: #000;
-      --fg: #fff;
-      --muted: #a0a0a0;
-      --card-bg: #121212;
-      --border: #242424;
-      --radius-card: 18px;
-      --shadow-soft: 0 10px 24px rgba(0,0,0,0.45);
-      --t-fast: .18s ease-out;
-      --t-med: .28s ease;
+      --bg:#000; --fg:#fff; --muted:#a0a0a0; --border:#242424;
+      --radius-card:18px; --shadow-soft:0 10px 24px rgba(0,0,0,0.45);
+      --t-fast:.18s ease-out; --t-med:.28s ease;
     }
-    *{ box-sizing:border-box; margin:0; padding:0;}
+    *{ box-sizing:border-box; margin:0; padding:0; }
     body{
       min-height:100vh;
       background: radial-gradient(circle at top, #171717 0, #080808 45%, #000 100%);
@@ -31,36 +37,36 @@
     }
     h1,h2,h3{ font-family:"Playfair Display","Times New Roman",serif; letter-spacing:.02em; }
 
-    /* Layout shell */
+    /* Frame */
     .page-wrap{ max-width:1140px; margin:24px auto 40px; padding:0 16px; }
     .app-shell{
-      width:100%; background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border-radius:28px; border:1px solid rgba(255,255,255,0.08); box-shadow:var(--shadow-soft);
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:28px; box-shadow:var(--shadow-soft);
       overflow:hidden; backdrop-filter: blur(14px);
     }
-    .app-inner{ display:flex; flex-direction:column; width:100%; }
+    .app-inner{ display:flex; flex-direction:column; width:100%; position:relative; }
 
     /* Header */
     .app-header{
       display:flex; align-items:center; justify-content:space-between;
-      padding:16px 20px 12px;
+      padding:14px 16px;
       border-bottom:1px solid rgba(255,255,255,0.06);
       background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 55%);
       position:relative;
     }
-    .brand-left{ display:flex; align-items:center; gap:10px; min-width:0;}
+    .brand-left{ display:flex; align-items:center; gap:10px; min-width:0; }
     .brand-icon{
       width:32px; height:32px; border-radius:8px; overflow:hidden; flex-shrink:0;
       border:1px solid rgba(255,255,255,0.12); background:#0e0e0e;
-      display:flex; align-items:center; justify-content:center;
-      opacity:.9;
+      display:flex; align-items:center; justify-content:center; opacity:.9;
     }
     .brand-icon img{ width:100%; height:100%; object-fit:contain; display:block; }
-    .brand-text{ display:flex; flex-direction:column; gap:2px; min-width:0;}
-    .brand-name{ font-size:.98rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap;}
-    .brand-tagline{ font-size:.78rem; color:#a9a9a9;}
+    .brand-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .brand-name{ font-size:.98rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
+    .brand-tagline{ font-size:.78rem; color:#a9a9a9; }
 
-    /* Primary nav (Dashboard | Profile) */
+    /* Center tabs (desktop) */
     .primary-nav{ position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:12px; }
     .nav-btn{
       padding:6px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.14);
@@ -71,8 +77,7 @@
 
     .header-right{
       display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.8rem;
-      padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
-      background:#0f0f0f;
+      padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:#0f0f0f;
     }
     .beta-pill{
       padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18);
@@ -80,204 +85,131 @@
     }
     .version-tag{ opacity:.9; }
 
+    /* Social & quick links (desktop only) */
     .social-links{ display:flex; align-items:center; gap:8px; margin:0 6px; }
     .social-link{
       width:28px; height:28px; border-radius:8px; display:none; align-items:center; justify-content:center;
       background:#111; border:1px solid rgba(255,255,255,0.12); color:#fff; text-decoration:none; opacity:.95;
       transition: background var(--t-fast), border-color var(--t-fast);
     }
-    .social-link:hover{ background:#151515; border-color:rgba(255,255,255,0.2); }
     .social-link svg{ width:18px; height:18px; display:block; }
-
-    .quick-links{ display:flex; align-items:center; gap:8px; margin:0 6px;}
+    .quick-links{ display:flex; align-items:center; gap:8px; margin:0 6px; }
     .quick-link{
       display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 10px; border-radius:999px;
       background:#111; color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,0.12); font-size:.82rem; opacity:.95;
       transition: background var(--t-fast), border-color var(--t-fast);
     }
-    .quick-link:hover{ background:#151515; border-color:rgba(255,255,255,0.2); }
-    .quick-link svg{ width:16px; height:16px; display:block; }
 
+    /* Desktop avatar (hidden on mobile) */
     .avatar{
       width:36px; height:36px; border-radius:50%;
       border:1px solid rgba(255,255,255,0.25);
       overflow:hidden; background:#0d0d0d; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; opacity:.92;
     }
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-    /* Avatar dropdown */
     .avatar-menu{
-      position:absolute; top:60px; right:16px; width:180px;
-      background:#0f0f0f; border:1px solid rgba(255,255,255,0.12);
-      border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+      position:absolute; top:56px; right:16px; width:180px;
+      background:#0f0f0f; border:1px solid rgba(255,255,255,0.12); border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.6);
       display:none; padding:6px; z-index:30;
     }
-    .avatar-menu button{
-      width:100%; text-align:left; padding:8px 10px; border-radius:8px; border:0; background:transparent; color:#fff; cursor:pointer; font-size:.88rem;
-    }
+    .avatar-menu button{ width:100%; text-align:left; padding:8px 10px; border-radius:8px; border:0; background:transparent; color:#fff; cursor:pointer; font-size:.88rem; }
     .avatar-menu button:hover{ background:rgba(255,255,255,0.06); }
 
-    /* Main card */
-    .card{
-      margin:16px; background:#0b0b0b; border:1px solid var(--border);
-      border-radius:16px; display:block; min-height:480px; overflow:hidden; box-shadow: var(--shadow-soft);
+    /* === MOBILE HEADER (Option A) === */
+    .hamburger{
+      display:none; width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.2);
+      background:#0f0f0f; color:#fff; cursor:pointer; align-items:center; justify-content:center; font-size:18px;
     }
-    .card-right{
-      width:100%; padding:32px; display:flex; flex-direction:column; justify-content:center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
-      position:relative;
+    .mobile-menu{
+      display:none; position:absolute; top:100%; right:0; left:0; background:rgba(10,10,10,0.96);
+      border-top:1px solid rgba(255,255,255,0.08); box-shadow:0 12px 28px rgba(0,0,0,0.5);
+      padding:10px; z-index:40;
     }
+    .mobile-menu a, .mobile-menu button{
+      width:100%; text-align:left; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.12);
+      background:#0f0f0f; color:#fff; font-size:1rem; display:block; margin-bottom:8px; cursor:pointer;
+    }
+    .mobile-menu a:hover, .mobile-menu button:hover{ background:#141414; }
+    .mobile-menu small{ display:block; color:#bdbdbd; margin:6px 2px 2px; }
 
-    /* Dashboard (existing) */
-    .dashboard{ display:none; flex-direction:column; gap:16px; margin-top:16px; }
+    /* Main card */
+    .card{ margin:16px; background:#0b0b0b; border:1px solid var(--border); border-radius:16px; min-height:520px; overflow:hidden; box-shadow:var(--shadow-soft); position:relative; }
+    .card-right{ width:100%; padding:24px 16px 28px; display:flex; flex-direction:column; justify-content:flex-start; background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent); }
+
+    /* Panels and content (same as before, trimmed for brevity) */
+    .panel{ background:#0f0f0f; border-radius:var(--radius-card); border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 18px rgba(0,0,0,0.5); overflow:hidden; }
+    .panel-login{ display:flex; flex-wrap:wrap; }
+    .login-left,.login-right{ flex:1 1 320px; min-width:280px; padding:24px; }
+    .field-label{ font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:#bdbdbd; }
+    .field-input{ margin-top:4px; width:100%; padding:10px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.16); background:#0b0b0b; color:#fff; font-size:.9rem; }
+    .btn-primary,.btn-secondary,.btn-small{ border-radius:999px; }
+    .btn-secondary{ padding:10px 14px; background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.35); }
+    .btn-small{ padding:8px 12px; border:1px solid rgba(255,255,255,0.25); background:transparent; color:#fff; font-size:.86rem; }
+
+    .dashboard,.collections-view,.pieces-view{ display:none; flex-direction:column; gap:16px; margin-top:8px; }
     .dash-header-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-    .dash-title-block{ display:flex; flex-direction:column; gap:4px; }
-    .dash-title{ font-size:1.4rem; }
-    .dash-subtitle{ font-size:.88rem; color:#b0b0b0; max-width:360px; }
+    .dash-title{ font-size:1.35rem; }
+    .dash-subtitle{ font-size:.9rem; color:#b0b0b0; max-width:420px; }
     .dash-pills{ display:flex; align-items:center; gap:8px; font-size:.75rem; flex-wrap:wrap; }
-    .pill-soft{
-      padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18);
-      background:#0b0b0b; color:#cfcfcf; text-transform:uppercase; letter-spacing:.12em;
-    }
-    .pill-soft strong{ color:#fff; font-weight:600; }
-    .pill-outline{ padding:4px 10px; border-radius:999px; border:1px dashed rgba(255,255,255,0.3); color:#a9a9a9; text-transform:uppercase; letter-spacing:.12em; }
-    .grid-3{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
-    .dash-card{
-      border-radius:14px; border:1px solid rgba(255,255,255,0.12);
-      background:#0f0f0f; padding:12px; position:relative; overflow:hidden;
-      transition: background var(--t-fast), border-color var(--t-fast);
-    }
-    .dash-card:hover{ border-color:rgba(255,255,255,0.18); background:#121212; }
+    .pill-soft{ padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); background:#0b0b0b; color:#cfcfcf; text-transform:uppercase; letter-spacing:.12em; }
+    .pill-outline{ padding:4px 10px; border-radius:999px; border:1px dashed rgba(255,255,255,0.3); color:#a9a9a9; text-transform:uppercase; letter-spacing:.12em; background:transparent; }
+
+    .grid-3{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+    .dash-card{ border-radius:14px; border:1px solid rgba(255,255,255,0.12); background:#0f0f0f; padding:12px; transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast); }
+    .dash-card:hover{ border-color:rgba(255,255,255,0.18); background:#121212; transform:translateY(-2px); }
     .card-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
     .card-title{ font-size:.92rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
     .card-tag{ font-size:.72rem; color:#b0b0b0; text-transform:uppercase; letter-spacing:.12em; }
-    .card-body{ font-size:.85rem; color:#bdbdbd; display:flex; flex-direction:column; gap:8px; }
+    .card-body{ font-size:.88rem; color:#c9c9c9; display:flex; flex-direction:column; gap:8px; }
     .metric-row{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
-    .metric-label{ font-size:.8rem; color:#b0b0b0; }
-    .metric-value{ font-size:1rem; font-weight:600; color:#fff; }
-    .metric-pill{ padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:.76rem; color:#cfcfcf; }
+    .metric-pill{ padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:.76rem; color:#cfcfcf; background:#0e0e0e; }
 
-    /* Profile/Gallery panels (existing) */
-    .panel-section{ margin:12px 16px 12px; display:grid; grid-template-columns: 1fr 1.6fr; gap:16px; }
-    .profile-panel, .gallery-panel{ background:#0f0f0f; border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:16px; }
-    .section-title{ font-size:1.1rem; font-weight:600; margin-bottom:8px; letter-spacing:.08em; }
-    .section-sub{ font-size:.9rem; color:#b0b0b0; margin-bottom:12px; }
+    /* Profile/Gallery section */
+    .panel-section{ margin:12px 0; display:grid; grid-template-columns:1fr 1.6fr; gap:16px; }
+    .profile-panel,.gallery-panel{ background:#0f0f0f; border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:16px; }
     .profile-avatar-lg{ width:120px; height:120px; border-radius:50%; overflow:hidden; border:1px solid rgba(255,255,255,0.25); background:#111; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
-    .profile-avatar-lg img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .inline-actions{ display:flex; gap:8px; flex-wrap:wrap; }
-    .hint{ font-size:.8rem; color:#9a9a9a; margin-top:8px; }
-    .uploader{ padding:12px; border:1px dashed rgba(255,255,255,0.25); border-radius:12px; background:#0c0c0c; }
-    .uploader label{ font-size:.88rem; color:#dcdcdc; display:block; margin-bottom:8px; }
-    .uploader input{ display:block; }
-    .gallery-grid{ margin-top:12px; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
-    .gallery-item{ position:relative; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.12); background:#0b0b0b; aspect-ratio:1/1; }
-    .gallery-item img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .delete-btn{ position:absolute; top:6px; right:6px; background: rgba(0,0,0,0.55); color:#fff; border:1px solid rgba(255,255,255,0.35); border-radius:999px; font-size:.78rem; padding:4px 8px; cursor:pointer; }
-    .delete-btn:hover{ background: rgba(255,255,255,0.12); }
 
-    /* Footer */
-    .app-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-top:1px solid rgba(255,255,255,0.06); font-size:.9rem; color:#d0d0d0; background:#0f0f0f; }
-    .footer-left{ display:flex; align-items:center; gap:8px; }
-
-    /* Modal (existing, for Social Links) */
-    .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:1000; }
-    .modal-backdrop.show{ display:flex; }
-    .modal{ width:min(720px, 92vw); background:#101010; color:#fff; border-radius:16px; border:1px solid rgba(255,255,255,0.12); box-shadow: var(--shadow-soft); overflow:hidden; }
-    .modal-header{ padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between; }
-    .modal-title{ font-size:1.1rem; font-weight:600; }
-    .modal-body{ padding:14px 16px; display:flex; flex-direction:column; gap:12px; }
-    .modal-row{ display:grid; grid-template-columns: 86px 1fr; gap:10px; align-items:center; }
-    .modal-row .row-cols{ display:grid; grid-template-columns: 18px 1fr; gap:8px; align-items:center; }
-    .modal-row input[type="text"]{ width:100%; padding:9px 11px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:#0b0b0b; color:#fff; font-size:.88rem; }
-    .modal-row .preview{ font-size:.82rem; color:#bdbdbd; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .modal-footer{ padding:12px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:8px; justify-content:flex-end; }
-    .modal-close{ background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.25); padding:8px 12px; border-radius:999px; cursor:pointer; }
-    .modal-save{ background:#fff; color:#000; border:0; padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:600; }
-
-    /* Fade transitions for page panels */
-    .fade-view{ opacity:0; transform: translateY(4px); transition: opacity var(--t-med), transform var(--t-med); display:none; }
+    /* Fade helpers */
+    .fade-view{ display:none; opacity:0; transform: translateY(4px); transition: opacity var(--t-med), transform var(--t-med); }
     .fade-view.active{ display:block; opacity:1; transform:none; }
     .fade-flex{ display:none; opacity:0; transform: translateY(4px); transition: opacity var(--t-med), transform var(--t-med); }
     .fade-flex.active{ display:flex; opacity:1; transform:none; }
 
-    /* ---------- PROFILE PAGE STYLES ---------- */
-    .profile-page{ padding:28px 24px 40px; }
-    .profile-hero{
-      text-align:center; display:flex; flex-direction:column; gap:14px; margin-top:6px; align-items:center;
-    }
-    .hero-avatar{
-      width:110px; height:110px; border-radius:26px;
-      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), rgba(0,0,0,0.85));
-      border:1px solid rgba(255,255,255,0.12);
-      display:flex; align-items:center; justify-content:center;
-      overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-    }
-    .hero-avatar img{ width:100%; height:100%; object-fit:cover; opacity:.9; }
-    .profile-name{ font-size:1.6rem; font-family:"Playfair Display", serif; }
+    /* Profile page (Richard) */
+    .profile-page{ padding:24px 10px 32px; }
+    .profile-hero{ text-align:center; display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:4px; }
+    .hero-avatar{ width:110px; height:110px; border-radius:26px; background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), rgba(0,0,0,0.85)); border:1px solid rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
+    .profile-name{ font-size:1.6rem; }
     .profile-tagline{ font-size:.95rem; color:#cfcfcf; }
     .profile-location{ font-size:.85rem; color:#a9a9a9; }
-
-    .profile-card{
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(0,0,0,0.98));
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:16px; margin-top:16px;
-    }
-
-    .social-row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-    .social-chip{
-      display:inline-flex; align-items:center; gap:8px; padding:8px 12px;
-      border-radius:999px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
-      color:#fff; text-decoration:none; font-size:.88rem; transition: background var(--t-fast), transform var(--t-fast), border-color var(--t-fast);
-    }
-    .social-chip:hover{ background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.2); transform: translateY(-1px); }
-    .social-chip svg{ width:16px; height:16px; }
-
-    .collections-preview{ display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; }
-    .collection-card{ background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:14px; text-align:center; }
-    .collection-title{ font-size:.95rem; color:#fff; }
-    .collection-count{ font-size:.85rem; color:#c2c2c2; }
-
-    .qr-placeholder{
-      width:130px; height:130px; margin:0 auto; border-radius:12px;
-      border:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04);
-      position:relative; overflow:hidden;
-    }
-    .qr-placeholder::before{
-      content:""; position:absolute; inset:0;
-      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 40%, transparent 80%);
-      transform: translateX(-120%); animation: shimmerMove 2.4s infinite; opacity:0.7;
-    }
+    .profile-card{ background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(0,0,0,0.98)); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+    .social-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .social-chip{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#fff; text-decoration:none; font-size:.88rem; }
+    .collections-preview{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .collection-card{ background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:12px; text-align:center; }
+    .qr-placeholder{ width:130px; height:130px; margin:0 auto; border-radius:12px; border:1px dashed rgba(255,255,255,0.25); background:rgba(255,255,255,0.04); position:relative; overflow:hidden; }
+    .qr-placeholder::before{ content:""; position:absolute; inset:0; background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 40%, transparent 80%); transform: translateX(-120%); animation: shimmerMove 2.4s infinite; opacity:.7; }
     @keyframes shimmerMove{ 0%{ transform: translateX(-120%);} 100%{ transform: translateX(120%);} }
 
-    .btn-secondary{
-      padding:12px 18px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
-      border-radius:12px; color:#fff; cursor:pointer; font-size:.9rem; transition: background var(--t-fast);
-    }
-    .btn-secondary:hover{ background:rgba(255,255,255,0.18); }
-
-    .btn-ghost{
-      padding:10px 14px; border-radius:999px; background:transparent; color:#fff;
-      border:1px solid rgba(255,255,255,0.25); font-size:.88rem; cursor:pointer;
-    }
-    .btn-ghost:hover{ background:rgba(255,255,255,0.06); }
-
-    .copy-toast{
-      position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
-      padding:8px 12px; border-radius:10px; background:#101010; border:1px solid rgba(255,255,255,0.18);
-      color:#fff; font-size:.86rem; display:none; z-index:60;
-    }
+    /* Footer */
+    .app-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-top:1px solid rgba(255,255,255,0.06); font-size:.9rem; color:#d0d0d0; background:#0f0f0f; }
 
     /* Responsive */
-    @media (max-width: 900px){
-      .grid-3{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
-      .panel-section{ grid-template-columns: 1fr; }
-      .primary-nav{ position:static; transform:none; margin-left:10px; }
+    @media (max-width: 920px){
+      .social-links, .quick-links { display:none; }      /* hide extras on mobile */
+      .primary-nav { display:none; }                    /* remove center tabs */
+      .avatar { display:none; }                         /* hide desktop avatar on mobile */
+      .hamburger { display:inline-flex; }               /* show hamburger */
     }
-    @media (max-width: 640px){
+    @media (max-width: 860px){
+      .grid-3{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .panel-section{ grid-template-columns:1fr; }
+      .card-right{ padding:20px 14px 24px; }
+    }
+    @media (max-width: 560px){
       .grid-3{ grid-template-columns:1fr; }
-      .gallery-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); }
-      .card-right{ padding:20px; }
       .collections-preview{ grid-template-columns:1fr; }
+      .dash-title{ font-size:1.2rem; }
     }
   </style>
 </head>
@@ -298,52 +230,32 @@
             </div>
           </div>
 
-          <!-- Primary nav (Dashboard | Profile) -->
+          <!-- Desktop center nav -->
           <nav class="primary-nav" aria-label="Primary">
             <button id="nav-dashboard" class="nav-btn" type="button" aria-current="page">Dashboard</button>
             <button id="nav-profile" class="nav-btn" type="button">Profile</button>
           </nav>
 
           <div class="header-right" aria-label="Header controls">
-            <div class="beta-pill" aria-label="This is a demo build">Demo</div>
-            <div class="version-tag" aria-label="Version">v0.7 + Profile</div>
+            <div class="beta-pill">Demo</div>
+            <div class="version-tag">v0.7.2-mobile</div>
 
-            <!-- Social icons (enabled via Settings) -->
+            <!-- Desktop social/quick links (auto-hidden on mobile) -->
             <nav class="social-links" aria-label="Social profiles">
-              <a id="link-ebay" class="social-link" target="_blank" rel="noopener noreferrer" title="eBay" aria-label="eBay profile">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
-              </a>
               <a id="link-instagram" class="social-link" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Instagram profile">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zm5-2.3a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-              </a>
-              <a id="link-facebook" class="social-link" target="_blank" rel="noopener noreferrer" title="Facebook" aria-label="Facebook profile">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 22v-7h2.5l.5-3H13V9.5c0-.87.28-1.5 1.7-1.5H16V5.2c-.3-.04-1.2-.1-2.3-.1-2.3 0-3.7 1.2-3.7 3.9V12H7v3h3v7h3z"/></svg>
-              </a>
-              <a id="link-tiktok" class="social-link" target="_blank" rel="noopener noreferrer" title="TikTok" aria-label="TikTok profile">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 3h2c.2 1.5 1.2 2.9 2.5 3.7 1 .6 2 .9 3.1.9v2.1c-1.7 0-3.3-.6-4.7-1.6v6.8c0 3-2.4 5.4-5.4 5.4S6.1 17.9 6.1 15c0-2.8 2-5 4.7-5 .6 0 1.2.1 1.7.3V12c-.5-.3-1.1-.5-1.7-.5-1.5 0-2.7 1.2-2.7 2.7S9.3 17 10.8 17s2.7-1.2 2.7-2.7V3z"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 3.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zm5-2.3a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
               </a>
               <a id="link-x" class="social-link" target="_blank" rel="noopener noreferrer" title="X" aria-label="X profile">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 4l6.7 8.1L5.2 20H8l4.6-5.7L17.6 20H21l-6.6-8 6-7.9h-2.8l-4.4 5.8L8.6 4H5z"/></svg>
               </a>
-              <a id="link-youtube" class="social-link" target="_blank" rel="noopener noreferrer" title="YouTube" aria-label="YouTube channel">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23 12s0-3.4-.4-5.1c-.2-.9-1-1.7-2-1.9C18.8 4.5 12 4.5 12 4.5s-6.8 0-8.6.5c-1 .2-1.8 1-2 1.9C1 8.6 1 12 1 12s0 3.4.4 5.1c.2.9 1 1.7 2 1.9 1.8.5 8.6.5 8.6.5s6.8 0 8.6-.5c1-.2 1.8-1 2-1.9.4-1.7.4-5.1.4-5.1zM9.8 8.8l6.1 3.2-6.1 3.2V8.8z"/></svg>
-              </a>
             </nav>
-
-            <!-- Quick links -->
             <nav class="quick-links" aria-label="Marketplaces">
-              <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer" title="eBay UK">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
-                eBay
-              </a>
-              <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener noreferrer" title="PSA">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l8 4v6c0 5.25-3.75 8.78-8 10-4.25-1.22-8-4.75-8-10V6l8-4zm-1.8 6.9h5.3c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45h-3.9v1.3h4.1c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45H10.2V8.9z"/></svg>
-                PSA
-              </a>
+              <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer">eBay</a>
+              <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener noreferrer">PSA</a>
             </nav>
 
-            <!-- Avatar + menu -->
-            <div id="avatar" class="avatar" aria-label="Profile photo" aria-haspopup="true" aria-expanded="false">
+            <!-- Desktop avatar -->
+            <div id="avatar" class="avatar" aria-haspopup="true" aria-expanded="false" title="Profile menu">
               <img id="header-avatar" src="./CCLogoSML.png" alt="Profile avatar" />
             </div>
             <div id="avatar-menu" class="avatar-menu" role="menu" aria-hidden="true">
@@ -351,15 +263,27 @@
               <button id="menu-settings" role="menuitem">Settings</button>
               <button id="menu-signout" role="menuitem">Sign Out</button>
             </div>
+
+            <!-- Mobile hamburger -->
+            <button id="hamburger" class="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
+          </div>
+
+          <!-- Mobile dropdown menu -->
+          <div id="mobile-menu" class="mobile-menu" role="menu" aria-hidden="true">
+            <button id="mnav-dashboard" role="menuitem">Dashboard</button>
+            <button id="mnav-profile" role="menuitem">Profile</button>
+            <small>Account</small>
+            <button id="mnav-settings" role="menuitem">Settings</button>
+            <button id="mnav-signout" role="menuitem">Sign Out</button>
           </div>
         </header>
 
         <!-- MAIN -->
         <main>
           <div class="card">
-            <section class="card-right" aria-label="Authentication and dashboard">
+            <section class="card-right" aria-label="Content">
 
-              <!-- LOGIN VIEW (unchanged; fades in/out) -->
+              <!-- LOGIN VIEW -->
               <div id="login-view" class="panel panel-login fade-view active" aria-hidden="false" aria-live="polite">
                 <div class="login-left">
                   <div class="login-title">Log in</div>
@@ -373,12 +297,12 @@
                     <input id="email" class="field-input" type="email" placeholder="you@example.com" />
                     <label class="field-label" for="password">Password</label>
                     <input id="password" class="field-input" type="password" placeholder="••••••••" />
-                    <button id="login-button" class="btn-secondary" type="submit"><span>Log in</span><span> →</span></button>
+                    <button id="login-button" class="btn-secondary" type="submit"><span>Log in</span> <span>→</span></button>
                   </form>
                 </div>
               </div>
 
-              <!-- DASHBOARD VIEW (existing content; now fade-flex) -->
+              <!-- DASHBOARD VIEW -->
               <div id="dashboard-view" class="dashboard fade-flex" aria-hidden="true" aria-live="polite">
                 <div class="dash-header-row">
                   <div class="dash-title-block">
@@ -394,7 +318,6 @@
                 </div>
 
                 <div class="grid-3" style="margin-top:10px;">
-                  <!-- Collections -->
                   <div class="dash-card">
                     <div class="card-header"><div class="card-title">Collections</div><div class="card-tag">Overview</div></div>
                     <div class="card-body">
@@ -402,7 +325,6 @@
                       <div class="metric-row"><div class="metric-label">Most Active</div><div class="metric-pill"><strong>Watches</strong></div></div>
                     </div>
                   </div>
-                  <!-- Pieces -->
                   <div class="dash-card">
                     <div class="card-header"><div class="card-title">Pieces</div><div class="card-tag">Inventory</div></div>
                     <div class="card-body">
@@ -410,49 +332,44 @@
                       <div class="metric-row"><div class="metric-label">Latest Added</div><div class="metric-pill"><strong>Omega Seamaster</strong></div></div>
                     </div>
                   </div>
-                  <!-- Favourite Piece -->
                   <div class="dash-card">
                     <div class="card-header"><div class="card-title">Favourite Piece</div><div class="card-tag">Personal</div></div>
                     <div class="card-body">
-                      <div class="fav-photo" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <div class="profile-avatar-lg" style="width:84px;height:84px;border-radius:12px;margin:0;">
-                          <img id="favpiece-img" src="./CCLogoSML.png" alt="Favourite piece photo preview" />
-                        </div>
-                        <div class="inline-actions">
-                          <label class="btn-ghost" for="favpiece-file">Upload photo</label>
-                          <input id="favpiece-file" type="file" accept="image/*" style="display:none" />
-                          <button id="favpiece-clear" class="btn-ghost" type="button">Remove photo</button>
-                        </div>
+                      <div class="profile-avatar-lg" style="width:84px;height:84px;border-radius:12px;margin:0;">
+                        <img id="favpiece-img" src="./CCLogoSML.png" alt="Favourite piece photo preview" />
                       </div>
-                      <div class="metric-row" style="justify-content:flex-start; gap:10px;"><div class="metric-pill"><strong>Rolex Submariner (1998)</strong></div></div>
-                     
-<div class="metric-row" style="justify-content:flex-start; gap:10px;">
-  <div class="metric-pill"><strong>Charizard ex (Scarlet & Violet)</strong></div>
-</div>
-
+                      <div class="inline-actions" style="margin-top:8px;">
+                        <label class="btn-small" for="favpiece-file">Upload photo</label>
+                        <input id="favpiece-file" type="file" accept="image/*" style="display:none" />
+                        <button id="favpiece-clear" class="btn-small" type="button">Remove photo</button>
+                      </div>
+                      <!-- Update this line if desired -->
+                      <div class="metric-row" style="justify-content:flex-start; gap:10px;"><div class="metric-pill"><strong>Charizard ex (Scarlet & Violet)</strong></div></div>
+                      <div class="metric-row" style="justify-content:flex-start;"><div class="metric-label">Your favourite card</div></div>
+                      <div class="metric-row" style="justify-content:flex-start;"><div class="metric-label">One of the most iconic Pokémon pulls.</div></div>
+                    </div>
+                  </div>
                 </div>
 
-                <!-- Profile + Gallery Section (existing) -->
+                <!-- Profile + Gallery Section -->
                 <div class="panel-section" aria-label="Profile and Collection Photos">
-                  <!-- Profile panel -->
                   <section class="profile-panel" aria-labelledby="profileTitle">
                     <h3 id="profileTitle" class="section-title">Profile Photo</h3>
                     <p class="section-sub">Upload a picture to appear in your header and profile.</p>
                     <div class="profile-avatar-lg"><img id="profile-avatar-lg" src="./CCLogoSML.png" alt="Profile photo preview" /></div>
                     <div class="inline-actions">
-                      <label class="btn-ghost" for="profile-file">Upload profile photo</label>
+                      <label class="btn-small" for="profile-file">Upload profile photo</label>
                       <input id="profile-file" type="file" accept="image/*" style="display:none" />
-                      <button id="clear-profile" class="btn-ghost" type="button">Remove profile photo</button>
+                      <button id="clear-profile" class="btn-small" type="button">Remove profile photo</button>
                     </div>
                     <p class="hint">Tip: square images look best. We’ll auto‑fit and lightly compress to keep it fast.</p>
                     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08); margin:14px 0;" />
                     <h3 class="section-title" style="margin-top:2px;">Social Links</h3>
                     <p class="section-sub">Choose which to show on your profile during setup, or edit anytime.</p>
-                    <div class="inline-actions"><button id="open-social-setup" class="btn-ghost" type="button">Edit social links</button></div>
+                    <div class="inline-actions"><button id="open-social-setup" class="btn-small" type="button">Edit social links</button></div>
                     <p class="hint">Saved locally in your browser for this demo.</p>
                   </section>
 
-                  <!-- Gallery panel -->
                   <section class="gallery-panel" aria-labelledby="galleryTitle">
                     <h3 id="galleryTitle" class="section-title">Your Collection Photos</h3>
                     <p class="section-sub">Add photos of your pieces. This demo keeps them locally in your browser.</p>
@@ -460,26 +377,23 @@
                       <label for="gallery-files">Upload images (you can select multiple):</label>
                       <input id="gallery-files" type="file" accept="image/*" multiple />
                       <p class="hint">Images are compressed to max 1280px for performance. Stored locally (no server).</p>
-                      <div class="inline-actions" style="margin-top:8px;"><button id="clear-gallery" class="btn-ghost" type="button">Clear all photos</button></div>
+                      <div class="inline-actions" style="margin-top:8px;"><button id="clear-gallery" class="btn-small" type="button">Clear all photos</button></div>
                     </div>
                     <div id="gallery-grid" class="gallery-grid" aria-live="polite"></div>
                   </section>
                 </div>
 
-                <!-- LIVE FEED -->
-                <section class="gallery-panel" aria-labelledby="feedTitle" style="margin:0 16px 20px;">
+                <section class="gallery-panel" aria-labelledby="feedTitle" style="margin:0 0 8px;">
                   <h3 id="feedTitle" class="section-title">Recent Activity</h3>
                   <p class="section-sub">Automatically updates when you add or remove collection photos (local to this browser).</p>
                   <ul id="feed-list" class="feed-list" aria-live="polite" aria-relevant="additions text"></ul>
                 </section>
-              </div> <!-- /dashboard-view -->
+              </div>
 
               <!-- PROFILE PAGE (Richard) -->
               <div id="profile-page" class="fade-view profile-page" aria-hidden="true" aria-live="polite">
                 <section class="profile-hero">
-                  <div class="hero-avatar">
-                    <img src="./CCLogoSML.png" alt="Richard's avatar" />
-                  </div>
+                  <div class="hero-avatar"><img src="./CCLogoSML.png" alt="Profile avatar" /></div>
                   <div class="profile-name">Richard</div>
                   <div class="profile-tagline">Collector of Coins, Pint Glasses &amp; Pub History</div>
                   <div class="profile-location">Swindon • Member since 2025</div>
@@ -487,53 +401,22 @@
 
                 <section class="profile-card">
                   <h3>Collector Card</h3>
-                  <div class="social-row" role="list">
-                    <a class="social-chip" role="listitem" href="https://instagram.com/richardcollects" target="_blank" rel="noopener">
-                      <!-- IG -->
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 3.5a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zm5-2.3a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-                      @richardcollects
-                    </a>
-                    <a class="social-chip" role="listitem" href="https://www.tiktok.com/@pubtreasures" target="_blank" rel="noopener">
-                      <!-- TikTok -->
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14 3h2c.2 1.5 1.2 2.9 2.5 3.7 1 .6 2 .9 3.1.9v2.1c-1.7 0-3.3-.6-4.7-1.6v6.8c0 3-2.4 5.4-5.4 5.4S6.1 17.9 6.1 15c0-2.8 2-5 4.7-5 .6 0 1.2.1 1.7.3V12c-.5-.3-1.1-.5-1.7-.5-1.5 0-2.7 1.2-2.7 2.7S9.3 17 10.8 17s2.7-1.2 2.7-2.7V3z"/></svg>
-                      @pubtreasures
-                    </a>
-                    <a class="social-chip" role="listitem" href="https://x.com/richardcoins" target="_blank" rel="noopener">
-                      <!-- X -->
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 4l6.7 8.1L5.2 20H8l4.6-5.7L17.6 20H21l-6.6-8 6-7.9h-2.8l-4.4 5.8L8.6 4H5z"/></svg>
-                      @richardcoins
-                    </a>
-                    <span class="social-chip" role="listitem" title="Discord handle">
-                      <!-- Discord glyph approximation -->
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 4a16 16 0 0 0-4-.9l-.2.5A13 13 0 0 1 12 4a13 13 0 0 1-3.8-.4l-.2-.5A16 16 0 0 0 4 4a8 8 0 0 0-2 5.4V18a2 2 0 0 0 2 2h2.5l.6-2a10 10 0 0 0 2.8.8l.3.6h3.6l.3-.6a10 10 0 0 0 2.8-.8l.6 2H20a2 2 0 0 0 2-2V9.4A8 8 0 0 0 20 4zM9 13c-.6 0-1-.5-1-1s.5-1 1-1 1 .5 1 1-.4 1-1 1zm6 0c-.6 0-1-.5-1-1s.5-1 1-1 1 .5 1 1-.5 1-1 1z"/></svg>
-                      richard#1842
-                    </span>
-                    <a class="social-chip" role="listitem" href="https://richardscollection.uk" target="_blank" rel="noopener">
-                      <!-- Globe -->
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20zm0 2c1.3 0 2.6.4 3.7 1H8.3C9.4 4.4 10.7 4 12 4zm-6 6c0-.7.1-1.3.3-2H9v2H6zm0 2h3v2H6c-.2-.7-.3-1.3-.3-2zm.7 4H9v2H7c-.5-.6-.9-1.3-1.3-2zM12 20c-1.3 0-2.6-.4-3.7-1h7.4c-1.1.6-2.4 1-3.7 1zm3-3v-2h3c-.2.7-.3 1.4-.3 2H15zm0-4V11h3c.2.7.3 1.3.3 2H15zm0-4V7h2c.5.6.9 1.3 1.3 2H15zM11 7v2H6.3c.2-.7.5-1.4.9-2H11zm0 4v2H9v-2h2zm0 4v2H7.7c-.4-.6-.7-1.3-.9-2H11zm2 2v-2h2v2h-2zm0-4v-2h2v2h-2zm0-4V7h2v2h-2z"/></svg>
-                      richardscollection.uk
-                    </a>
+                  <div class="social-row">
+                    <a class="social-chip" href="https://instagram.com/richardcollects" target="_blank" rel="noopener">IG @richardcollects</a>
+                    <a class="social-chip" href="https://www.tiktok.com/@pubtreasures" target="_blank" rel="noopener">TikTok @pubtreasures</a>
+                    <a class="social-chip" href="https://x.com/richardcoins" target="_blank" rel="noopener">X @richardcoins</a>
+                    <span class="social-chip" title="Discord">Discord: richard#1842</span>
+                    <a class="social-chip" href="https://richardscollection.uk" target="_blank" rel="noopener">richardscollection.uk</a>
                   </div>
-                  <div style="text-align:center;">
-                    <button id="copy-profile-link" class="btn-ghost" type="button">Copy profile link</button>
-                  </div>
+                  <div style="text-align:center;"><button id="copy-profile-link" class="btn-small" type="button">Copy profile link</button></div>
                 </section>
 
                 <section class="profile-card">
                   <h3>Collections</h3>
                   <div class="collections-preview">
-                    <div class="collection-card">
-                      <div class="collection-title">Coins</div>
-                      <div class="collection-count">42 pieces</div>
-                    </div>
-                    <div class="collection-card">
-                      <div class="collection-title">Pint Glasses</div>
-                      <div class="collection-count">18 pieces</div>
-                    </div>
-                    <div class="collection-card">
-                      <div class="collection-title">Pub Paraphernalia</div>
-                      <div class="collection-count">27 pieces</div>
-                    </div>
+                    <div class="collection-card"><div class="collection-title">Coins</div><div class="collection-count">42 pieces</div></div>
+                    <div class="collection-card"><div class="collection-title">Pint Glasses</div><div class="collection-count">18 pieces</div></div>
+                    <div class="collection-card"><div class="collection-title">Pub Paraphernalia</div><div class="collection-count">27 pieces</div></div>
                   </div>
                 </section>
 
@@ -556,14 +439,13 @@
                   <button id="back-to-dashboard" class="btn-secondary" type="button">Back to Dashboard</button>
                 </div>
               </div>
-              <!-- /PROFILE PAGE -->
             </section>
           </div>
         </main>
 
         <!-- FOOTER -->
         <footer class="app-footer" role="contentinfo">
-          <div class="footer-left">
+          <div class="footer-left" style="display:flex;align-items:center;gap:8px;">
             <div class="footer-dot" style="width:6px;height:6px;border-radius:999px;background:#3ddc84;"></div>
             <div>CollectorConnector Demo</div>
           </div>
@@ -574,7 +456,7 @@
     </div>
   </div>
 
-  <!-- SOCIAL SETUP MODAL (existing) -->
+  <!-- SOCIAL MODAL -->
   <div id="social-modal-backdrop" class="modal-backdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="socialModalTitle">
       <div class="modal-header">
@@ -582,13 +464,12 @@
         <button id="social-close" class="modal-close" type="button" aria-label="Close">Close</button>
       </div>
       <div class="modal-body">
-        <!-- platforms -->
-        <div class="modal-row"><div>eBay</div><div><div class="row-cols"><input id="show-ebay" type="checkbox" aria-label="Show eBay" /><input id="val-ebay" type="text" placeholder="yourname or full URL (e.g. https://www.ebay.co.uk/usr/yourname)" /></div><div id="prev-ebay" class="preview"></div></div></div>
-        <div class="modal-row"><div>Instagram</div><div><div class="row-cols"><input id="show-instagram" type="checkbox" aria-label="Show Instagram" /><input id="val-instagram" type="text" placeholder="yourname or full URL (e.g. https://instagram.com/yourname)" /></div><div id="prev-instagram" class="preview"></div></div></div>
-        <div class="modal-row"><div>Facebook</div><div><div class="row-cols"><input id="show-facebook" type="checkbox" aria-label="Show Facebook" /><input id="val-facebook" type="text" placeholder="yourname or full URL (e.g. https://facebook.com/yourname)" /></div><div id="prev-facebook" class="preview"></div></div></div>
-        <div class="modal-row"><div>TikTok</div><div><div class="row-cols"><input id="show-tiktok" type="checkbox" aria-label="Show TikTok" /><input id="val-tiktok" type="text" placeholder="@yourname or full URL (e.g. https://www.tiktok.com/@yourname)" /></div><div id="prev-tiktok" class="preview"></div></div></div>
-        <div class="modal-row"><div>X</div><div><div class="row-cols"><input id="show-x" type="checkbox" aria-label="Show X" /><input id="val-x" type="text" placeholder="@yourname or full URL (e.g. https://x.com/yourname)" /></div><div id="prev-x" class="preview"></div></div></div>
-        <div class="modal-row"><div>YouTube</div><div><div class="row-cols"><input id="show-youtube" type="checkbox" aria-label="Show YouTube" /><input id="val-youtube" type="text" placeholder="@handle, channel/ABC..., or full URL (e.g. https://youtube.com/@yourhandle)" /></div><div id="prev-youtube" class="preview"></div></div></div>
+        <div class="modal-row"><div>Instagram</div><div><div class="row-cols"><input id="show-instagram" type="checkbox" /><input id="val-instagram" type="text" placeholder="@yourname or full URL" /></div><div id="prev-instagram" class="preview"></div></div></div>
+        <div class="modal-row"><div>X</div><div><div class="row-cols"><input id="show-x" type="checkbox" /><input id="val-x" type="text" placeholder="@yourname or full URL" /></div><div id="prev-x" class="preview"></div></div></div>
+        <div class="modal-row"><div>Facebook</div><div><div class="row-cols"><input id="show-facebook" type="checkbox" /><input id="val-facebook" type="text" placeholder="yourname or full URL" /></div><div id="prev-facebook" class="preview"></div></div></div>
+        <div class="modal-row"><div>TikTok</div><div><div class="row-cols"><input id="show-tiktok" type="checkbox" /><input id="val-tiktok" type="text" placeholder="@yourname or full URL" /></div><div id="prev-tiktok" class="preview"></div></div></div>
+        <div class="modal-row"><div>eBay</div><div><div class="row-cols"><input id="show-ebay" type="checkbox" /><input id="val-ebay" type="text" placeholder="yourname or full URL" /></div><div id="prev-ebay" class="preview"></div></div></div>
+        <div class="modal-row"><div>YouTube</div><div><div class="row-cols"><input id="show-youtube" type="checkbox" /><input id="val-youtube" type="text" placeholder="@handle, channel/ABC..., or full URL" /></div><div id="prev-youtube" class="preview"></div></div></div>
       </div>
       <div class="modal-footer">
         <button id="social-save" class="modal-save" type="button">Save</button>
@@ -596,10 +477,9 @@
     </div>
   </div>
 
-  <!-- JS -->
   <script>
   (function(){
-    // Elements
+    /* Elements */
     const loginForm = document.getElementById("login-form");
     const loginButton = document.getElementById("login-button");
     const skipButton = document.getElementById("skip-button");
@@ -609,253 +489,172 @@
     const dashboardView = document.getElementById("dashboard-view");
     const profilePage = document.getElementById("profile-page");
 
-    const headerAvatarImg = document.getElementById("header-avatar");
-    const profileAvatarImg = document.getElementById("profile-avatar-lg");
-    const profileFile = document.getElementById("profile-file");
-    const clearProfileBtn = document.getElementById("clear-profile");
-
-    const galleryInput = document.getElementById("gallery-files");
-    const clearGalleryBtn = document.getElementById("clear-gallery");
-    const galleryGrid = document.getElementById("gallery-grid");
-    const feedList = document.getElementById("feed-list");
-
-    // Favourite piece
-    const favImg = document.getElementById("favpiece-img");
-    const favFile = document.getElementById("favpiece-file");
-    const favClear = document.getElementById("favpiece-clear");
-
-    // Header nav & avatar menu
     const navDashboard = document.getElementById("nav-dashboard");
     const navProfile = document.getElementById("nav-profile");
+
     const avatar = document.getElementById("avatar");
     const avatarMenu = document.getElementById("avatar-menu");
     const menuProfile = document.getElementById("menu-profile");
     const menuSettings = document.getElementById("menu-settings");
     const menuSignout = document.getElementById("menu-signout");
 
-    // Social header links
+    const hamburger = document.getElementById("hamburger");
+    const mobileMenu = document.getElementById("mobile-menu");
+    const mnavDashboard = document.getElementById("mnav-dashboard");
+    const mnavProfile = document.getElementById("mnav-profile");
+    const mnavSettings = document.getElementById("mnav-settings");
+    const mnavSignout = document.getElementById("mnav-signout");
+
+    const profileFile = document.getElementById("profile-file");
+    const clearProfileBtn = document.getElementById("clear-profile");
+    const profileAvatarImg = document.getElementById("profile-avatar-lg");
+    const headerAvatarImg = document.getElementById("header-avatar");
+
+    const favImg = document.getElementById("favpiece-img");
+    const favFile = document.getElementById("favpiece-file");
+    const favClear = document.getElementById("favpiece-clear");
+
+    const galleryInput = document.getElementById("gallery-files");
+    const clearGalleryBtn = document.getElementById("clear-gallery");
+    const galleryGrid = document.getElementById("gallery-grid");
+    const feedList = document.getElementById("feed-list");
+
+    const copyBtn = document.getElementById("copy-profile-link");
+
+    /* Storage keys */
+    const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
+    const PROFILE_IMG_KEY = "cc-demo-profile-image";
+    const GALLERY_KEY = "cc-demo-gallery-images";
+    const FEED_KEY = "cc-demo-feed";
+    const FAVPIECE_IMG_KEY = "cc-demo-favpiece-image";
+    const SOCIAL_USERS_KEY = "cc-demo-social-usernames";
+    const PLATFORMS = ["instagram","x","facebook","tiktok","ebay","youtube"];
+
+    /* Helpers */
+    function setVisible(el, on, isFlex=false){
+      if(!el) return;
+      el.classList.toggle("active", !!on);
+      el.setAttribute("aria-hidden", on ? "false" : "true");
+      if(on){
+        if(isFlex){ el.classList.add("fade-flex"); } else { el.classList.add("fade-view"); }
+      }
+    }
+    function setCurrent(navBtn){
+      if(navDashboard) navDashboard.removeAttribute("aria-current");
+      if(navProfile) navProfile.removeAttribute("aria-current");
+      if(navBtn) navBtn.setAttribute("aria-current","page");
+    }
+    function closeAvatarMenu(){
+      if(!avatarMenu) return;
+      avatarMenu.style.display = "none";
+      avatar?.setAttribute("aria-expanded","false");
+      avatarMenu.setAttribute("aria-hidden","true");
+    }
+    function toggleMobileMenu(){
+      const open = mobileMenu.style.display === "block";
+      mobileMenu.style.display = open ? "none" : "block";
+      hamburger.setAttribute("aria-expanded", String(!open));
+      mobileMenu.setAttribute("aria-hidden", String(open));
+    }
+    function closeMobileMenu(){ mobileMenu.style.display="none"; hamburger.setAttribute("aria-expanded","false"); mobileMenu.setAttribute("aria-hidden","true"); }
+
+    /* Routes */
+    function showLogin(){
+      setVisible(dashboardView, false, true);
+      setVisible(profilePage, false);
+      setVisible(loginView, true);
+      setCurrent(null);
+      try{ sessionStorage.removeItem(VISUAL_LOGIN_KEY);}catch(e){}
+      closeAvatarMenu(); closeMobileMenu();
+    }
+    function showDashboard(){
+      setVisible(loginView, false);
+      setVisible(profilePage, false);
+      setVisible(dashboardView, true, true);
+      setCurrent(navDashboard);
+      try{ sessionStorage.setItem(VISUAL_LOGIN_KEY,"1"); }catch(e){}
+      closeAvatarMenu(); closeMobileMenu();
+    }
+    function showProfile(){
+      const authed = sessionStorage.getItem(VISUAL_LOGIN_KEY)==="1";
+      if(!authed){ showLogin(); return; }
+      setVisible(loginView, false);
+      setVisible(dashboardView, false, true);
+      setVisible(profilePage, true);
+      setCurrent(navProfile);
+      closeAvatarMenu(); closeMobileMenu();
+    }
+
+    /* Social header rendering (kept light) */
     const linkEls = {
-      ebay: document.getElementById("link-ebay"),
       instagram: document.getElementById("link-instagram"),
+      x: document.getElementById("link-x"),
       facebook: document.getElementById("link-facebook"),
       tiktok: document.getElementById("link-tiktok"),
-      x: document.getElementById("link-x"),
-      youtube: document.getElementById("link-youtube")
+      ebay: document.getElementById("link-ebay"),
+      youtube: document.getElementById("link-youtube"),
     };
+    function sanitize(u){ return String(u||"").trim().replace(/^@+/, ""); }
+    function buildUrl(p, v){
+      const raw = String(v||"").trim();
+      if(!raw) return "";
+      if(/^https?:\/\//i.test(raw)) return raw;
+      const u = sanitize(raw);
+      switch(p){
+        case "instagram": return `https://www.instagram.com/${u}`;
+        case "x": return `https://x.com/${u}`;
+        case "facebook": return `https://www.facebook.com/${u}`;
+        case "tiktok": return `https://www.tiktok.com/@${u}`;
+        case "ebay": return `https://www.ebay.co.uk/usr/${u}`;
+        case "youtube": return u.startsWith("@")?`https://www.youtube.com/${u}`:`https://www.youtube.com/@${u}`;
+        default: return "";
+      }
+    }
+    function getSocial(){
+      try{ const raw = localStorage.getItem(SOCIAL_USERS_KEY); return raw?JSON.parse(raw):{}; }catch(e){ return {}; }
+    }
+    function renderHeaderSocial(){
+      const cfg = getSocial();
+      PLATFORMS.forEach(p=>{
+        const el = linkEls[p]; if(!el) return;
+        const ok = !!cfg[p]?.enabled && !!buildUrl(p, cfg[p]?.value||"");
+        el.style.display = ok ? "inline-flex" : "none";
+        if(ok) el.href = buildUrl(p, cfg[p]?.value);
+      });
+    }
 
-    // Social modal
+    /* Modals (Social) */
     const socialBackdrop = document.getElementById("social-modal-backdrop");
     const btnSocialClose = document.getElementById("social-close");
     const btnSocialSave = document.getElementById("social-save");
     const btnOpenSocial = document.getElementById("open-social-setup");
     const showInputs = {
-      ebay: document.getElementById("show-ebay"),
       instagram: document.getElementById("show-instagram"),
+      x: document.getElementById("show-x"),
       facebook: document.getElementById("show-facebook"),
       tiktok: document.getElementById("show-tiktok"),
-      x: document.getElementById("show-x"),
-      youtube: document.getElementById("show-youtube")
+      ebay: document.getElementById("show-ebay"),
+      youtube: document.getElementById("show-youtube"),
     };
     const valInputs = {
-      ebay: document.getElementById("val-ebay"),
       instagram: document.getElementById("val-instagram"),
+      x: document.getElementById("val-x"),
       facebook: document.getElementById("val-facebook"),
       tiktok: document.getElementById("val-tiktok"),
-      x: document.getElementById("val-x"),
-      youtube: document.getElementById("val-youtube")
+      ebay: document.getElementById("val-ebay"),
+      youtube: document.getElementById("val-youtube"),
     };
     const prevEls = {
-      ebay: document.getElementById("prev-ebay"),
       instagram: document.getElementById("prev-instagram"),
+      x: document.getElementById("prev-x"),
       facebook: document.getElementById("prev-facebook"),
       tiktok: document.getElementById("prev-tiktok"),
-      x: document.getElementById("prev-x"),
-      youtube: document.getElementById("prev-youtube")
+      ebay: document.getElementById("prev-ebay"),
+      youtube: document.getElementById("prev-youtube"),
     };
-
-    // Storage keys
-    const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
-    const PROFILE_IMG_KEY = "cc-demo-profile-image";
-    const GALLERY_KEY = "cc-demo-gallery-images";
-    const SOCIAL_USERS_KEY = "cc-demo-social-usernames";
-    const FEED_KEY = "cc-demo-feed";
-    const FAVPIECE_IMG_KEY = "cc-demo-favpiece-image";
-
-    /* ---------- VIEW HELPERS ---------- */
-    function setAria(el, on){
-      if(!el) return;
-      el.classList.toggle("active", !!on);
-      el.setAttribute("aria-hidden", on ? "false" : "true");
-    }
-    function setCurrentNav(target){
-      if(navDashboard) navDashboard.removeAttribute("aria-current");
-      if(navProfile) navProfile.removeAttribute("aria-current");
-      if(target) target.setAttribute("aria-current","page");
-    }
-
-    function showDashboard(){
-      setAria(loginView, false);
-      setAria(profilePage, false);
-      setAria(dashboardView, true);
-      dashboardView.classList.remove("fade-view");
-      dashboardView.classList.add("fade-flex");
-      setCurrentNav(navDashboard);
-      try { sessionStorage.setItem(VISUAL_LOGIN_KEY, "1"); } catch(e){}
-      maybeShowSocialOnboarding();
-    }
-    function showLogin(){
-      setAria(dashboardView, false);
-      setAria(profilePage, false);
-      // loginView is block-based fade
-      setAria(loginView, true);
-      setCurrentNav(null);
-      try { sessionStorage.removeItem(VISUAL_LOGIN_KEY); } catch(e){}
-      closeAvatarMenu();
-    }
-    function showProfilePage(){
-      // Only allow after "login"
-      const wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY)==="1";
-      if(!wasLogged){ showLogin(); return; }
-      setAria(loginView, false);
-      setAria(dashboardView, false);
-      setAria(profilePage, true);
-      setCurrentNav(navProfile);
-      closeAvatarMenu();
-    }
-
-    /* ---------- PROFILE IMAGE ---------- */
-    function renderProfile(src){
-      const fallback = "./CCLogoSML.png";
-      const useSrc = src || fallback;
-      if (headerAvatarImg) headerAvatarImg.src = useSrc;
-      if (profileAvatarImg) profileAvatarImg.src = useSrc;
-    }
-    function saveProfile(src){ try{ localStorage.setItem(PROFILE_IMG_KEY, src || ""); }catch(e){} renderProfile(src); }
-    function loadProfile(){ let s=""; try{s=localStorage.getItem(PROFILE_IMG_KEY)||"";}catch(e){} renderProfile(s||""); }
-
-    /* ---------- IMAGE UTILS ---------- */
-    function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
-    function loadImage(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
-    async function resizeImageDataURL(dataUrl, maxSize=1280, quality=0.85){
-      const img = await loadImage(dataUrl);
-      let {width, height} = img;
-      if (width > height && width > maxSize){ const r=maxSize/width; width=maxSize; height=Math.round(height*r); }
-      else if (height >= width && height > maxSize){ const r=maxSize/height; height=maxSize; width=Math.round(width*r); }
-      const c=document.createElement("canvas"); c.width=width; c.height=height; c.getContext("2d").drawImage(img,0,0,width,height);
-      return c.toDataURL("image/jpeg", quality);
-    }
-
-    /* ---------- FAVOURITE PIECE ---------- */
-    function renderFavpiece(src){ if(favImg) favImg.src = src || "./CCLogoSML.png"; }
-    function saveFavpiece(src){ try{ localStorage.setItem(FAVPIECE_IMG_KEY, src || ""); }catch(e){} renderFavpiece(src); }
-    function loadFavpiece(){ let s=""; try{ s = localStorage.getItem(FAVPIECE_IMG_KEY) || ""; }catch(e){} renderFavpiece(s||""); }
-
-    /* ---------- GALLERY ---------- */
-    function getGallery(){ try{ const raw=localStorage.getItem(GALLERY_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
-    function saveGallery(arr){ try{ localStorage.setItem(GALLERY_KEY, JSON.stringify(arr)); }catch(e){} }
-    function renderGallery(){
-      const items=getGallery();
-      galleryGrid.innerHTML=""; if(!items.length) return;
-      items.forEach((src, idx)=>{
-        const wrap=document.createElement("div"); wrap.className="gallery-item";
-        const img=document.createElement("img"); img.src=src; img.alt=`Collection photo ${idx+1}`;
-        const del=document.createElement("button"); del.className="delete-btn"; del.type="button"; del.dataset.index=String(idx); del.textContent="Delete"; del.setAttribute("aria-label",`Remove photo ${idx+1}`);
-        wrap.appendChild(img); wrap.appendChild(del); galleryGrid.appendChild(wrap);
-      });
-    }
-
-    /* ---------- FEED ---------- */
-    function getFeed(){ try{ const raw=localStorage.getItem(FEED_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
-    function saveFeed(list){ try{ localStorage.setItem(FEED_KEY, JSON.stringify(list)); }catch(e){} }
-    function addFeedEvent(type, details){
-      const list = getFeed();
-      const ev = { id: Date.now() + "-" + Math.random().toString(36).slice(2,8), type, details: details || {}, at: Date.now() };
-      list.push(ev); if(list.length > 50) list.splice(0, list.length - 50); saveFeed(list); renderFeed();
-    }
-    function formatWhen(ts){ try { return new Date(ts).toLocaleString(); } catch(e){ return ""; } }
-    function renderFeed(){
-      if(!feedList) return;
-      const list = getFeed().slice().sort((a,b)=>b.at - a.at);
-      feedList.innerHTML = "";
-      if(!list.length){
-        const li=document.createElement("li"); li.className="feed-item";
-        li.innerHTML = `<div class="feed-thumb"><img src="./CCLogoSML.png" alt="No activity yet" /></div>
-          <div class="feed-text"><div>No activity yet.</div><div class="feed-meta">Upload some photos to see updates here.</div></div>`;
-        feedList.appendChild(li); return;
-      }
-      list.forEach(ev=>{
-        const li=document.createElement("li"); li.className="feed-item";
-        const thumbUrl = (ev.details && ev.details.thumb) || "./CCLogoSML.png";
-        let text = "Activity";
-        if(ev.type === "photos-added"){ const n = ev.details?.count || 0; text = `Added ${n} new photo${n===1?"":"s"} to collection`; }
-        else if (ev.type === "photo-deleted"){ text = `Removed 1 photo from collection`; }
-        else if (ev.type === "gallery-cleared"){ const n = ev.details?.count || 0; text = `Cleared ${n} photo${n===1?"":"s"} from collection`; }
-        else if (ev.type === "favpiece-updated"){ text = `Updated favourite piece photo`; }
-        else if (ev.type === "favpiece-cleared"){ text = `Removed favourite piece photo`; }
-        li.innerHTML = `<div class="feed-thumb"><img src="${thumbUrl}" alt="Activity thumbnail" /></div>
-          <div class="feed-text"><div>${text}</div><div class="feed-meta">${formatWhen(ev.at)}</div></div>`;
-        feedList.appendChild(li);
-      });
-    }
-
-    /* ---------- SOCIAL LINKS HEADER ---------- */
-    const PLATFORMS = ["ebay","instagram","facebook","tiktok","x","youtube"];
-    function sanitizeUsername(u){ if(!u) return ""; return String(u).trim().replace(/^@+/, ""); }
-    function buildUrl(platform, value){
-      const raw = String(value || "").trim();
-      if(!raw) return "";
-      if(/^https?:\/\//i.test(raw)) return raw;
-      const u = sanitizeUsername(raw);
-      switch(platform){
-        case "ebay": return `https://www.ebay.co.uk/usr/${u}`;
-        case "instagram": return `https://www.instagram.com/${u}`;
-        case "facebook": return `https://www.facebook.com/${u}`;
-        case "tiktok": return `https://www.tiktok.com/@${u}`;
-        case "x": return `https://x.com/${u}`;
-        case "youtube": return u.startsWith("@") ? `https://www.youtube.com/${u}` : `https://www.youtube.com/@${u}`;
-        default: return "";
-      }
-    }
-    function getSocial(){
-      try{
-        const raw = localStorage.getItem(SOCIAL_USERS_KEY);
-        if(!raw) return {};
-        const data = JSON.parse(raw);
-        if (data && typeof data === "object" && typeof data.ebay === "string"){
-          const migrated = {};
-          PLATFORMS.forEach(p=>{
-            const v = (data && data[p]) || "";
-            migrated[p] = { enabled: !!v, value: String(v || "") };
-          });
-          saveSocial(migrated); return migrated;
-        }
-        return data || {};
-      }catch(e){ return {}; }
-    }
-    function saveSocial(obj){ try{ localStorage.setItem(SOCIAL_USERS_KEY, JSON.stringify(obj || {})); }catch(e){} }
-    function renderHeaderSocial(){
-      const cfg = getSocial();
-      PLATFORMS.forEach(p=>{
-        const a = linkEls[p]; if(!a) return;
-        const enabled = !!cfg[p]?.enabled;
-        const url = buildUrl(p, cfg[p]?.value || "");
-        const ok = enabled && !!url;
-        a.style.display = ok ? "inline-flex" : "none";
-        if (ok) { a.href = url; } else { a.removeAttribute("href"); }
-      });
-    }
-
-    /* ---------- MODAL (SOCIAL) ---------- */
-    function openSocialModal(){
-      socialBackdrop.classList.add("show");
-      socialBackdrop.setAttribute("aria-hidden","false");
-      populateModalFromStorage();
-    }
-    function closeSocialModal(){
-      socialBackdrop.classList.remove("show");
-      socialBackdrop.setAttribute("aria-hidden","true");
-    }
-    function populateModalFromStorage(){
+    function openSocialModal(){ socialBackdrop.classList.add("show"); socialBackdrop.setAttribute("aria-hidden","false"); populateModal(); }
+    function closeSocialModal(){ socialBackdrop.classList.remove("show"); socialBackdrop.setAttribute("aria-hidden","true"); }
+    function populateModal(){
       const cfg = getSocial();
       PLATFORMS.forEach(p=>{
         if(showInputs[p]) showInputs[p].checked = !!cfg[p]?.enabled;
@@ -863,7 +662,7 @@
         updatePreview(p);
       });
     }
-    function collectFromModal(){
+    function collectModal(){
       const out = {};
       PLATFORMS.forEach(p=>{
         out[p] = { enabled: !!showInputs[p]?.checked, value: valInputs[p]?.value || "" };
@@ -871,151 +670,175 @@
       return out;
     }
     function updatePreview(p){
-      const v = valInputs[p]?.value || "";
-      const url = buildUrl(p, v);
-      if(prevEls[p]){
-        prevEls[p].innerHTML = url ? `<a href="${url}" target="_blank" rel="noopener">${url}</a>` : "";
-      }
-    }
-    function maybeShowSocialOnboarding(){
-      try{
-        const raw = localStorage.getItem(SOCIAL_USERS_KEY);
-        if(!raw){ openSocialModal(); }
-      }catch(e){}
+      const url = buildUrl(p, valInputs[p]?.value || "");
+      if(prevEls[p]) prevEls[p].innerHTML = url ? `${url}${url}</a>` : "";
     }
 
-    /* ---------- AVATAR MENU ---------- */
+    /* Avatar desktop menu */
     function toggleAvatarMenu(){
       const open = avatarMenu.style.display === "block";
-      if(open) closeAvatarMenu();
+      if(open){ closeAvatarMenu(); }
       else{
         avatarMenu.style.display = "block";
         avatar.setAttribute("aria-expanded","true");
         avatarMenu.setAttribute("aria-hidden","false");
       }
     }
-    function closeAvatarMenu(){
-      avatarMenu.style.display = "none";
-      avatar.setAttribute("aria-expanded","false");
-      avatarMenu.setAttribute("aria-hidden","true");
-    }
-    document.addEventListener("click", (e)=>{
-      if(avatarMenu.style.display==="block"
-         && !e.target.closest("#avatar") && !e.target.closest("#avatar-menu")){
-        closeAvatarMenu();
-      }
-    });
 
-    /* ---------- EVENTS ---------- */
-    if(loginForm){ loginForm.addEventListener("submit", (e)=>{ e.preventDefault(); showDashboard(); }); }
-    if(loginButton) loginButton.addEventListener("click", ()=>{}); // handled by submit
+    /* Images & gallery */
+    function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+    function loadImage(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
+    async function resizeImageDataURL(dataUrl, maxSize=1280, quality=0.85){
+      const img = await loadImage(dataUrl); let {width, height} = img;
+      if(width>height && width>maxSize){ const r=maxSize/width; width=maxSize; height=Math.round(height*r); }
+      else if(height>=width && height>maxSize){ const r=maxSize/height; height=maxSize; width=Math.round(width*r); }
+      const c=document.createElement("canvas"); c.width=width; c.height=height; c.getContext("2d").drawImage(img,0,0,width,height);
+      return c.toDataURL("image/jpeg", quality);
+    }
+
+    function saveProfile(src){ try{ localStorage.setItem(PROFILE_IMG_KEY, src||""); }catch(e){} renderProfile(src); }
+    function renderProfile(src){ const fallback="./CCLogoSML.png"; const use=src||fallback; if(headerAvatarImg) headerAvatarImg.src=use; if(profileAvatarImg) profileAvatarImg.src=use; }
+    function loadProfile(){ let s=""; try{ s=localStorage.getItem(PROFILE_IMG_KEY)||""; }catch(e){} renderProfile(s); }
+
+    function saveFavpiece(src){ try{ localStorage.setItem(FAVPIECE_IMG_KEY, src||""); }catch(e){} if(favImg) favImg.src = src||"./CCLogoSML.png"; }
+    function loadFavpiece(){ let s=""; try{ s=localStorage.getItem(FAVPIECE_IMG_KEY)||""; }catch(e){} if(favImg) favImg.src=s||"./CCLogoSML.png"; }
+
+    function getGallery(){ try{ const raw=localStorage.getItem(GALLERY_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
+    function saveGallery(arr){ try{ localStorage.setItem(GALLERY_KEY, JSON.stringify(arr)); }catch(e){} }
+    function renderGallery(){
+      const items=getGallery(); galleryGrid.innerHTML=""; if(!items.length) return;
+      items.forEach((src, idx)=>{
+        const wrap=document.createElement("div"); wrap.className="gallery-item";
+        const img=document.createElement("img"); img.src=src; img.alt=`Collection photo ${idx+1}`;
+        const del=document.createElement("button"); del.className="delete-btn"; del.type="button"; del.dataset.index=String(idx); del.textContent="Delete";
+        wrap.appendChild(img); wrap.appendChild(del); galleryGrid.appendChild(wrap);
+      });
+    }
+
+    /* Feed (lightweight) */
+    function getFeed(){ try{ const raw=localStorage.getItem(FEED_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
+    function saveFeed(list){ try{ localStorage.setItem(FEED_KEY, JSON.stringify(list)); }catch(e){} }
+    function addFeedEvent(type, details){
+      const list = getFeed(); list.push({id:Date.now()+"-"+Math.random().toString(36).slice(2,8), type, details:details||{}, at:Date.now()});
+      if(list.length>50) list.splice(0, list.length-50); saveFeed(list); renderFeed();
+    }
+    function renderFeed(){
+      if(!feedList) return;
+      const list=getFeed().slice().sort((a,b)=>b.at-a.at); feedList.innerHTML="";
+      if(!list.length){ feedList.innerHTML = `<li class="feed-item"><div class="feed-thumb"><img src="./CCLogoSML.png" alt="" /></div><div class="feed-text"><div>No activity yet.</div><div class="feed-meta">Upload some photos to see updates here.</div></div></li>`; return; }
+      list.forEach(ev=>{
+        const thumb = ev.details?.thumb || "./CCLogoSML.png";
+        let text = "Activity";
+        if(ev.type==="photos-added"){ const n=ev.details?.count||0; text=`Added ${n} new photo${n===1?"":"s"} to collection`; }
+        else if(ev.type==="photo-deleted"){ text="Removed 1 photo from collection"; }
+        else if(ev.type==="gallery-cleared"){ const n=ev.details?.count||0; text=`Cleared ${n} photo${n===1?"":"s"} from collection`; }
+        else if(ev.type==="favpiece-updated"){ text="Updated favourite piece photo"; }
+        else if(ev.type==="favpiece-cleared"){ text="Removed favourite piece photo"; }
+        const li=document.createElement("li"); li.className="feed-item";
+        li.innerHTML = `<div class="feed-thumb"><img src="${thumb}" alt="" /></div><div class="feed-text"><div>${text}</div><div class="feed-meta">${new Date(ev.at).toLocaleString()}</div></div>`;
+        feedList.appendChild(li);
+      });
+    }
+
+    /* Events */
+    if(loginForm){ loginForm.addEventListener("submit",(e)=>{ e.preventDefault(); showDashboard(); }); }
     if(skipButton) skipButton.addEventListener("click", showDashboard);
     if(logoutButton) logoutButton.addEventListener("click", showLogin);
 
     if(navDashboard) navDashboard.addEventListener("click", showDashboard);
-    if(navProfile) navProfile.addEventListener("click", showProfilePage);
+    if(navProfile) navProfile.addEventListener("click", showProfile);
 
-    if(avatar) avatar.addEventListener("click", toggleAvatarMenu);
-    if(menuProfile) menuProfile.addEventListener("click", showProfilePage);
+    if(avatar) avatar.addEventListener("click", ()=>{ // desktop only
+      if(window.matchMedia("(max-width: 920px)").matches){ return; } // ignore on mobile
+      const open = avatarMenu.style.display==="block";
+      if(open) closeAvatarMenu(); else { avatarMenu.style.display="block"; avatar.setAttribute("aria-expanded","true"); avatarMenu.setAttribute("aria-hidden","false"); }
+    });
+    document.addEventListener("click",(e)=>{
+      if(avatarMenu.style.display==="block" && !e.target.closest("#avatar") && !e.target.closest("#avatar-menu")) closeAvatarMenu();
+    });
+    if(menuProfile) menuProfile.addEventListener("click", showProfile);
     if(menuSettings) menuSettings.addEventListener("click", ()=>{ closeAvatarMenu(); openSocialModal(); });
     if(menuSignout) menuSignout.addEventListener("click", ()=>{ closeAvatarMenu(); showLogin(); });
 
-    if(btnOpenSocial) btnOpenSocial.addEventListener("click", openSocialModal);
-    if(btnSocialClose) btnSocialClose.addEventListener("click", closeSocialModal);
-    if(btnSocialSave){
-      btnSocialSave.addEventListener("click", ()=>{
-        const cfg = collectFromModal();
-        saveSocial(cfg);
-        renderHeaderSocial();
-        closeSocialModal();
-      });
-    }
-    PLATFORMS.forEach(p=>{
-      const inp = valInputs[p]; if(inp){ inp.addEventListener("input", () => updatePreview(p)); }
-      const chk = showInputs[p]; if(chk){ chk.addEventListener("change", () => updatePreview(p)); }
+    if(hamburger) hamburger.addEventListener("click", toggleMobileMenu);
+    if(mnavDashboard) mnavDashboard.addEventListener("click", showDashboard);
+    if(mnavProfile) mnavProfile.addEventListener("click", showProfile);
+    if(mnavSettings) mnavSettings.addEventListener("click", ()=>{ openSocialModal(); closeMobileMenu(); });
+    if(mnavSignout) mnavSignout.addEventListener("click", ()=>{ closeMobileMenu(); showLogin(); });
+
+    document.addEventListener("click",(e)=>{
+      if(mobileMenu.style.display==="block" && !e.target.closest("#mobile-menu") && !e.target.closest("#hamburger")) closeMobileMenu();
     });
 
-    // Profile uploads
+    if(btnOpenSocial) btnOpenSocial.addEventListener("click", openSocialModal);
+    if(btnSocialClose) btnSocialClose.addEventListener("click", closeSocialModal);
+    if(btnSocialSave) btnSocialSave.addEventListener("click", ()=>{ 
+      const data = collectModal();
+      try{ localStorage.setItem(SOCIAL_USERS_KEY, JSON.stringify(data)); }catch(e){}
+      renderHeaderSocial(); closeSocialModal();
+    });
+    PLATFORMS.forEach(p=>{
+      const i = document.getElementById(`val-${p}`); const c = document.getElementById(`show-${p}`);
+      if(i) i.addEventListener("input", ()=>updatePreview(p));
+      if(c) c.addEventListener("change", ()=>updatePreview(p));
+    });
+
     if(profileFile){
       profileFile.addEventListener("change", async (e)=>{
-        const file = e.target.files && e.target.files[0]; if(!file) return;
-        try{
-          const processed = await resizeImageDataURL(await readFileAsDataURL(file), 512, 0.9);
-          saveProfile(processed);
-        }catch(err){ alert("Sorry, that image could not be processed."); }
+        const file = e.target.files?.[0]; if(!file) return;
+        try{ const processed=await resizeImageDataURL(await readFileAsDataURL(file), 512, 0.9); saveProfile(processed); }
+        catch{ alert("Sorry, that image could not be processed."); }
         finally{ profileFile.value=""; }
       });
     }
-    if(clearProfileBtn){ clearProfileBtn.addEventListener("click", () => saveProfile("")); }
+    if(clearProfileBtn) clearProfileBtn.addEventListener("click", ()=>saveProfile(""));
 
-    // Favourite piece upload/remove
     if(favFile){
       favFile.addEventListener("change", async (e)=>{
-        const file = e.target.files && e.target.files[0]; if(!file) return;
-        try{
-          const processed = await resizeImageDataURL(await readFileAsDataURL(file), 800, 0.9);
-          saveFavpiece(processed);
-          addFeedEvent("favpiece-updated", { thumb: processed });
-        }catch(err){ alert("Sorry, that image could not be processed."); }
+        const file = e.target.files?.[0]; if(!file) return;
+        try{ const processed=await resizeImageDataURL(await readFileAsDataURL(file), 800, 0.9); saveFavpiece(processed); addFeedEvent("favpiece-updated",{thumb:processed}); }
+        catch{ alert("Sorry, that image could not be processed."); }
         finally{ favFile.value=""; }
       });
     }
-    if(favClear){ favClear.addEventListener("click", ()=>{ saveFavpiece(""); addFeedEvent("favpiece-cleared", {}); }); }
+    if(favClear) favClear.addEventListener("click", ()=>{ saveFavpiece(""); addFeedEvent("favpiece-cleared",{}); });
 
-    // Gallery
     if(galleryInput){
       galleryInput.addEventListener("change", async (e)=>{
-        const files = Array.from(e.target.files || []); if(!files.length) return;
-        const existing = getGallery(); const addedImages = [];
+        const files = Array.from(e.target.files||[]); if(!files.length) return;
+        const existing = getGallery(); const added=[];
         for(const f of files){
-          try{
-            const raw=await readFileAsDataURL(f);
-            const resized=await resizeImageDataURL(raw,1280,0.85);
-            existing.push(resized); addedImages.push(resized);
-          } catch(err){}
+          try{ const raw=await readFileAsDataURL(f); const resized=await resizeImageDataURL(raw,1280,0.85); existing.push(resized); added.push(resized); }catch{}
         }
         saveGallery(existing); renderGallery(); galleryInput.value="";
-        if (addedImages.length){ addFeedEvent("photos-added", { count: addedImages.length, thumb: addedImages[0] }); }
+        if(added.length){ addFeedEvent("photos-added",{count:added.length,thumb:added[0]}); }
       });
     }
-    if(clearGalleryBtn){
-      clearGalleryBtn.addEventListener("click", ()=>{
-        const before = getGallery();
-        if(confirm("Remove all collection photos from this browser?")){
-          saveGallery([]); renderGallery();
-          addFeedEvent("gallery-cleared", { count: before.length });
-        }
-      });
-    }
+    if(clearGalleryBtn) clearGalleryBtn.addEventListener("click", ()=>{
+      const before=getGallery(); if(confirm("Remove all collection photos from this browser?")){ saveGallery([]); renderGallery(); addFeedEvent("gallery-cleared",{count:before.length}); }
+    });
     if(galleryGrid){
-      galleryGrid.addEventListener("click", (e)=>{
+      galleryGrid.addEventListener("click",(e)=>{
         const btn = e.target.closest(".delete-btn"); if(!btn) return;
-        const idx = parseInt((btn.dataset.index || "-1"), 10); if(Number.isNaN(idx)) return;
-        const items = getGallery(); items.splice(idx,1); saveGallery(items); renderGallery();
-        addFeedEvent("photo-deleted", {});
+        const idx = parseInt(btn.dataset.index||"-1",10); if(Number.isNaN(idx)) return;
+        const items=getGallery(); items.splice(idx,1); saveGallery(items); renderGallery(); addFeedEvent("photo-deleted",{});
       });
     }
 
-    // Copy profile link
-    const copyBtn = document.getElementById("copy-profile-link");
-    const toast = document.createElement("div"); toast.className="copy-toast"; toast.textContent="Profile link copied"; document.body.appendChild(toast);
-    function showToast(){ toast.style.display="block"; setTimeout(()=>toast.style.display="none",1200); }
     if(copyBtn){
+      const toast=document.createElement("div"); toast.textContent="Profile link copied"; toast.style.cssText="position:fixed;bottom:14px;left:50%;transform:translateX(-50%);padding:8px 12px;border-radius:10px;background:#101010;border:1px solid rgba(255,255,255,0.18);color:#fff;font-size:.86rem;display:none;z-index:60;";
+      document.body.appendChild(toast);
       copyBtn.addEventListener("click", async ()=>{
         const url = location.origin + location.pathname + "#/richard";
-        try{ await navigator.clipboard.writeText(url); }catch(e){}
-        showToast();
+        try{ await navigator.clipboard.writeText(url); }catch{}
+        toast.style.display="block"; setTimeout(()=>toast.style.display="none",1200);
       });
     }
 
-    // Restore state
-    let wasLogged=false; try{ wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY)==="1"; }catch(e){}
-    if(wasLogged){ showDashboard(); } else { showLogin(); }
-    loadProfile();
-    loadFavpiece();
-    renderGallery();
-    renderFeed();
-    renderHeaderSocial();
+    /* Restore */
+    const wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY)==="1";
+    if(wasLogged) showDashboard(); else showLogin();
+    loadProfile(); loadFavpiece(); renderGallery(); renderFeed(); renderHeaderSocial();
   })();
   </script>
 </body>

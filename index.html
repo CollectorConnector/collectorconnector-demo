@@ -4,15 +4,24 @@
   <meta charset="UTF-8" />
   <title>CollectorConnector — Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Favicon -->
+  <meta name="description" content="CollectorConnector is a home for collectors — a calm space to showcase pieces, tell stories, and connect." />
   <link rel="icon" href="./CCLogoSML.png" type="image/png" />
-  <!-- Google Fonts (preconnect + stylesheet) -->
+
+  <!-- Social share (uses local image; for best results on public hosts, use an absolute URL) -->
+  <meta property="og:title" content="CollectorConnector — Demo" />
+  <meta property="og:description" content="Every piece tells a story. This is where they live." />
+  <meta property="og:image" content="./CCLogoSML.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="CollectorConnector — Demo" />
+  <meta name="twitter:description" content="Every piece tells a story. This is where they live." />
+  <meta name="twitter:image" content="./CCLogoSML.png" />
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+
   <style>
     :root{
       --bg: #000;
@@ -25,6 +34,8 @@
       --radius-card: 18px;
       --shadow-soft: 0 10px 24px rgba(0,0,0,0.45);
       --t-fast: .18s ease-out;
+      --t-med: .28s ease;
+      --glass: rgba(255,255,255,0.06);
     }
     * { box-sizing: border-box; margin:0; padding:0; }
     body{
@@ -33,26 +44,18 @@
       color: var(--fg);
       font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
     }
-    h1,h2,h3{
-      font-family:"Playfair Display","Times New Roman",serif;
-      letter-spacing:.02em;
-    }
+    h1,h2,h3{ font-family:"Playfair Display","Times New Roman",serif; letter-spacing:.02em; }
+
     /* Layout shell */
-    .page-wrap{
-      max-width: 1140px;
-      margin: 24px auto 40px;
-      padding: 0 16px;
-    }
+    .page-wrap{ max-width: 1140px; margin: 24px auto 40px; padding: 0 16px; }
     .app-shell{
       width:100%;
       background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border-radius:28px;
-      border:1px solid rgba(255,255,255,0.08);
+      border-radius:28px; border:1px solid rgba(255,255,255,0.08);
       box-shadow: var(--shadow-soft);
-      overflow:hidden;
-      backdrop-filter: blur(14px);
+      overflow:hidden; backdrop-filter: blur(14px);
     }
-    .app-inner{ display:flex; flex-direction:column; width:100%; }
+    .app-inner{ display:flex; flex-direction:column; width:100%; position:relative; }
 
     /* Header */
     .app-header{
@@ -60,6 +63,7 @@
       padding:16px 20px 12px;
       border-bottom:1px solid rgba(255,255,255,0.06);
       background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 55%);
+      position: relative;
     }
     .brand-left{ display:flex; align-items:center; gap:10px; min-width:0; }
     .brand-icon{
@@ -75,7 +79,7 @@
     .header-right{
       display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.8rem;
       padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
-      background:#0f0f0f;
+      background:#0f0f0f; position: relative;
     }
     .beta-pill{
       padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18);
@@ -83,20 +87,19 @@
     }
     .version-tag{ opacity:.9; }
 
-    /* Header: social icons (appear when enabled + valid link) */
+    /* Header social links */
     .social-links{ display:flex; align-items:center; gap:8px; margin:0 6px; }
     .social-link{
       width:28px; height:28px; border-radius:8px;
-      display:none; /* shown when enabled + valid URL */
-      align-items:center; justify-content:center;
+      display:none; align-items:center; justify-content:center;
       background:#111; border:1px solid rgba(255,255,255,0.12);
       color:#fff; text-decoration:none; opacity:.95;
-      transition: background var(--t-fast), border-color var(--t-fast);
+      transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
     }
-    .social-link:hover{ background:#151515; border-color:rgba(255,255,255,0.2); }
+    .social-link:hover{ background:#151515; border-color:rgba(255,255,255,0.2); transform:translateY(-1px); }
     .social-link svg{ width:18px; height:18px; display:block; }
 
-    /* Header: quick links */
+    /* Quick links (kept, minimal) */
     .quick-links { display:flex; align-items:center; gap:8px; margin:0 6px; }
     .quick-link{
       display:inline-flex; align-items:center; gap:6px;
@@ -107,48 +110,56 @@
     .quick-link:hover{ background:#151515; border-color:rgba(255,255,255,0.2); }
     .quick-link svg{ width:16px; height:16px; display:block; }
 
-    .avatar{
-      width:36px; height:36px; border-radius:50%;
-      border:1px solid rgba(255,255,255,0.25);
-      overflow:hidden; background:#0d0d0d;
-      display:inline-flex; align-items:center; justify-content:center;
-    }
+    /* Avatar + menu */
+    .avatar{ width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,0.25);
+      overflow:hidden; background:#0d0d0d; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-    /* Main card (single column) */
-    .card{
-      margin:16px; background:#0b0b0b; border:1px solid var(--border);
-      border-radius:16px; display:block; min-height:480px; overflow:hidden; box-shadow: var(--shadow-soft);
+    .avatar-menu{
+      position:absolute; top:48px; right:8px; width:180px;
+      background:#0f0f0f; border:1px solid rgba(255,255,255,0.12);
+      border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+      display:none; padding:6px; z-index:30;
     }
-    .card-right{
-      width:100%; padding:32px;
-      display:flex; flex-direction:column; justify-content:center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
+    .avatar-menu button{
+      width:100%; text-align:left; padding:8px 10px; border-radius:8px; border:0; background:transparent; color:#fff; cursor:pointer; font-size:.88rem;
+    }
+    .avatar-menu button:hover{ background:rgba(255,255,255,0.06); }
+
+    /* Help tooltip */
+    .help-btn{
+      width:24px; height:24px; border-radius:50%; border:1px solid rgba(255,255,255,0.25);
+      display:inline-flex; align-items:center; justify-content:center; background:#0a0a0a; color:#fff; cursor:pointer; font-weight:700;
+    }
+    .help-tip{
+      position:absolute; top:48px; right:210px; width:260px; padding:10px 12px; border-radius:10px;
+      background:#0f0f0f; border:1px solid rgba(255,255,255,0.12); color:#dcdcdc; font-size:.88rem; display:none; z-index:30;
+      box-shadow:0 12px 30px rgba(0,0,0,0.6);
     }
 
+    /* Top tabs (fake navigation) */
+    .top-tabs{ display:none; align-items:center; gap:8px; margin:10px 0 4px; }
+    .tab-btn{
+      padding:6px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.14);
+      background:#0f0f0f; color:#fff; font-size:.86rem; cursor:pointer; transition:background var(--t-fast), border-color var(--t-fast);
+    }
+    .tab-btn[aria-selected="true"]{ background:#171717; border-color:rgba(255,255,255,0.28); }
+
+    /* Main card */
+    .card{ margin:16px; background:#0b0b0b; border:1px solid var(--border);
+      border-radius:16px; display:block; min-height:520px; overflow:hidden; box-shadow: var(--shadow-soft); position:relative; }
+    .card-right{ width:100%; padding:32px; display:flex; flex-direction:column; justify-content:flex-start;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent); position:relative; }
+
+    /* Login */
+    .panel{ background:#0f0f0f; border-radius:var(--radius-card); border:1px solid rgba(255,255,255,0.08);
+      box-shadow:0 8px 18px rgba(0,0,0,0.5); overflow:hidden; position:relative; }
+    .panel-login{ display:flex; width:100%; flex-wrap:wrap; }
+    .login-left{ flex:1 1 320px; padding:28px; border-right:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:10px; justify-content:center; background:#101010; min-width:280px; }
+    .login-right{ flex:1 1 320px; padding:28px; display:flex; flex-direction:column; justify-content:center; gap:14px; background:#0e0e0e; min-width:280px; }
     .login-title{ font-size:1.4rem; margin-bottom:4px; }
     .login-subtitle{ font-size:.85rem; color:#a0a0a0; margin-bottom:16px; }
 
-    .panel{
-      background:#0f0f0f; border-radius:var(--radius-card);
-      border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 18px rgba(0,0,0,0.5);
-      overflow:hidden; position:relative;
-    }
-    .panel-login{ display:flex; width:100%; flex-wrap:wrap; }
-
-    .login-left{
-      flex:1 1 320px; padding:28px; border-right:1px solid rgba(255,255,255,0.06);
-      display:flex; flex-direction:column; gap:10px; justify-content:center;
-      background:#101010; min-width:280px;
-    }
-    .login-right{
-      flex:1 1 320px; padding:28px; display:flex; flex-direction:column;
-      justify-content:center; gap:14px; background:#0e0e0e; min-width:280px;
-    }
-
-    .field-label{
-      font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:#bdbdbd;
-    }
+    .field-label{ font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:#bdbdbd; }
     .field-input{
       margin-top:4px; width:100%; padding:10px 12px; border-radius:999px;
       border:1px solid rgba(255,255,255,0.16); background:#0b0b0b; color:#fff; font-size:.9rem; outline:none;
@@ -156,12 +167,6 @@
     }
     .field-input::placeholder{ color:rgba(255,255,255,0.35); }
     .field-input:focus{ border-color:rgba(255,255,255,0.5); box-shadow:0 0 0 1px rgba(255,255,255,0.25); background:#0c0c0c; }
-
-    .row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .row-left{ display:flex; align-items:center; gap:6px; }
-
-    .link{ color:#fff; text-decoration:none; font-size:.82rem; }
-    .link:hover{ text-decoration:underline; }
 
     .btn-primary, .btn-secondary{
       margin-top:8px; padding:10px 14px; width:100%; border-radius:999px; border:none;
@@ -173,7 +178,6 @@
     .btn-primary:hover{ background:#f1f1f1; }
     .btn-secondary{ background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.35); }
     .btn-secondary:hover{ background:rgba(255,255,255,0.06); }
-
     .btn-small{
       padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.25);
       background:transparent; color:#fff; font-size:.82rem; cursor:pointer;
@@ -183,12 +187,14 @@
     .or-divider{ display:flex; align-items:center; gap:10px; margin:8px 0; color:#a0a0a0; font-size:.8rem; }
     .or-divider span{ flex:1; height:1px; background:var(--border); }
 
-    /* Dashboard */
-    .dashboard{ display:none; flex-direction:column; gap:16px; margin-top:16px; }
+    /* Dashboard view + tabs content containers */
+    .dashboard, .collections-view, .pieces-view{ display:none; flex-direction:column; gap:16px; margin-top:8px; }
     .dash-header-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:10px; flex-wrap:wrap; }
     .dash-title-block{ display:flex; flex-direction:column; gap:4px; }
     .dash-title{ font-size:1.4rem; }
-    .dash-subtitle{ font-size:.88rem; color:#b0b0b0; max-width:360px; }
+    .dash-subtitle{ font-size:.88rem; color:#b0b0b0; max-width:420px; }
+    .dash-emo{ font-size:.92rem; color:#cfcfcf; opacity:.95; }
+
     .dash-pills{ display:flex; align-items:center; gap:8px; font-size:.75rem; flex-wrap:wrap; }
     .pill-soft{
       padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18);
@@ -197,72 +203,58 @@
     .pill-soft strong{ color:#fff; font-weight:600; }
     .pill-outline{
       padding:4px 10px; border-radius:999px; border:1px dashed rgba(255,255,255,0.3);
-      color:#a9a9a9; text-transform:uppercase; letter-spacing:.12em;
+      color:#a9a9a9; text-transform:uppercase; letter-spacing:.12em; background:transparent;
     }
+    .pill-outline.linkish{ cursor:pointer; }
 
     .grid-3{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
 
     .dash-card{
       border-radius:14px; border:1px solid rgba(255,255,255,0.12);
       background:#0f0f0f; padding:12px; position:relative; overflow:hidden;
-      transition: background var(--t-fast), border-color var(--t-fast);
+      transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
     }
-    .dash-card:hover{ border-color:rgba(255,255,255,0.18); background:#121212; }
+    .dash-card:hover{ border-color:rgba(255,255,255,0.18); background:#121212; transform:translateY(-2px); }
+    /* Dark glass sheen on hover */
+    .dash-card::after{
+      content:""; position:absolute; inset:0; background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.08) 50%, transparent 80%);
+      transform: translateX(-120%); opacity:0; pointer-events:none;
+    }
+    .dash-card:hover::after{ animation: sheen 1.4s ease forwards; opacity:1; }
+    @keyframes sheen { 0%{ transform: translateX(-120%);} 100%{ transform: translateX(120%);} }
 
     .card-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
     .card-title{ font-size:.92rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
     .card-tag{ font-size:.72rem; color:#b0b0b0; text-transform:uppercase; letter-spacing:.12em; }
-
     .card-body{ font-size:.85rem; color:#bdbdbd; display:flex; flex-direction:column; gap:8px; }
 
     .metric-row{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
     .metric-label{ font-size:.8rem; color:#b0b0b0; }
     .metric-value{ font-size:1rem; font-weight:600; color:#fff; }
-    .metric-pill{ padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:.76rem; color:#cfcfcf; }
+    .metric-pill{ padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.18); font-size:.76rem; color:#cfcfcf; background:#0e0e0e; }
     .metric-pill strong{ color:#fff; }
 
-    /* Favourite Piece photo */
+    /* Favourite piece */
     .fav-photo{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-    .fav-thumb{
-      width:84px; height:84px; border-radius:12px; overflow:hidden;
-      border:1px solid rgba(255,255,255,0.12); background:#0b0b0b;
-      display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    }
+    .fav-thumb{ width:84px; height:84px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.12); background:#0b0b0b; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .fav-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
     .fav-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 
-    /* Profile + Gallery panels */
-    .panel-section{
-      margin: 12px 16px 12px;
-      display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px;
-    }
-    .profile-panel, .gallery-panel{
-      background:#0f0f0f; border:1px solid rgba(255,255,255,0.12);
-      border-radius:16px; padding:16px;
-    }
+    /* Gallery + Profile section (existing) */
+    .panel-section{ margin: 12px 16px 12px; display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; }
+    .profile-panel, .gallery-panel{ background:#0f0f0f; border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:16px; }
     .section-title{ font-size:1.1rem; font-weight:600; margin-bottom:8px; letter-spacing:.08em; }
     .section-sub{ font-size:.9rem; color:#b0b0b0; margin-bottom:12px; }
-
-    .profile-avatar-lg{
-      width:120px; height:120px; border-radius:50%; overflow:hidden;
-      border:1px solid rgba(255,255,255,0.25); background:#111;
-      display:flex; align-items:center; justify-content:center; margin-bottom:12px;
-    }
+    .profile-avatar-lg{ width:120px; height:120px; border-radius:50%; overflow:hidden; border:1px solid rgba(255,255,255,0.25); background:#111; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
     .profile-avatar-lg img{ width:100%; height:100%; object-fit:cover; display:block; }
-
     .inline-actions{ display:flex; gap:8px; flex-wrap:wrap; }
     .hint{ font-size:.8rem; color:#9a9a9a; margin-top:8px; }
-
-    .uploader{
-      padding:12px; border:1px dashed rgba(255,255,255,0.25); border-radius:12px; background:#0c0c0c;
-    }
+    .uploader{ padding:12px; border:1px dashed rgba(255,255,255,0.25); border-radius:12px; background:#0c0c0c; }
     .uploader label{ font-size:.88rem; color:#dcdcdc; display:block; margin-bottom:8px; }
     .uploader input{ display:block; }
-
     .gallery-grid{ margin-top:12px; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
     .gallery-item{ position:relative; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.12); background:#0b0b0b; aspect-ratio:1/1; }
     .gallery-item img{ width:100%; height:100%; object-fit:cover; display:block; }
-
     .delete-btn{
       position:absolute; top:6px; right:6px; background: rgba(0,0,0,0.55);
       color:#fff; border:1px solid rgba(255,255,255,0.35); border-radius:999px; font-size:.78rem; padding:4px 8px; cursor:pointer;
@@ -270,11 +262,7 @@
     .delete-btn:hover{ background: rgba(255,255,255,0.12); }
 
     /* Live Feed */
-    .feed-panel{
-      margin: 0 16px 20px;
-      background:#0f0f0f; border:1px solid rgba(255,255,255,0.12);
-      border-radius:16px; padding:16px;
-    }
+    .feed-panel{ margin: 0 16px 20px; background:#0f0f0f; border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:16px; }
     .feed-list{ list-style:none; display:flex; flex-direction:column; gap:10px; max-height:260px; overflow:auto; padding-right:4px; }
     .feed-item{ display:flex; align-items:center; gap:10px; background:#101010; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:8px; }
     .feed-thumb{ width:44px; height:44px; border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.12); flex-shrink:0; background:#0b0b0b; display:flex; align-items:center; justify-content:center; }
@@ -282,35 +270,41 @@
     .feed-text{ display:flex; flex-direction:column; gap:3px; font-size:.9rem; }
     .feed-meta{ font-size:.78rem; color:#a9a9a9; }
 
-    /* Modal */
-    .modal-backdrop{
-      position:fixed; inset:0; background:rgba(0,0,0,0.6);
-      display:none; align-items:center; justify-content:center; z-index:1000;
+    /* Footer */
+    .app-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-top:1px solid rgba(255,255,255,0.06); font-size:.9rem; color:#d0d0d0; background:#0f0f0f; }
+    .footer-left{ display:flex; align-items:center; gap:8px; }
+
+    /* Login shimmer overlay */
+    .login-shimmer{
+      position:absolute; inset:0; background:rgba(0,0,0,0.4);
+      display:none; align-items:center; justify-content:center; z-index:5;
     }
+    .login-shimmer::after{
+      content:""; width:60%; max-width:520px; height:6px; border-radius:999px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      animation: loadingShimmer .8s linear infinite;
+    }
+    @keyframes loadingShimmer { 0%{ transform: translateX(-40%);} 100%{ transform: translateX(40%);} }
+
+    /* Watermark */
+    .watermark{
+      position:fixed; right:14px; bottom:12px; font-size:.8rem; color:#d9d9d9;
+      background:rgba(0,0,0,0.36); border:1px solid rgba(255,255,255,0.12); padding:6px 10px; border-radius:10px; z-index:50; backdrop-filter: blur(6px);
+    }
+
+    /* Micro-modal (collections) reuses modal styles from social dialog */
+    .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:1000; }
     .modal-backdrop.show{ display:flex; }
-    .modal{
-      width:min(720px, 92vw); background:#101010; color:#fff; border-radius:16px;
-      border:1px solid rgba(255,255,255,0.12); box-shadow: var(--shadow-soft);
-      overflow:hidden;
-    }
+    .modal{ width:min(640px, 92vw); background:#101010; color:#fff; border-radius:16px; border:1px solid rgba(255,255,255,0.12); box-shadow: var(--shadow-soft); overflow:hidden; }
     .modal-header{ padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between; }
     .modal-title{ font-size:1.1rem; font-weight:600; }
-    .modal-body{ padding:14px 16px; display:flex; flex-direction:column; gap:12px; }
-    .modal-row{ display:grid; grid-template-columns: 86px 1fr; gap:10px; align-items:center; }
-    .modal-row .row-cols{ display:grid; grid-template-columns: 18px 1fr; gap:8px; align-items:center; }
-    .modal-row input[type="text"]{
-      width:100%; padding:9px 11px; border-radius:10px; border:1px solid rgba(255,255,255,0.18);
-      background:#0b0b0b; color:#fff; font-size:.88rem;
-    }
-    .modal-row .preview{
-      font-size:.82rem; color:#bdbdbd; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
+    .modal-body{ padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
     .modal-footer{ padding:12px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:8px; justify-content:flex-end; }
     .modal-close{ background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.25); padding:8px 12px; border-radius:999px; cursor:pointer; }
     .modal-save{ background:#fff; color:#000; border:0; padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:600; }
 
-    /* Accessibility focus */
-    .btn-primary:focus-visible, .btn-secondary:focus-visible, .btn-small:focus-visible, .link:focus-visible, input:focus-visible, .modal-close:focus-visible, .modal-save:focus-visible{
+    /* Focus */
+    .btn-primary:focus-visible, .btn-secondary:focus-visible, .btn-small:focus-visible, .link:focus-visible, input:focus-visible, .modal-close:focus-visible, .modal-save:focus-visible, .tab-btn:focus-visible, .help-btn:focus-visible{
       outline:2px solid #fff; outline-offset:2px;
     }
 
@@ -341,11 +335,12 @@
               <div class="brand-tagline">A home for collectors</div>
             </div>
           </div>
-          <div class="header-right">
-            <div class="beta-pill" aria-label="This is a demo build">Demo</div>
-            <div class="version-tag" aria-label="Version">v0.7</div>
 
-            <!-- Social icons (enabled + valid link) -->
+          <div class="header-right" aria-label="Header controls">
+            <div class="beta-pill" aria-label="This is a demo build">Demo</div>
+            <div class="version-tag" aria-label="Version">v0.7.1</div>
+
+            <!-- Social icons (enabled via Settings) -->
             <nav class="social-links" aria-label="Social profiles">
               <a id="link-ebay" class="social-link" target="_blank" rel="noopener noreferrer" title="eBay" aria-label="eBay profile">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
@@ -367,20 +362,25 @@
               </a>
             </nav>
 
-            <!-- Quick links (valid anchors) -->
+            <!-- Quick links sample -->
             <nav class="quick-links" aria-label="Marketplaces">
-              <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer" title="eBay UK">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 3zm-2.4 9.9c0 1.54 1.25 2.7 3.02 2.7 1.34 0 2.42-.6 2.86-1.62h-1.64c-.22.38-.71.62-1.23.62-.9 0-1.53-.6-1.53-1.5h4.49c.03-.21.05-.41.05-.61 0-1.79-1.27-3.09-3.05-3.09-1.85 0-2.97 1.25-2.97 3.5zm1.78-.63c.07-.86.7-1.41 1.52-1.41.81 0 1.41.55 1.41 1.41h-2.93z"/></svg>
-                eBay
-              </a>
-              <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener noreferrer" title="PSA">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l8 4v6c0 5.25-3.75 8.78-8 10-4.25-1.22-8-4.75-8-10V6l8-4zm-1.8 6.9h5.3c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45h-3.9v1.3h4.1c.8 0 1.5.65 1.5 1.45s-.7 1.45-1.5 1.45H10.2V8.9z"/></svg>
-                PSA
-              </a>
+              <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener noreferrer" title="eBay UK">eBay</a>
+              <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener noreferrer" title="PSA">PSA</a>
             </nav>
 
-            <div class="avatar" aria-label="Profile photo">
+            <!-- Help + Avatar -->
+            <button id="help-btn" class="help-btn" aria-haspopup="true" aria-expanded="false" title="What is this?">?</button>
+            <div id="help-tip" class="help-tip" role="tooltip">
+              This demo shows the early vision of CollectorConnector. More features coming soon.
+            </div>
+
+            <div id="avatar" class="avatar" aria-label="Profile photo" aria-haspopup="true" aria-expanded="false">
               <img id="header-avatar" src="./CCLogoSML.png" alt="Profile avatar" />
+            </div>
+            <div id="avatar-menu" class="avatar-menu" role="menu" aria-hidden="true">
+              <button id="menu-edit" role="menuitem">Edit Profile</button>
+              <button id="menu-settings" role="menuitem">Settings</button>
+              <button id="menu-signout" role="menuitem">Sign Out</button>
             </div>
           </div>
         </header>
@@ -388,7 +388,8 @@
         <!-- MAIN -->
         <main>
           <div class="card">
-            <!-- RIGHT: Authentication + Dashboard ONLY -->
+            <div id="login-shimmer" class="login-shimmer" aria-hidden="true"></div>
+
             <section class="card-right" aria-label="Authentication and dashboard">
               <!-- LOGIN VIEW -->
               <div id="login-view" class="panel panel-login" aria-hidden="false" aria-live="polite">
@@ -406,17 +407,18 @@
                     <input id="email" class="field-input" type="email" placeholder="you@example.com" />
                     <label class="field-label" for="password">Password</label>
                     <input id="password" class="field-input" type="password" placeholder="••••••••" />
-                    <div class="row">
-                      <div class="row-left">
-                        <input id="remember" type="checkbox" />
-                        <label for="remember" style="text-transform:none;letter-spacing:0;">Remember me</label>
-                      </div>
-                    </div>
                     <button id="login-button" class="btn-primary" type="submit">
-                      <span>Log in</span><span>→</span>
+                      <span id="login-btn-text">Log in</span><span>→</span>
                     </button>
                   </form>
                 </div>
+              </div>
+
+              <!-- TABS (fake navigation, only when logged in) -->
+              <div id="top-tabs" class="top-tabs" role="tablist" aria-label="Sections">
+                <button class="tab-btn" id="tab-dashboard" role="tab" aria-selected="true" aria-controls="dashboard-view">Dashboard</button>
+                <button class="tab-btn" id="tab-collections" role="tab" aria-selected="false" aria-controls="collections-view">Collections</button>
+                <button class="tab-btn" id="tab-pieces" role="tab" aria-selected="false" aria-controls="pieces-view">Pieces</button>
               </div>
 
               <!-- DASHBOARD VIEW -->
@@ -425,10 +427,12 @@
                   <div class="dash-title-block">
                     <h2 class="dash-title">Your Dashboard</h2>
                     <p class="dash-subtitle">A calm overview of your world of pieces.</p>
+                    <p class="dash-emo"><em>Every piece tells a story. This is where they live.</em></p>
                     <div class="dash-pills">
                       <div class="pill-soft"><strong>3</strong> Collections</div>
                       <div class="pill-soft"><strong>18</strong> Pieces</div>
-                      <div class="pill-outline">Private</div>
+                      <!-- Option C: Private/Public toggle (visual only) -->
+                      <button id="privacy-toggle" class="pill-outline linkish" type="button" aria-pressed="true" aria-label="Privacy: Private">Private</button>
                     </div>
                   </div>
                   <button id="logout-button" class="btn-secondary" type="button">Log out</button>
@@ -440,7 +444,11 @@
                     <div class="card-header"><div class="card-title">Collections</div><div class="card-tag">Overview</div></div>
                     <div class="card-body">
                       <div class="metric-row"><div class="metric-label">Total</div><div class="metric-value">3</div></div>
-                      <div class="metric-row"><div class="metric-label">Most Active</div><div class="metric-pill"><strong>Watches</strong></div></div>
+                      <div class="metric-row">
+                        <div class="metric-label">Most Active</div>
+                        <!-- Micro-modal trigger -->
+                        <button class="metric-pill linkish" type="button" data-collection="Watches"><strong>Watches</strong></button>
+                      </div>
                     </div>
                   </div>
 
@@ -453,7 +461,7 @@
                     </div>
                   </div>
 
-                  <!-- Favourite Piece -->
+                  <!-- Favourite Piece (hover reveal) -->
                   <div class="dash-card">
                     <div class="card-header">
                       <div class="card-title">Favourite Piece</div>
@@ -472,18 +480,16 @@
                       </div>
                       <div class="metric-row" style="justify-content:flex-start; gap:10px;">
                         <div class="metric-pill"><strong>Rolex Submariner (1998)</strong></div>
+                        <!-- Hover reveal pill -->
+                        <button id="view-story" class="btn-small" type="button" title="View Story" style="display:none;">View Story</button>
                       </div>
-                      <div class="metric-row" style="justify-content:flex-start;">
-                        <div class="metric-label">Your most meaningful piece</div>
-                      </div>
-                      <div class="metric-row" style="justify-content:flex-start;">
-                        <div class="metric-label">A reminder of where your collecting journey began.</div>
-                      </div>
+                      <div class="metric-row" style="justify-content:flex-start;"><div class="metric-label">Your most meaningful piece</div></div>
+                      <div class="metric-row" style="justify-content:flex-start;"><div class="metric-label">A reminder of where your collecting journey began.</div></div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Profile + Gallery Section -->
+                <!-- Profile + Gallery Section (unchanged core features) -->
                 <div class="panel-section" aria-label="Profile and Collection Photos">
                   <!-- Profile panel -->
                   <section class="profile-panel" aria-labelledby="profileTitle">
@@ -532,6 +538,52 @@
                   <ul id="feed-list" class="feed-list" aria-live="polite" aria-relevant="additions text"></ul>
                 </section>
               </div> <!-- /dashboard-view -->
+
+              <!-- COLLECTIONS TAB VIEW (fake) -->
+              <div id="collections-view" class="collections-view" aria-hidden="true" aria-live="polite">
+                <h2 class="dash-title">Your Collections</h2>
+                <p class="dash-subtitle">A quick glimpse at your current sets. Create new ones as your story grows.</p>
+                <div class="grid-3" style="margin-top:10px;">
+                  <div class="dash-card">
+                    <div class="card-header"><div class="card-title">Watches</div><div class="card-tag">3 pieces</div></div>
+                    <div class="card-body">
+                      <div class="metric-row" style="justify-content:flex-start;">
+                        <button class="metric-pill linkish" data-collection="Watches" type="button"><strong>View Collection</strong></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="dash-card">
+                    <div class="card-header"><div class="card-title">Vintage Posters</div><div class="card-tag">8 pieces</div></div>
+                    <div class="card-body">
+                      <div class="metric-row" style="justify-content:flex-start;">
+                        <button class="metric-pill linkish" data-collection="Vintage Posters" type="button"><strong>View Collection</strong></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="dash-card">
+                    <div class="card-header"><div class="card-title">Coins</div><div class="card-tag">7 pieces</div></div>
+                    <div class="card-body">
+                      <div class="metric-row" style="justify-content:flex-start;">
+                        <button class="metric-pill linkish" data-collection="Coins" type="button"><strong>View Collection</strong></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style="margin-top:8px;">
+                  <button class="btn-secondary" type="button" disabled title="Demo only">Create Collection</button>
+                </div>
+              </div>
+
+              <!-- PIECES TAB VIEW (fake) -->
+              <div id="pieces-view" class="pieces-view" aria-hidden="true" aria-live="polite">
+                <h2 class="dash-title">Pieces</h2>
+                <p class="dash-subtitle">A lightweight look at your latest additions.</p>
+                <div class="grid-3" style="margin-top:10px;">
+                  <div class="dash-card"><div class="card-header"><div class="card-title">Omega Seamaster</div><div class="card-tag">Watch</div></div><div class="card-body"><div class="metric-label">Added recently</div></div></div>
+                  <div class="dash-card"><div class="card-header"><div class="card-title">Rolex Submariner</div><div class="card-tag">Watch</div></div><div class="card-body"><div class="metric-label">Favourite</div></div></div>
+                  <div class="dash-card"><div class="card-header"><div class="card-title">1960s Concert Poster</div><div class="card-tag">Poster</div></div><div class="card-body"><div class="metric-label">Vintage</div></div></div>
+                </div>
+              </div>
             </section>
           </div>
         </main>
@@ -549,7 +601,10 @@
     </div>
   </div>
 
-  <!-- SOCIAL SETUP MODAL -->
+  <!-- WATERMARK -->
+  <div class="watermark" aria-hidden="true">Demo Mode — Not Final Product</div>
+
+  <!-- SOCIAL SETUP MODAL (existing) -->
   <div id="social-modal-backdrop" class="modal-backdrop" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="socialModalTitle">
       <div class="modal-header">
@@ -557,7 +612,7 @@
         <button id="social-close" class="modal-close" type="button" aria-label="Close">Close</button>
       </div>
       <div class="modal-body">
-        <!-- One row per platform -->
+        <!-- Platform rows -->
         <div class="modal-row">
           <div>eBay</div>
           <div>
@@ -568,7 +623,6 @@
             <div id="prev-ebay" class="preview"></div>
           </div>
         </div>
-
         <div class="modal-row">
           <div>Instagram</div>
           <div>
@@ -579,7 +633,6 @@
             <div id="prev-instagram" class="preview"></div>
           </div>
         </div>
-
         <div class="modal-row">
           <div>Facebook</div>
           <div>
@@ -590,7 +643,6 @@
             <div id="prev-facebook" class="preview"></div>
           </div>
         </div>
-
         <div class="modal-row">
           <div>TikTok</div>
           <div>
@@ -601,7 +653,6 @@
             <div id="prev-tiktok" class="preview"></div>
           </div>
         </div>
-
         <div class="modal-row">
           <div>X</div>
           <div>
@@ -612,7 +663,6 @@
             <div id="prev-x" class="preview"></div>
           </div>
         </div>
-
         <div class="modal-row">
           <div>YouTube</div>
           <div>
@@ -630,431 +680,502 @@
     </div>
   </div>
 
+  <!-- COLLECTION PREVIEW MICRO-MODAL -->
+  <div id="collection-modal-backdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="collectionModalTitle">
+      <div class="modal-header">
+        <div id="collectionModalTitle" class="modal-title">Collection</div>
+        <button id="collection-close" class="modal-close" type="button" aria-label="Close">Close</button>
+      </div>
+      <div id="collectionModalBody" class="modal-body"></div>
+      <div class="modal-footer">
+        <button id="collection-ok" class="modal-save" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- JS -->
   <script>
-    (function(){
-      // Elements
-      const loginForm = document.getElementById("login-form");
-      const loginButton = document.getElementById("login-button");
-      const skipButton = document.getElementById("skip-button");
-      const logoutButton = document.getElementById("logout-button");
-      const loginView = document.getElementById("login-view");
-      const dashboardView = document.getElementById("dashboard-view");
+  (function(){
+    // Elements
+    const loginForm = document.getElementById("login-form");
+    const loginButton = document.getElementById("login-button");
+    const loginBtnText = document.getElementById("login-btn-text");
+    const skipButton = document.getElementById("skip-button");
+    const logoutButton = document.getElementById("logout-button");
+    const loginView = document.getElementById("login-view");
+    const dashboardView = document.getElementById("dashboard-view");
+    const topTabs = document.getElementById("top-tabs");
+    const tabDashboard = document.getElementById("tab-dashboard");
+    const tabCollections = document.getElementById("tab-collections");
+    const tabPieces = document.getElementById("tab-pieces");
+    const collectionsView = document.getElementById("collections-view");
+    const piecesView = document.getElementById("pieces-view");
+    const loginShimmer = document.getElementById("login-shimmer");
 
-      const headerAvatarImg = document.getElementById("header-avatar");
-      const profileAvatarImg = document.getElementById("profile-avatar-lg");
-      const profileFile = document.getElementById("profile-file");
-      const clearProfileBtn = document.getElementById("clear-profile");
+    const headerAvatarImg = document.getElementById("header-avatar");
+    const profileAvatarImg = document.getElementById("profile-avatar-lg");
+    const profileFile = document.getElementById("profile-file");
+    const clearProfileBtn = document.getElementById("clear-profile");
 
-      const galleryInput = document.getElementById("gallery-files");
-      const clearGalleryBtn = document.getElementById("clear-gallery");
-      const galleryGrid = document.getElementById("gallery-grid");
+    const galleryInput = document.getElementById("gallery-files");
+    const clearGalleryBtn = document.getElementById("clear-gallery");
+    const galleryGrid = document.getElementById("gallery-grid");
 
-      const feedList = document.getElementById("feed-list");
+    const feedList = document.getElementById("feed-list");
 
-      // Favourite piece elements
-      const favImg = document.getElementById("favpiece-img");
-      const favFile = document.getElementById("favpiece-file");
-      const favClear = document.getElementById("favpiece-clear");
+    // Fave piece
+    const favImg = document.getElementById("favpiece-img");
+    const favFile = document.getElementById("favpiece-file");
+    const favClear = document.getElementById("favpiece-clear");
 
-      // Social header link elements
-      const linkEls = {
-        ebay: document.getElementById("link-ebay"),
-        instagram: document.getElementById("link-instagram"),
-        facebook: document.getElementById("link-facebook"),
-        tiktok: document.getElementById("link-tiktok"),
-        x: document.getElementById("link-x"),
-        youtube: document.getElementById("link-youtube"),
+    // Privacy toggle (real interaction #1C)
+    const privacyToggle = document.getElementById("privacy-toggle");
+
+    // Hover reveal pill (1B)
+    const favCard = favImg?.closest(".dash-card");
+    const viewStoryBtn = document.getElementById("view-story");
+
+    // Header help + avatar menu (4 + 10)
+    const avatar = document.getElementById("avatar");
+    const avatarMenu = document.getElementById("avatar-menu");
+    const menuEdit = document.getElementById("menu-edit");
+    const menuSettings = document.getElementById("menu-settings");
+    const menuSignout = document.getElementById("menu-signout");
+    const helpBtn = document.getElementById("help-btn");
+    const helpTip = document.getElementById("help-tip");
+
+    // Social header link elements
+    const linkEls = {
+      ebay: document.getElementById("link-ebay"),
+      instagram: document.getElementById("link-instagram"),
+      facebook: document.getElementById("link-facebook"),
+      tiktok: document.getElementById("link-tiktok"),
+      x: document.getElementById("link-x"),
+      youtube: document.getElementById("link-youtube"),
+    };
+
+    // Social modal elements
+    const socialBackdrop = document.getElementById("social-modal-backdrop");
+    const btnSocialClose = document.getElementById("social-close");
+    const btnSocialSave = document.getElementById("social-save");
+    const btnOpenSocial = document.getElementById("open-social-setup");
+
+    const showInputs = {
+      ebay: document.getElementById("show-ebay"),
+      instagram: document.getElementById("show-instagram"),
+      facebook: document.getElementById("show-facebook"),
+      tiktok: document.getElementById("show-tiktok"),
+      x: document.getElementById("show-x"),
+      youtube: document.getElementById("show-youtube"),
+    };
+    const valInputs = {
+      ebay: document.getElementById("val-ebay"),
+      instagram: document.getElementById("val-instagram"),
+      facebook: document.getElementById("val-facebook"),
+      tiktok: document.getElementById("val-tiktok"),
+      x: document.getElementById("val-x"),
+      youtube: document.getElementById("val-youtube"),
+    };
+    const prevEls = {
+      ebay: document.getElementById("prev-ebay"),
+      instagram: document.getElementById("prev-instagram"),
+      facebook: document.getElementById("prev-facebook"),
+      tiktok: document.getElementById("prev-tiktok"),
+      x: document.getElementById("prev-x"),
+      youtube: document.getElementById("prev-youtube"),
+    };
+
+    // Collection micro-modal elements
+    const collectionBackdrop = document.getElementById("collection-modal-backdrop");
+    const collectionTitle = document.getElementById("collectionModalTitle");
+    const collectionBody = document.getElementById("collectionModalBody");
+    const collectionClose = document.getElementById("collection-close");
+    const collectionOk = document.getElementById("collection-ok");
+
+    // Storage keys
+    const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
+    const PROFILE_IMG_KEY = "cc-demo-profile-image";
+    const GALLERY_KEY = "cc-demo-gallery-images";
+    const SOCIAL_USERS_KEY = "cc-demo-social-usernames";
+    const FEED_KEY = "cc-demo-feed";
+    const FAVPIECE_IMG_KEY = "cc-demo-favpiece-image";
+
+    // Helpers
+    function setHidden(el, hidden){
+      if(!el) return;
+      el.setAttribute("aria-hidden", hidden ? "true" : "false");
+      try{ el.inert = !!hidden; } catch(e){}
+    }
+    function showDashboard(){
+      if(!loginView || !dashboardView) return;
+      setHidden(loginView, true); setHidden(dashboardView, false);
+      loginView.style.display = "none"; dashboardView.style.display = "flex";
+      document.body.classList.add("logged-in");
+      if(topTabs) topTabs.style.display = "flex";
+      setTab("dashboard");
+      try { sessionStorage.setItem(VISUAL_LOGIN_KEY, "1"); } catch(e){}
+      maybeShowSocialOnboarding();
+    }
+    function showLogin(){
+      if(!loginView || !dashboardView) return;
+      dashboardView.style.display = "none"; loginView.style.display = "block";
+      setHidden(loginView, false); setHidden(dashboardView, true);
+      if(topTabs) topTabs.style.display = "none";
+      document.body.classList.remove("logged-in");
+      try { sessionStorage.removeItem(VISUAL_LOGIN_KEY); } catch(e){}
+      closeAvatarMenu();
+    }
+
+    function authenticateFake(callback){
+      // 0.8s shimmer + button state
+      if(loginShimmer){ loginShimmer.style.display = "flex"; loginShimmer.setAttribute("aria-hidden","false"); }
+      if(loginButton){ loginButton.disabled = true; }
+      if(loginBtnText){ loginBtnText.textContent = "Signing in…"; }
+      setTimeout(()=>{
+        if(loginShimmer){ loginShimmer.style.display = "none"; loginShimmer.setAttribute("aria-hidden","true"); }
+        if(loginButton){ loginButton.disabled = false; }
+        if(loginBtnText){ loginBtnText.textContent = "Log in"; }
+        callback && callback();
+      }, 800);
+    }
+
+    // Tabs
+    function setTab(name){
+      const map = {
+        dashboard: {btn: tabDashboard, view: dashboardView},
+        collections: {btn: tabCollections, view: collectionsView},
+        pieces: {btn: tabPieces, view: piecesView}
       };
-
-      // Modal elements
-      const socialBackdrop = document.getElementById("social-modal-backdrop");
-      const btnSocialClose = document.getElementById("social-close");
-      const btnSocialSave = document.getElementById("social-save");
-      const btnOpenSocial = document.getElementById("open-social-setup");
-
-      const showInputs = {
-        ebay: document.getElementById("show-ebay"),
-        instagram: document.getElementById("show-instagram"),
-        facebook: document.getElementById("show-facebook"),
-        tiktok: document.getElementById("show-tiktok"),
-        x: document.getElementById("show-x"),
-        youtube: document.getElementById("show-youtube"),
-      };
-      const valInputs = {
-        ebay: document.getElementById("val-ebay"),
-        instagram: document.getElementById("val-instagram"),
-        facebook: document.getElementById("val-facebook"),
-        tiktok: document.getElementById("val-tiktok"),
-        x: document.getElementById("val-x"),
-        youtube: document.getElementById("val-youtube"),
-      };
-      const prevEls = {
-        ebay: document.getElementById("prev-ebay"),
-        instagram: document.getElementById("prev-instagram"),
-        facebook: document.getElementById("prev-facebook"),
-        tiktok: document.getElementById("prev-tiktok"),
-        x: document.getElementById("prev-x"),
-        youtube: document.getElementById("prev-youtube"),
-      };
-
-      // Storage keys
-      const VISUAL_LOGIN_KEY = "cc-demo-visual-login";
-      const PROFILE_IMG_KEY = "cc-demo-profile-image";
-      const GALLERY_KEY = "cc-demo-gallery-images";
-      const SOCIAL_USERS_KEY = "cc-demo-social-usernames"; // stores {platform: {enabled, value}}
-      const FEED_KEY = "cc-demo-feed";
-      const FAVPIECE_IMG_KEY = "cc-demo-favpiece-image";
-
-      // Helpers
-      function setHidden(el, hidden){
-        if(!el) return;
-        el.setAttribute("aria-hidden", hidden ? "true" : "false");
-        try{ el.inert = !!hidden; } catch(e){}
-      }
-      function showDashboard(){
-        if(!loginView || !dashboardView) return;
-        setHidden(loginView, true); setHidden(dashboardView, false);
-        loginView.style.display = "none"; dashboardView.style.display = "flex";
-        document.body.classList.add("logged-in");
-        try { sessionStorage.setItem(VISUAL_LOGIN_KEY, "1"); } catch(e){}
-        maybeShowSocialOnboarding();
-      }
-      function showLogin(){
-        if(!loginView || !dashboardView) return;
-        dashboardView.style.display = "none"; loginView.style.display = "block";
-        setHidden(loginView, false); setHidden(dashboardView, true);
-        document.body.classList.remove("logged-in");
-        try { sessionStorage.removeItem(VISUAL_LOGIN_KEY); } catch(e){}
-      }
-
-      // Profile image
-      function renderProfile(src){
-        const fallback = "./CCLogoSML.png";
-        const useSrc = src || fallback;
-        if (headerAvatarImg) headerAvatarImg.src = useSrc;
-        if (profileAvatarImg) profileAvatarImg.src = useSrc;
-      }
-      function saveProfile(src){
-        try{ localStorage.setItem(PROFILE_IMG_KEY, src || ""); }catch(e){}
-        renderProfile(src);
-      }
-      function loadProfile(){
-        let s = "";
-        try{ s = localStorage.getItem(PROFILE_IMG_KEY) || ""; }catch(e){}
-        renderProfile(s || "");
-      }
-
-      // Image utils
-      function readFileAsDataURL(file){
-        return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
-      }
-      function loadImage(src){
-        return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; });
-      }
-      async function resizeImageDataURL(dataUrl, maxSize=1280, quality=0.85){
-        const img = await loadImage(dataUrl);
-        let {width, height} = img;
-        if (width > height && width > maxSize){ const r=maxSize/width; width=maxSize; height=Math.round(height*r); }
-        else if (height >= width && height > maxSize){ const r=maxSize/height; height=maxSize; width=Math.round(width*r); }
-        const c=document.createElement("canvas"); c.width=width; c.height=height;
-        c.getContext("2d").drawImage(img,0,0,width,height);
-        return c.toDataURL("image/jpeg", quality);
-      }
-
-      // Favourite piece photo
-      function renderFavpiece(src){ favImg.src = src || "./CCLogoSML.png"; }
-      function saveFavpiece(src){
-        try{ localStorage.setItem(FAVPIECE_IMG_KEY, src || ""); }catch(e){}
-        renderFavpiece(src);
-      }
-      function loadFavpiece(){
-        let s = "";
-        try{ s = localStorage.getItem(FAVPIECE_IMG_KEY) || ""; }catch(e){}
-        renderFavpiece(s || "");
-      }
-
-      // Gallery
-      function getGallery(){ try{ const raw=localStorage.getItem(GALLERY_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
-      function saveGallery(arr){ try{ localStorage.setItem(GALLERY_KEY, JSON.stringify(arr)); }catch(e){} }
-      function renderGallery(){
-        const items=getGallery();
-        galleryGrid.innerHTML=""; if(!items.length) return;
-        items.forEach((src, idx)=>{
-          const wrap=document.createElement("div"); wrap.className="gallery-item";
-          const img=document.createElement("img"); img.src=src; img.alt=`Collection photo ${idx+1}`;
-          const del=document.createElement("button"); del.className="delete-btn"; del.type="button"; del.dataset.index=String(idx); del.textContent="Delete"; del.setAttribute("aria-label",`Remove photo ${idx+1}`);
-          wrap.appendChild(img); wrap.appendChild(del); galleryGrid.appendChild(wrap);
-        });
-      }
-
-      // FEED (live activity)
-      function getFeed(){ try{ const raw=localStorage.getItem(FEED_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
-      function saveFeed(list){ try{ localStorage.setItem(FEED_KEY, JSON.stringify(list)); }catch(e){} }
-      function addFeedEvent(type, details){
-        const list = getFeed();
-        const ev = { id: Date.now() + "-" + Math.random().toString(36).slice(2,8), type, details: details || {}, at: Date.now() };
-        list.push(ev);
-        if(list.length > 50) list.splice(0, list.length - 50);
-        saveFeed(list);
-        renderFeed();
-      }
-      function formatWhen(ts){ try { return new Date(ts).toLocaleString(); } catch(e){ return ""; } }
-      function renderFeed(){
-        if(!feedList) return;
-        const list = getFeed().slice().sort((a,b)=>b.at - a.at);
-        feedList.innerHTML = "";
-        if(!list.length){
-          const li=document.createElement("li");
-          li.className="feed-item";
-          li.innerHTML = `
-            <div class="feed-thumb"><img src="./CCLogoSML.png" alt="No activity yet" /></div>
-            <div class="feed-text">
-              <div>No activity yet.</div>
-              <div class="feed-meta">Upload some photos to see updates here.</div>
-            </div>`;
-          feedList.appendChild(li);
-          return;
-        }
-        list.forEach(ev=>{
-          const li=document.createElement("li"); li.className="feed-item";
-          const thumbUrl = (ev.details && ev.details.thumb) || "./CCLogoSML.png";
-          let text = "";
-          if(ev.type === "photos-added"){
-            const n = (ev.details && ev.details.count) || 0;
-            text = `Added ${n} new photo${n===1?"":"s"} to collection`;
-          } else if (ev.type === "photo-deleted"){
-            text = `Removed 1 photo from collection`;
-          } else if (ev.type === "gallery-cleared"){
-            const n = (ev.details && ev.details.count) || 0;
-            text = `Cleared ${n} photo${n===1?"":"s"} from collection`;
-          } else if (ev.type === "favpiece-updated"){
-            text = `Updated favourite piece photo`;
-          } else if (ev.type === "favpiece-cleared"){
-            text = `Removed favourite piece photo`;
-          } else {
-            text = (ev.details && ev.details.text) || "Activity";
-          }
-          li.innerHTML = `
-            <div class="feed-thumb"><img src="${thumbUrl}" alt="Activity thumbnail" /></div>
-            <div class="feed-text">
-              <div>${text}</div>
-              <div class="feed-meta">${formatWhen(ev.at)}</div>
-            </div>`;
-          feedList.appendChild(li);
-        });
-      }
-
-      // SOCIAL LINKS (username OR full URL) + enable/disable
-      const PLATFORMS = ["ebay","instagram","facebook","tiktok","x","youtube"];
-      function sanitizeUsername(u){
-        if(!u) return "";
-        // Keep it simple: strip leading @ and trim
-        return String(u).trim().replace(/^@+/, "");
-      }
-      function buildUrl(platform, value){
-        const raw = String(value || "").trim();
-        if(!raw) return "";
-        if(/^https?:\/\//i.test(raw)) return raw; // full URL pasted
-        const u = sanitizeUsername(raw);
-        switch(platform){
-          case "ebay": return `https://www.ebay.co.uk/usr/${u}`;
-          case "instagram": return `https://www.instagram.com/${u}`;
-          case "facebook": return `https://www.facebook.com/${u}`;
-          case "tiktok": return `https://www.tiktok.com/@${u}`;
-          case "x": return `https://x.com/${u}`;
-          case "youtube": return u.startsWith("@") ? `https://www.youtube.com/${u}` : `https://www.youtube.com/@${u}`;
-          default: return "";
-        }
-      }
-
-      // Storage format: {platform: {enabled:boolean, value:string}}
-      function getSocial(){
-        try{
-          const raw = localStorage.getItem(SOCIAL_USERS_KEY);
-          if(!raw) return {};
-          const data = JSON.parse(raw);
-          // Migrate from string-only format if needed
-          if (data && typeof data === "object" && typeof data.ebay === "string"){
-            const migrated = {};
-            PLATFORMS.forEach(p=>{
-              const v = (data && data[p]) || "";
-              migrated[p] = { enabled: !!v, value: String(v || "") };
-            });
-            saveSocial(migrated);
-            return migrated;
-          }
-          return data || {};
-        }catch(e){ return {}; }
-      }
-      function saveSocial(obj){
-        try{ localStorage.setItem(SOCIAL_USERS_KEY, JSON.stringify(obj || {})); }catch(e){}
-      }
-      function renderHeaderSocial(){
-        const cfg = getSocial();
-        PLATFORMS.forEach(p=>{
-          const a = linkEls[p];
-          if(!a) return;
-          const enabled = !!(cfg[p] && cfg[p].enabled);
-          const url = buildUrl(p, (cfg[p] && cfg[p].value) || "");
-          const ok = enabled && !!url;
-          a.style.display = ok ? "inline-flex" : "none";
-          if (ok) { a.href = url; } else { a.removeAttribute("href"); }
-        });
-      }
-
-      // Modal open/close
-      function openSocialModal(){
-        if(!socialBackdrop) return;
-        socialBackdrop.classList.add("show");
-        socialBackdrop.setAttribute("aria-hidden","false");
-        populateModalFromStorage();
-      }
-      function closeSocialModal(){
-        if(!socialBackdrop) return;
-        socialBackdrop.classList.remove("show");
-        socialBackdrop.setAttribute("aria-hidden","true");
-      }
-      function populateModalFromStorage(){
-        const cfg = getSocial();
-        PLATFORMS.forEach(p=>{
-          if(showInputs[p]) showInputs[p].checked = !!(cfg[p] && cfg[p].enabled);
-          if(valInputs[p]) valInputs[p].value = (cfg[p] && cfg[p].value) || "";
-          updatePreview(p);
-        });
-      }
-      function collectFromModal(){
-        const out = {};
-        PLATFORMS.forEach(p=>{
-          out[p] = {
-            enabled: !!(showInputs[p] && showInputs[p].checked),
-            value: (valInputs[p] && valInputs[p].value) || ""
-          };
-        });
-        return out;
-      }
-      function updatePreview(p){
-        const v = (valInputs[p] && valInputs[p].value) || "";
-        const url = buildUrl(p, v);
-        if(prevEls[p]){
-          prevEls[p].innerHTML = url
-            ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
-            : "";
-        }
-      }
-
-      // Onboarding: show once if no social config stored
-      function maybeShowSocialOnboarding(){
-        try{
-          const raw = localStorage.getItem(SOCIAL_USERS_KEY);
-          if(!raw){ openSocialModal(); }
-        }catch(e){}
-      }
-
-      // Wire up modal events
-      if(btnOpenSocial) btnOpenSocial.addEventListener("click", openSocialModal);
-      if(btnSocialClose) btnSocialClose.addEventListener("click", closeSocialModal);
-      if(btnSocialSave){
-        btnSocialSave.addEventListener("click", ()=>{
-          const cfg = collectFromModal();
-          saveSocial(cfg);
-          renderHeaderSocial();
-          closeSocialModal();
-        });
-      }
-      // Live preview while typing / toggling
-      PLATFORMS.forEach(p=>{
-        const inp = valInputs[p];
-        if(inp){ inp.addEventListener("input", () => updatePreview(p)); }
-        const chk = showInputs[p];
-        if(chk){ chk.addEventListener("change", () => updatePreview(p)); }
+      ["dashboard","collections","pieces"].forEach(k=>{
+        const is = k===name;
+        const {btn, view} = map[k];
+        if(btn){ btn.setAttribute("aria-selected", String(is)); }
+        if(view){ view.style.display = is ? (k==="dashboard"?"flex":"block") : "none"; view.setAttribute("aria-hidden", String(!is)); }
       });
+    }
 
-      // Wire events (login + profile + gallery)
-      if(loginForm){ loginForm.addEventListener("submit", (e)=>{ e.preventDefault(); showDashboard(); }); }
-      if(loginButton) loginButton.addEventListener("click", () => showDashboard());
-      if(skipButton) skipButton.addEventListener("click", () => showDashboard());
-      if(logoutButton)logoutButton.addEventListener("click", showLogin);
+    // Profile image
+    function renderProfile(src){
+      const fallback = "./CCLogoSML.png";
+      const useSrc = src || fallback;
+      if (headerAvatarImg) headerAvatarImg.src = useSrc;
+      if (profileAvatarImg) profileAvatarImg.src = useSrc;
+    }
+    function saveProfile(src){ try{ localStorage.setItem(PROFILE_IMG_KEY, src || ""); }catch(e){} renderProfile(src); }
+    function loadProfile(){ let s=""; try{s=localStorage.getItem(PROFILE_IMG_KEY)||"";}catch(e){} renderProfile(s||""); }
 
-      if(profileFile){
-        profileFile.addEventListener("change", async (e)=>{
-          const file = e.target.files && e.target.files[0]; if(!file) return;
+    // Image utils
+    function readFileAsDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+    function loadImage(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
+    async function resizeImageDataURL(dataUrl, maxSize=1280, quality=0.85){
+      const img = await loadImage(dataUrl);
+      let {width, height} = img;
+      if (width > height && width > maxSize){ const r=maxSize/width; width=maxSize; height=Math.round(height*r); }
+      else if (height >= width && height > maxSize){ const r=maxSize/height; height=maxSize; width=Math.round(width*r); }
+      const c=document.createElement("canvas"); c.width=width; c.height=height; c.getContext("2d").drawImage(img,0,0,width,height);
+      return c.toDataURL("image/jpeg", quality);
+    }
+
+    // Favourite piece
+    function renderFavpiece(src){ if(favImg) favImg.src = src || "./CCLogoSML.png"; }
+    function saveFavpiece(src){ try{ localStorage.setItem(FAVPIECE_IMG_KEY, src || ""); }catch(e){} renderFavpiece(src); }
+    function loadFavpiece(){ let s=""; try{ s = localStorage.getItem(FAVPIECE_IMG_KEY) || ""; }catch(e){} renderFavpiece(s||""); }
+
+    // Gallery
+    function getGallery(){ try{ const raw=localStorage.getItem(GALLERY_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
+    function saveGallery(arr){ try{ localStorage.setItem(GALLERY_KEY, JSON.stringify(arr)); }catch(e){} }
+    function renderGallery(){
+      const items=getGallery();
+      galleryGrid.innerHTML=""; if(!items.length) return;
+      items.forEach((src, idx)=>{
+        const wrap=document.createElement("div"); wrap.className="gallery-item";
+        const img=document.createElement("img"); img.src=src; img.alt=`Collection photo ${idx+1}`;
+        const del=document.createElement("button"); del.className="delete-btn"; del.type="button"; del.dataset.index=String(idx); del.textContent="Delete"; del.setAttribute("aria-label",`Remove photo ${idx+1}`);
+        wrap.appendChild(img); wrap.appendChild(del); galleryGrid.appendChild(wrap);
+      });
+    }
+
+    // FEED
+    function getFeed(){ try{ const raw=localStorage.getItem(FEED_KEY); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
+    function saveFeed(list){ try{ localStorage.setItem(FEED_KEY, JSON.stringify(list)); }catch(e){} }
+    function addFeedEvent(type, details){
+      const list = getFeed();
+      const ev = { id: Date.now() + "-" + Math.random().toString(36).slice(2,8), type, details: details || {}, at: Date.now() };
+      list.push(ev); if(list.length > 50) list.splice(0, list.length - 50); saveFeed(list); renderFeed();
+    }
+    function formatWhen(ts){ try { return new Date(ts).toLocaleString(); } catch(e){ return ""; } }
+    function renderFeed(){
+      if(!feedList) return;
+      const list = getFeed().slice().sort((a,b)=>b.at - a.at);
+      feedList.innerHTML = "";
+      if(!list.length){
+        const li=document.createElement("li"); li.className="feed-item";
+        li.innerHTML = `<div class="feed-thumb"><img src="./CCLogoSML.png" alt="No activity yet" /></div>
+        <div class="feed-text"><div>No activity yet.</div><div class="feed-meta">Upload some photos to see updates here.</div></div>`;
+        feedList.appendChild(li); return;
+      }
+      list.forEach(ev=>{
+        const li=document.createElement("li"); li.className="feed-item";
+        const thumbUrl = (ev.details && ev.details.thumb) || "./CCLogoSML.png";
+        let text = "Activity";
+        if(ev.type === "photos-added"){ const n = ev.details?.count || 0; text = `Added ${n} new photo${n===1?"":"s"} to collection`; }
+        else if (ev.type === "photo-deleted"){ text = `Removed 1 photo from collection`; }
+        else if (ev.type === "gallery-cleared"){ const n = ev.details?.count || 0; text = `Cleared ${n} photo${n===1?"":"s"} from collection`; }
+        else if (ev.type === "favpiece-updated"){ text = `Updated favourite piece photo`; }
+        else if (ev.type === "favpiece-cleared"){ text = `Removed favourite piece photo`; }
+        li.innerHTML = `<div class="feed-thumb"><img src="${thumbUrl}" alt="Activity thumbnail" /></div>
+        <div class="feed-text"><div>${text}</div><div class="feed-meta">${formatWhen(ev.at)}</div></div>`;
+        feedList.appendChild(li);
+      });
+    }
+
+    // Social links logic
+    const PLATFORMS = ["ebay","instagram","facebook","tiktok","x","youtube"];
+    function sanitizeUsername(u){ if(!u) return ""; return String(u).trim().replace(/^@+/, ""); }
+    function buildUrl(platform, value){
+      const raw = String(value || "").trim();
+      if(!raw) return "";
+      if(/^https?:\/\//i.test(raw)) return raw;
+      const u = sanitizeUsername(raw);
+      switch(platform){
+        case "ebay": return `https://www.ebay.co.uk/usr/${u}`;
+        case "instagram": return `https://www.instagram.com/${u}`;
+        case "facebook": return `https://www.facebook.com/${u}`;
+        case "tiktok": return `https://www.tiktok.com/@${u}`;
+        case "x": return `https://x.com/${u}`;
+        case "youtube": return u.startsWith("@") ? `https://www.youtube.com/${u}` : `https://www.youtube.com/@${u}`;
+        default: return "";
+      }
+    }
+    function getSocial(){
+      try{
+        const raw = localStorage.getItem(SOCIAL_USERS_KEY);
+        if(!raw) return {};
+        const data = JSON.parse(raw);
+        if (data && typeof data === "object" && typeof data.ebay === "string"){
+          const migrated = {};
+          PLATFORMS.forEach(p=>{
+            const v = (data && data[p]) || "";
+            migrated[p] = { enabled: !!v, value: String(v || "") };
+          });
+          saveSocial(migrated); return migrated;
+        }
+        return data || {};
+      }catch(e){ return {}; }
+    }
+    function saveSocial(obj){ try{ localStorage.setItem(SOCIAL_USERS_KEY, JSON.stringify(obj || {})); }catch(e){} }
+    function renderHeaderSocial(){
+      const cfg = getSocial();
+      PLATFORMS.forEach(p=>{
+        const a = linkEls[p]; if(!a) return;
+        const enabled = !!cfg[p]?.enabled;
+        const url = buildUrl(p, cfg[p]?.value || "");
+        const ok = enabled && !!url;
+        a.style.display = ok ? "inline-flex" : "none";
+        if (ok) { a.href = url; } else { a.removeAttribute("href"); }
+      });
+    }
+    function openSocialModal(){ socialBackdrop.classList.add("show"); socialBackdrop.setAttribute("aria-hidden","false"); populateModalFromStorage(); }
+    function closeSocialModal(){ socialBackdrop.classList.remove("show"); socialBackdrop.setAttribute("aria-hidden","true"); }
+    function populateModalFromStorage(){
+      const cfg = getSocial();
+      PLATFORMS.forEach(p=>{
+        if(showInputs[p]) showInputs[p].checked = !!cfg[p]?.enabled;
+        if(valInputs[p]) valInputs[p].value = cfg[p]?.value || "";
+        updatePreview(p);
+      });
+    }
+    function collectFromModal(){
+      const out = {};
+      PLATFORMS.forEach(p=>{
+        out[p] = { enabled: !!showInputs[p]?.checked, value: valInputs[p]?.value || "" };
+      });
+      return out;
+    }
+    function updatePreview(p){
+      const v = valInputs[p]?.value || "";
+      const url = buildUrl(p, v);
+      if(prevEls[p]){ prevEls[p].innerHTML = url ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>` : ""; }
+    }
+    function maybeShowSocialOnboarding(){
+      try{ const raw = localStorage.getItem(SOCIAL_USERS_KEY); if(!raw){ openSocialModal(); } }catch(e){}
+    }
+
+    // Collection micro-modal
+    const COLLECTION_EXAMPLES = {
+      "Watches": ["Rolex Submariner (1998)","Omega Seamaster","TAG Heuer Carrera"],
+      "Vintage Posters": ["1960s Concert Poster","Art Deco Travel Print","Film One‑Sheet (1972)"],
+      "Coins": ["1937 Crown","1918 Half‑Sovereign","1977 Jubilee Crown"]
+    };
+    function openCollectionModal(name){
+      const list = COLLECTION_EXAMPLES[name] || ["Sample Piece A","Sample Piece B","Sample Piece C"];
+      collectionTitle.textContent = name;
+      collectionBody.innerHTML = `
+        <div class="section-sub">A few highlights from <strong>${name}</strong>:</div>
+        <ul style="margin-left:16px; display:flex; flex-direction:column; gap:6px;">
+          ${list.map(i=>`<li>${i}</li>`).join("")}
+        </ul>
+      `;
+      collectionBackdrop.classList.add("show"); collectionBackdrop.setAttribute("aria-hidden","false");
+    }
+    function closeCollectionModal(){
+      collectionBackdrop.classList.remove("show"); collectionBackdrop.setAttribute("aria-hidden","true");
+    }
+
+    // Avatar menu & help tooltip
+    function toggleAvatarMenu(){
+      const open = avatarMenu.style.display === "block";
+      if(open) closeAvatarMenu(); else {
+        avatarMenu.style.display = "block";
+        avatar.setAttribute("aria-expanded","true");
+        avatarMenu.setAttribute("aria-hidden","false");
+      }
+    }
+    function closeAvatarMenu(){
+      avatarMenu.style.display = "none";
+      avatar.setAttribute("aria-expanded","false");
+      avatarMenu.setAttribute("aria-hidden","true");
+    }
+    function toggleHelp(){
+      const open = helpTip.style.display === "block";
+      helpTip.style.display = open ? "none" : "block";
+      helpBtn.setAttribute("aria-expanded", String(!open));
+    }
+
+    // Wire events
+    if(loginForm){
+      loginForm.addEventListener("submit",(e)=>{ e.preventDefault(); authenticateFake(showDashboard); });
+    }
+    if(loginButton){ loginButton.addEventListener("click", ()=>{}); } // handled by submit
+    if(skipButton){ skipButton.addEventListener("click", ()=> authenticateFake(showDashboard)); }
+    if(logoutButton){ logoutButton.addEventListener("click", showLogin); }
+
+    // Tabs
+    if(tabDashboard) tabDashboard.addEventListener("click", ()=> setTab("dashboard"));
+    if(tabCollections) tabCollections.addEventListener("click", ()=> setTab("collections"));
+    if(tabPieces) tabPieces.addEventListener("click", ()=> setTab("pieces"));
+
+    // Profile uploads
+    if(profileFile){
+      profileFile.addEventListener("change", async (e)=>{
+        const file = e.target.files && e.target.files[0]; if(!file) return;
+        try{
+          const processed = await resizeImageDataURL(await readFileAsDataURL(file), 512, 0.9);
+          saveProfile(processed);
+        }catch(err){ alert("Sorry, that image could not be processed."); }
+        finally{ profileFile.value=""; }
+      });
+    }
+    if(clearProfileBtn){ clearProfileBtn.addEventListener("click", () => saveProfile("")); }
+
+    // Favourite piece
+    if(favFile){
+      favFile.addEventListener("change", async (e)=>{
+        const file = e.target.files && e.target.files[0]; if(!file) return;
+        try{
+          const processed = await resizeImageDataURL(await readFileAsDataURL(file), 800, 0.9);
+          saveFavpiece(processed);
+          addFeedEvent("favpiece-updated", { thumb: processed });
+        }catch(err){ alert("Sorry, that image could not be processed."); }
+        finally{ favFile.value=""; }
+      });
+    }
+    if(favClear){ favClear.addEventListener("click", ()=>{ saveFavpiece(""); addFeedEvent("favpiece-cleared", {}); }); }
+
+    // Hover reveal for favourite card
+    if(favCard){
+      favCard.addEventListener("mouseenter", ()=>{ if(viewStoryBtn) viewStoryBtn.style.display = "inline-flex"; });
+      favCard.addEventListener("mouseleave", ()=>{ if(viewStoryBtn) viewStoryBtn.style.display = "none"; });
+      if(viewStoryBtn){ viewStoryBtn.addEventListener("click", ()=> openCollectionModal("Favourite Piece Story")); }
+    }
+
+    // Gallery
+    if(galleryInput){
+      galleryInput.addEventListener("change", async (e)=>{
+        const files = Array.from(e.target.files || []); if(!files.length) return;
+        const existing = getGallery(); const addedImages = [];
+        for(const f of files){
           try{
-            const processed = await resizeImageDataURL(await readFileAsDataURL(file), 512, 0.9);
-            saveProfile(processed);
-          }catch(err){ alert("Sorry, that image could not be processed."); }
-          finally{ profileFile.value=""; }
-        });
-      }
-      if(clearProfileBtn){ clearProfileBtn.addEventListener("click", () => saveProfile("")); }
+            const raw=await readFileAsDataURL(f);
+            const resized=await resizeImageDataURL(raw,1280,0.85);
+            existing.push(resized); addedImages.push(resized);
+          } catch(err){}
+        }
+        saveGallery(existing); renderGallery(); galleryInput.value="";
+        if (addedImages.length){ addFeedEvent("photos-added", { count: addedImages.length, thumb: addedImages[0] }); }
+      });
+    }
+    if(clearGalleryBtn){
+      clearGalleryBtn.addEventListener("click", ()=>{
+        const before = getGallery();
+        if(confirm("Remove all collection photos from this browser?")){
+          saveGallery([]); renderGallery();
+          addFeedEvent("gallery-cleared", { count: before.length });
+        }
+      });
+    }
+    if(galleryGrid){
+      galleryGrid.addEventListener("click", (e)=>{
+        const btn = e.target.closest(".delete-btn"); if(!btn) return;
+        const idx = parseInt((btn.dataset.index || "-1"), 10); if(Number.isNaN(idx)) return;
+        const items = getGallery(); items.splice(idx,1); saveGallery(items); renderGallery();
+        addFeedEvent("photo-deleted", {});
+      });
+    }
 
-      // Favourite piece upload/remove
-      if(favFile){
-        favFile.addEventListener("change", async (e)=>{
-          const file = e.target.files && e.target.files[0]; if(!file) return;
-          try{
-            const processed = await resizeImageDataURL(await readFileAsDataURL(file), 800, 0.9);
-            saveFavpiece(processed);
-            addFeedEvent("favpiece-updated", { thumb: processed });
-          }catch(err){ alert("Sorry, that image could not be processed."); }
-          finally{ favFile.value=""; }
-        });
-      }
-      if(favClear){
-        favClear.addEventListener("click", ()=>{
-          saveFavpiece("");
-          addFeedEvent("favpiece-cleared", {});
-        });
-      }
+    // Privacy toggle (visual only)
+    if(privacyToggle){
+      privacyToggle.addEventListener("click", ()=>{
+        const isPrivate = privacyToggle.getAttribute("aria-pressed") === "true";
+        const next = !isPrivate;
+        privacyToggle.setAttribute("aria-pressed", String(next));
+        privacyToggle.textContent = next ? "Public" : "Private";
+      });
+    }
 
-      if(galleryInput){
-        galleryInput.addEventListener("change", async (e)=>{
-          const files = Array.from(e.target.files || []); if(!files.length) return;
-          const existing = getGallery();
-          const addedImages = [];
-          for(const f of files){
-            try{
-              const raw=await readFileAsDataURL(f);
-              const resized=await resizeImageDataURL(raw,1280,0.85);
-              existing.push(resized);
-              addedImages.push(resized);
-            } catch(err){ /* ignore */ }
-          }
-          saveGallery(existing);
-          renderGallery();
-          galleryInput.value="";
-          if (addedImages.length){
-            addFeedEvent("photos-added", { count: addedImages.length, thumb: addedImages[0] });
-          }
-        });
+    // Collection micro-modal triggers
+    document.addEventListener("click",(e)=>{
+      const btn = e.target.closest('[data-collection]');
+      if(btn){
+        const name = btn.getAttribute('data-collection') || 'Collection';
+        openCollectionModal(name);
       }
-      if(clearGalleryBtn){
-        clearGalleryBtn.addEventListener("click", ()=>{
-          const before = getGallery();
-          if(confirm("Remove all collection photos from this browser?")){
-            saveGallery([]); renderGallery();
-            addFeedEvent("gallery-cleared", { count: before.length });
-          }
-        });
-      }
-      if(galleryGrid){
-        galleryGrid.addEventListener("click", (e)=>{
-          const btn = e.target.closest(".delete-btn"); if(!btn) return;
-          const idx = parseInt((btn.dataset.index || "-1"), 10); if(Number.isNaN(idx)) return;
-          const items = getGallery(); items.splice(idx,1); saveGallery(items); renderGallery();
-          addFeedEvent("photo-deleted", {});
-        });
-      }
+    });
+    if(collectionClose) collectionClose.addEventListener("click", closeCollectionModal);
+    if(collectionOk) collectionOk.addEventListener("click", closeCollectionModal);
+    if(collectionBackdrop) collectionBackdrop.addEventListener("click",(e)=>{ if(e.target === collectionBackdrop) closeCollectionModal(); });
 
-      // Restore state
-      let wasLogged=false; try{ wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY)==="1"; }catch(e){}
-      if(wasLogged) showDashboard(); else showLogin();
-      loadProfile();
-      loadFavpiece();
-      renderGallery();
-      renderFeed();
-      renderHeaderSocial();
-    })();
+    // Avatar menu + help
+    function anyClickOutsideClose(e){
+      if(avatarMenu.style.display==="block" && !e.target.closest("#avatar") && !e.target.closest("#avatar-menu")) closeAvatarMenu();
+      if(helpTip.style.display==="block" && !e.target.closest("#help-btn") && !e.target.closest("#help-tip")) toggleHelp();
+    }
+    if(avatar) avatar.addEventListener("click", toggleAvatarMenu);
+    if(menuEdit) menuEdit.addEventListener("click", ()=>{ closeAvatarMenu(); document.getElementById("profileTitle")?.scrollIntoView({behavior:"smooth"}); });
+    if(menuSettings) menuSettings.addEventListener("click", ()=>{ closeAvatarMenu(); openSocialModal(); });
+    if(menuSignout) menuSignout.addEventListener("click", ()=>{ closeAvatarMenu(); showLogin(); });
+    if(helpBtn) helpBtn.addEventListener("click", toggleHelp);
+    document.addEventListener("click", anyClickOutsideClose);
+
+    // Social modal events
+    if(btnOpenSocial) btnOpenSocial.addEventListener("click", openSocialModal);
+    if(btnSocialClose) btnSocialClose.addEventListener("click", closeSocialModal);
+    if(btnSocialSave){
+      btnSocialSave.addEventListener("click", ()=>{
+        const cfg = collectFromModal(); saveSocial(cfg); renderHeaderSocial(); closeSocialModal();
+      });
+    }
+    PLATFORMS.forEach(p=>{
+      const inp = valInputs[p]; if(inp){ inp.addEventListener("input", () => updatePreview(p)); }
+      const chk = showInputs[p]; if(chk){ chk.addEventListener("change", () => updatePreview(p)); }
+    });
+
+    // Restore state
+    let wasLogged=false; try{ wasLogged = sessionStorage.getItem(VISUAL_LOGIN_KEY)==="1"; }catch(e){}
+    if(wasLogged){ showDashboard(); } else { showLogin(); }
+    loadProfile(); loadFavpiece(); renderGallery(); renderFeed(); renderHeaderSocial();
+  })();
   </script>
 </body>
 </html>

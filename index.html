@@ -66,13 +66,13 @@
     .brand-name{ font-size:.98rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
     .brand-tagline{ font-size:.78rem; color:#a9a9a9; }
 
-    /* Center tabs (desktop) — Option A (surgical) */
+    /* Center tabs (desktop) */
     .primary-nav{
       position:absolute;
-      left:28%;
-      transform:translateX(-28%);
+      left:35%;
+      transform:translateX(-35%);
       display:flex; gap:12px;
-      z-index:2; /* keep tabs clickable even if close to right cluster */
+      z-index:2;
     }
     .nav-btn{
       padding:6px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.14);
@@ -84,7 +84,7 @@
     .header-right{
       display:flex; align-items:center; gap:8px; color:var(--muted); font-size:.8rem;
       padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:#0f0f0f;
-      padding-right:12px; /* subtle nudge away from shell edge */
+      padding-right:10px; /* subtle breathing room on the far right */
     }
     .beta-pill{
       padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18);
@@ -277,8 +277,7 @@
             <div class="beta-pill">Demo</div>
             <div class="version-tag">v0.7.4</div>
 
-            <!-- New: direct Profile button (desktop) -->
-            <button id="header-profile-btn" class="btn-small" type="button" aria-label="Open Profile">Profile</button>
+            <!-- Removed duplicate Profile button that sat next to the avatar -->
 
             <!-- Desktop avatar -->
             <div id="avatar" class="avatar" aria-haspopup="true" aria-expanded="false" title="Profile menu">
@@ -350,17 +349,14 @@
                     <!-- Minimal-but-obvious, left-aligned -->
                     <div class="social-auth">
                       <button type="button" class="social-btn" aria-label="Sign in with Apple">
-                        <!-- Apple (minimal glyph) -->
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M16.2 13.2c0-2 1.6-3 1.7-3.1-1-.1-2 .6-2.5.6-.5 0-1.2-.6-2-.6-1 0-1.9.6-2.4 1.5-1 1.8-.3 4.4.7 5.9.5.7 1 1.5 1.7 1.5.7 0 1-.5 2-.5.9 0 1.1.5 2 .5.8 0 1.3-.7 1.8-1.4.6-.9.9-1.8 1-1.9-.1-.1-2-.8-2-3.5zM14.9 7.1c.4-.5.7-1.2.6-1.9-.6 0-1.4.4-1.8.9-.4.4-.7 1.1-.6 1.8.7 0 1.3-.3 1.8-.8z"/></svg>
                         <span>Sign in with Apple</span>
                       </button>
                       <button type="button" class="social-btn" aria-label="Sign in with Google">
-                        <!-- Google 'G' (mono) -->
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M21.8 12.3c0-.6-.1-1.2-.2-1.7H12v3.3h5.5c-.2 1.1-.9 2.1-1.9 2.7v2.2h3.1c1.9-1.8 3.1-4.5 3.1-6.5z"/><path fill="#fff" d="M12 22c2.7 0 5-1 6.6-2.6l-3.1-2.2c-.9.6-2 .9-3.5.9-2.7 0-5-1.8-5.8-4.3H3v2.3C4.6 20 8.1 22 12 22z"/><path fill="#fff" d="M6.2 13.8c-.2-.6-.3-1.3-.3-1.8s.1-1.2.3-1.8V7.9H3C2.4 9.1 2 10.5 2 12s.4 2.9 1 4.1l3.2-2.3z"/><path fill="#fff" d="M12 5.5c1.5 0 2.8.5 3.9 1.6l2.9-2.9C17 2.4 14.7 1.5 12 1.5 8.1 1.5 4.6 3.5 3 7l3.2 2.3C7 7 9.3 5.5 12 5.5z"/></svg>
                         <span>Sign in with Google</span>
                       </button>
                       <button type="button" class="social-btn" aria-label="Continue with Facebook">
-                        <!-- Facebook 'f' (mono) -->
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M13 22v-7h2.5l.5-3H13V9.5c0-.87.28-1.5 1.7-1.5H16V5.2c-.3-.04-1.2-.1-2.3-.1-2.3 0-3.7 1.2-3.7 3.9V12H7v3h3v7h3z"/></svg>
                         <span>Continue with Facebook</span>
                       </button>
@@ -742,7 +738,6 @@
     if(loginForm){
       loginForm.addEventListener("submit",(e)=>{
         e.preventDefault();
-        // Remember me (persist across sessions)
         try{
           if(remember && remember.checked){ localStorage.setItem("cc-demo-stay-signed-in","1"); }
           else { localStorage.removeItem("cc-demo-stay-signed-in"); }
@@ -755,10 +750,6 @@
 
     if(navDashboard) navDashboard.addEventListener("click", showDashboard);
     if(navProfile) navProfile.addEventListener("click", showProfile);
-
-    /* New: header Profile button wiring */
-    const headerProfileBtn = document.getElementById("header-profile-btn");
-    if (headerProfileBtn) headerProfileBtn.addEventListener("click", showProfile);
 
     if(avatar) avatar.addEventListener("click", toggleAvatarMenu);
     document.addEventListener("click",(e)=>{

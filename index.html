@@ -263,12 +263,16 @@
               <a class="quick-link" href="https://www.ebay.co.uk/" target="_blank" rel="noopener">eBay</a>
               <a class="quick-link" href="https://www.psacard.com/" target="_blank" rel="noopener">PSA</a>
               <a class="quick-link" href="https://goldin.co/" target="_blank" rel="noopener">Goldin</a>
+              <!-- New: Whatnot -->
               <a class="quick-link" href="https://www.whatnot.com/" target="_blank" rel="noopener">Whatnot</a>
               <a class="quick-link" href="https://www.sportscardinvestor.com/" target="_blank" rel="noopener">Sports Card Investor</a>
             </nav>
 
             <div class="beta-pill">Demo</div>
             <div class="version-tag">v0.7.4</div>
+
+            <!-- New: direct Profile button (desktop) -->
+            <button id="header-profile-btn" class="btn-small" type="button" aria-label="Open Profile">Profile</button>
 
             <!-- Desktop avatar -->
             <div id="avatar" class="avatar" aria-haspopup="true" aria-expanded="false" title="Profile menu">
@@ -295,6 +299,7 @@
             <a href="https://www.ebay.co.uk/" target="_blank" rel="noopener">eBay</a>
             <a href="https://www.psacard.com/" target="_blank" rel="noopener">PSA</a>
             <a href="https://goldin.co/" target="_blank" rel="noopener">Goldin Auctions</a>
+            <!-- New: Whatnot -->
             <a href="https://www.whatnot.com/" target="_blank" rel="noopener">Whatnot</a>
             <a href="https://www.sportscardinvestor.com/" target="_blank" rel="noopener">Sports Card Investor</a>
           </div>
@@ -745,6 +750,10 @@
 
     if(navDashboard) navDashboard.addEventListener("click", showDashboard);
     if(navProfile) navProfile.addEventListener("click", showProfile);
+
+    /* New: header Profile button wiring */
+    const headerProfileBtn = document.getElementById("header-profile-btn");
+    if (headerProfileBtn) headerProfileBtn.addEventListener("click", showProfile);
 
     if(avatar) avatar.addEventListener("click", toggleAvatarMenu);
     document.addEventListener("click",(e)=>{

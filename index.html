@@ -66,13 +66,13 @@
     .brand-name{ font-size:.98rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
     .brand-tagline{ font-size:.78rem; color:#a9a9a9; }
 
-    /* Center tabs (desktop) */
+    /* Center tabs (desktop) — Option A (surgical) */
     .primary-nav{
       position:absolute;
-      /* moved further left per request */
-      left:33%;
-      transform:translateX(-33%);
+      left:28%;
+      transform:translateX(-28%);
       display:flex; gap:12px;
+      z-index:2; /* keep tabs clickable even if close to right cluster */
     }
     .nav-btn{
       padding:6px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.14);
@@ -84,8 +84,7 @@
     .header-right{
       display:flex; align-items:center; gap:8px; color:var(--muted); font-size:.8rem;
       padding:6px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:#0f0f0f;
-      /* subtle right nudge for overall group */
-      padding-right:10px;
+      padding-right:12px; /* subtle nudge away from shell edge */
     }
     .beta-pill{
       padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.18);
@@ -94,11 +93,7 @@
     .version-tag{ opacity:.9; }
 
     /* Quick links (desktop) */
-    .quick-links{
-      display:flex; align-items:center; gap:8px; margin:0 6px;
-      /* tiny right nudge, keep spacing clean */
-      margin-right:4px;
-    }
+    .quick-links{ display:flex; align-items:center; gap:8px; margin:0 6px; }
     .quick-link{
       display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 10px; border-radius:999px;
       background:#111; color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,0.12); font-size:.82rem; opacity:.95;

@@ -1,5 +1,5 @@
 
-
+{
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -17,5 +17,5 @@
     "incremental": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.cjs", "**/*.mjs"],
-  "exclude": [".next", "node_modules", "dist", "build"]
+  "exclude": ["node_modules", ".next", "dist", "build"]
 }

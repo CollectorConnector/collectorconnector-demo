@@ -1,2 +1,16 @@
+# Node / Next
 node_modules/
-.env
+.next/
+out/
+dist/
+build/
+
+# Build artifacts
+*.map
+*-manifest.*
+*.hot-update.*
+*.pack.gz
+
+# Env & local configs
+.env*
+supabase/config*.json

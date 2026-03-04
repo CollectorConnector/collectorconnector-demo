@@ -266,37 +266,53 @@ export default function ProfilePage() {
           </div>
         ) : profile ? (
           <>
-            {/* Avatar + Name */}
-            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 16 }}>
-              <div
-                style={{
-                  width: 96,
-                  height: 96,
-                  borderRadius: 12, // squared with rounded edges
-                  overflow: "hidden",
-                  background: "#111827",
-                  border: "1px solid #1F2937",
-                  boxShadow: "0 4px 18px rgba(0,0,0,0.35)",
-                }}
-              >
-                {profile.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={profile.avatar_url}
-                    alt={`${profile.username} avatar`}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      display: "grid",
-                      placeItems: "center",
-                      color: "#9CA3AF",
-                      fontSize: 12,
-                    }}
-                  >
+            
+{/* Avatar + Name */}
+<div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 16 }}>
+  <div
+    style={{
+      width: 96,
+      height: 96,
+      borderRadius: 12, // squared with rounded edges
+      overflow: "hidden",
+      background: "#111827",
+      border: "1px solid #1F2937",
+      boxShadow: "0 4px 18px rgba(0,0,0,0.35)",
+    }}
+  >
+    {profile.avatar_url ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={profile.avatar_url}
+        alt={`${profile.username} avatar`}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+      />
+    ) : (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "grid",
+          placeItems: "center",
+          color: "#9CA3AF",
+          fontSize: 12,
+        }}
+      >
+        No avatar
+      </div>
+    )}
+  </div>
+
+  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
+      {profile.display_name || profile.username}
+    </h1>
+    <div style={{ color: "#9CA3AF" }}>@{profile.username}</div>
+
+    <TierSerialBadge tier={profile.tier} serial={serialNumber} total={totalCount} />
+  </div>
+</div>
+               >
                     No avatar
                   </div>
                 )}

@@ -1,177 +1,327 @@
 
-"use client";
+'use client';
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabase'; // <-- relative import (no alias)
 
-export default function CreateProfile() {
-  const [username, setUsername] = useState("");
-  const [bio, setBio] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+type Profile = {
+  id: string;
+  username: string | null;
+  display_name?: string | null;
+  bio?: string | null;
+  avatar_url?: string | null;
+  instagram?: string | null;
+  twitter?: string | null;
+  youtube?: string | null;
+  ebay?: string | null;
+  whatnot?: string | null;
+  discord?: string | null;
+  tier?: string | null;
+};
 
-  const [instagram, setInstagram] = useState("");
-  const [twitter, setTwitter] = useState("");
-  const [youtube, setYoutube] = useState("");
-  const [ebay, setEbay] = useState("");
-  const [whatnot, setWhatnot] = useState("");
-  const [discord, setDiscord] = useState("");
+export default function CreateProfilePage() {
+  const router = useRouter();
 
-  const [tier, setTier] = useState("bronze");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
-  const [message, setMessage] = useState("");
+  // session
+  const [session, setSession] = useState<any>(null);
 
-  async function handleSubmit(e: any) {
+  // form state
+  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [youtube, setYoutube] = useState('');
+  const [ebay, setEbay] = useState('');
+  const [whatnot, setWhatnot] = useState('');
+  const [discord, setDiscord] = useState('');
+  const [tier, setTier] = useState('bronze');
+
+  // Load session; if already has a profile, you can optionally redirect
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/auth/signup');
+        return;
+      }
+      setSession(session);
+      setLoading(false);
+    })();
+  }, [router]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!session) return;
 
-    const { error } = await supabase.from("profiles").insert([
-      {
-        username,
-        bio,
-        avatar_url: avatarUrl,
-        instagram,
-        twitter,
-        youtube,
-        ebay,
-        whatnot,
-        discord,
-        tier,
-      },
-    ]);
+    setSaving(true);
+    setMessage(null);
+
+    const payload: Partial<Profile> & { id: string } = {
+      id: session.user.id,
+      username: username || null,
+      display_name: displayName || null,
+      bio: bio || null,
+      instagram: instagram || null,
+      twitter: twitter || null,
+      youtube: youtube || null,
+      ebay: ebay || null,
+      whatnot: whatnot || null,
+      discord: discord || null,
+      tier: tier || null,
+    };
+
+    const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' });
+
+    setSaving(false);
 
     if (error) {
-      setMessage("❌ Error saving profile: " + error.message);
+      setMessage({ type: 'err', text: error.message });
     } else {
-      setMessage("✅ Profile created successfully!");
-
-      // Reset form
-      setUsername("");
-      setBio("");
-      setAvatarUrl("");
-      setInstagram("");
-      setTwitter("");
-      setYoutube("");
-      setEbay("");
-      setWhatnot("");
-      setDiscord("");
-      setTier("bronze");
+      setMessage({ type: 'ok', text: 'Profile created successfully.' });
+      // Go to account or profile page
+      router.push('/account');
     }
   }
 
+  if (loading) {
+    return (
+      <div style={{ color: '#fff', padding: 40 }}>
+        <h1>Loading…</h1>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: "40px" }}>
-      <h1>Create Your Collector Profile</h1>
+    <div
+      style={{
+        maxWidth: 720,
+        margin: '60px auto',
+        padding: 24,
+        background: '#111',
+        border: '1px solid #1F2937',
+        borderRadius: 12,
+        color: '#fff',
+      }}
+    >
+      <h1 style={{ fontSize: 24, marginBottom: 18 }}>Create Profile</h1>
 
-      <form onSubmit={handleSubmit} style={{ maxWidth: "500px" }}>
-        
-        <label>Username</label>
-        <input
-          style={{ width: "100%" }}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <br /><br />
-
-        <label>Bio</label>
-        <textarea
-          style={{ width: "100%" }}
-          rows={4}
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-        />
-        <br /><br />
-
-        <label>Avatar URL</label>
-        <input
-          style={{ width: "100%" }}
-          value={avatarUrl}
-          onChange={(e) => setAvatarUrl(e.target.value)}
-        />
-        <br /><br />
-
-        <label>Tier</label>
-        <select
-          style={{ width: "100%", height: "38px" }}
-          value={tier}
-          onChange={(e) => setTier(e.target.value)}
+      {message && (
+        <div
+          style={{
+            background: message.type === 'ok' ? 'rgba(74,222,128,0.15)' : 'rgba(255,0,0,0.2)',
+            padding: 10,
+            borderRadius: 8,
+            marginBottom: 15,
+            color: message.type === 'ok' ? '#86efac' : '#ff6b6b',
+            border:
+              message.type === 'ok'
+                ? '1px solid rgba(74,222,128,0.35)'
+                : '1px solid rgba(255,0,0,0.35)',
+          }}
         >
-          <option value="bronze">Bronze 🟤</option>
-          <option value="silver">Silver ⚪</option>
-          <option value="gold">Gold 🟡</option>
-          <option value="platinum">Platinum 🟦</option>
-        </select>
-        <br /><br />
+          {message.text}
+        </div>
+      )}
 
-        <h3>Social Links</h3>
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }}>
+        {/* Username */}
+        <div style={{ display: 'grid', gap: 6 }}>
+          <label htmlFor="username" style={{ color: '#D1D5DB' }}>
+            Username
+          </label>
+          <input
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="stacypearce123"
+            style={{
+              padding: 10,
+              borderRadius: 8,
+              border: '1px solid #1F2937',
+              outline: 'none',
+            }}
+            required
+          />
+        </div>
 
-        <label>Instagram</label>
-        <input
-          style={{ width: "100%" }}
-          value={instagram}
-          onChange={(e) => setInstagram(e.target.value)}
-        />
-        <br /><br />
+        {/* Display Name */}
+        <div style={{ display: 'grid', gap: 6 }}>
+          <label htmlFor="displayName" style={{ color: '#D1D5DB' }}>
+            Display name
+          </label>
+          <input
+            id="displayName"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Stacy Pearce"
+            style={{
+              padding: 10,
+              borderRadius: 8,
+              border: '1px solid #1F2937',
+              outline: 'none',
+            }}
+          />
+        </div>
 
-        <label>Twitter / X</label>
-        <input
-          style={{ width: "100%" }}
-          value={twitter}
-          onChange={(e) => setTwitter(e.target.value)}
-        />
-        <br /><br />
+        {/* Bio */}
+        <div style={{ display: 'grid', gap: 6 }}>
+          <label htmlFor="bio" style={{ color: '#D1D5DB' }}>
+            Bio
+          </label>
+          <textarea
+            id="bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={4}
+            placeholder="What do you collect?"
+            style={{
+              padding: 10,
+              borderRadius: 8,
+              border: '1px solid #1F2937',
+              outline: 'none',
+            }}
+          />
+        </div>
 
-        <label>YouTube</label>
-        <input
-          style={{ width: "100%" }}
-          value={youtube}
-          onChange={(e) => setYoutube(e.target.value)}
-        />
-        <br /><br />
+        {/* Socials */}
+        <div style={{ display: 'grid', gap: 10, marginTop: 6 }}>
+          <h3 style={{ margin: '8px 0 0 0', color: '#9CA3AF', fontSize: 14, letterSpacing: 1 }}>
+            SOCIAL LINKS
+          </h3>
 
-        <h3>Marketplaces</h3>
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="instagram" style={{ color: '#D1D5DB' }}>
+              Instagram
+            </label>
+            <input
+              id="instagram"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              placeholder="@yourhandle or full URL"
+              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+            />
+          </div>
 
-        <label>eBay</label>
-        <input
-          style={{ width: "100%" }}
-          value={ebay}
-          onChange={(e) => setEbay(e.target.value)}
-        />
-        <br /><br />
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="twitter" style={{ color: '#D1D5DB' }}>
+              Twitter / X
+            </label>
+            <input
+              id="twitter"
+              value={twitter}
+              onChange={(e) => setTwitter(e.target.value)}
+              placeholder="@yourhandle or full URL"
+              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+            />
+          </div>
 
-        <label>Whatnot</label>
-        <input
-          style={{ width: "100%" }}
-          value={whatnot}
-          onChange={(e) => setWhatnot(e.target.value)}
-        />
-        <br /><br />
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="youtube" style={{ color: '#D1D5DB' }}>
+              YouTube
+            </label>
+            <input
+              id="youtube"
+              value={youtube}
+              onChange={(e) => setYoutube(e.target.value)}
+              placeholder="channel link or @handle"
+              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+            />
+          </div>
+        </div>
 
-        <label>Discord</label>
-        <input
-          style={{ width: "100%" }}
-          value={discord}
-          onChange={(e) => setDiscord(e.target.value)}
-        />
-        <br /><br />
+        {/* Marketplaces */}
+        <div style={{ display: 'grid', gap: 10, marginTop: 6 }}>
+          <h3 style={{ margin: '8px 0 0 0', color: '#9CA3AF', fontSize: 14, letterSpacing: 1 }}>
+            MARKETPLACES
+          </h3>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="ebay" style={{ color: '#D1D5DB' }}>
+              eBay
+            </label>
+            <input
+              id="ebay"
+              value={ebay}
+              onChange={(e) => setEbay(e.target.value)}
+              placeholder="eBay username or full URL"
+              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="whatnot" style={{ color: '#D1D5DB' }}>
+              Whatnot
+            </label>
+            <input
+              id="whatnot"
+              value={whatnot}
+              onChange={(e) => setWhatnot(e.target.value)}
+              placeholder="Whatnot username or full URL"
+              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label htmlFor="discord" style={{ color: '#D1D5DB' }}>
+              Discord
+            </label>
+            <input
+              id="discord"
+              value={discord}
+              onChange={(e) => setDiscord(e.target.value)}
+              placeholder="@handle or any relevant link"
+              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+            />
+          </div>
+        </div>
+
+        {/* Tier */}
+        <div style={{ display: 'grid', gap: 6 }}>
+          <label htmlFor="tier" style={{ color: '#D1D5DB' }}>Tier</label>
+          <select
+            id="tier"
+            value={tier}
+            onChange={(e) => setTier(e.target.value)}
+            style={{
+              padding: 10,
+              borderRadius: 8,
+              border: '1px solid #1F2937',
+              outline: 'none',
+              background: '#000',
+              color: '#fff',
+            }}
+          >
+            <option value="bronze">Bronze 🟤</option>
+            <option value="silver">Silver ⚪</option>
+            <option value="gold">Gold 🟡</option>
+            <option value="platinum">Platinum 🟦</option>
+          </select>
+        </div>
 
         <button
           type="submit"
+          disabled={saving}
           style={{
-            background: "#4ADE80",
-            padding: "12px 20px",
-            border: "none",
-            cursor: "pointer",
-            marginTop: "10px",
+            padding: '12px 16px',
+            background: '#4ADE80',
+            color: '#000',
+            border: 'none',
+            borderRadius: 8,
+            fontWeight: 700,
+            cursor: 'pointer',
+            opacity: saving ? 0.7 : 1,
+            marginTop: 8,
           }}
         >
-          Save Profile
+          {saving ? 'Saving…' : 'Save Profile'}
         </button>
       </form>
-
-      {message && (
-        <p style={{ marginTop: "20px", fontWeight: "bold" }}>{message}</p>
-      )}
     </div>
   );
 }
-``

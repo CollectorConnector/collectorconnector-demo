@@ -12,7 +12,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body style={{ background: "#000", color: "#fff", margin: 0 }}>
-        
         {/* NAVIGATION BAR */}
         <nav
           style={{
@@ -28,36 +27,30 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             zIndex: 50,
           }}
         >
-          {/* LEFT SIDE - LOGO */}
+          {/* LEFT SIDE - LOGO / BRAND */}
           /
-            /CC-SML-Logo.png
+            CollectorConnector
           </a>
 
           {/* RIGHT SIDE - NAV LINKS */}
           <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-            
             /
               Home
             </a>
-
             /collectors
               Collectors
             </a>
-
             /create-profile
               Create Profile
             </a>
 
-            {/* This adjusts depending on session */}
+            {/* This will show Login or Account depending on session */}
             <NavSessionLink />
           </div>
         </nav>
 
         {/* PAGE CONTENT */}
-        <main style={{ padding: "24px" }}>
-          {children}
-        </main>
-
+        <main style={{ padding: "24px" }}>{children}</main>
       </body>
     </html>
   );

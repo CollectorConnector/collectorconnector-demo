@@ -42,12 +42,15 @@ function capitalise(s?: string | null) {
 }
 
 // Build a clickable URL for known platforms if a user typed a handle.
-function asUrl(kind: "instagram" | "twitter" | "youtube" | "ebay" | "whatnot" | "discord", value?: string | null) {
+function asUrl(
+  kind: "instagram" | "twitter" | "youtube" | "ebay" | "whatnot" | "discord",
+  value?: string | null
+) {
   if (!value) return null;
   const v = value.trim();
 
   // Already a URL?
-  if (/^https?:\\/\\//i.test(v)) return v;
+  if (/^https?:\/\//i.test(v)) return v;
 
   const handle = v.replace(/^@+/, "");
 
@@ -60,7 +63,7 @@ function asUrl(kind: "instagram" | "twitter" | "youtube" | "ebay" | "whatnot" | 
       // If they typed a channel/user id, just try /@handle
       return `https://youtube.com/@${handle}`;
     case "ebay":
-      // If not a url, assume eBay username
+      // If not a URL, assume eBay username
       return `https://www.ebay.com/usr/${handle}`;
     case "whatnot":
       return `https://www.whatnot.com/user/${handle}`;
@@ -75,14 +78,26 @@ function asUrl(kind: "instagram" | "twitter" | "youtube" | "ebay" | "whatnot" | 
 // ---------------------------------------------
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{ marginTop: 32, marginBottom: 12, fontSize: 14, letterSpacing: 1, color: "#9CA3AF" }}>
+    <h2
+      style={{
+        marginTop: 32,
+        marginBottom: 12,
+        fontSize: 14,
+        letterSpacing: 1,
+        color: "#9CA3AF",
+      }}
+    >
       {children}
     </h2>
   );
 }
 
 function Row({ children }: { children: React.ReactNode }) {
-  return <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>{children}</div>;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+      {children}
+    </div>
+  );
 }
 
 function SocialRow({
@@ -101,7 +116,9 @@ function SocialRow({
   const content = (
     <>
       <span style={{ width: 22, display: "inline-block" }}>{emoji}</span>
-      <span style={{ color: "#9CA3AF", minWidth: 92, display: "inline-block" }}>{label}</span>
+      <span style={{ color: "#9CA3AF", minWidth: 92, display: "inline-block" }}>
+        {label}
+      </span>
       <span style={{ color: href ? "#4ADE80" : "#fff" }}>{text}</span>
     </>
   );
@@ -123,7 +140,15 @@ function SocialRow({
   );
 }
 
-function TierSerialBadge({ tier, serial, total }: { tier?: string | null; serial?: number | null; total?: number | null }) {
+function TierSerialBadge({
+  tier,
+  serial,
+  total,
+}: {
+  tier?: string | null;
+  serial?: number | null;
+  total?: number | null;
+}) {
   const niceTier = tier ? capitalise(tier) : "—";
   // Choose a dot color / icon by tier
   const dot =
@@ -166,8 +191,11 @@ function TierSerialBadge({ tier, serial, total }: { tier?: string | null; serial
 // Main page
 // ---------------------------------------------
 export default function ProfilePage() {
-  const params = useParams<{ username: string }>();
-  const username = useMemo(() => (Array.isArray(params?.username) ? params.username[0] : params?.username || ""), [params]);
+  const params = useParams(); // Record<string, string | string[]>
+  const username = useMemo(() => {
+    const u = (params as any)?.username;
+    return Array.isArray(u) ? u[0] : (u as string) || "";
+  }, [params]);
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -266,53 +294,37 @@ export default function ProfilePage() {
           </div>
         ) : profile ? (
           <>
-            
-{/* Avatar + Name */}
-<div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 16 }}>
-  <div
-    style={{
-      width: 96,
-      height: 96,
-      borderRadius: 12, // squared with rounded edges
-      overflow: "hidden",
-      background: "#111827",
-      border: "1px solid #1F2937",
-      boxShadow: "0 4px 18px rgba(0,0,0,0.35)",
-    }}
-  >
-    {profile.avatar_url ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={profile.avatar_url}
-        alt={`${profile.username} avatar`}
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-      />
-    ) : (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "grid",
-          placeItems: "center",
-          color: "#9CA3AF",
-          fontSize: 12,
-        }}
-      >
-        No avatar
-      </div>
-    )}
-  </div>
-
-  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-    <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
-      {profile.display_name || profile.username}
-    </h1>
-    <div style={{ color: "#9CA3AF" }}>@{profile.username}</div>
-
-    <TierSerialBadge tier={profile.tier} serial={serialNumber} total={totalCount} />
-  </div>
-</div>
-               >
+            {/* Avatar + Name */}
+            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 16 }}>
+              <div
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: 12, // squared with rounded edges
+                  overflow: "hidden",
+                  background: "#111827",
+                  border: "1px solid #1F2937",
+                  boxShadow: "0 4px 18px rgba(0,0,0,0.35)",
+                }}
+              >
+                {profile.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.avatar_url}
+                    alt={`${profile.username} avatar`}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "grid",
+                      placeItems: "center",
+                      color: "#9CA3AF",
+                      fontSize: 12,
+                    }}
+                  >
                     No avatar
                   </div>
                 )}

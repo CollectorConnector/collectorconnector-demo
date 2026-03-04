@@ -4,8 +4,14 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function AvatarUpload({ userId, currentUrl, onSaved }:{
-  userId: string; currentUrl?: string; onSaved?: (url:string)=>void;
+export default function AvatarUpload({
+  userId,
+  currentUrl,
+  onSaved,
+}: {
+  userId: string;
+  currentUrl?: string;
+  onSaved?: (url: string) => void;
 }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(currentUrl);
@@ -19,8 +25,7 @@ export default function AvatarUpload({ userId, currentUrl, onSaved }:{
       const ext = file.name.split('.').pop();
       const path = `${userId}/avatar-${Date.now()}.${ext}`;
 
-      const { error } = await supabase
-        .storage
+      const { error } = await supabase.storage
         .from('item-photos')
         .upload(path, file, { upsert: true });
 
@@ -32,7 +37,7 @@ export default function AvatarUpload({ userId, currentUrl, onSaved }:{
 
       setPreview(data.publicUrl);
       onSaved?.(data.publicUrl);
-    } catch (err:any) {
+    } catch (err: any) {
       alert(err.message || 'Upload failed');
     } finally {
       setUploading(false);
@@ -42,18 +47,35 @@ export default function AvatarUpload({ userId, currentUrl, onSaved }:{
   return (
     <div>
       {preview ? (
-        <img src={preview} style={{ width: 120, height: 120, borderRadius: '50%' }}/>
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={preview}
+          alt="Avatar"
+          style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover' }}
+        />
       ) : (
-        <div style={{ width: 120, height: 120, borderRadius: '50%', background: '#222' }}/>
+        <div
+          style={{
+            width: 120,
+            height: 120,
+            borderRadius: '50%',
+            background: '#222',
+            border: '1px solid #1F2937',
+          }}
+        />
       )}
 
-      <br/>
+      <br />
 
-      <label style={{ cursor: 'pointer' }}>
+      <label style={{ cursor: 'pointer', fontWeight: 600 }}>
         {uploading ? 'Uploading…' : 'Upload Photo'}
-        <input type="file" accept="image/*" onChange={onFileChange} style={{ display:'none' }} />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={onFileChange}
+          style={{ display: 'none' }}
+        />
       </label>
     </div>
   );
 }
-

@@ -11,7 +11,8 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ background: "#000", color: "#fff" }}>
+      <body style={{ background: "#000", color: "#fff", margin: 0 }}>
+        
         {/* NAVIGATION BAR */}
         <nav
           style={{
@@ -27,37 +28,36 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             zIndex: 50,
           }}
         >
-          {/* LEFT SIDE - APP NAME */}
-          <a
-            href="/"
-            style={{
-              color: "#fff",
-              fontSize: "20px",
-              fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            CollectorConnector
+          {/* LEFT SIDE - LOGO */}
+          /
+            /CC-SML-Logo.png
           </a>
 
           {/* RIGHT SIDE - NAV LINKS */}
           <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-            <a href="/" style={{ color: "#fff", textDecoration: "none" }}>
+            
+            /
               Home
             </a>
-            <a href="/collectors" style={{ color: "#fff", textDecoration: "none" }}>
+
+            /collectors
               Collectors
             </a>
-            <a href="/create-profile" style={{ color: "#fff", textDecoration: "none" }}>
+
+            /create-profile
               Create Profile
             </a>
 
-            {/* This will show Login or Account depending on session */}
+            {/* This adjusts depending on session */}
             <NavSessionLink />
           </div>
         </nav>
 
-        {children}
+        {/* PAGE CONTENT */}
+        <main style={{ padding: "24px" }}>
+          {children}
+        </main>
+
       </body>
     </html>
   );

@@ -13,7 +13,7 @@ export default function NavSessionLink() {
       setHasSession(!!session);
     });
 
-    // Keep it in sync if the user logs in/out
+    // Keep it in sync
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -23,8 +23,10 @@ export default function NavSessionLink() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // A tiny placeholder prevents layout shift while we check
-  if (hasSession === null) return <span style={{ color: "#9CA3AF" }}>…</span>;
+    // Small placeholder to avoid layout shift
+  if (hasSession === null) {
+    return <span style={{ color: "#9CA3AF" }}>…</span>;
+  }
 
   return hasSession ? (
     <a

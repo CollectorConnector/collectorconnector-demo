@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-
+import AvatarUpload from '@/components/AvatarUpload';
 type Profile = {
   id: string;
   username: string | null;
@@ -31,7 +31,7 @@ export default function EditProfilePage() {
   // form state
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
 
   const [instagram, setInstagram] = useState("");
   const [twitter, setTwitter] = useState("");
@@ -196,6 +196,21 @@ export default function EditProfilePage() {
             }}
           />
         </div>
+        
+        {/* Profile photo */}
+<div style={{ marginBottom: 16 }}>
+  <label style={{ display: 'block', marginBottom: 8, fontWeight: 700 }}>
+    Profile photo
+  </label>
+
+  {session?.user?.id && (
+    <AvatarUpload
+      userId={session.user.id}
+      currentUrl={avatarUrl}
+      onSaved={(url) => setAvatarUrl(url)}
+    />
+  )}
+</div>
 
         {/* Avatar URL */}
         <div style={{ display: "grid", gap: 6 }}>

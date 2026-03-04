@@ -1,28 +1,44 @@
+
 {
   "compilerOptions": {
-    "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": false,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    /* Module resolution & paths */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+
+    /* Target & module */
+    "target": "ES2020",
+    "lib": ["DOM", "ES2020"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
+    "allowJs": true,
+    "incremental": true,
+
+    /* JSX / React */
+    "jsx": "preserve",
+    "jsxImportSource": "react",
+
+    /* Type checking */
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
     "isolatedModules": true,
-    "jsx": "preserve"
+
+    /* Interop & types */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Next.js types (keeps IDE happy) */
+    "types": ["node"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    "**/*.js",
+    "**/*.jsx"
   ],
   "exclude": [
     "node_modules"

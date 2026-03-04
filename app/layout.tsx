@@ -1,6 +1,7 @@
 
 import "./globals.css";
 import { ReactNode } from "react";
+import NavSessionLink from "@/components/NavSessionLink";
 
 export const metadata = {
   title: "CollectorConnector",
@@ -11,7 +12,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body style={{ background: "#000", color: "#fff" }}>
-        
         {/* NAVIGATION BAR */}
         <nav
           style={{
@@ -42,13 +42,23 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
           {/* RIGHT SIDE - NAV LINKS */}
           <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-            <a href="/" style={{ color: "#fff", textDecoration: "none" }}>Home</a>
-            <a href="/collectors" style={{ color: "#fff", textDecoration: "none" }}>Collectors</a>
-            <a href="/create-profile" style={{ color: "#fff", textDecoration: "none" }}>Create Profile</a>
-            <a href="/auth/login" style={{ color: "#4ADE80", textDecoration: "none", fontWeight: 600 }}>
-              Login
+            <a href="/" style={{ color: "#fff", textDecoration: "none" }}>
+              Home
             </a>
+            <a href="/collectors" style={{ color: "#fff", textDecoration: "none" }}>
+              Collectors
+            </a>
+            <a href="/create-profile" style={{ color: "#fff", textDecoration: "none" }}>
+              Create Profile
+            </a>
+
+            {/* This will show Login or Account depending on session */}
+            <NavSessionLink />
           </div>
         </nav>
 
         {children}
+      </body>
+    </html>
+  );
+}

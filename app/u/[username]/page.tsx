@@ -11,7 +11,7 @@ const textSecondary = "#9CA3AF";
 const borderColor = "#1f1f1f";
 const accent = "#4ADE80";
 
-// Tiny bits
+// Small section title
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2
@@ -39,6 +39,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Simple social link (neutral color; no client-side events in an RSC)
 function SocialLink({
   href,
   label,
@@ -63,15 +64,6 @@ function SocialLink({
         borderRadius: 8,
         fontWeight: 700,
         textDecoration: "none",
-        transition: "color 120ms ease, border-color 120ms ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.color = accent;
-        e.currentTarget.style.borderColor = "#264e3a";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.color = textPrimary;
-        e.currentTarget.style.borderColor = borderColor;
       }}
     >
       <span aria-hidden="true">{icon}</span>
@@ -80,7 +72,7 @@ function SocialLink({
   );
 }
 
-// Safe Supabase client (string fallback prevents TS build errors)
+// Create Supabase client (string fallbacks prevent TS build errors)
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supabase = createClient(url, anon);
@@ -92,31 +84,25 @@ export default async function PublicProfilePage({
 }) {
   const { username } = params;
 
-  // Wrap Supabase calls to avoid server crashes
-  async function safeFetch<T>(fn: () => Promise<T>): Promise<{ data?: any; error?: any }> {
-    try {
-      // @ts-ignore supabase returns { data, error }
-      const res = await fn();
-      // @ts-ignore
-      return { data: res.data, error: res.error };
-    } catch (e) {
-      console.error("Server fetch crash:", e);
-      return { error: e };
-    }
-  }
-
-  // ---- PROFILE ----
-  const { data: profile, error: profileErr } = await safeFetch(() =>
-    supabase
+  // -------- PROFILE (direct await; correct types) --------
+  let profile: any = null;
+  try {
+    const { data, error } = await supabase
       .from("profiles")
       .select(
         "id, username, display_name, bio, avatar_url, instagram, ebay, whatnot, website, tier"
       )
       .eq("username", username)
-      .maybeSingle()
-  );
+      .maybeSingle();
 
-  if (profileErr) console.error("Profile fetch error:", profileErr);
+    if (error) {
+      console.error("Profile fetch error:", error);
+    } else {
+      profile = data;
+    }
+  } catch (e) {
+    console.error("Profile fetch crash:", e);
+  }
 
   if (!profile) {
     return (
@@ -128,6 +114,7 @@ export default async function PublicProfilePage({
           minHeight: "100vh",
         }}
       >
+        {/* MINIMAL NAV FOR CONSISTENCY */}
         <nav
           style={{
             height: 64,
@@ -140,7 +127,7 @@ export default async function PublicProfilePage({
             margin: "-40px -40px 24px -40px",
           }}
         >
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/CC-SML-Logo.png"
@@ -156,34 +143,30 @@ export default async function PublicProfilePage({
         <h1 style={{ color: accent, marginTop: 12 }}>Profile not found</h1>
         <p>No user found for @{username}.</p>
 
-        <Link
-          href="/"
-          style={{
-            display: "inline-block",
-            marginTop: 16,
-            color: textPrimary,
-            border: `1px solid ${borderColor}`,
-            padding: "8px 12px",
-            borderRadius: 8,
-            textDecoration: "none",
-          }}
-        >
+        <Link href="/" style={{ color: textPrimary, textDecoration: "underline" }}>
           Go Home
         </Link>
       </div>
     );
   }
 
-  // ---- COLLECTIONS ----
-  const { data: collections, error: collErr } = await safeFetch(() =>
-    supabase
+  // -------- COLLECTIONS (direct await; correct types) --------
+  let collections: any[] | null = null;
+  try {
+    const { data, error } = await supabase
       .from("collections")
       .select("id, title, niche, cover_url, item_count, created_at")
       .eq("user_id", profile.id)
-      .order("created_at", { ascending: false })
-  );
+      .order("created_at", { ascending: false });
 
-  if (collErr) console.error("Collections fetch error:", collErr);
+    if (error) {
+      console.error("Collections fetch error:", error);
+    } else {
+      collections = data;
+    }
+  } catch (e) {
+    console.error("Collections fetch crash:", e);
+  }
 
   return (
     <div
@@ -207,7 +190,7 @@ export default async function PublicProfilePage({
           backdropFilter: "blur(6px)",
         }}
       >
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/CC-SML-Logo.png"
@@ -220,16 +203,7 @@ export default async function PublicProfilePage({
         </Link>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 16 }}>
-          <Link
-            href="/upload"
-            style={{
-              color: textPrimary,
-              border: `1px solid ${borderColor}`,
-              padding: "8px 12px",
-              borderRadius: 8,
-              textDecoration: "none",
-            }}
-          >
+          <Link href="/upload" style={{ color: textPrimary, textDecoration: "none" }}>
             Upload
           </Link>
         </div>
@@ -423,9 +397,9 @@ export default async function PublicProfilePage({
           <img
             src="/CC-SML-Logo.png"
             alt="CollectorConnector"
-            width={24}
-            height={24}
-            style={{ display: "block", opacity: 0.9 }}
+            width={28}
+            height={28}
+            style={{ display: "block" }}
           />
           <span style={{ fontSize: 13 }}>
             © {new Date().getFullYear()} CollectorConnector

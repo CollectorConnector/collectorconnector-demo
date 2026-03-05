@@ -13,11 +13,11 @@ const TIER_STYLES: Record<
 };
 
 type Props = {
-  tier?: string | null;       // raw DB value; we'll normalize
-  size?: "sm" | "md" | "lg";  // visual size
-  showCount?: boolean;        // show trailing count text
-  countText?: string;         // override count text
-  titleOverride?: string;     // custom tooltip
+  tier?: string | null;
+  size?: "sm" | "md" | "lg";
+  showCount?: boolean;
+  countText?: string;
+  titleOverride?: string;
 };
 
 export default function TierBadge({
@@ -63,7 +63,6 @@ export default function TierBadge({
         lineHeight: 1,
       }}
     >
-      {/* coin/dot */}
       <span
         aria-hidden="true"
         style={{
@@ -74,10 +73,7 @@ export default function TierBadge({
           boxShadow: `0 0 10px ${style.text}`,
         }}
       />
-      {/* label */}
       <span>{name}</span>
-
-      {/* divider + count (optional) */}
       {effectiveCount && (
         <>
           <span

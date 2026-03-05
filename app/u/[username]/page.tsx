@@ -1,11 +1,10 @@
 
 // app/u/[username]/page.tsx
-
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import TierBadge from "../../../components/TierBadge";
 
-// Neutral palette
+// Neutral palette (page-only tokens; layout provides background + global nav/footer)
 const textPrimary = "#E5E7EB";
 const textSecondary = "#9CA3AF";
 const borderColor = "#1f1f1f";
@@ -39,7 +38,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Simple social link (neutral color; no client-side events in an RSC)
+// Simple social link (no client events; works in Server Component)
 function SocialLink({
   href,
   label,
@@ -72,7 +71,7 @@ function SocialLink({
   );
 }
 
-// Create Supabase client (string fallbacks prevent TS build errors)
+// Create Supabase client (string fallbacks avoid TS complaints at build)
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supabase = createClient(url, anon);
@@ -84,7 +83,7 @@ export default async function PublicProfilePage({
 }) {
   const { username } = params;
 
-  // -------- PROFILE (direct await; correct types) --------
+  // -------- PROFILE --------
   let profile: any = null;
   try {
     const { data, error } = await supabase
@@ -114,43 +113,16 @@ export default async function PublicProfilePage({
           minHeight: "100vh",
         }}
       >
-        {/* MINIMAL NAV FOR CONSISTENCY */}
-        <nav
-          style={{
-            height: 64,
-            borderBottom: `1px solid ${borderColor}`,
-            display: "flex",
-            alignItems: "center",
-            padding: "0 16px",
-            background: "rgba(0,0,0,0.75)",
-            backdropFilter: "blur(6px)",
-            margin: "-40px -40px 24px -40px",
-          }}
-        >
-          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/CC-SML-Logo.png"
-              alt="CollectorConnector"
-              width={42}
-              height={42}
-              style={{ display: "block" }}
-            />
-            <span style={{ fontWeight: 800, color: textPrimary }}>CollectorConnector</span>
-          </Link>
-        </nav>
-
         <h1 style={{ color: accent, marginTop: 12 }}>Profile not found</h1>
         <p>No user found for @{username}.</p>
-
-        <Link href="/" style={{ color: textPrimary, textDecoration: "underline" }}>
+        <Link href="/" style={{ color: textSecondary, textDecoration: "underline" }}>
           Go Home
         </Link>
       </div>
     );
   }
 
-  // -------- COLLECTIONS (direct await; correct types) --------
+  // -------- COLLECTIONS --------
   let collections: any[] | null = null;
   try {
     const { data, error } = await supabase
@@ -178,38 +150,7 @@ export default async function PublicProfilePage({
         flexDirection: "column",
       }}
     >
-      {/* NAVBAR */}
-      <nav
-        style={{
-          height: 64,
-          borderBottom: `1px solid ${borderColor}`,
-          display: "flex",
-          alignItems: "center",
-          padding: "0 16px",
-          background: "rgba(0,0,0,0.75)",
-          backdropFilter: "blur(6px)",
-        }}
-      >
-        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/CC-SML-Logo.png"
-            alt="CollectorConnector"
-            width={42}
-            height={42}
-            style={{ display: "block" }}
-          />
-          <span style={{ fontWeight: 800, color: textPrimary }}>CollectorConnector</span>
-        </Link>
-
-        <div style={{ marginLeft: "auto", display: "flex", gap: 16 }}>
-          <Link href="/upload" style={{ color: textPrimary, textDecoration: "none" }}>
-            Upload
-          </Link>
-        </div>
-      </nav>
-
-      {/* HEADER */}
+      {/* HEADER (no page-level nav; layout renders Nav/Footer) */}
       <header
         style={{
           padding: "32px 16px",
@@ -374,53 +315,6 @@ export default async function PublicProfilePage({
           )}
         </div>
       </main>
-
-      {/* FOOTER */}
-      <footer
-        style={{
-          padding: "18px 16px",
-          borderTop: `1px solid ${borderColor}`,
-          color: textSecondary,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 1080,
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/CC-SML-Logo.png"
-            alt="CollectorConnector"
-            width={28}
-            height={28}
-            style={{ display: "block" }}
-          />
-          <span style={{ fontSize: 13 }}>
-            © {new Date().getFullYear()} CollectorConnector
-          </span>
-
-          <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
-            <Link href="/terms" style={{ color: textSecondary, textDecoration: "none" }}>
-              Terms
-            </Link>
-            <Link href="/privacy" style={{ color: textSecondary, textDecoration: "none" }}>
-              Privacy
-            </Link>
-            <Link href="/cookies" style={{ color: textSecondary, textDecoration: "none" }}>
-              Cookies
-            </Link>
-            <Link href="/guidelines" style={{ color: textSecondary, textDecoration: "none" }}>
-              Guidelines
-            </Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

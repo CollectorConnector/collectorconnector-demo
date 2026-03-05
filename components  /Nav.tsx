@@ -21,17 +21,32 @@ export default function Nav() {
         zIndex: 30,
       }}
     >
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+      <Link
+        href="/"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 12,
+          textDecoration: "none",
+          color: textPrimary,
+        }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        /CC-SML-Logo.png
-        <span style={{ fontWeight: 800, color: textPrimary }}>CollectorConnector</span>
+        <img
+          src="/CC-SML-Logo.png"
+          alt="CollectorConnector"
+          width={42}
+          height={42}
+          style={{ display: "block" }}
+        />
+        <span style={{ fontWeight: 800 }}>CollectorConnector</span>
       </Link>
 
       <div style={{ marginLeft: "auto", display: "flex", gap: 14 }}>
-        <Link href="/" style={{ color: textPrimary, textDecoration: "none", fontWeight: 600 }}>
+        <Link href="/" style={{ color: textPrimary, textDecoration: "none" }}>
           Home
         </Link>
-        <Link href="/upload" style={{ color: textPrimary, textDecoration: "none", fontWeight: 600 }}>
+        <Link href="/upload" style={{ color: textPrimary, textDecoration: "none" }}>
           Upload
         </Link>
       </div>

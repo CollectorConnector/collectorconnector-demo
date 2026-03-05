@@ -1,6 +1,5 @@
 
 // app/u/[username]/page.tsx
-
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 
@@ -9,6 +8,79 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// ----- helpers -----
+const TIER_COLORS: Record<string, { bg: string; glow: string; text: string }> = {
+  Emerald: { bg: "#083f2e", glow: "0 0 28px #4ADE80AA", text: "#4ADE80" },
+  Gold: { bg: "#3f3a08", glow: "0 0 28px #facc15AA", text: "#facc15" },
+  Platinum: { bg: "#2b2f35", glow: "0 0 28px #93c5fdAA", text: "#93c5fd" },
+};
+
+function TierBadge({ tier = "Emerald" }: { tier?: string }) {
+  const c = TIER_COLORS[tier] ?? TIER_COLORS.Emerald;
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "6px 12px",
+        borderRadius: 999,
+        background: c.bg,
+        color: c.text,
+        border: `1px solid ${c.text}55`,
+        boxShadow: c.glow,
+        fontSize: 13,
+        letterSpacing: 0.3,
+        fontWeight: 700,
+      }}
+      title={`${tier} Tier`}
+    >
+      <span
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: c.text,
+          boxShadow: `0 0 8px ${c.text}`,
+        }}
+      />
+      {tier} Tier
+    </span>
+  );
+}
+
+function SocialLink({
+  href,
+  label,
+  icon,
+}: {
+  href: string;
+  label: string;
+  icon: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        border: "1px solid #1f1f1f",
+        color: "#4ADE80",
+        padding: "8px 12px",
+        borderRadius: 8,
+        fontWeight: 700,
+        textDecoration: "none",
+      }}
+    >
+      <span aria-hidden="true">{icon}</span>
+      {label}
+    </a>
+  );
+}
+
 export default async function PublicProfilePage({
   params,
 }: {
@@ -16,10 +88,12 @@ export default async function PublicProfilePage({
 }) {
   const { username } = params;
 
-  // FETCH PROFILE
+  // PROFILE
   const { data: profile, error: profileErr } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, avatar_url")
+    .select(
+      "id, username, display_name, bio, avatar_url, instagram, ebay, whatnot, website, tier"
+    )
     .eq("username", username)
     .maybeSingle();
 
@@ -27,7 +101,7 @@ export default async function PublicProfilePage({
 
   if (!profile) {
     return (
-      <div style={{ background: "black", color: "white", padding: 40 }}>
+      <div style={{ background: "black", color: "white", padding: 40, minHeight: "100vh" }}>
         <h1 style={{ color: "#4ADE80" }}>Profile not found</h1>
         <p>No user found for @{username}</p>
         <Link href="/" style={{ color: "#4ADE80" }}>Go Home</Link>
@@ -35,7 +109,7 @@ export default async function PublicProfilePage({
     );
   }
 
-  // FETCH COLLECTIONS
+  // COLLECTIONS
   const { data: collections, error: collErr } = await supabase
     .from("collections")
     .select("id, title, niche, cover_url, item_count, created_at")
@@ -66,22 +140,18 @@ export default async function PublicProfilePage({
           backdropFilter: "blur(6px)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/CC-SML-Logo.png"
-              alt="CC Logo"
-              width={42}
-              height={42}
-              style={{ borderRadius: 8 }}
-            />
-            <span style={{ fontWeight: 800 }}>CollectorConnector</span>
-          </Link>
-        </div>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/CC-SML-Logo.png"
+            alt="CollectorConnector"
+            style={{ width: 42, height: 42, objectFit: "contain" }}
+          />
+          <span style={{ fontWeight: 800 }}>CollectorConnector</span>
+        </Link>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 16 }}>
-          <Link href="/upload" style={{ color: "#4ADE80", fontWeight: 600 }}>
+          <Link href="/upload" style={{ color: "#4ADE80", fontWeight: 700 }}>
             Upload
           </Link>
         </div>
@@ -103,9 +173,9 @@ export default async function PublicProfilePage({
             display: "grid",
             gridTemplateColumns: "100px 1fr",
             gap: 16,
+            alignItems: "center",
           }}
         >
-          {/* AVATAR */}
           <div
             style={{
               width: 100,
@@ -118,7 +188,7 @@ export default async function PublicProfilePage({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={profile.avatar_url || "/default-avatar.png"}
-              alt={profile.display_name}
+              alt={profile.display_name || profile.username}
               style={{
                 width: "100%",
                 height: "100%",
@@ -127,14 +197,53 @@ export default async function PublicProfilePage({
             />
           </div>
 
-          {/* PROFILE INFO */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800 }}>
-              {profile.display_name || profile.username}
-            </h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800 }}>
+                {profile.display_name || profile.username}
+              </h1>
+              <TierBadge tier={profile.tier || "Gold"} />
+            </div>
             <div style={{ color: "#9CA3AF" }}>@{profile.username}</div>
             {profile.bio && (
-              <p style={{ maxWidth: 740, color: "#E5E7EB" }}>{profile.bio}</p>
+              <p style={{ maxWidth: 740, color: "#E5E7EB", marginTop: 8 }}>{profile.bio}</p>
+            )}
+
+            {/* SOCIALS */}
+            {(profile.instagram || profile.ebay || profile.whatnot || profile.website) && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+                {profile.instagram && (
+                  <div>
+                    <div style={{ color: "#9CA3AF", fontSize: 12, marginBottom: 6 }}>
+                      SOCIAL LINKS
+                    </div>
+                    <SocialLink
+                      href={profile.instagram}
+                      label="Instagram"
+                      icon="📸"
+                    />
+                  </div>
+                )}
+
+                {(profile.ebay || profile.whatnot || profile.website) && (
+                  <div>
+                    <div style={{ color: "#9CA3AF", fontSize: 12, marginBottom: 6 }}>
+                      MARKETPLACES / WEB
+                    </div>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      {profile.ebay && (
+                        <SocialLink href={profile.ebay} label="eBay" icon="🛒" />
+                      )}
+                      {profile.whatnot && (
+                        <SocialLink href={profile.whatnot} label="Whatnot" icon="🎙️" />
+                      )}
+                      {profile.website && (
+                        <SocialLink href={profile.website} label="Website" icon="🔗" />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -143,7 +252,6 @@ export default async function PublicProfilePage({
       {/* COLLECTIONS */}
       <main style={{ padding: "24px 16px", flex: 1 }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          {/* SECTION TITLE */}
           <h2
             style={{
               margin: "8px 0 16px",
@@ -167,7 +275,6 @@ export default async function PublicProfilePage({
             Collections
           </h2>
 
-          {/* EMPTY STATE */}
           {!collections || collections.length === 0 ? (
             <div
               style={{
@@ -180,7 +287,6 @@ export default async function PublicProfilePage({
               No collections yet.
             </div>
           ) : (
-            /* GRID */
             <div
               style={{
                 display: "grid",
@@ -206,16 +312,15 @@ export default async function PublicProfilePage({
                   <div style={{ position: "relative", height: 160 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={c.cover_url}
+                      src={c.cover_url || "/collection-placeholder.jpg"}
                       alt={c.title}
                       style={{
                         width: "100%",
                         height: "100%",
                         objectFit: "cover",
+                        display: "block",
                       }}
                     />
-
-                    {/* GRADIENT OVERLAY */}
                     <div
                       style={{
                         position: "absolute",
@@ -224,8 +329,6 @@ export default async function PublicProfilePage({
                           "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)",
                       }}
                     />
-
-                    {/* TEXT */}
                     <div
                       style={{
                         position: "absolute",
@@ -238,8 +341,7 @@ export default async function PublicProfilePage({
                     >
                       <div style={{ fontWeight: 800 }}>{c.title}</div>
                       <div style={{ fontSize: 13, color: "#9CA3AF" }}>
-                        {c.item_count ?? 0} items
-                        {c.niche ? ` · ${c.niche}` : ""}
+                        {(c.item_count ?? 0)} items{c.niche ? ` · ${c.niche}` : ""}
                       </div>
                     </div>
                   </div>
@@ -271,28 +373,18 @@ export default async function PublicProfilePage({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/CC-SML-Logo.png"
-            alt="CC Logo"
-            width={32}
-            height={32}
-            style={{ opacity: 0.75 }}
+            alt="CollectorConnector"
+            style={{ width: 24, height: 24, objectFit: "contain", opacity: 0.9 }}
           />
           <span style={{ fontSize: 13 }}>
             © {new Date().getFullYear()} CollectorConnector
           </span>
 
           <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
-            <Link href="/terms" style={{ color: "#9CA3AF" }}>
-              Terms
-            </Link>
-            <Link href="/privacy" style={{ color: "#9CA3AF" }}>
-              Privacy
-            </Link>
-            <Link href="/cookies" style={{ color: "#9CA3AF" }}>
-              Cookies
-            </Link>
-            <Link href="/guidelines" style={{ color: "#9CA3AF" }}>
-              Guidelines
-            </Link>
+            <Link href="/terms" style={{ color: "#9CA3AF" }}>Terms</Link>
+            <Link href="/privacy" style={{ color: "#9CA3AF" }}>Privacy</Link>
+            <Link href="/cookies" style={{ color: "#9CA3AF" }}>Cookies</Link>
+            <Link href="/guidelines" style={{ color: "#9CA3AF" }}>Guidelines</Link>
           </div>
         </div>
       </footer>

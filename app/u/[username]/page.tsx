@@ -1,22 +1,16 @@
 
 // app/u/[username]/page.tsx
-
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import TierBadge from "../../../components/TierBadge";
 
-// Neutral colour tokens
-const textPrimary = "#E5E7EB";   // main text
-const textSecondary = "#9CA3AF"; // secondary text
-const borderColor = "#1f1f1f";   // card/border lines
-const accent = "#4ADE80";        // green for accents/hover only
+// Neutral palette
+const textPrimary = "#E5E7EB";
+const textSecondary = "#9CA3AF";
+const borderColor = "#1f1f1f";
+const accent = "#4ADE80";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-// ---- Reusable small section title ----
+// Small bits
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2
@@ -44,7 +38,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ---- Reusable social link (neutral with green hover) ----
 function SocialLink({
   href,
   label,
@@ -86,6 +79,11 @@ function SocialLink({
   );
 }
 
+// Create a safe Supabase client (strings or empty to avoid TS build failures)
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const supabase = createClient(url, anon);
+
 export default async function PublicProfilePage({
   params,
 }: {
@@ -93,48 +91,54 @@ export default async function PublicProfilePage({
 }) {
   const { username } = params;
 
-  // ---- PROFILE ----
-  const { data: profile, error: profileErr } = await supabase
-    .from("profiles")
-    .select(
-      "id, username, display_name, bio, avatar_url, instagram, ebay, whatnot, website, tier"
-    )
-    .eq("username", username)
-    .maybeSingle();
-
-  if (profileErr) {
-    console.error("Profile fetch error:", profileErr);
+  // ---- SAFE FETCH WRAPPER ----
+  async function safeFetch<T>(fn: () => Promise<T>): Promise<{ data?: any; error?: any }> {
+    try {
+      // @ts-ignore
+      const res = await fn();
+      // supabase-js returns { data, error }
+      // @ts-ignore
+      return { data: res.data, error: res.error };
+    } catch (e) {
+      console.error("Server fetch crash:", e);
+      return { error: e };
+    }
   }
+
+  // PROFILE
+  const { data: profile, error: profileErr } = await safeFetch(() =>
+    supabase
+      .from("profiles")
+      .select(
+        "id, username, display_name, bio, avatar_url, instagram, ebay, whatnot, website, tier"
+      )
+      .eq("username", username)
+      .maybeSingle()
+  );
+
+  if (profileErr) console.error("Profile fetch error:", profileErr);
 
   if (!profile) {
     return (
-      <div
-        style={{
-          background: "black",
-          color: textPrimary,
-          padding: 40,
-          minHeight: "100vh",
-        }}
-      >
-        <h1 style={{ color: accent }}>Profile not found</h1>
-        <p>No user found for @{username}</p>
-        <Link href="/" style={{ color: textPrimary, textDecoration: "underline" }}>
+      <div style={{ background: "black", color: textPrimary, padding: 40, minHeight: "100vh" }}>
+        <h1 style={{ color: accent, marginTop: 12 }}>Profile not found</h1>
+        <p>No user found for @{username}.</p>
+        /
           Go Home
         </Link>
       </div>
     );
   }
 
-  // ---- COLLECTIONS ----
-  const { data: collections, error: collErr } = await supabase
-    .from("collections")
-    .select("id, title, niche, cover_url, item_count, created_at")
-    .eq("user_id", profile.id)
-    .order("created_at", { ascending: false });
-
-  if (collErr) {
-    console.error("Collections fetch error:", collErr);
-  }
+  // COLLECTIONS
+  const { data: collections, error: collErr } = await safeFetch(() =>
+    supabase
+      .from("collections")
+      .select("id, title, niche, cover_url, item_count, created_at")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: false })
+  );
+  if (collErr) console.error("Collections fetch error:", collErr);
 
   return (
     <div
@@ -158,24 +162,15 @@ export default async function PublicProfilePage({
           backdropFilter: "blur(6px)",
         }}
       >
-        <Link
-          href="/"
-          style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}
-        >
+        /
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/CC-SML-Logo.png"
-            alt="CollectorConnector"
-            width={42}
-            height={42}
-            style={{ display: "block" }}
-          />
+          /CC-SML-Logo.png
           <span style={{ fontWeight: 800, color: textPrimary }}>CollectorConnector</span>
         </Link>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 16 }}>
-          <Link href="/upload" style={{ color: textPrimary, textDecoration: "none" }}>
-            Upload
+          /upload
+            <span style={{ color: textPrimary }}>Upload</span>
           </Link>
         </div>
       </nav>
@@ -365,29 +360,23 @@ export default async function PublicProfilePage({
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/CC-SML-Logo.png"
-            alt="CollectorConnector"
-            width={32}
-            height={32}
-            style={{ display: "block" }}
-          />
+          /CC-SML-Logo.png
           <span style={{ fontSize: 13 }}>
             © {new Date().getFullYear()} CollectorConnector
           </span>
 
           <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
-            <Link href="/terms" style={{ color: textSecondary, textDecoration: "none" }}>
-              Terms
+            /terms
+              <span style={{ color: textSecondary }}>Terms</span>
             </Link>
-            <Link href="/privacy" style={{ color: textSecondary, textDecoration: "none" }}>
-              Privacy
+            /privacy
+              <span style={{ color: textSecondary }}>Privacy</span>
             </Link>
-            <Link href="/cookies" style={{ color: textSecondary, textDecoration: "none" }}>
-              Cookies
+            /cookies
+              <span style={{ color: textSecondary }}>Cookies</span>
             </Link>
-            <Link href="/guidelines" style={{ color: textSecondary, textDecoration: "none" }}>
-              Guidelines
+            /guidelines
+              <span style={{ color: textSecondary }}>Guidelines</span>
             </Link>
           </div>
         </div>

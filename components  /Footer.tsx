@@ -1,24 +1,46 @@
 
-// app/layout.tsx
-import "./globals.css";
-import type { Metadata } from "next";
-import Nav from "@/components/Nav";
-import Footer from "@/components/Footer";
+// components/Footer.tsx
+import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "CollectorConnector",
-  description: "Collectors unite.",
-};
+const borderColor = "#1f1f1f";
+const textSecondary = "#9CA3AF";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function Footer() {
   return (
-    <html lang="en">
-      <body style={{ margin: 0, background: "black", color: "#E5E7EB" }}>
-        <Nav />
-        <main style={{ minHeight: "calc(100vh - 64px - 68px)" }}>{children}</main>
-        <Footer />
-      </body>
-    </html>
-  );
-}
-``
+    <footer
+      style={{
+        borderTop: `1px solid ${borderColor}`,
+        padding: "18px 16px",
+        color: textSecondary,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1080,
+          margin: "0 auto",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/CC-SML-Logo.png"
+          alt="CollectorConnector"
+          width={20}
+          height={20}
+          style={{ display: "block", opacity: 0.8 }}
+        />
+        <span style={{ fontSize: 13 }}>
+          © {new Date().getFullYear()} CollectorConnector
+        </span>
+
+        <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
+          <Link href="/terms" style={{ color: textSecondary, textDecoration: "none" }}>
+            Terms
+          </Link>
+          <Link href="/privacy" style={{ color: textSecondary, textDecoration: "none" }}>
+            Privacy
+          </Link>
+          <Link

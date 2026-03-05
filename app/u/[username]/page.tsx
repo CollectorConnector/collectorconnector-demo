@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import TierBadge from "@/components/TierBadge";
+import TierBadge from "../../../components/TierBadge";
 
 // Neutral colour tokens
 const textPrimary = "#E5E7EB";   // main text

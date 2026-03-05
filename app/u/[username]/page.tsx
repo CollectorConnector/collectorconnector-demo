@@ -5,11 +5,11 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import TierBadge from "@/components/TierBadge";
 
-// Colour tokens (neutral by default)
+// Neutral colour tokens
 const textPrimary = "#E5E7EB";   // main text
-const textSecondary = "#9CA3AF"; // subtle grey
-const borderColor = "#1f1f1f";
-const accent = "#4ADE80";        // green only for highlights
+const textSecondary = "#9CA3AF"; // secondary text
+const borderColor = "#1f1f1f";   // card/border lines
+const accent = "#4ADE80";        // green for accents/hover only
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,7 +44,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ---- Reusable social link ----
+// ---- Reusable social link (neutral with green hover) ----
 function SocialLink({
   href,
   label,
@@ -93,8 +93,8 @@ export default async function PublicProfilePage({
 }) {
   const { username } = params;
 
-  // Profile query
-  const { data: profile } = await supabase
+  // ---- PROFILE ----
+  const { data: profile, error: profileErr } = await supabase
     .from("profiles")
     .select(
       "id, username, display_name, bio, avatar_url, instagram, ebay, whatnot, website, tier"
@@ -102,22 +102,39 @@ export default async function PublicProfilePage({
     .eq("username", username)
     .maybeSingle();
 
+  if (profileErr) {
+    console.error("Profile fetch error:", profileErr);
+  }
+
   if (!profile) {
     return (
-      <div style={{ background: "black", color: textPrimary, padding: 40, minHeight: "100vh" }}>
+      <div
+        style={{
+          background: "black",
+          color: textPrimary,
+          padding: 40,
+          minHeight: "100vh",
+        }}
+      >
         <h1 style={{ color: accent }}>Profile not found</h1>
         <p>No user found for @{username}</p>
-        /Go Home</Link>
+        <Link href="/" style={{ color: textPrimary, textDecoration: "underline" }}>
+          Go Home
+        </Link>
       </div>
     );
   }
 
-  // Collections query
-  const { data: collections } = await supabase
+  // ---- COLLECTIONS ----
+  const { data: collections, error: collErr } = await supabase
     .from("collections")
     .select("id, title, niche, cover_url, item_count, created_at")
     .eq("user_id", profile.id)
     .order("created_at", { ascending: false });
+
+  if (collErr) {
+    console.error("Collections fetch error:", collErr);
+  }
 
   return (
     <div
@@ -141,17 +158,24 @@ export default async function PublicProfilePage({
           backdropFilter: "blur(6px)",
         }}
       >
-        /
+        <Link
+          href="/"
+          style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          /CC-SML-Logo.png
-          <span style={{ fontWeight: 800, color: textPrimary }}>
-            CollectorConnector
-          </span>
+          <img
+            src="/CC-SML-Logo.png"
+            alt="CollectorConnector"
+            width={42}
+            height={42}
+            style={{ display: "block" }}
+          />
+          <span style={{ fontWeight: 800, color: textPrimary }}>CollectorConnector</span>
         </Link>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 16 }}>
-          /upload
-            <span style={{ color: textPrimary }}>Upload</span>
+          <Link href="/upload" style={{ color: textPrimary, textDecoration: "none" }}>
+            Upload
           </Link>
         </div>
       </nav>
@@ -201,13 +225,9 @@ export default async function PublicProfilePage({
               </h1>
               <TierBadge tier={profile.tier || "Gold"} size="md" showCount />
             </div>
-
             <div style={{ color: textSecondary }}>@{profile.username}</div>
-
             {profile.bio && (
-              <p style={{ maxWidth: 740, color: textPrimary, marginTop: 8 }}>
-                {profile.bio}
-              </p>
+              <p style={{ maxWidth: 740, color: textPrimary, marginTop: 8 }}>{profile.bio}</p>
             )}
 
             {/* SOCIALS */}
@@ -227,11 +247,8 @@ export default async function PublicProfilePage({
                     <div style={{ color: textSecondary, fontSize: 12, marginBottom: 6 }}>
                       MARKETPLACES / WEB
                     </div>
-
                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      {profile.ebay && (
-                        <SocialLink href={profile.ebay} label="eBay" icon="🛒" />
-                      )}
+                      {profile.ebay && <SocialLink href={profile.ebay} label="eBay" icon="🛒" />}
                       {profile.whatnot && (
                         <SocialLink href={profile.whatnot} label="Whatnot" icon="🎙️" />
                       )}
@@ -298,7 +315,6 @@ export default async function PublicProfilePage({
                         display: "block",
                       }}
                     />
-
                     <div
                       style={{
                         position: "absolute",
@@ -307,7 +323,6 @@ export default async function PublicProfilePage({
                           "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)",
                       }}
                     />
-
                     <div
                       style={{
                         position: "absolute",
@@ -350,26 +365,29 @@ export default async function PublicProfilePage({
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          /CC-SML-Logo.png
+          <img
+            src="/CC-SML-Logo.png"
+            alt="CollectorConnector"
+            width={32}
+            height={32}
+            style={{ display: "block" }}
+          />
           <span style={{ fontSize: 13 }}>
             © {new Date().getFullYear()} CollectorConnector
           </span>
 
           <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
-            /terms
-              <span style={{ color: textSecondary }}>Terms</span>
+            <Link href="/terms" style={{ color: textSecondary, textDecoration: "none" }}>
+              Terms
             </Link>
-
-            /privacy
-              <span style={{ color: textSecondary }}>Privacy</span>
+            <Link href="/privacy" style={{ color: textSecondary, textDecoration: "none" }}>
+              Privacy
             </Link>
-
-            /cookies
-              <span style={{ color: textSecondary }}>Cookies</span>
+            <Link href="/cookies" style={{ color: textSecondary, textDecoration: "none" }}>
+              Cookies
             </Link>
-
-            /guidelines
-              <span style={{ color: textSecondary }}>Guidelines</span>
+            <Link href="/guidelines" style={{ color: textSecondary, textDecoration: "none" }}>
+              Guidelines
             </Link>
           </div>
         </div>

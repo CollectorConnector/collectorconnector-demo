@@ -25,22 +25,16 @@ export default function Footer() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/CC-SML-Logo.png"
-          alt="CollectorConnector"
-          width={20}
-          height={20}
-          style={{ display: "block", opacity: 0.8 }}
-        />
-        <span style={{ fontSize: 13 }}>
-          © {new Date().getFullYear()} CollectorConnector
-        </span>
+        <img src="/CC-SML-Logo.png" alt="CollectorConnector" width={18} height={18} />
+        <span style={{ fontSize: 13 }}>© {new Date().getFullYear()} CollectorConnector</span>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}>
-          <Link href="/terms" style={{ color: textSecondary, textDecoration: "none" }}>
-            Terms
-          </Link>
-          <Link href="/privacy" style={{ color: textSecondary, textDecoration: "none" }}>
-            Privacy
-          </Link>
-          <Link
+          <Link href="/terms" style={{ color: textSecondary, textDecoration: "none" }}>Terms</Link>
+          <Link href="/privacy" style={{ color: textSecondary, textDecoration: "none" }}>Privacy</Link>
+          <Link href="/cookies" style={{ color: textSecondary, textDecoration: "none" }}>Cookies</Link>
+          <Link href="/guidelines" style={{ color: textSecondary, textDecoration: "none" }}>Guidelines</Link>
+        </div>
+      </div>
+    </footer>
+  );
+}

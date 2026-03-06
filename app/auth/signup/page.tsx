@@ -12,38 +12,20 @@ export default function SignupPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // GOOGLE SIGNUP
-  async function handleGoogleSignup() {
+  // SOCIAL SIGNUP
+  async function handleOAuth(provider: "google" | "apple" | "facebook") {
     setErrorMessage("");
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) setErrorMessage(error.message);
-  }
-
-  // APPLE SIGNUP
-  async function handleAppleSignup() {
-    setErrorMessage("");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) setErrorMessage(error.message);
-  }
-
-  // FACEBOOK SIGNUP
-  async function handleFacebookSignup() {
-    setErrorMessage("");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "facebook",
+      provider,
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) setErrorMessage(error.message);
   }
 
   // EMAIL SIGNUP
-  async function handleEmailSignup(e) {
+  async function handleEmailSignup(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
     setErrorMessage("");
     setSubmitting(true);
@@ -51,9 +33,6 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
 
     setSubmitting(false);
@@ -107,7 +86,7 @@ export default function SignupPage() {
             marginBottom: "24px",
           }}
         >
-          Join the world of collectors
+          Start your CollectorConnector journey
         </p>
 
         {errorMessage && (
@@ -126,10 +105,10 @@ export default function SignupPage() {
           </div>
         )}
 
-        {/* Social signup */}
+        {/* SOCIAL BUTTONS */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
           <button
-            onClick={handleGoogleSignup}
+            onClick={() => handleOAuth("google")}
             style={{
               width: "100%",
               padding: "12px",
@@ -150,7 +129,7 @@ export default function SignupPage() {
           </button>
 
           <button
-            onClick={handleAppleSignup}
+            onClick={() => handleOAuth("apple")}
             style={{
               width: "100%",
               padding: "12px",
@@ -171,7 +150,7 @@ export default function SignupPage() {
           </button>
 
           <button
-            onClick={handleFacebookSignup}
+            onClick={() => handleOAuth("facebook")}
             style={{
               width: "100%",
               padding: "12px",
@@ -192,15 +171,18 @@ export default function SignupPage() {
           </button>
         </div>
 
-        {/* Divider */}
+        {/* DIVIDER */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "10px 0 18px" }}>
           <div style={{ height: 1, background: "#1F2937", flex: 1 }} />
           <div style={{ color: "#9CA3AF", fontSize: 12 }}>or</div>
           <div style={{ height: 1, background: "#1F2937", flex: 1 }} />
         </div>
 
-        {/* Email signup */}
-        <form onSubmit={handleEmailSignup} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* EMAIL SIGNUP FORM */}
+        <form
+          onSubmit={handleEmailSignup}
+          style={{ display: "flex", flexDirection: "column", gap: 12 }}
+        >
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label htmlFor="email" style={{ color: "#D1D5DB", fontSize: 14 }}>
               Email

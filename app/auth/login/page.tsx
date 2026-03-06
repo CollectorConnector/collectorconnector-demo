@@ -39,7 +39,9 @@ export default function LoginPage() {
     if (error) setErrorMessage(error.message);
   }
 
-  async function handleEmailLogin(e) {
+  async function handleEmailLogin(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
     setErrorMessage("");
     setSubmitting(true);
@@ -190,7 +192,10 @@ export default function LoginPage() {
           <div style={{ height: 1, background: "#1F2937", flex: 1 }} />
         </div>
 
-        <form onSubmit={handleEmailLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <form
+          onSubmit={handleEmailLogin}
+          style={{ display: "flex", flexDirection: "column", gap: 12 }}
+        >
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label htmlFor="email" style={{ color: "#D1D5DB", fontSize: 14 }}>
               Email

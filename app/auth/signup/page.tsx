@@ -68,6 +68,17 @@ export default function SignupPage() {
           boxShadow: "0 0 40px rgba(0,0,0,0.4)",
         }}
       >
+        {/* LOGO */}
+        <img
+          src="/CC-main-logo.png"
+          alt="CollectorConnector"
+          style={{
+            width: "160px",
+            display: "block",
+            margin: "0 auto 28px",
+          }}
+        />
+
         <h1
           style={{
             fontSize: "28px",
@@ -250,7 +261,7 @@ export default function SignupPage() {
         </form>
 
         <div style={{ marginTop: 18, color: "#9CA3AF", fontSize: 14, textAlign: "center" }}>
-          Already have an account?{" "}
+          Already have an account{" "}
           <a href="/auth/login" style={{ color: "#4ADE80", textDecoration: "none", fontWeight: 600 }}>
             Log in
           </a>

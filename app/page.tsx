@@ -12,7 +12,7 @@ export default function HomePage() {
         flexDirection: "column",
       }}
     >
-      {/* NAVBAR */}
+      {/* NAVBAR — your original clean version */}
       <nav
         style={{
           width: "100%",
@@ -36,9 +36,6 @@ export default function HomePage() {
         <div style={{ display: "flex", gap: 20, fontSize: 15 }}>
           <Link href="/" style={{ color: "#9CA3AF", textDecoration: "none" }}>
             Home
-          </Link>
-          <Link href="/explore" style={{ color: "#9CA3AF", textDecoration: "none" }}>
-            Explore
           </Link>
           <Link href="/upload" style={{ color: "#9CA3AF", textDecoration: "none" }}>
             Upload
@@ -175,51 +172,6 @@ export default function HomePage() {
               Explore collectors
             </Link>
           </div>
-
-          {/* FLOATING PROFILE MOCKUP */}
-          <div
-            style={{
-              marginTop: "60px",
-              display: "flex",
-              justifyContent: "center",
-              opacity: 0.95,
-            }}
-          >
-            <div
-              style={{
-                width: "300px",
-                padding: "20px",
-                background: "#1a1a1a",
-                borderRadius: "14px",
-                border: "1px solid #2a2a2a",
-                boxShadow: "0 0 40px rgba(0,0,0,0.4)",
-                transform: "translateY(0px)",
-                animation: "floatCard 6s ease-in-out infinite",
-              }}
-            >
-              <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                  background: "#333",
-                  margin: "0 auto 12px",
-                }}
-              />
-              <h3 style={{ marginBottom: 4 }}>Sample Collector</h3>
-              <p style={{ color: "#9CA3AF", fontSize: 14 }}>
-                “Pokémon, Funko Pops, and rare finds.”
-              </p>
-            </div>
-          </div>
-
-          <style>{`
-            @keyframes floatCard {
-              0% { transform: translateY(0px); }
-              50% { transform: translateY(-10px); }
-              100% { transform: translateY(0px); }
-            }
-          `}</style>
         </div>
       </div>
     </div>

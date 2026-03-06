@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // GOOGLE LOGIN
   async function handleGoogleLogin() {
     setErrorMessage("");
     const { error } = await supabase.auth.signInWithOAuth({
@@ -21,6 +22,7 @@ export default function LoginPage() {
     if (error) setErrorMessage(error.message);
   }
 
+  // APPLE LOGIN
   async function handleAppleLogin() {
     setErrorMessage("");
     const { error } = await supabase.auth.signInWithOAuth({
@@ -30,6 +32,7 @@ export default function LoginPage() {
     if (error) setErrorMessage(error.message);
   }
 
+  // FACEBOOK LOGIN
   async function handleFacebookLogin() {
     setErrorMessage("");
     const { error } = await supabase.auth.signInWithOAuth({
@@ -39,6 +42,7 @@ export default function LoginPage() {
     if (error) setErrorMessage(error.message);
   }
 
+  // EMAIL LOGIN
   async function handleEmailLogin(
     e: React.FormEvent<HTMLFormElement>
   ) {
@@ -84,6 +88,17 @@ export default function LoginPage() {
           boxShadow: "0 0 40px rgba(0,0,0,0.4)",
         }}
       >
+        {/* LOGO */}
+        <img
+          src="/CC-main-logo.png"
+          alt="CollectorConnector"
+          style={{
+            width: "160px",
+            display: "block",
+            margin: "0 auto 28px",
+          }}
+        />
+
         <h1
           style={{
             fontSize: "28px",
@@ -121,7 +136,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+        {/* SOCIAL BUTTONS */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
           <button
             onClick={handleGoogleLogin}
             style={{
@@ -135,7 +151,7 @@ export default function LoginPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
+              gap: 12,
               cursor: "pointer",
             }}
           >
@@ -156,7 +172,7 @@ export default function LoginPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
+              gap: 12,
               cursor: "pointer",
             }}
           >
@@ -177,7 +193,7 @@ export default function LoginPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
+              gap: 12,
               cursor: "pointer",
             }}
           >
@@ -186,12 +202,14 @@ export default function LoginPage() {
           </button>
         </div>
 
+        {/* DIVIDER */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "10px 0 18px" }}>
           <div style={{ height: 1, background: "#1F2937", flex: 1 }} />
           <div style={{ color: "#9CA3AF", fontSize: 12 }}>or</div>
           <div style={{ height: 1, background: "#1F2937", flex: 1 }} />
         </div>
 
+        {/* EMAIL LOGIN FORM */}
         <form
           onSubmit={handleEmailLogin}
           style={{ display: "flex", flexDirection: "column", gap: 12 }}
@@ -263,7 +281,7 @@ export default function LoginPage() {
         </form>
 
         <div style={{ marginTop: 18, color: "#9CA3AF", fontSize: 14, textAlign: "center" }}>
-          New to CollectorConnector?{" "}
+          New to CollectorConnector{" "}
           <a href="/auth/signup" style={{ color: "#4ADE80", textDecoration: "none", fontWeight: 600 }}>
             Create an account
           </a>

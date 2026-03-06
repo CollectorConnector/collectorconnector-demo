@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import TierBadge from "@/components/TierBadge";
-
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,8 +15,13 @@ export default function UserProfile({ params }: { params: { username: string } }
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // -----------------------------
+  // FETCH PROFILE
+  // -----------------------------
   useEffect(() => {
-    async function loadProfile() {
+    const fetchProfile = async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -26,149 +30,108 @@ export default function UserProfile({ params }: { params: { username: string } }
 
       if (!error) setProfile(data);
       setLoading(false);
-    }
+    };
 
-    loadProfile();
+    fetchProfile();
   }, [username]);
 
-  if (loading) {
-    return (
-      <div style={{ padding: 40, color: "#9CA3AF" }}>
-        Loading profile…
-      </div>
-    );
-  }
+  // -----------------------------
+  // AVATAR UPLOAD HANDLER
+  // -----------------------------
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile) return;
 
-  if (!profile) {
-    return (
-      <div style={{ padding: 40, color: "#9CA3AF" }}>
-        User not found.
-      </div>
-    );
-  }
+    const ext = file.name.split(".").pop();
+    const filePath = `${profile.id}/${Date.now()}.${ext}`;
 
-  // Determine tier
-  const tier = profile.tier?.toLowerCase();
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
 
-  let badgeTier: "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "EMERALD" = "EMERALD";
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return;
+    }
 
-  if (tier === "founder") badgeTier = "FOUNDER";
-  else if (tier === "gold") badgeTier = "GOLD";
-  else if (tier === "silver") badgeTier = "SILVER";
-  else if (tier === "bronze") badgeTier = "BRONZE";
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+
+    const publicUrl = publicUrlData.publicUrl;
+
+    // Update DB
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("id", profile.id);
+
+    if (updateError) {
+      console.error("DB update error:", updateError);
+      return;
+    }
+
+    // Update UI
+    setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }));
+  };
+
+  if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
+  if (!profile) return <div style={{ padding: 20 }}>User not found</div>;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "black",
-        color: "#E5E7EB",
-        paddingBottom: 80,
-      }}
-    >
-      {/* PROFILE HEADER */}
+    <div style={{ padding: 20, maxWidth: 600, margin: "0 auto" }}>
+      {/* Hidden file input */}
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleAvatarUpload}
+      />
+
+      {/* Avatar */}
       <div
+        onClick={() => fileInputRef.current?.click()}
         style={{
-          padding: "32px 16px",
-          borderBottom: "1px solid #1f1f1f",
-          background:
-            "radial-gradient(1200px 480px at 10% -10%, rgba(74,222,128,0.10), rgba(0,0,0,0))",
+          width: 120,
+          height: 120,
+          borderRadius: "50%",
+          overflow: "hidden",
+          border: "2px solid #333",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          background: "#111",
+          marginBottom: 20,
         }}
       >
-        <div
-          style={{
-            maxWidth: 1080,
-            margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "100px 1fr",
-            gap: 16,
-            alignItems: "center",
-          }}
-        >
-          {/* AVATAR */}
-          <div
-            style={{
-              width: 100,
-              height: 100,
-              overflow: "hidden",
-              borderRadius: 16,
-              border: "1px solid #1f1f1f",
-              background: "#111",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 40,
-              color: "#444",
-            }}
-          >
-            {profile.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt={profile.display_name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              "?"
-            )}
-          </div>
-
-          {/* PROFILE INFO */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800 }}>
-                {profile.display_name || username}
-              </h1>
-
-              {/* TIER BADGE */}
-              <TierBadge tier={badgeTier} size="md" showCount={badgeTier === "FOUNDER"} count={badgeTier === "FOUNDER" ? 1 : undefined} />
-            </div>
-
-            <div style={{ color: "#9CA3AF" }}>@{username}</div>
-
-            {profile.bio && (
-              <p style={{ maxWidth: 740, marginTop: 8 }}>{profile.bio}</p>
-            )}
-          </div>
-        </div>
+        {profile.avatar_url ? (
+          <img
+            src={profile.avatar_url}
+            alt="Avatar"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <span style={{ color: "#666", fontSize: 12 }}>+ Add Photo</span>
+        )}
       </div>
 
-      {/* COLLECTIONS */}
-      <main style={{ padding: "24px 16px" }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <h2
-            style={{
-              margin: "8px 0 16px",
-              fontSize: 18,
-              fontWeight: 800,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                background: "#4ADE80",
-                borderRadius: "50%",
-                boxShadow: "0 0 10px #4ADE80",
-              }}
-            />
-            Collections
-          </h2>
+      {/* Display Name */}
+      <h1 style={{ fontSize: 24, fontWeight: 700 }}>{profile.display_name}</h1>
 
-          <div
-            style={{
-              border: "1px dashed #1f1f1f",
-              color: "#9CA3AF",
-              padding: 20,
-              borderRadius: 12,
-            }}
-          >
-            No collections yet.
-          </div>
-        </div>
-      </main>
+      {/* Tier Badge */}
+      <TierBadge
+        tier={profile.tier?.toUpperCase()}
+        size="md"
+        showCount={profile.tier?.toLowerCase() === "founder"}
+        count={profile.tier?.toLowerCase() === "founder" ? 1 : undefined}
+      />
+
+      {/* Username */}
+      <div style={{ marginTop: 10, color: "#9CA3AF" }}>@{profile.username}</div>
     </div>
   );
 }

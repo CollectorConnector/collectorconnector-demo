@@ -77,7 +77,7 @@ export default function RootLayout({
             </nav>
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT SIDE — MOBILE-FRIENDLY */}
           <div
             style={{
               display: "flex",
@@ -87,19 +87,56 @@ export default function RootLayout({
               whiteSpace: "nowrap",
             }}
           >
-            <a href="https://www.ebay.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>
+            {/* Always visible */}
+            <a
+              href="https://www.ebay.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#9CA3AF" }}
+            >
               eBay
             </a>
-            <a href="https://www.whatnot.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>
+
+            {/* Hidden on mobile */}
+            <a
+              href="https://www.whatnot.com"
+              target="_blank"
+              rel="noreferrer"
+              className="hide-mobile"
+              style={{ color: "#9CA3AF" }}
+            >
               Whatnot
             </a>
-            <a href="https://www.instagram.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>
+
+            {/* Always visible */}
+            <a
+              href="https://www.instagram.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#9CA3AF" }}
+            >
               Instagram
             </a>
-            <a href="https://www.youtube.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>
+
+            {/* Hidden on mobile */}
+            <a
+              href="https://www.youtube.com"
+              target="_blank"
+              rel="noreferrer"
+              className="hide-mobile"
+              style={{ color: "#9CA3AF" }}
+            >
               YouTube
             </a>
-            <a href="https://discord.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>
+
+            {/* Hidden on mobile */}
+            <a
+              href="https://discord.com"
+              target="_blank"
+              rel="noreferrer"
+              className="hide-mobile"
+              style={{ color: "#9CA3AF" }}
+            >
               Discord
             </a>
           </div>

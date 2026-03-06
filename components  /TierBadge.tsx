@@ -5,7 +5,7 @@ interface TierBadgeProps {
   tier: "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "EMERALD";
   size?: "sm" | "md" | "lg";
   showCount?: boolean;
-  count?: number;
+  count?: number; //
 }
 
 export default function TierBadge({

@@ -7,97 +7,219 @@ export default function HomePage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg, #0a0a0a 0%, #111 100%)",
+        background: "radial-gradient(circle at top, #1a1a1a 0%, #0a0a0a 70%)",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
+        flexDirection: "column",
       }}
     >
-      <div
+      {/* NAVBAR */}
+      <nav
         style={{
           width: "100%",
-          maxWidth: "720px",
-          textAlign: "center",
+          padding: "18px 28px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           color: "#fff",
-          padding: "32px",
+          opacity: 0.9,
         }}
       >
-        {/* LOGO */}
-        <img
-          src="/CC-main-logo.png"
-          alt="CollectorConnector"
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img
+            src="/CC-SML-Logo.png"
+            alt="CC"
+            style={{ width: 32, height: 32 }}
+          />
+          <span style={{ fontWeight: 700, fontSize: 18 }}>CollectorConnector</span>
+        </div>
+
+        <div style={{ display: "flex", gap: 20, fontSize: 15 }}>
+          <Link href="/" style={{ color: "#9CA3AF", textDecoration: "none" }}>
+            Home
+          </Link>
+          <Link href="/explore" style={{ color: "#9CA3AF", textDecoration: "none" }}>
+            Explore
+          </Link>
+          <Link href="/upload" style={{ color: "#9CA3AF", textDecoration: "none" }}>
+            Upload
+          </Link>
+          <Link href="/auth/login" style={{ color: "#4ADE80", textDecoration: "none" }}>
+            Log in
+          </Link>
+        </div>
+      </nav>
+
+      {/* HERO SECTION */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px",
+          textAlign: "center",
+          color: "#fff",
+          position: "relative",
+        }}
+      >
+        {/* ANIMATED GLOW */}
+        <div
           style={{
-            width: "200px",
-            display: "block",
-            margin: "0 auto 32px",
+            position: "absolute",
+            top: "20%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "420px",
+            height: "420px",
+            background: "radial-gradient(circle, rgba(74,222,128,0.18), transparent 70%)",
+            filter: "blur(60px)",
+            animation: "pulseGlow 12s ease-in-out infinite",
+            zIndex: 0,
           }}
         />
 
-        {/* TAGLINE */}
-        <h1
-          style={{
-            fontSize: "32px",
-            fontWeight: 800,
-            marginBottom: "12px",
-            letterSpacing: "-0.5px",
-          }}
-        >
-          WHERE COLLECTORS MEET
-        </h1>
+        <style>{`
+          @keyframes pulseGlow {
+            0% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.7; transform: translateX(-50%) scale(1.15); }
+            100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+          }
+        `}</style>
 
-        {/* SUBTAGLINE */}
-        <p
-          style={{
-            fontSize: "18px",
-            color: "#9CA3AF",
-            marginBottom: "40px",
-            lineHeight: 1.5,
-          }}
-        >
-          Create your identity. Showcase your collections.  
-          Connect with collectors around the world.
-        </p>
-
-        {/* BUTTONS */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "14px",
-            maxWidth: "320px",
-            margin: "0 auto",
-          }}
-        >
-          <Link
-            href="/auth/signup"
+        <div style={{ position: "relative", zIndex: 2, maxWidth: "720px" }}>
+          {/* MAIN LOGO */}
+          <img
+            src="/CC-main-logo.png"
+            alt="CollectorConnector"
             style={{
-              padding: "14px",
-              background: "#4ADE80",
-              color: "#000",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              fontSize: "16px",
+              width: "200px",
+              display: "block",
+              margin: "0 auto 24px",
             }}
-          >
-            Create your profile
-          </Link>
+          />
 
-          <Link
-            href="/explore"
+          {/* MICRO TAGLINE */}
+          <p
             style={{
-              padding: "14px",
-              border: "1px solid #4ADE80",
               color: "#4ADE80",
-              borderRadius: "10px",
-              fontWeight: 600,
-              textDecoration: "none",
-              fontSize: "16px",
+              fontSize: "14px",
+              letterSpacing: "2px",
+              marginBottom: "12px",
             }}
           >
-            Explore collectors
-          </Link>
+            BUILT FOR COLLECTORS
+          </p>
+
+          {/* MAIN TAGLINE */}
+          <h1
+            style={{
+              fontSize: "36px",
+              fontWeight: 800,
+              marginBottom: "12px",
+              letterSpacing: "-0.5px",
+            }}
+          >
+            WHERE COLLECTORS MEET
+          </h1>
+
+          {/* SUBTAGLINE */}
+          <p
+            style={{
+              fontSize: "18px",
+              color: "#9CA3AF",
+              marginBottom: "40px",
+              lineHeight: 1.5,
+            }}
+          >
+            Create your identity. Showcase your collections.  
+            Connect with collectors around the world.
+          </p>
+
+          {/* CTA BUTTONS */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+              maxWidth: "320px",
+              margin: "0 auto",
+            }}
+          >
+            <Link
+              href="/auth/signup"
+              style={{
+                padding: "14px",
+                background: "#4ADE80",
+                color: "#000",
+                borderRadius: "10px",
+                fontWeight: 700,
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Create your profile
+            </Link>
+
+            <Link
+              href="/explore"
+              style={{
+                padding: "14px",
+                border: "1px solid #4ADE80",
+                color: "#4ADE80",
+                borderRadius: "10px",
+                fontWeight: 600,
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              Explore collectors
+            </Link>
+          </div>
+
+          {/* FLOATING PROFILE MOCKUP */}
+          <div
+            style={{
+              marginTop: "60px",
+              display: "flex",
+              justifyContent: "center",
+              opacity: 0.95,
+            }}
+          >
+            <div
+              style={{
+                width: "300px",
+                padding: "20px",
+                background: "#1a1a1a",
+                borderRadius: "14px",
+                border: "1px solid #2a2a2a",
+                boxShadow: "0 0 40px rgba(0,0,0,0.4)",
+                transform: "translateY(0px)",
+                animation: "floatCard 6s ease-in-out infinite",
+              }}
+            >
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  background: "#333",
+                  margin: "0 auto 12px",
+                }}
+              />
+              <h3 style={{ marginBottom: 4 }}>Sample Collector</h3>
+              <p style={{ color: "#9CA3AF", fontSize: 14 }}>
+                “Pokémon, Funko Pops, and rare finds.”
+              </p>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes floatCard {
+              0% { transform: translateY(0px); }
+              50% { transform: translateY(-10px); }
+              100% { transform: translateY(0px); }
+            }
+          `}</style>
         </div>
       </div>
     </div>

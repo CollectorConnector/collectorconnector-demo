@@ -1,98 +1,76 @@
+"use client";
 
-// components/TierBadge.tsx
-
-type TierName = "Emerald" | "Gold" | "Platinum";
-
-const TIER_STYLES: Record<
-  TierName,
-  { bg: string; text: string; glow: string; dot: string }
-> = {
-  Emerald: { bg: "#0B2F24", text: "#4ADE80", glow: "0 0 20px #4ADE80AA", dot: "#34D399" },
-  Gold: { bg: "#3A3009", text: "#FACC15", glow: "0 0 20px #FACC15AA", dot: "#F59E0B" },
-  Platinum: { bg: "#21262C", text: "#93C5FD", glow: "0 0 20px #93C5FDAA", dot: "#60A5FA" },
-};
-
-type Props = {
-  tier?: string | null;
+export interface TierBadgeProps {
+  tier: "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "EMERALD";
   size?: "sm" | "md" | "lg";
   showCount?: boolean;
-  countText?: string;
-  titleOverride?: string;
-};
+  count?: number;
+}
 
 export default function TierBadge({
-  tier = "Emerald",
+  tier,
   size = "md",
-  showCount = true,
-  countText,
-  titleOverride,
-}: Props) {
-  const name = normalizeTier(tier);
-  const style = TIER_STYLES[name];
+  showCount = false,
+  count,
+}: TierBadgeProps) {
+  const sizes = {
+    sm: { font: 10, pad: "2px 6px", radius: 6 },
+    md: { font: 12, pad: "4px 10px", radius: 8 },
+    lg: { font: 14, pad: "6px 14px", radius: 10 },
+  };
 
-  const SIZES = {
-    sm: { padV: 4, padH: 10, fs: 11, gap: 8, dot: 8, radius: 999 },
-    md: { padV: 6, padH: 12, fs: 13, gap: 10, dot: 10, radius: 999 },
-    lg: { padV: 8, padH: 14, fs: 14, gap: 12, dot: 12, radius: 999 },
-  } as const;
-  const s = SIZES[size];
+  const style = sizes[size];
 
-  const effectiveCount = showCount
-    ? countText ?? (name === "Gold" ? "1 of 1" : "Member")
-    : "";
+  const tierStyles: Record<string, { label: string; color: string; glow: string }> = {
+    FOUNDER: {
+      label: "Founder",
+      color: "#4ADE80",
+      glow: "0 0 10px rgba(74,222,128,0.6)",
+    },
+    GOLD: {
+      label: "Gold",
+      color: "#facc15",
+      glow: "0 0 10px rgba(250,204,21,0.5)",
+    },
+    SILVER: {
+      label: "Silver",
+      color: "#e5e7eb",
+      glow: "0 0 10px rgba(229,231,235,0.4)",
+    },
+    BRONZE: {
+      label: "Bronze",
+      color: "#cd7f32",
+      glow: "0 0 10px rgba(205,127,50,0.4)",
+    },
+    EMERALD: {
+      label: "Emerald Member",
+      color: "#34d399",
+      glow: "0 0 10px rgba(52,211,153,0.5)",
+    },
+  };
+
+  const t = tierStyles[tier] ?? tierStyles["EMERALD"];
 
   return (
     <span
-      role="img"
-      aria-label={`${name} tier${effectiveCount ? ` – ${effectiveCount}` : ""}`}
-      title={titleOverride ?? `${name} Tier`}
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: s.gap,
-        padding: `${s.padV}px ${s.padH}px`,
-        borderRadius: s.radius,
-        background: style.bg,
-        color: style.text,
-        border: `1px solid ${style.text}55`,
-        boxShadow: style.glow,
-        fontSize: s.fs,
+        gap: 6,
+        padding: style.pad,
+        fontSize: style.font,
         fontWeight: 700,
-        letterSpacing: 0.2,
+        borderRadius: style.radius,
+        color: t.color,
+        border: `1px solid ${t.color}`,
+        boxShadow: t.glow,
         whiteSpace: "nowrap",
-        lineHeight: 1,
       }}
     >
-      <span
-        aria-hidden="true"
-        style={{
-          width: s.dot,
-          height: s.dot,
-          borderRadius: "50%",
-          background: style.dot,
-          boxShadow: `0 0 10px ${style.text}`,
-        }}
-      />
-      <span>{name}</span>
-      {effectiveCount && (
-        <>
-          <span
-            aria-hidden="true"
-            style={{ width: 1, height: s.dot + 6, background: `${style.text}33` }}
-          />
-          <span style={{ opacity: 0.9, fontWeight: 600, color: style.text }}>
-            {effectiveCount}
-          </span>
-        </>
+      {t.label}
+      {showCount && count !== undefined && (
+        <span style={{ opacity: 0.8 }}>· {count}</span>
       )}
     </span>
   );
-}
-
-function normalizeTier(raw?: string | null): TierName {
-  const v = String(raw ?? "").toLowerCase();
-  if (v.startsWith("gold")) return "Gold";
-  if (v.startsWith("plat")) return "Platinum";
-  if (v.startsWith("emer")) return "Emerald";
-  return "Emerald";
 }

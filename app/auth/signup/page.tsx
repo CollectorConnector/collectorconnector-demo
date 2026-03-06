@@ -1,136 +1,110 @@
+"use client";
 
-'use client';
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabase'; // <-- relative import (no alias)
-
-export default function SignUpPage() {
+export default function SignupPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // GOOGLE SIGNUP
+  async function handleGoogleSignup() {
+    setErrorMessage("");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setErrorMessage(error.message);
+  }
+
+  // APPLE SIGNUP
+  async function handleAppleSignup() {
+    setErrorMessage("");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setErrorMessage(error.message);
+  }
+
+  // FACEBOOK SIGNUP
+  async function handleFacebookSignup() {
+    setErrorMessage("");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setErrorMessage(error.message);
+  }
+
+  // EMAIL SIGNUP
+  async function handleEmailSignup(e) {
     e.preventDefault();
-    setLoading(true);
-    setMessage(null);
+    setErrorMessage("");
+    setSubmitting(true);
 
-    try {
-      if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        setMessage({ type: 'ok', text: 'Check your email to confirm your account.' });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        router.push('/account');
-      }
-    } catch (err: any) {
-      setMessage({ type: 'err', text: err.message || 'Auth failed' });
-    } finally {
-      setLoading(false);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    setSubmitting(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
     }
+
+    router.push("/auth/callback");
   }
 
   return (
     <div
       style={{
-        maxWidth: 420,
-        margin: '80px auto',
-        padding: 24,
-        background: '#111',
-        border: '1px solid #1F2937',
-        borderRadius: 12,
-        color: '#fff',
+        minHeight: "100vh",
+        background: "#0a0a0a",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
       }}
     >
-      <h1 style={{ margin: 0, marginBottom: 12, fontSize: 22 }}>
-        {mode === 'signup' ? 'Create your account' : 'Sign in'}
-      </h1>
-
-      {message && (
-        <div
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "420px",
+          padding: "32px",
+          background: "#111",
+          border: "1px solid #1F2937",
+          borderRadius: "14px",
+          color: "#fff",
+          boxShadow: "0 0 40px rgba(0,0,0,0.4)",
+        }}
+      >
+        <h1
           style={{
-            background: message.type === 'ok' ? 'rgba(74,222,128,0.15)' : 'rgba(255,0,0,0.2)',
-            padding: 10,
-            borderRadius: 8,
-            marginBottom: 15,
-            color: message.type === 'ok' ? '#86efac' : '#ff6b6b',
-            border:
-              message.type === 'ok'
-                ? '1px solid rgba(74,222,128,0.35)'
-                : '1px solid rgba(255,0,0,0.35)',
-          }}
-        >
-          {message.text}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-        <div style={{ display: 'grid', gap: 6 }}>
-          <label htmlFor="email" style={{ color: '#D1D5DB' }}>Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
-            required
-          />
-        </div>
-
-        <div style={{ display: 'grid', gap: 6 }}>
-          <label htmlFor="password" style={{ color: '#D1D5DB' }}>Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: '12px 16px',
-            background: '#4ADE80',
-            color: '#000',
-            border: 'none',
-            borderRadius: 8,
+            fontSize: "28px",
             fontWeight: 700,
-            cursor: 'pointer',
-            opacity: loading ? 0.7 : 1,
-            marginTop: 4,
+            marginBottom: "6px",
+            textAlign: "center",
           }}
         >
-          {loading ? 'Please wait…' : (mode === 'signup' ? 'Create account' : 'Sign in')}
-        </button>
+          Create your account
+        </h1>
 
-        <button
-          type="button"
-          onClick={() => setMode(mode === 'signup' ? 'signin' : 'signup')}
+        <p
           style={{
-            padding: '10px 14px',
-            background: 'transparent',
-            color: '#4ADE80',
-            border: '1px solid #1F2937',
-            borderRadius: 8,
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginTop: 4,
+            textAlign: "center",
+            color: "#9CA3AF",
+            marginBottom: "24px",
           }}
         >
-          {mode === 'signup' ? 'Have an account? Sign in' : 'New here? Create account'}
-        </button>
-      </form>
-    </div>
-  );
-}
+          Join the world of

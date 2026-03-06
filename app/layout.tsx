@@ -1,12 +1,17 @@
 import "./globals.css";
 import Link from "next/link";
+import React from "react";
 
 export const metadata = {
   title: "CollectorConnector",
   description: "Where collectors meet",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body
@@ -18,7 +23,7 @@ export default function RootLayout({ children }) {
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        {/* GLOBAL HEADER GOES HERE */}
+        {/* GLOBAL HEADER */}
         <header
           style={{
             width: "100%",
@@ -33,7 +38,7 @@ export default function RootLayout({ children }) {
             zIndex: 50,
             whiteSpace: "nowrap",
             borderBottom: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 0 18px rgba(255,255,255,0.08)",
+            boxShadow: "0 0 18px rgba(255,255,255,0.08)", // soft glow
           }}
         >
           {/* LEFT SIDE */}

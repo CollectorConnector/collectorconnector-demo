@@ -1,9 +1,8 @@
+"use client";
 
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase'; // <-- relative import (no alias)
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 
 type Profile = {
   id: string;
@@ -25,29 +24,28 @@ export default function CreateProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  // session
   const [session, setSession] = useState<any>(null);
 
-  // form state
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
-  const [instagram, setInstagram] = useState('');
-  const [twitter, setTwitter] = useState('');
-  const [youtube, setYoutube] = useState('');
-  const [ebay, setEbay] = useState('');
-  const [whatnot, setWhatnot] = useState('');
-  const [discord, setDiscord] = useState('');
-  const [tier, setTier] = useState('bronze');
+  // Form state
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [twitter, setTwitter] = useState("");
+  const [youtube, setYoutube] = useState("");
+  const [ebay, setEbay] = useState("");
+  const [whatnot, setWhatnot] = useState("");
+  const [discord, setDiscord] = useState("");
+  const [tier, setTier] = useState("bronze");
 
-  // Load session; if already has a profile, you can optionally redirect
+  // Load session
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push('/auth/signup');
+        router.push("/auth/signup");
         return;
       }
       setSession(session);
@@ -55,7 +53,7 @@ export default function CreateProfilePage() {
     })();
   }, [router]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!session) return;
 
@@ -76,22 +74,21 @@ export default function CreateProfilePage() {
       tier: tier || null,
     };
 
-    const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' });
+    const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
 
     setSaving(false);
 
     if (error) {
-      setMessage({ type: 'err', text: error.message });
+      setMessage({ type: "err", text: error.message });
     } else {
-      setMessage({ type: 'ok', text: 'Profile created successfully.' });
-      // Go to account or profile page
-      router.push('/account');
+      setMessage({ type: "ok", text: "Profile created successfully." });
+      router.push("/account");
     }
   }
 
   if (loading) {
     return (
-      <div style={{ color: '#fff', padding: 40 }}>
+      <div style={{ color: "#fff", padding: 40, textAlign: "center" }}>
         <h1>Loading…</h1>
       </div>
     );
@@ -100,103 +97,150 @@ export default function CreateProfilePage() {
   return (
     <div
       style={{
-        maxWidth: 720,
-        margin: '60px auto',
-        padding: 24,
-        background: '#111',
-        border: '1px solid #1F2937',
-        borderRadius: 12,
-        color: '#fff',
+        minHeight: "100vh",
+        background: "#0a0a0a",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
       }}
     >
-      <h1 style={{ fontSize: 24, marginBottom: 18 }}>Create Profile</h1>
-
-      {message && (
-        <div
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "720px",
+          padding: "32px",
+          background: "#111",
+          border: "1px solid #1F2937",
+          borderRadius: "14px",
+          color: "#fff",
+          boxShadow: "0 0 40px rgba(0,0,0,0.4)",
+        }}
+      >
+        {/* LOGO */}
+        <img
+          src="/CC-main-logo.png"
+          alt="CollectorConnector"
           style={{
-            background: message.type === 'ok' ? 'rgba(74,222,128,0.15)' : 'rgba(255,0,0,0.2)',
-            padding: 10,
-            borderRadius: 8,
-            marginBottom: 15,
-            color: message.type === 'ok' ? '#86efac' : '#ff6b6b',
-            border:
-              message.type === 'ok'
-                ? '1px solid rgba(74,222,128,0.35)'
-                : '1px solid rgba(255,0,0,0.35)',
+            width: "160px",
+            display: "block",
+            margin: "0 auto 28px",
+          }}
+        />
+
+        <h1
+          style={{
+            fontSize: "28px",
+            fontWeight: 700,
+            marginBottom: "6px",
+            textAlign: "center",
           }}
         >
-          {message.text}
-        </div>
-      )}
+          Create your profile
+        </h1>
 
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }}>
-        {/* Username */}
-        <div style={{ display: 'grid', gap: 6 }}>
-          <label htmlFor="username" style={{ color: '#D1D5DB' }}>
-            Username
-          </label>
-          <input
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="stacypearce123"
+        <p
+          style={{
+            textAlign: "center",
+            color: "#9CA3AF",
+            marginBottom: "24px",
+          }}
+        >
+          Tell collectors who you are
+        </p>
+
+        {message && (
+          <div
             style={{
-              padding: 10,
-              borderRadius: 8,
-              border: '1px solid #1F2937',
-              outline: 'none',
+              background: message.type === "ok" ? "rgba(74,222,128,0.15)" : "rgba(255,0,0,0.2)",
+              padding: "12px",
+              borderRadius: "8px",
+              marginBottom: "18px",
+              color: message.type === "ok" ? "#86efac" : "#ff6b6b",
+              border:
+                message.type === "ok"
+                  ? "1px solid rgba(74,222,128,0.35)"
+                  : "1px solid rgba(255,0,0,0.35)",
+              fontSize: "14px",
             }}
-            required
-          />
-        </div>
+          >
+            {message.text}
+          </div>
+        )}
 
-        {/* Display Name */}
-        <div style={{ display: 'grid', gap: 6 }}>
-          <label htmlFor="displayName" style={{ color: '#D1D5DB' }}>
-            Display name
-          </label>
-          <input
-            id="displayName"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Stacy Pearce"
-            style={{
-              padding: 10,
-              borderRadius: 8,
-              border: '1px solid #1F2937',
-              outline: 'none',
-            }}
-          />
-        </div>
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 18 }}>
+          {/* Username */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="username" style={{ color: "#D1D5DB" }}>
+              Username
+            </label>
+            <input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="stacypearce123"
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
+              required
+            />
+          </div>
 
-        {/* Bio */}
-        <div style={{ display: 'grid', gap: 6 }}>
-          <label htmlFor="bio" style={{ color: '#D1D5DB' }}>
-            Bio
-          </label>
-          <textarea
-            id="bio"
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            rows={4}
-            placeholder="What do you collect?"
-            style={{
-              padding: 10,
-              borderRadius: 8,
-              border: '1px solid #1F2937',
-              outline: 'none',
-            }}
-          />
-        </div>
+          {/* Display Name */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="displayName" style={{ color: "#D1D5DB" }}>
+              Display name
+            </label>
+            <input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Stacy Pearce"
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
+            />
+          </div>
 
-        {/* Socials */}
-        <div style={{ display: 'grid', gap: 10, marginTop: 6 }}>
-          <h3 style={{ margin: '8px 0 0 0', color: '#9CA3AF', fontSize: 14, letterSpacing: 1 }}>
+          {/* Bio */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="bio" style={{ color: "#D1D5DB" }}>
+              Bio
+            </label>
+            <textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={4}
+              placeholder="What do you collect?"
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
+            />
+          </div>
+
+          {/* SOCIAL LINKS */}
+          <h3 style={{ marginTop: 10, color: "#9CA3AF", fontSize: 14, letterSpacing: 1 }}>
             SOCIAL LINKS
           </h3>
 
-          <div style={{ display: 'grid', gap: 6 }}>
-            <label htmlFor="instagram" style={{ color: '#D1D5DB' }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="instagram" style={{ color: "#D1D5DB" }}>
               Instagram
             </label>
             <input
@@ -204,12 +248,19 @@ export default function CreateProfilePage() {
               value={instagram}
               onChange={(e) => setInstagram(e.target.value)}
               placeholder="@yourhandle or full URL"
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
             />
           </div>
 
-          <div style={{ display: 'grid', gap: 6 }}>
-            <label htmlFor="twitter" style={{ color: '#D1D5DB' }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="twitter" style={{ color: "#D1D5DB" }}>
               Twitter / X
             </label>
             <input
@@ -217,12 +268,19 @@ export default function CreateProfilePage() {
               value={twitter}
               onChange={(e) => setTwitter(e.target.value)}
               placeholder="@yourhandle or full URL"
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
             />
           </div>
 
-          <div style={{ display: 'grid', gap: 6 }}>
-            <label htmlFor="youtube" style={{ color: '#D1D5DB' }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="youtube" style={{ color: "#D1D5DB" }}>
               YouTube
             </label>
             <input
@@ -230,19 +288,24 @@ export default function CreateProfilePage() {
               value={youtube}
               onChange={(e) => setYoutube(e.target.value)}
               placeholder="channel link or @handle"
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
             />
           </div>
-        </div>
 
-        {/* Marketplaces */}
-        <div style={{ display: 'grid', gap: 10, marginTop: 6 }}>
-          <h3 style={{ margin: '8px 0 0 0', color: '#9CA3AF', fontSize: 14, letterSpacing: 1 }}>
+          {/* MARKETPLACES */}
+          <h3 style={{ marginTop: 10, color: "#9CA3AF", fontSize: 14, letterSpacing: 1 }}>
             MARKETPLACES
           </h3>
 
-          <div style={{ display: 'grid', gap: 6 }}>
-            <label htmlFor="ebay" style={{ color: '#D1D5DB' }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="ebay" style={{ color: "#D1D5DB" }}>
               eBay
             </label>
             <input
@@ -250,12 +313,19 @@ export default function CreateProfilePage() {
               value={ebay}
               onChange={(e) => setEbay(e.target.value)}
               placeholder="eBay username or full URL"
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
             />
           </div>
 
-          <div style={{ display: 'grid', gap: 6 }}>
-            <label htmlFor="whatnot" style={{ color: '#D1D5DB' }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="whatnot" style={{ color: "#D1D5DB" }}>
               Whatnot
             </label>
             <input
@@ -263,12 +333,19 @@ export default function CreateProfilePage() {
               value={whatnot}
               onChange={(e) => setWhatnot(e.target.value)}
               placeholder="Whatnot username or full URL"
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
             />
           </div>
 
-          <div style={{ display: 'grid', gap: 6 }}>
-            <label htmlFor="discord" style={{ color: '#D1D5DB' }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="discord" style={{ color: "#D1D5DB" }}>
               Discord
             </label>
             <input
@@ -276,52 +353,62 @@ export default function CreateProfilePage() {
               value={discord}
               onChange={(e) => setDiscord(e.target.value)}
               placeholder="@handle or any relevant link"
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #1F2937', outline: 'none' }}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#0d0d0d",
+                color: "#fff",
+                outline: "none",
+              }}
             />
           </div>
-        </div>
 
-        {/* Tier */}
-        <div style={{ display: 'grid', gap: 6 }}>
-          <label htmlFor="tier" style={{ color: '#D1D5DB' }}>Tier</label>
-          <select
-            id="tier"
-            value={tier}
-            onChange={(e) => setTier(e.target.value)}
+          {/* TIER */}
+          <div style={{ display: "grid", gap: 6 }}>
+            <label htmlFor="tier" style={{ color: "#D1D5DB" }}>
+              Tier
+            </label>
+            <select
+              id="tier"
+              value={tier}
+              onChange={(e) => setTier(e.target.value)}
+              style={{
+                padding: 12,
+                borderRadius: 8,
+                border: "1px solid #1F2937",
+                background: "#000",
+                color: "#fff",
+                outline: "none",
+              }}
+            >
+              <option value="bronze">Bronze 🟤</option>
+              <option value="silver">Silver ⚪</option>
+              <option value="gold">Gold 🟡</option>
+              <option value="platinum">Platinum 🟦</option>
+            </select>
+          </div>
+
+          {/* SAVE BUTTON */}
+          <button
+            type="submit"
+            disabled={saving}
             style={{
-              padding: 10,
+              padding: "12px 16px",
+              background: "#4ADE80",
+              color: "#000",
+              border: "none",
               borderRadius: 8,
-              border: '1px solid #1F2937',
-              outline: 'none',
-              background: '#000',
-              color: '#fff',
+              fontWeight: 700,
+              cursor: "pointer",
+              opacity: saving ? 0.7 : 1,
+              marginTop: 8,
             }}
           >
-            <option value="bronze">Bronze 🟤</option>
-            <option value="silver">Silver ⚪</option>
-            <option value="gold">Gold 🟡</option>
-            <option value="platinum">Platinum 🟦</option>
-          </select>
-        </div>
-
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            padding: '12px 16px',
-            background: '#4ADE80',
-            color: '#000',
-            border: 'none',
-            borderRadius: 8,
-            fontWeight: 700,
-            cursor: 'pointer',
-            opacity: saving ? 0.7 : 1,
-            marginTop: 8,
-          }}
-        >
-          {saving ? 'Saving…' : 'Save Profile'}
-        </button>
-      </form>
+            {saving ? "Saving…" : "Save Profile"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

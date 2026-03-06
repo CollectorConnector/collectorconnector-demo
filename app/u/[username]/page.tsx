@@ -1,4 +1,3 @@
-
 // app/u/[username]/page.tsx
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
@@ -71,7 +70,7 @@ function SocialLink({
   );
 }
 
-// Create Supabase client (string fallbacks avoid TS complaints at build)
+// Create Supabase client
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supabase = createClient(url, anon);
@@ -94,11 +93,7 @@ export default async function PublicProfilePage({
       .eq("username", username)
       .maybeSingle();
 
-    if (error) {
-      console.error("Profile fetch error:", error);
-    } else {
-      profile = data;
-    }
+    if (!error) profile = data;
   } catch (e) {
     console.error("Profile fetch crash:", e);
   }
@@ -131,11 +126,7 @@ export default async function PublicProfilePage({
       .eq("user_id", profile.id)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Collections fetch error:", error);
-    } else {
-      collections = data;
-    }
+    if (!error) collections = data;
   } catch (e) {
     console.error("Collections fetch crash:", e);
   }
@@ -150,8 +141,8 @@ export default async function PublicProfilePage({
         flexDirection: "column",
       }}
     >
-      {/* HEADER (no page-level nav; layout renders Nav/Footer) */}
-      <header
+      {/* PROFILE HEADER (converted from <header> to <div>) */}
+      <div
         style={{
           padding: "32px 16px",
           borderBottom: `1px solid ${borderColor}`,
@@ -179,7 +170,6 @@ export default async function PublicProfilePage({
               border: `1px solid ${borderColor}`,
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={profile.avatar_url || "/default-avatar.png"}
               alt={profile.display_name || profile.username}
@@ -232,7 +222,7 @@ export default async function PublicProfilePage({
             )}
           </div>
         </div>
-      </header>
+      </div>
 
       {/* COLLECTIONS */}
       <main style={{ padding: "24px 16px", flex: 1 }}>
@@ -274,7 +264,6 @@ export default async function PublicProfilePage({
                   }}
                 >
                   <div style={{ position: "relative", height: 160 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={c.cover_url || "/collection-placeholder.jpg"}
                       alt={c.title}

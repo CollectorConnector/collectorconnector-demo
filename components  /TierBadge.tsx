@@ -1,19 +1,15 @@
-// components/TierBadge.tsx
 "use client";
 
 interface TierBadgeProps {
   tier: "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "EMERALD";
   size?: "sm" | "md" | "lg";
   showCount?: boolean;
-  count?: number; //
+  count?: number;
 }
 
-export default function TierBadge({
-  tier,
-  size = "md",
-  showCount = false,
-  count,
-}: TierBadgeProps) {
+export default function TierBadge(props: TierBadgeProps) {
+  const { tier, size = "md", showCount = false, count } = props;
+
   const sizes = {
     sm: { font: 10, pad: "2px 6px", radius: 6 },
     md: { font: 12, pad: "4px 10px", radius: 8 },

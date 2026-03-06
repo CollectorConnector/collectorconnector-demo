@@ -1,398 +1,715 @@
-
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
-// ---------------------------------------------
-// Types
-// ---------------------------------------------
-type Profile = {
-  id: string;
+type Tier = "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "STANDARD";
+
+interface ProfileData {
   username: string;
-  display_name?: string | null;
-  bio?: string | null;
-  avatar_url?: string | null;
-  instagram?: string | null;
-  twitter?: string | null;
-  youtube?: string | null;
-  ebay?: string | null;
-  whatnot?: string | null;
-  discord?: string | null;
-  tier?: string | null;
-  created_at?: string | null;
+  displayName: string;
+  bio?: string;
+  tier: Tier;
+  memberNumber: number;
+  totalAtJoin: number;
+  profilePhoto: string;
+  categories: string[];
+  social: {
+    instagram?: string;
+    twitter?: string;
+    youtube?: string;
+    discord?: string;
+  };
+  marketplaces: {
+    ebay?: string;
+    whatnot?: string;
+    stockx?: string;
+    goat?: string;
+    tcgplayer?: string;
+    bricklink?: string;
+    stamps?: string;
+    discogs?: string;
+    chrono24?: string;
+  };
+  collectionPreview: { id: string; title: string; image: string }[];
+}
+
+// TEMP: replace with real data fetching
+const mockProfile: ProfileData = {
+  username: "stacy",
+  displayName: "Stacy Pearce",
+  bio: "Collector of watches, Pokémon, coins, and pub history. Building CollectorConnector.",
+  tier: "FOUNDER",
+  memberNumber: 1,
+  totalAtJoin: 1,
+  profilePhoto: "/default-profile.png",
+  categories: ["Watches", "Pokémon", "Coins", "Pub History"],
+  social: {
+    instagram: "https://instagram.com/ace_cards_and_c",
+  },
+  marketplaces: {
+    ebay: "https://www.ebay.co.uk/usr/Pear-stac",
+  },
+  collectionPreview: [
+    { id: "1", title: "Vintage Watch", image: "/items/watch-1.png" },
+    { id: "2", title: "Charizard", image: "/items/card-1.png" },
+    { id: "3", title: "Old Coin", image: "/items/coin-1.png" },
+    { id: "4", title: "Pub Sign", image: "/items/pub-1.png" },
+  ],
 };
 
-// ---------------------------------------------
-// Helpers
-// ---------------------------------------------
-function fmt(n: number | undefined | null) {
-  if (n == null) return "";
-  try {
-    return n.toLocaleString("en-GB");
-  } catch {
-    return String(n);
+function getTierLabel(tier: Tier) {
+  switch (tier) {
+    case "FOUNDER":
+      return "Founder";
+    case "GOLD":
+      return "Gold";
+    case "SILVER":
+      return "Silver";
+    case "BRONZE":
+      return "Bronze";
+    default:
+      return "Collector";
   }
 }
 
-function capitalise(s?: string | null) {
-  if (!s) return "";
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-// Build a clickable URL for known platforms if a user typed a handle.
-function asUrl(
-  kind: "instagram" | "twitter" | "youtube" | "ebay" | "whatnot" | "discord",
-  value?: string | null
-) {
-  if (!value) return null;
-  const v = value.trim();
-
-  // Already a URL?
-  if (/^https?:\/\//i.test(v)) return v;
-
-  const handle = v.replace(/^@+/, "");
-
-  switch (kind) {
-    case "instagram":
-      return `https://instagram.com/${handle}`;
-    case "twitter":
-      return `https://twitter.com/${handle}`;
-    case "youtube":
-      // If they typed a channel/user id, just try /@handle
-      return `https://youtube.com/@${handle}`;
-    case "ebay":
-      // If not a URL, assume eBay username
-      return `https://www.ebay.com/usr/${handle}`;
-    case "whatnot":
-      return `https://www.whatnot.com/user/${handle}`;
-    case "discord":
-      // Discord usernames/handles aren't reliably linkable; return null to render as text.
-      return null;
+function getTierEmoji(tier: Tier) {
+  switch (tier) {
+    case "FOUNDER":
+      return "💎";
+    case "GOLD":
+      return "🟡";
+    case "SILVER":
+      return "⚪";
+    case "BRONZE":
+      return "🟤";
+    default:
+      return "⚫";
   }
 }
 
-// ---------------------------------------------
-// Small presentational components (inline for simplicity)
-// ---------------------------------------------
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2
-      style={{
-        marginTop: 32,
-        marginBottom: 12,
-        fontSize: 14,
-        letterSpacing: 1,
-        color: "#9CA3AF",
-      }}
-    >
-      {children}
-    </h2>
-  );
-}
-
-function Row({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-      {children}
-    </div>
-  );
-}
-
-function SocialRow({
-  emoji,
-  label,
-  value,
-  href,
-}: {
-  emoji: string;
-  label: string;
-  value?: string | null;
-  href?: string | null;
-}) {
-  if (!value) return null;
-  const text = value.trim();
-  const content = (
-    <>
-      <span style={{ width: 22, display: "inline-block" }}>{emoji}</span>
-      <span style={{ color: "#9CA3AF", minWidth: 92, display: "inline-block" }}>
-        {label}
-      </span>
-      <span style={{ color: href ? "#4ADE80" : "#fff" }}>{text}</span>
-    </>
-  );
-  return (
-    <Row>
-      {href ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none" }}
-        >
-          {content}
-        </a>
-      ) : (
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>{content}</div>
-      )}
-    </Row>
-  );
-}
-
-function TierSerialBadge({
-  tier,
-  serial,
-  total,
-}: {
-  tier?: string | null;
-  serial?: number | null;
-  total?: number | null;
-}) {
-  const niceTier = tier ? capitalise(tier) : "—";
-  // Choose a dot color / icon by tier
-  const dot =
-    tier === "gold"
-      ? "🟡"
-      : tier === "platinum"
-      ? "🟦"
-      : tier === "silver"
-      ? "⚪"
-      : tier === "bronze"
-      ? "🟤"
-      : "⬛";
-
-  const serialText =
-    serial && total ? `${fmt(serial)} of ${fmt(total)}` : total ? `— of ${fmt(total)}` : "—";
+export default function PublicProfilePage() {
+  const profile = mockProfile;
+  const tierLabel = getTierLabel(profile.tier);
+  const tierEmoji = getTierEmoji(profile.tier);
+  const memberText = `${profile.memberNumber} of ${profile.totalAtJoin}`;
 
   return (
     <div
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "8px 12px",
-        borderRadius: 10,
-        border: "1px solid #1F2937",
-        background: "linear-gradient(180deg, rgba(31,41,55,0.6), rgba(17,24,39,0.6))",
-        boxShadow: "0 0 0 1px rgba(74,222,128,0.08), 0 10px 30px rgba(0,0,0,0.35)",
+        minHeight: "100vh",
+        background: "radial-gradient(circle at top, #1a1a1a 0%, #0a0a0a 70%)",
+        color: "#fff",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <span style={{ color: "#fff", fontWeight: 600 }}>
-        {niceTier} {dot}
-      </span>
-      <span style={{ color: "#9CA3AF" }}>—</span>
-      <span style={{ color: "#4ADE80", fontWeight: 600 }}>{serialText}</span>
-    </div>
-  );
-}
-
-// ---------------------------------------------
-// Main page
-// ---------------------------------------------
-export default function ProfilePage() {
-  const params = useParams(); // Record<string, string | string[]>
-  const username = useMemo(() => {
-    const u = (params as any)?.username;
-    return Array.isArray(u) ? u[0] : (u as string) || "";
-  }, [params]);
-
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [totalCount, setTotalCount] = useState<number | null>(null);
-  const [serialNumber, setSerialNumber] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      if (!username) return;
-      setLoading(true);
-      setError(null);
-
-      // 1) Get the profile by username
-      const { data: p, error: e1 } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", username)
-        .limit(1)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      if (e1) {
-        setError(e1.message);
-        setLoading(false);
-        return;
-      }
-      if (!p) {
-        setError("Profile not found.");
-        setLoading(false);
-        return;
-      }
-
-      setProfile(p);
-
-      // 2) Get total number of profiles (for "… of TOTAL")
-      const { count: total, error: e2 } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
-
-      if (!cancelled) {
-        if (!e2) setTotalCount(total ?? null);
-      }
-
-      // 3) Compute serial number (row number by created_at)
-      if (p?.created_at) {
-        const { count: serial, error: e3 } = await supabase
-          .from("profiles")
-          .select("*", { count: "exact", head: true })
-          .lte("created_at", p.created_at);
-
-        if (!cancelled) {
-          if (!e3) setSerialNumber(serial ?? null);
-        }
-      } else {
-        // created_at not available -> fall back to null (we'll render "— of TOTAL")
-        setSerialNumber(null);
-      }
-
-      if (!cancelled) setLoading(false);
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [username]);
-
-  // Render
-  return (
-    <div style={{ background: "#000", minHeight: "100vh", color: "#fff" }}>
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 20px" }}>
-        {/* Header / Title */}
-        <header style={{ marginBottom: 20 }}>
-          <a href="/" style={{ color: "#4ADE80", textDecoration: "none", fontWeight: 600 }}>
-            CollectorConnector
-          </a>
-        </header>
-
-        {loading ? (
-          <p style={{ color: "#9CA3AF" }}>Loading profile…</p>
-        ) : error ? (
-          <div
+      {/* GLOBAL HEADER */}
+      <header
+        style={{
+          width: "100%",
+          padding: "14px 20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: "1px solid #1f2933",
+          background: "rgba(10,10,10,0.9)",
+          backdropFilter: "blur(10px)",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img
+              src="/CC-SML-Logo.png"
+              alt="CC"
+              style={{ width: 28, height: 28 }}
+            />
+            <span style={{ fontWeight: 700, fontSize: 18 }}>
+              CollectorConnector
+            </span>
+          </div>
+          <nav
             style={{
-              border: "1px solid #7F1D1D",
-              background: "rgba(127,29,29,0.2)",
-              color: "#FCA5A5",
-              padding: 14,
-              borderRadius: 8,
+              display: "flex",
+              gap: 14,
+              fontSize: 14,
+              color: "#9CA3AF",
             }}
           >
-            {error}
-          </div>
-        ) : profile ? (
-          <>
-            {/* Avatar + Name */}
-            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 16 }}>
+            <Link href="/" style={{ textDecoration: "none", color: "#9CA3AF" }}>
+              Home
+            </Link>
+            <Link
+              href="/explore"
+              style={{ textDecoration: "none", color: "#9CA3AF" }}
+            >
+              Explore
+            </Link>
+            <Link
+              href="/upload"
+              style={{ textDecoration: "none", color: "#9CA3AF" }}
+            >
+              Upload
+            </Link>
+            <Link
+              href="/account"
+              style={{ textDecoration: "none", color: "#9CA3AF" }}
+            >
+              Account
+            </Link>
+          </nav>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            fontSize: 13,
+            alignItems: "center",
+          }}
+        >
+          <a href="https://www.ebay.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>eBay</a>
+          <a href="https://www.whatnot.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>Whatnot</a>
+          <a href="https://www.instagram.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>Instagram</a>
+          <a href="https://www.youtube.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>YouTube</a>
+          <a href="https://discord.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>Discord</a>
+        </div>
+      </header>
+
+      {/* MAIN CONTENT */}
+      <main
+        style={{
+          flex: 1,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          padding: "40px 16px 60px",
+        }}
+      >
+        <div style={{ maxWidth: 800, width: "100%", textAlign: "center" }}>
+          {/* MAIN LOGO */}
+          <img
+            src="/CC-main-logo.png"
+            alt="CollectorConnector"
+            style={{
+              width: 140,
+              display: "block",
+              margin: "0 auto 16px",
+            }}
+          />
+
+          {/* PROFILE SQUIRCLE + SMALL TIER EMBLEM */}
+          <div style={{ marginBottom: 16, position: "relative" }}>
+            <div
+              style={{
+                width: 170,
+                height: 170,
+                margin: "0 auto",
+                borderRadius: "28%",
+                overflow: "hidden",
+                border: "2px solid #fff",
+                boxShadow: "0 10px 26px rgba(0,0,0,0.6)",
+                position: "relative",
+              }}
+            >
+              <img
+                src={profile.profilePhoto}
+                alt={profile.displayName}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+              {/* Small emblem */}
               <div
                 style={{
-                  width: 96,
-                  height: 96,
-                  borderRadius: 12, // squared with rounded edges
-                  overflow: "hidden",
-                  background: "#111827",
-                  border: "1px solid #1F2937",
-                  boxShadow: "0 4px 18px rgba(0,0,0,0.35)",
+                  position: "absolute",
+                  right: 8,
+                  top: 8,
+                  padding: "4px 8px",
+                  borderRadius: 999,
+                  background:
+                    profile.tier === "FOUNDER"
+                      ? "linear-gradient(135deg, #fef3c7, #facc15, #f97316)"
+                      : "rgba(0,0,0,0.8)",
+                  color: profile.tier === "FOUNDER" ? "#111827" : "#E5E7EB",
+                  fontSize: 11,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  border: "1px solid rgba(255,255,255,0.4)",
                 }}
               >
-                {profile.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={profile.avatar_url}
-                    alt={`${profile.username} avatar`}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      display: "grid",
-                      placeItems: "center",
-                      color: "#9CA3AF",
-                      fontSize: 12,
-                    }}
-                  >
-                    No avatar
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
-                  {profile.display_name || profile.username}
-                </h1>
-                <div style={{ color: "#9CA3AF" }}>@{profile.username}</div>
-
-                <TierSerialBadge tier={profile.tier} serial={serialNumber} total={totalCount} />
+                <span>{tierEmoji}</span>
+                <span>{tierLabel}</span>
               </div>
             </div>
+          </div>
 
-            {/* Bio */}
-            {profile.bio && (
-              <p style={{ color: "#D1D5DB", lineHeight: 1.5, marginTop: 12 }}>{profile.bio}</p>
-            )}
+          {/* NAME + USERNAME */}
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              margin: "4px 0 2px",
+            }}
+          >
+            {profile.displayName}
+          </h1>
+          <p
+            style={{
+              fontSize: 14,
+              color: "#9CA3AF",
+              margin: "0 0 8px",
+            }}
+          >
+            @{profile.username}
+          </p>
 
-            {/* Socials */}
-            <SectionTitle>SOCIAL LINKS</SectionTitle>
+          {/* FULL TIER BADGE UNDER USERNAME */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: 999,
+              border: "1px solid #fff",
+              fontSize: 12,
+              marginBottom: 12,
+              background:
+                profile.tier === "FOUNDER"
+                  ? "linear-gradient(135deg, #fef3c7, #facc15, #f97316)"
+                  : "rgba(17,24,39,0.9)",
+              color: profile.tier === "FOUNDER" ? "#111827" : "#E5E7EB",
+            }}
+          >
+            <span>{tierEmoji}</span>
+            <span>{tierLabel}</span>
+            <span style={{ opacity: 0.8 }}>· {memberText}</span>
+          </div>
+
+          {/* BIO */}
+          {profile.bio && (
+            <p
+              style={{
+                maxWidth: 520,
+                margin: "0 auto 16px",
+                fontSize: 14,
+                color: "#D1D5DB",
+              }}
+            >
+              {profile.bio}
+            </p>
+          )}
+
+          {/* CATEGORIES (NICHE FAMILIES) */}
+          {profile.categories.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <p
+                style={{
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  color: "#6B7280",
+                  marginBottom: 8,
+                }}
+              >
+                Collector Categories
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 8,
+                  justifyContent: "center",
+                }}
+              >
+                {profile.categories.map((cat) => (
+                  <span
+                    key={cat}
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      fontSize: 12,
+                      color: "#fff",
+                    }}
+                  >
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SOCIAL + MARKETPLACES */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 20,
+              textAlign: "left",
+              marginBottom: 32,
+            }}
+          >
+            {/* Social */}
             <div>
-              <SocialRow
-                emoji="📸"
-                label="Instagram"
-                value={profile.instagram || undefined}
-                href={asUrl("instagram", profile.instagram)}
-              />
-              <SocialRow
-                emoji="🐦"
-                label="Twitter / X"
-                value={profile.twitter || undefined}
-                href={asUrl("twitter", profile.twitter)}
-              />
-              <SocialRow
-                emoji="▶️"
-                label="YouTube"
-                value={profile.youtube || undefined}
-                href={asUrl("youtube", profile.youtube)}
-              />
+              <p
+                style={{
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  color: "#6B7280",
+                  marginBottom: 8,
+                }}
+              >
+                Social Links
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 8,
+                  fontSize: 12,
+                }}
+              >
+                {profile.social.instagram && (
+                  <a
+                    href={profile.social.instagram}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Instagram
+                  </a>
+                )}
+                {profile.social.twitter && (
+                  <a
+                    href={profile.social.twitter}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Twitter / X
+                  </a>
+                )}
+                {profile.social.youtube && (
+                  <a
+                    href={profile.social.youtube}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    YouTube
+                  </a>
+                )}
+                {profile.social.discord && (
+                  <a
+                    href={profile.social.discord}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Discord
+                  </a>
+                )}
+              </div>
             </div>
 
             {/* Marketplaces */}
-            <SectionTitle>MARKETPLACES</SectionTitle>
             <div>
-              <SocialRow
-                emoji="🛒"
-                label="eBay"
-                value={profile.ebay || undefined}
-                href={asUrl("ebay", profile.ebay)}
-              />
-              <SocialRow
-                emoji="🔥"
-                label="Whatnot"
-                value={profile.whatnot || undefined}
-                href={asUrl("whatnot", profile.whatnot)}
-              />
-              <SocialRow
-                emoji="💬"
-                label="Discord"
-                value={profile.discord || undefined}
-                href={asUrl("discord", profile.discord)}
-              />
+              <p
+                style={{
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  color: "#6B7280",
+                  marginBottom: 8,
+                }}
+              >
+                Marketplaces
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 8,
+                  fontSize: 12,
+                }}
+              >
+                {profile.marketplaces.ebay && (
+                  <a
+                    href={profile.marketplaces.ebay}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    eBay
+                  </a>
+                )}
+                {profile.marketplaces.whatnot && (
+                  <a
+                    href={profile.marketplaces.whatnot}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Whatnot
+                  </a>
+                )}
+                {profile.marketplaces.stockx && (
+                  <a
+                    href={profile.marketplaces.stockx}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    StockX
+                  </a>
+                )}
+                {profile.marketplaces.goat && (
+                  <a
+                    href={profile.marketplaces.goat}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    GOAT
+                  </a>
+                )}
+                {profile.marketplaces.tcgplayer && (
+                  <a
+                    href={profile.marketplaces.tcgplayer}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    TCGPlayer
+                  </a>
+                )}
+                {profile.marketplaces.bricklink && (
+                  <a
+                    href={profile.marketplaces.bricklink}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    BrickLink
+                  </a>
+                )}
+                {profile.marketplaces.stamps && (
+                  <a
+                    href={profile.marketplaces.stamps}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    stamps.com
+                  </a>
+                )}
+                {profile.marketplaces.discogs && (
+                  <a
+                    href={profile.marketplaces.discogs}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Discogs
+                  </a>
+                )}
+                {profile.marketplaces.chrono24 && (
+                  <a
+                    href={profile.marketplaces.chrono24}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      border: "1px solid #fff",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Chrono24
+                  </a>
+                )}
+              </div>
             </div>
-          </>
-        ) : null}
-      </div>
+          </div>
+
+          {/* COLLECTION PREVIEW */}
+          <section style={{ textAlign: "left", marginBottom: 24 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                Collection Preview
+              </p>
+              <span
+                style={{
+                  fontSize: 12,
+                  color: "#9CA3AF",
+                }}
+              >
+                {profile.collectionPreview.length} items
+              </span>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                gap: 14,
+              }}
+            >
+              {profile.collectionPreview.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    textAlign: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      aspectRatio: "1 / 1",
+                      borderRadius: "24%",
+                      overflow: "hidden",
+                      border: "1px solid #1f2937",
+                      boxShadow: "0 10px 24px rgba(0,0,0,0.6)",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: "#E5E7EB",
+                      margin: 0,
+                    }}
+                  >
+                    {item.title}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* VIEW FULL COLLECTION BUTTON */}
+          <div style={{ marginTop: 8 }}>
+            <Link
+              href={`/profile/${profile.username}/collection`}
+              style={{
+                padding: "12px 20px",
+                background: "#000",
+                color: "#fff",
+                borderRadius: 10,
+                border: "1px solid #333",
+                fontWeight: 600,
+                textDecoration: "none",
+                fontSize: 14,
+              }}
+            >
+              View Full Collection
+            </Link>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

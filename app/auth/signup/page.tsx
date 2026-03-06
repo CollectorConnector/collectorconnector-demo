@@ -106,7 +106,7 @@ export default function SignupPage() {
         )}
 
         {/* SOCIAL BUTTONS */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
           <button
             onClick={() => handleOAuth("google")}
             style={{
@@ -120,7 +120,7 @@ export default function SignupPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
+              gap: 12,
               cursor: "pointer",
             }}
           >
@@ -141,7 +141,7 @@ export default function SignupPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
+              gap: 12,
               cursor: "pointer",
             }}
           >
@@ -162,7 +162,7 @@ export default function SignupPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 10,
+              gap: 12,
               cursor: "pointer",
             }}
           >

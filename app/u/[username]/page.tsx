@@ -14,6 +14,7 @@ export default function UserProfile({ params }: { params: { username: string } }
 
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -45,7 +46,6 @@ export default function UserProfile({ params }: { params: { username: string } }
     const ext = file.name.split(".").pop();
     const filePath = `${profile.id}/${Date.now()}.${ext}`;
 
-    // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(filePath, file, { upsert: true });
@@ -55,14 +55,12 @@ export default function UserProfile({ params }: { params: { username: string } }
       return;
     }
 
-    // Get public URL
     const { data: publicUrlData } = supabase.storage
       .from("avatars")
       .getPublicUrl(filePath);
 
     const publicUrl = publicUrlData.publicUrl;
 
-    // Update DB
     const { error: updateError } = await supabase
       .from("profiles")
       .update({ avatar_url: publicUrl })
@@ -73,8 +71,22 @@ export default function UserProfile({ params }: { params: { username: string } }
       return;
     }
 
-    // Update UI
     setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }));
+  };
+
+  // -----------------------------
+  // SAVE PROFILE CHANGES
+  // -----------------------------
+  const handleSaveProfile = async (updates: any) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", profile.id);
+
+    if (!error) {
+      setProfile((prev: any) => ({ ...prev, ...updates }));
+      setIsEditing(false);
+    }
   };
 
   if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
@@ -132,6 +144,172 @@ export default function UserProfile({ params }: { params: { username: string } }
 
       {/* Username */}
       <div style={{ marginTop: 10, color: "#9CA3AF" }}>@{profile.username}</div>
+
+      {/* Edit Profile Button */}
+      <button
+        onClick={() => setIsEditing(true)}
+        style={{
+          marginTop: 20,
+          padding: "8px 14px",
+          borderRadius: 8,
+          background: "#222",
+          color: "#fff",
+          border: "1px solid #333",
+          cursor: "pointer",
+          fontSize: 14,
+        }}
+      >
+        Edit Profile
+      </button>
+
+      {/* Modal */}
+      <EditProfileModal
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        profile={profile}
+        onSave={handleSaveProfile}
+      />
+    </div>
+  );
+}
+
+// ------------------------------------------------------
+// EDIT PROFILE MODAL COMPONENT
+// ------------------------------------------------------
+function EditProfileModal({
+  isOpen,
+  onClose,
+  profile,
+  onSave,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  profile: any;
+  onSave: (updates: any) => void;
+}) {
+  const [displayName, setDisplayName] = useState(profile.display_name || "");
+  const [username, setUsername] = useState(profile.username || "");
+  const [bio, setBio] = useState(profile.bio || "");
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9999,
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#111",
+          padding: 24,
+          borderRadius: 12,
+          width: "90%",
+          maxWidth: 400,
+          border: "1px solid #333",
+        }}
+      >
+        <h2 style={{ marginBottom: 16, fontSize: 20, fontWeight: 700 }}>
+          Edit Profile
+        </h2>
+
+        <label style={{ fontSize: 12, opacity: 0.7 }}>Display Name</label>
+        <input
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 10,
+            marginTop: 4,
+            marginBottom: 16,
+            borderRadius: 8,
+            border: "1px solid #333",
+            background: "#000",
+            color: "#fff",
+          }}
+        />
+
+        <label style={{ fontSize: 12, opacity: 0.7 }}>Username</label>
+        <input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 10,
+            marginTop: 4,
+            marginBottom: 16,
+            borderRadius: 8,
+            border: "1px solid #333",
+            background: "#000",
+            color: "#fff",
+          }}
+        />
+
+        <label style={{ fontSize: 12, opacity: 0.7 }}>Bio</label>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          rows={3}
+          style={{
+            width: "100%",
+            padding: 10,
+            marginTop: 4,
+            marginBottom: 20,
+            borderRadius: 8,
+            border: "1px solid #333",
+            background: "#000",
+            color: "#fff",
+            resize: "none",
+          }}
+        />
+
+        <button
+          onClick={() =>
+            onSave({
+              display_name: displayName,
+              username,
+              bio,
+            })
+          }
+          style={{
+            width: "100%",
+            padding: 12,
+            borderRadius: 8,
+            background: "#4ADE80",
+            color: "#000",
+            fontWeight: 700,
+            border: "none",
+            cursor: "pointer",
+            marginBottom: 10,
+          }}
+        >
+          Save Changes
+        </button>
+
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%",
+            padding: 12,
+            borderRadius: 8,
+            background: "#222",
+            color: "#fff",
+            fontWeight: 600,
+            border: "1px solid #333",
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }

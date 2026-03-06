@@ -7,3 +7,14 @@ body {
 
 a { color: #4ADE80; text-decoration: none; }
 input, textarea, select { color: black; }
+/* Hide certain links on mobile */
+.hide-mobile {
+  display: none;
+}
+
+/* Show them again on wider screens */
+@media (min-width: 600px) {
+  .hide-mobile {
+    display: inline !important;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import TierBadge from "@/components/TierBadge";
 
@@ -15,8 +15,6 @@ export default function UserProfile({ params }: { params: { username: string } }
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // -----------------------------
   // FETCH PROFILE
@@ -37,44 +35,6 @@ export default function UserProfile({ params }: { params: { username: string } }
   }, [username]);
 
   // -----------------------------
-  // AVATAR UPLOAD HANDLER
-  // -----------------------------
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !profile) return;
-
-    const ext = file.name.split(".").pop();
-    const filePath = `${profile.id}/${Date.now()}.${ext}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, file, { upsert: true });
-
-    if (uploadError) {
-      console.error("Upload error:", uploadError);
-      return;
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
-
-    const publicUrl = publicUrlData.publicUrl;
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ avatar_url: publicUrl })
-      .eq("id", profile.id);
-
-    if (updateError) {
-      console.error("DB update error:", updateError);
-      return;
-    }
-
-    setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }));
-  };
-
-  // -----------------------------
   // SAVE PROFILE CHANGES
   // -----------------------------
   const handleSaveProfile = async (updates: any) => {
@@ -89,6 +49,58 @@ export default function UserProfile({ params }: { params: { username: string } }
     }
   };
 
+  // -----------------------------
+  // AVATAR UPLOAD HANDLER
+  // -----------------------------
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile) return;
+
+    console.log("File selected");
+
+    const ext = file.name.split(".").pop();
+    const filePath = `${profile.id}/${Date.now()}.${ext}`;
+
+    try {
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        alert("Upload failed");
+        return;
+      }
+
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      // Update DB
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", profile.id);
+
+      if (updateError) {
+        console.error("DB update error:", updateError);
+        alert("Could not update profile");
+        return;
+      }
+
+      // Update UI
+      setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }));
+      console.log("Avatar updated:", publicUrl);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("Something went wrong");
+    }
+  };
+
   if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
   if (!profile) return <div style={{ padding: 20 }}>User not found</div>;
 
@@ -96,16 +108,19 @@ export default function UserProfile({ params }: { params: { username: string } }
     <div style={{ padding: 20, maxWidth: 600, margin: "0 auto" }}>
       {/* Hidden file input */}
       <input
+        id="avatar-input"
         type="file"
         accept="image/*"
-        ref={fileInputRef}
         style={{ display: "none" }}
         onChange={handleAvatarUpload}
       />
 
       {/* Avatar */}
       <div
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => {
+          console.log("Avatar clicked");
+          document.getElementById("avatar-input")?.click();
+        }}
         style={{
           width: 120,
           height: 120,

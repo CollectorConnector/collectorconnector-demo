@@ -298,7 +298,7 @@ export default function AccountPage() {
         }}
       >
         <Link
-          href="/account/edit"
+          href="/edit-profile"
           style={{
             padding: "12px",
             background: "#000",
@@ -314,7 +314,7 @@ export default function AccountPage() {
         </Link>
 
         <Link
-          href={`/profile/${account.username}`}
+          href={`/u/${account.username}`}
           style={{
             padding: "12px",
             border: "1px solid #fff",

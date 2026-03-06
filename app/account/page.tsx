@@ -8,36 +8,27 @@ interface AccountData {
   email: string;
   username: string;
   tier: Tier;
-  memberNumber: number; // e.g. 1, 2, 237
-  totalAtJoin: number;  // e.g. 1, 500, 1234
-  // personal links (optional)
+  memberNumber: number;
+  totalAtJoin: number;
+  profilePhoto?: string;
   instagram?: string;
   twitter?: string;
   youtube?: string;
   ebay?: string;
   whatnot?: string;
   discord?: string;
-  stockx?: string;
-  goat?: string;
-  lego?: string;
-  bricklink?: string;
-  stamps?: string;
-  discogs?: string;
-  chrono24?: string;
-  tcgplayer?: string;
 }
 
-// TEMP: replace this with real data from your backend
 const mockAccount: AccountData = {
   email: "pearce.stacy8@googlemail.com",
   username: "stacy",
   tier: "FOUNDER",
   memberNumber: 1,
   totalAtJoin: 1,
+  profilePhoto: "/default-profile.png",
   instagram: "https://instagram.com/yourhandle",
   ebay: "https://www.ebay.co.uk/usr/yourstore",
   whatnot: "https://www.whatnot.com/user/yourhandle",
-  discord: "https://discord.gg/yourserver",
 };
 
 function getTierLabel(tier: Tier) {
@@ -87,7 +78,7 @@ export default function AccountPage() {
         flexDirection: "column",
       }}
     >
-      {/* GLOBAL HEADER / COMMAND CENTRE */}
+      {/* GLOBAL HEADER */}
       <header
         style={{
           width: "100%",
@@ -140,14 +131,14 @@ export default function AccountPage() {
             </Link>
             <Link
               href="/account"
-              style={{ textDecoration: "none", color: "#4ADE80" }}
+              style={{ textDecoration: "none", color: "#fff" }}
             >
               Account
             </Link>
           </nav>
         </div>
 
-        {/* Right: Universal Collector Tools */}
+        {/* Right: Universal Tools */}
         <div
           style={{
             display: "flex",
@@ -156,46 +147,11 @@ export default function AccountPage() {
             alignItems: "center",
           }}
         >
-          <a
-            href="https://www.ebay.com"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#9CA3AF", textDecoration: "none" }}
-          >
-            eBay
-          </a>
-          <a
-            href="https://www.whatnot.com"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#9CA3AF", textDecoration: "none" }}
-          >
-            Whatnot
-          </a>
-          <a
-            href="https://www.instagram.com"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#9CA3AF", textDecoration: "none" }}
-          >
-            Instagram
-          </a>
-          <a
-            href="https://www.youtube.com"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#9CA3AF", textDecoration: "none" }}
-          >
-            YouTube
-          </a>
-          <a
-            href="https://discord.com"
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#9CA3AF", textDecoration: "none" }}
-          >
-            Discord
-          </a>
+          <a href="https://www.ebay.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>eBay</a>
+          <a href="https://www.whatnot.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>Whatnot</a>
+          <a href="https://www.instagram.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>Instagram</a>
+          <a href="https://www.youtube.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>YouTube</a>
+          <a href="https://discord.com" target="_blank" rel="noreferrer" style={{ color: "#9CA3AF" }}>Discord</a>
         </div>
       </header>
 
@@ -223,15 +179,56 @@ export default function AccountPage() {
 
           <p
             style={{
-              color: "#4ADE80",
+              color: "#fff",
               fontSize: 13,
               letterSpacing: "2px",
               marginBottom: 24,
               textTransform: "uppercase",
+              opacity: 0.7,
             }}
           >
             Your Collector Identity
           </p>
+
+          {/* PROFILE PHOTO (SQUIRCLE) */}
+          <div style={{ marginBottom: 24 }}>
+            <div
+              style={{
+                width: 140,
+                height: 140,
+                margin: "0 auto",
+                borderRadius: "28%",
+                overflow: "hidden",
+                border: "2px solid #fff",
+                boxShadow: "0 8px 20px rgba(0,0,0,0.5)",
+              }}
+            >
+              <img
+                src={account.profilePhoto}
+                alt="Profile"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
+
+            <button
+              style={{
+                marginTop: 12,
+                padding: "10px 16px",
+                background: "#000",
+                color: "#fff",
+                borderRadius: 10,
+                border: "1px solid #333",
+                cursor: "pointer",
+                fontSize: 14,
+              }}
+            >
+              Change Photo
+            </button>
+          </div>
 
           {/* ACCOUNT CARD */}
           <section
@@ -245,7 +242,7 @@ export default function AccountPage() {
               margin: "0 auto 24px",
             }}
           >
-            {/* Card header with small logo */}
+            {/* Card header */}
             <div
               style={{
                 display: "flex",
@@ -270,12 +267,13 @@ export default function AccountPage() {
                   Account Details
                 </h2>
               </div>
+
               {/* Tier badge */}
               <div
                 style={{
                   padding: "6px 10px",
                   borderRadius: 999,
-                  border: "1px solid #4ADE80",
+                  border: "1px solid #fff",
                   fontSize: 12,
                   display: "flex",
                   alignItems: "center",
@@ -355,44 +353,12 @@ export default function AccountPage() {
                     style={{
                       padding: "6px 10px",
                       borderRadius: 999,
-                      border: "1px solid #4ADE80",
-                      color: "#E5E7EB",
+                      border: "1px solid #fff",
+                      color: "#fff",
                       textDecoration: "none",
                     }}
                   >
                     Instagram
-                  </a>
-                )}
-                {account.twitter && (
-                  <a
-                    href={account.twitter}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: 999,
-                      border: "1px solid #4ADE80",
-                      color: "#E5E7EB",
-                      textDecoration: "none",
-                    }}
-                  >
-                    Twitter / X
-                  </a>
-                )}
-                {account.youtube && (
-                  <a
-                    href={account.youtube}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: 999,
-                      border: "1px solid #4ADE80",
-                      color: "#E5E7EB",
-                      textDecoration: "none",
-                    }}
-                  >
-                    YouTube
                   </a>
                 )}
                 {account.ebay && (
@@ -403,8 +369,8 @@ export default function AccountPage() {
                     style={{
                       padding: "6px 10px",
                       borderRadius: 999,
-                      border: "1px solid #4ADE80",
-                      color: "#E5E7EB",
+                      border: "1px solid #fff",
+                      color: "#fff",
                       textDecoration: "none",
                     }}
                   >
@@ -419,8 +385,8 @@ export default function AccountPage() {
                     style={{
                       padding: "6px 10px",
                       borderRadius: 999,
-                      border: "1px solid #4ADE80",
-                      color: "#E5E7EB",
+                      border: "1px solid #fff",
+                      color: "#fff",
                       textDecoration: "none",
                     }}
                   >
@@ -435,15 +401,14 @@ export default function AccountPage() {
                     style={{
                       padding: "6px 10px",
                       borderRadius: 999,
-                      border: "1px solid #4ADE80",
-                      color: "#E5E7EB",
+                      border: "1px solid #fff",
+                      color: "#fff",
                       textDecoration: "none",
                     }}
                   >
                     Discord
                   </a>
                 )}
-                {/* Add more platforms here as needed (StockX, GOAT, Lego, etc.) */}
               </div>
             </div>
           </section>
@@ -462,9 +427,10 @@ export default function AccountPage() {
               href="/account/edit"
               style={{
                 padding: "12px",
-                background: "#4ADE80",
-                color: "#000",
+                background: "#000",
+                color: "#fff",
                 borderRadius: 10,
+                border: "1px solid #333",
                 fontWeight: 700,
                 textDecoration: "none",
                 fontSize: 15,
@@ -474,11 +440,11 @@ export default function AccountPage() {
             </Link>
 
             <Link
-              href="/profile/stacy" // replace with dynamic route
+              href={`/profile/${account.username}`}
               style={{
                 padding: "12px",
-                border: "1px solid #4ADE80",
-                color: "#4ADE80",
+                border: "1px solid #fff",
+                color: "#fff",
                 borderRadius: 10,
                 fontWeight: 600,
                 textDecoration: "none",
@@ -500,10 +466,7 @@ export default function AccountPage() {
                 fontSize: 14,
                 cursor: "pointer",
               }}
-              onClick={() => {
-                // hook this up to your real logout logic
-                console.log("Log out clicked");
-              }}
+              onClick={() => console.log("Log out clicked")}
             >
               Log Out
             </button>

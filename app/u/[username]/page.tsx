@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase"; // ← Correct import
+import { supabase } from "@/lib/supabase"; // Correct import
 
 export default function ProfilePage() {
   const { username } = useParams();
 
-  const [userData, setUserData] = useState(null);
-  const [collections, setCollections] = useState([]);
-  const [activity, setActivity] = useState([]);
+  // FIXED TYPESCRIPT ERRORS
+  const [userData, setUserData] = useState<any>(null);
+  const [collections, setCollections] = useState<any[]>([]);
+  const [activity, setActivity] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("collections");
 
   // Load profile + collections + activity

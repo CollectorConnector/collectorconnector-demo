@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { supabase } from "@/lib/supabase"; // Correct import
+import { supabase } from "@/lib/supabase";
+
+// Define allowed tier types
+type Tier = "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "STANDARD";
 
 export default function ProfilePage() {
   const { username } = useParams();
 
-  // FIXED TYPESCRIPT ERRORS
   const [userData, setUserData] = useState<any>(null);
   const [collections, setCollections] = useState<any[]>([]);
   const [activity, setActivity] = useState<any[]>([]);
@@ -57,13 +59,16 @@ export default function ProfilePage() {
   }
 
   // Tier badge styling
-  const tierColors = {
+  const tierColors: Record<Tier, string> = {
     FOUNDER: "text-cyan-300 bg-cyan-900/30",
     GOLD: "text-yellow-400 bg-yellow-900/30",
     SILVER: "text-gray-300 bg-gray-700/40",
     BRONZE: "text-orange-400 bg-orange-900/30",
     STANDARD: "text-gray-500 bg-gray-800"
   };
+
+  // Force TypeScript to treat tier as a valid key
+  const tierKey = (userData.tier || "STANDARD") as Tier;
 
   return (
     <div className="min-h-screen bg-black text-white px-4 py-6">
@@ -92,7 +97,7 @@ export default function ProfilePage() {
           <h2 className="text-2xl font-bold">{userData.full_name}</h2>
 
           <div
-            className={`mt-1 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${tierColors[userData.tier]}`}
+            className={`mt-1 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${tierColors[tierKey]}`}
           >
             💎 {userData.tier}
           </div>

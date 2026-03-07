@@ -3,14 +3,32 @@
 import { useState } from "react";
 import TierBadge from "@/components/TierBadge";
 
-export default function ChatScreen() {
-  // Temporary mock data
-  const otherUser = {
-    name: "Richard House",
-    avatar: "/default-avatar.png",
-    tier: "FOUNDER",
+export default function ChatScreen({ params }) {
+  // Get the dynamic route ID (the user you're messaging)
+  const { id } = params;
+
+  // Temporary mock user data based on the ID
+  // Later this will come from Supabase
+  const mockUsers = {
+    "1": {
+      name: "Richard House",
+      avatar: "/default-avatar.png",
+      tier: "FOUNDER",
+    },
+    "2": {
+      name: "Sarah Collins",
+      avatar: "/default-avatar.png",
+      tier: "GOLD",
+    },
   };
 
+  const otherUser = mockUsers[id] || {
+    name: "Unknown User",
+    avatar: "/default-avatar.png",
+    tier: "BRONZE",
+  };
+
+  // Temporary mock messages
   const [messages, setMessages] = useState([
     { id: 1, sender: "them", text: "Hey Stacy, how’s the app going?" },
     { id: 2, sender: "me", text: "Really well! Just polishing the UI." },

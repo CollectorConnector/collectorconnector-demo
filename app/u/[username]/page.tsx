@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/lib/supabase"; // ← Correct import
 
 export default function ProfilePage() {
-  const supabase = createClient();
   const { username } = useParams();
 
   const [userData, setUserData] = useState(null);
@@ -13,7 +12,7 @@ export default function ProfilePage() {
   const [activity, setActivity] = useState([]);
   const [activeTab, setActiveTab] = useState("collections");
 
-  // Fetch profile data
+  // Load profile + collections + activity
   useEffect(() => {
     async function loadProfile() {
       const { data } = await supabase
@@ -56,7 +55,7 @@ export default function ProfilePage() {
     );
   }
 
-  // Tier badge logic
+  // Tier badge styling
   const tierColors = {
     FOUNDER: "text-cyan-300 bg-cyan-900/30",
     GOLD: "text-yellow-400 bg-yellow-900/30",
@@ -71,7 +70,6 @@ export default function ProfilePage() {
       {/* LOGO / NAV */}
       <header className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          {/* Replace with your actual logo */}
           <div className="w-8 h-8 bg-white rounded-md" />
           <h1 className="text-xl font-bold">CollectorConnector</h1>
         </div>
@@ -84,7 +82,6 @@ export default function ProfilePage() {
 
       {/* PROFILE HEADER */}
       <section className="flex items-start gap-4 mb-6">
-        {/* Profile Photo */}
         <img
           src={userData.avatar_url || "/default-avatar.png"}
           className="w-20 h-20 rounded-full object-cover"
@@ -93,7 +90,6 @@ export default function ProfilePage() {
         <div className="flex-1">
           <h2 className="text-2xl font-bold">{userData.full_name}</h2>
 
-          {/* Tier Badge */}
           <div
             className={`mt-1 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${tierColors[userData.tier]}`}
           >
@@ -103,7 +99,6 @@ export default function ProfilePage() {
           <p className="text-gray-300 mt-2">{userData.bio}</p>
           <p className="text-gray-500 text-sm mt-1">{userData.location}</p>
 
-          {/* Buttons */}
           <div className="flex gap-3 mt-4">
             <button className="px-4 py-2 bg-white text-black rounded-lg font-semibold">
               Follow

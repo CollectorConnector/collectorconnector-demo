@@ -19,32 +19,32 @@ export default function TierBadge(props: TierBadgeProps) {
   const style = sizes[size];
 
   const tierStyles: Record<string, { label: string; color: string; glow: string }> = {
-    FOUNDER: {
-      label: "Founder",
-      color: "#4ADE80",
-      glow: "0 0 10px rgba(74,222,128,0.6)",
-    },
-    GOLD: {
-      label: "Gold",
-      color: "#facc15",
-      glow: "0 0 10px rgba(250,204,21,0.5)",
-    },
-    SILVER: {
-      label: "Silver",
-      color: "#e5e7eb",
-      glow: "0 0 10px rgba(229,231,235,0.4)",
-    },
-    BRONZE: {
-      label: "Bronze",
-      color: "#cd7f32",
-      glow: "0 0 10px rgba(205,127,50,0.4)",
-    },
-    EMERALD: {
-      label: "Emerald Member",
-      color: "#34d399",
-      glow: "0 0 10px rgba(52,211,153,0.5)",
-    },
-  };
+  DIAMOND: {
+    label: "Diamond",
+    color: "#4FC3F7",
+    glow: "0 0 100px rgba(79,195,247,0.6)",
+  },
+  FOUNDER: {
+    label: "Founder",
+    color: "#4D0888",
+    glow: "0 0 100px rgba(74,222,128,0.6)",
+  },
+  GOLD: {
+    label: "Gold",
+    color: "#FACC15",
+    glow: "0 0 100px rgba(250,204,21,0.6)",
+  },
+  SILVER: {
+    label: "Silver",
+    color: "#9CA3AF",
+    glow: "0 0 100px rgba(156,163,175,0.6)",
+  },
+  BRONZE: {
+    label: "Bronze",
+    color: "#CD7F32",
+    glow: "0 0 100px rgba(205,127,50,0.6)",
+  },
+};
 
   const t = tierStyles[tier] ?? tierStyles["EMERALD"];
 

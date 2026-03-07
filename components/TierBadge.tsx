@@ -15,11 +15,11 @@ export default function TierBadge({ tier, size = "md" }: TierBadgeProps) {
   };
 
   const icons: Record<string, string> = {
-    FOUNDER: "/tier-icons/founder.png",
-    GOLD: "/tier-icons/gold.png",
-    SILVER: "/tier-icons/silver.png",
-    BRONZE: "/tier-icons/bronze.png",
-    DIAMOND: "/tier-icons/diamond.png",
+    FOUNDER: "/public/founder.png",
+    GOLD: "/public/gold.png",
+    SILVER: "/public/silver.png",
+    BRONZE: "/public/bronze.png",
+    DIAMOND: "/public/diamond.png",
   };
 
   const src = icons[tier] ?? icons["BRONZE"];

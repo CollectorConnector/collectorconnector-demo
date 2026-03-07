@@ -1,330 +1,207 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-import TierBadge from "@/components/TierBadge";
+import { useParams } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export default function ProfilePage() {
+  const supabase = createClient();
+  const { username } = useParams();
 
-export default function UserProfile({ params }: { params: { username: string } }) {
-  const { username } = params;
+  const [userData, setUserData] = useState(null);
+  const [collections, setCollections] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [activeTab, setActiveTab] = useState("collections");
 
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-
-  // -----------------------------
-  // FETCH PROFILE
-  // -----------------------------
+  // Fetch profile data
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data, error } = await supabase
+    async function loadProfile() {
+      const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("username", username)
         .single();
 
-      if (!error) setProfile(data);
-      setLoading(false);
-    };
+      setUserData(data);
+    }
 
-    fetchProfile();
+    async function loadCollections() {
+      const { data } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("username", username);
+
+      setCollections(data || []);
+    }
+
+    async function loadActivity() {
+      const { data } = await supabase
+        .from("activity")
+        .select("*")
+        .eq("username", username);
+
+      setActivity(data || []);
+    }
+
+    loadProfile();
+    loadCollections();
+    loadActivity();
   }, [username]);
 
-  // -----------------------------
-  // SAVE PROFILE CHANGES
-  // -----------------------------
-  const handleSaveProfile = async (updates: any) => {
-    const { error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", profile.id);
-
-    if (!error) {
-      setProfile((prev: any) => ({ ...prev, ...updates }));
-      setIsEditing(false);
-    }
-  };
-
-  // -----------------------------
-  // AVATAR UPLOAD HANDLER
-  // -----------------------------
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !profile) return;
-
-    console.log("File selected");
-
-    const ext = file.name.split(".").pop();
-    const filePath = `${profile.id}/${Date.now()}.${ext}`;
-
-    try {
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
-        alert("Upload failed");
-        return;
-      }
-
-      // Get public URL
-      const { data: publicUrlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicUrlData.publicUrl;
-
-      // Update DB
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ avatar_url: publicUrl })
-        .eq("id", profile.id);
-
-      if (updateError) {
-        console.error("DB update error:", updateError);
-        alert("Could not update profile");
-        return;
-      }
-
-      // Update UI
-      setProfile((prev: any) => ({ ...prev, avatar_url: publicUrl }));
-      console.log("Avatar updated:", publicUrl);
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      alert("Something went wrong");
-    }
-  };
-
-  if (loading) return <div style={{ padding: 20 }}>Loading...</div>;
-  if (!profile) return <div style={{ padding: 20 }}>User not found</div>;
-
-  return (
-    <div style={{ padding: 20, maxWidth: 600, margin: "0 auto" }}>
-      {/* Hidden file input */}
-      <input
-        id="avatar-input"
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={handleAvatarUpload}
-      />
-
-      {/* Avatar */}
-      <div
-        onClick={() => {
-          console.log("Avatar clicked");
-          document.getElementById("avatar-input")?.click();
-        }}
-        style={{
-          width: 120,
-          height: 120,
-          borderRadius: "50%",
-          overflow: "hidden",
-          border: "2px solid #333",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          background: "#111",
-          marginBottom: 20,
-        }}
-      >
-        {profile.avatar_url ? (
-          <img
-            src={profile.avatar_url}
-            alt="Avatar"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : (
-          <span style={{ color: "#666", fontSize: 12 }}>+ Add Photo</span>
-        )}
+  if (!userData) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading...
       </div>
+    );
+  }
 
-      {/* Display Name */}
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>{profile.display_name}</h1>
-
-      {/* Tier Badge */}
-      <TierBadge
-        tier={profile.tier?.toUpperCase()}
-        size="md"
-        showCount={profile.tier?.toLowerCase() === "founder"}
-        count={profile.tier?.toLowerCase() === "founder" ? 1 : undefined}
-      />
-
-      {/* Username */}
-      <div style={{ marginTop: 10, color: "#9CA3AF" }}>@{profile.username}</div>
-
-      {/* Edit Profile Button */}
-      <button
-        onClick={() => setIsEditing(true)}
-        style={{
-          marginTop: 20,
-          padding: "8px 14px",
-          borderRadius: 8,
-          background: "#222",
-          color: "#fff",
-          border: "1px solid #333",
-          cursor: "pointer",
-          fontSize: 14,
-        }}
-      >
-        Edit Profile
-      </button>
-
-      {/* Modal */}
-      <EditProfileModal
-        isOpen={isEditing}
-        onClose={() => setIsEditing(false)}
-        profile={profile}
-        onSave={handleSaveProfile}
-      />
-    </div>
-  );
-}
-
-// ------------------------------------------------------
-// EDIT PROFILE MODAL COMPONENT
-// ------------------------------------------------------
-function EditProfileModal({
-  isOpen,
-  onClose,
-  profile,
-  onSave,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  profile: any;
-  onSave: (updates: any) => void;
-}) {
-  const [displayName, setDisplayName] = useState(profile.display_name || "");
-  const [username, setUsername] = useState(profile.username || "");
-  const [bio, setBio] = useState(profile.bio || "");
-
-  if (!isOpen) return null;
+  // Tier badge logic
+  const tierColors = {
+    FOUNDER: "text-cyan-300 bg-cyan-900/30",
+    GOLD: "text-yellow-400 bg-yellow-900/30",
+    SILVER: "text-gray-300 bg-gray-700/40",
+    BRONZE: "text-orange-400 bg-orange-900/30",
+    STANDARD: "text-gray-500 bg-gray-800"
+  };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.6)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999,
-      }}
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#111",
-          padding: 24,
-          borderRadius: 12,
-          width: "90%",
-          maxWidth: 400,
-          border: "1px solid #333",
-        }}
-      >
-        <h2 style={{ marginBottom: 16, fontSize: 20, fontWeight: 700 }}>
-          Edit Profile
-        </h2>
+    <div className="min-h-screen bg-black text-white px-4 py-6">
 
-        <label style={{ fontSize: 12, opacity: 0.7 }}>Display Name</label>
-        <input
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            marginTop: 4,
-            marginBottom: 16,
-            borderRadius: 8,
-            border: "1px solid #333",
-            background: "#000",
-            color: "#fff",
-          }}
+      {/* LOGO / NAV */}
+      <header className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          {/* Replace with your actual logo */}
+          <div className="w-8 h-8 bg-white rounded-md" />
+          <h1 className="text-xl font-bold">CollectorConnector</h1>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button>Search</button>
+          <button>Messages</button>
+        </div>
+      </header>
+
+      {/* PROFILE HEADER */}
+      <section className="flex items-start gap-4 mb-6">
+        {/* Profile Photo */}
+        <img
+          src={userData.avatar_url || "/default-avatar.png"}
+          className="w-20 h-20 rounded-full object-cover"
         />
 
-        <label style={{ fontSize: 12, opacity: 0.7 }}>Username</label>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            marginTop: 4,
-            marginBottom: 16,
-            borderRadius: 8,
-            border: "1px solid #333",
-            background: "#000",
-            color: "#fff",
-          }}
-        />
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold">{userData.full_name}</h2>
 
-        <label style={{ fontSize: 12, opacity: 0.7 }}>Bio</label>
-        <textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          rows={3}
-          style={{
-            width: "100%",
-            padding: 10,
-            marginTop: 4,
-            marginBottom: 20,
-            borderRadius: 8,
-            border: "1px solid #333",
-            background: "#000",
-            color: "#fff",
-            resize: "none",
-          }}
-        />
+          {/* Tier Badge */}
+          <div
+            className={`mt-1 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${tierColors[userData.tier]}`}
+          >
+            💎 {userData.tier}
+          </div>
 
+          <p className="text-gray-300 mt-2">{userData.bio}</p>
+          <p className="text-gray-500 text-sm mt-1">{userData.location}</p>
+
+          {/* Buttons */}
+          <div className="flex gap-3 mt-4">
+            <button className="px-4 py-2 bg-white text-black rounded-lg font-semibold">
+              Follow
+            </button>
+            <button className="px-4 py-2 border border-gray-600 rounded-lg font-semibold">
+              Message
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="grid grid-cols-4 text-center mb-6">
+        <div>
+          <p className="text-xl font-bold">{userData.item_count}</p>
+          <p className="text-gray-400 text-sm">Items</p>
+        </div>
+        <div>
+          <p className="text-xl font-bold">{userData.category_count}</p>
+          <p className="text-gray-400 text-sm">Categories</p>
+        </div>
+        <div>
+          <p className="text-xl font-bold">{userData.rarity_score}</p>
+          <p className="text-gray-400 text-sm">Rarity</p>
+        </div>
+        <div>
+          <p className="text-xl font-bold">{userData.years_collecting}</p>
+          <p className="text-gray-400 text-sm">Years</p>
+        </div>
+      </section>
+
+      {/* TABS */}
+      <div className="flex gap-6 border-b border-gray-800 mb-6">
         <button
-          onClick={() =>
-            onSave({
-              display_name: displayName,
-              username,
-              bio,
-            })
-          }
-          style={{
-            width: "100%",
-            padding: 12,
-            borderRadius: 8,
-            background: "#4ADE80",
-            color: "#000",
-            fontWeight: 700,
-            border: "none",
-            cursor: "pointer",
-            marginBottom: 10,
-          }}
+          onClick={() => setActiveTab("collections")}
+          className={`pb-3 font-semibold ${
+            activeTab === "collections"
+              ? "border-b-2 border-green-500 text-green-400"
+              : "text-gray-400"
+          }`}
         >
-          Save Changes
+          Collections
         </button>
 
         <button
-          onClick={onClose}
-          style={{
-            width: "100%",
-            padding: 12,
-            borderRadius: 8,
-            background: "#222",
-            color: "#fff",
-            fontWeight: 600,
-            border: "1px solid #333",
-            cursor: "pointer",
-          }}
+          onClick={() => setActiveTab("activity")}
+          className={`pb-3 font-semibold ${
+            activeTab === "activity"
+              ? "border-b-2 border-green-500 text-green-400"
+              : "text-gray-400"
+          }`}
         >
-          Cancel
+          Activity
         </button>
       </div>
+
+      {/* COLLECTIONS */}
+      {activeTab === "collections" && (
+        <section>
+          <div className="grid grid-cols-3 gap-3">
+            {collections.map((item) => (
+              <div
+                key={item.id}
+                className="bg-gray-800 h-40 rounded-lg overflow-hidden"
+              >
+                <img
+                  src={item.image_url}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ACTIVITY */}
+      {activeTab === "activity" && (
+        <section className="mt-6">
+          {activity.map((post) => (
+            <div
+              key={post.id}
+              className="bg-gray-900 p-4 rounded-lg mb-4"
+            >
+              <p className="text-sm text-gray-400 mb-2">
+                {new Date(post.created_at).toLocaleString()}
+              </p>
+              <p className="mb-3">{post.text}</p>
+
+              {post.image_url && (
+                <img
+                  src={post.image_url}
+                  className="w-full h-40 object-cover rounded-lg"
+                />
+              )}
+            </div>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

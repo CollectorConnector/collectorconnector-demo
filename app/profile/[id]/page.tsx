@@ -1,46 +1,79 @@
-export default function ProfilePage() {
+import { createClient } from "@/utils/supabase/server";
+import TierBadge from "@/components/TierBadge";
+
+export default async function ProfilePage({ params }) {
+  const supabase = createClient();
+
+  // 1. Fetch user profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", params.id)
+    .single();
+
+  // 2. Fetch collections
+  const { data: collections } = await supabase
+    .from("collections")
+    .select("*")
+    .eq("user_id", params.id);
+
+  // 3. Stats
+  const totalItems = collections?.reduce(
+    (sum, col) => sum + (col.item_count || 0),
+    0
+  );
+
+  // ⭐ 4. REAL BADGE LOGIC
+  const STACY_UUID = "YOUR-UUID-HERE"; // replace this once you grab your UUID
+
+  const isStacy = profile?.id === STACY_UUID;
+  const tier = isStacy ? "DIAMOND" : profile?.tier;
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
 
       {/* 1. Profile Hero */}
       <section className="flex flex-col items-center text-center space-y-3">
         <div className="w-28 h-28 rounded-3xl overflow-hidden shadow-md">
-          {/* Profile Photo */}
-          <img src="/default-avatar.png" alt="Profile" className="w-full h-full object-cover" />
+          <img
+            src={profile?.avatar_url || "/default-avatar.png"}
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <div>
-          <h1 className="text-2xl font-semibold">Stacy Pearce</h1>
-          <p className="text-sm text-gray-500">@stacy</p>
+          <h1 className="text-2xl font-semibold">{profile?.name}</h1>
+          <p className="text-sm text-gray-500">@{profile?.username}</p>
         </div>
 
         {/* Tier Badge */}
         <div className="flex items-center justify-center">
-          <img src="/diamond.png" alt="Diamond Badge" className="w-8 h-8" />
+          <TierBadge tier={tier} />
         </div>
 
         {/* Collector Niche */}
-        <p className="text-sm text-gray-600">
-          Vintage Watches • Pokémon • Pub Tokens
-        </p>
+        {profile?.niche && (
+          <p className="text-sm text-gray-600">{profile.niche}</p>
+        )}
       </section>
 
       {/* 2. Stats Row */}
       <section className="grid grid-cols-4 text-center py-4 border-y border-gray-200">
         <div>
-          <p className="font-semibold">12</p>
+          <p className="font-semibold">{collections?.length || 0}</p>
           <p className="text-xs text-gray-500">Collections</p>
         </div>
         <div>
-          <p className="font-semibold">248</p>
+          <p className="font-semibold">{totalItems || 0}</p>
           <p className="text-xs text-gray-500">Items</p>
         </div>
         <div>
-          <p className="font-semibold">134</p>
+          <p className="font-semibold">{profile?.followers || 0}</p>
           <p className="text-xs text-gray-500">Followers</p>
         </div>
         <div>
-          <p className="font-semibold">89</p>
+          <p className="font-semibold">{profile?.following || 0}</p>
           <p className="text-xs text-gray-500">Following</p>
         </div>
       </section>
@@ -60,42 +93,46 @@ export default function ProfilePage() {
         <h2 className="text-lg font-semibold">Collections</h2>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {/* Example Collection Card */}
-          <div className="rounded-xl overflow-hidden shadow-sm bg-white">
-            <img src="/placeholder-collection.jpg" className="w-full h-32 object-cover" />
-            <div className="p-3">
-              <p className="font-medium">Vintage Watches</p>
-              <p className="text-xs text-gray-500">18 items</p>
+          {collections?.map((col) => (
+            <div
+              key={col.id}
+              className="rounded-xl overflow-hidden shadow-sm bg-white"
+            >
+              <img
+                src={col.cover_image || "/placeholder-collection.jpg"}
+                className="w-full h-32 object-cover"
+              />
+              <div className="p-3">
+                <p className="font-medium">{col.title}</p>
+                <p className="text-xs text-gray-500">
+                  {col.item_count || 0} items
+                </p>
+              </div>
             </div>
-          </div>
-
-          {/* Duplicate this card for more collections */}
+          ))}
         </div>
       </section>
 
-      {/* 5. Activity Feed (Optional) */}
+      {/* 5. Activity Feed */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Activity</h2>
 
         <div className="space-y-2">
           <div className="p-3 bg-gray-50 rounded-lg text-sm">
-            Stacy added 3 new items to <span className="font-medium">Vintage Watches</span>
-          </div>
-          <div className="p-3 bg-gray-50 rounded-lg text-sm">
-            Stacy created a new collection: <span className="font-medium">Pub Tokens</span>
+            {profile?.name} added new items recently
           </div>
         </div>
       </section>
 
       {/* 6. About Section */}
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">About</h2>
-        <p className="text-sm text-gray-600 leading-relaxed">
-          Collector of stories, history, and beautiful objects. Passionate about
-          vintage watches, rare Pokémon cards, and the hidden world of pub tokens.
-        </p>
-      </section>
-
+      {profile?.bio && (
+        <section className="space-y-2">
+          <h2 className="text-lg font-semibold">About</h2>
+          <p className="text-sm text-gray-600 leading-relaxed">
+            {profile.bio}
+          </p>
+        </section>
+      )}
     </div>
   );
 }

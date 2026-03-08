@@ -1,55 +1,136 @@
-// app/page.tsx
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
 
 export default function HomePage() {
   return (
-    <section className="flex flex-col items-center text-center py-16 md:py-24">
-      {/* HERO LOGO */}
-      <div className="mb-6">
-        <Image
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "radial-gradient(circle at top, #0d0d0d 0%, #000000 70%)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "20px",
+        textAlign: "center",
+        color: "#fff",
+        position: "relative",
+      }}
+    >
+      {/* WHITE GLOW */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "420px",
+          height: "420px",
+          background: "radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%)",
+          filter: "blur(60px)",
+          animation: "pulseGlow 12s ease-in-out infinite",
+          zIndex: 0,
+        }}
+      />
+
+      <style>{`
+        @keyframes pulseGlow {
+          0% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+          50% { opacity: 0.7; transform: translateX(-50%) scale(1.15); }
+          100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+        }
+      `}</style>
+
+      <div style={{ position: "relative", zIndex: 2, maxWidth: "720px", margin: "0 auto" }}>
+        {/* MAIN LOGO */}
+        <img
           src="/CC-main-logo.png"
           alt="CollectorConnector"
-          width={180}
-          height={48}
-          className="h-12 w-auto object-contain"
-          priority
+          style={{
+            width: "200px",
+            display: "block",
+            margin: "0 auto 24px",
+          }}
         />
-      </div>
 
-      {/* EYEBROW (was cyan/blue → now neutral grey) */}
-      <div className="text-xs tracking-[0.22em] text-zinc-400">
-        BUILT FOR COLLECTORS
-      </div>
-
-      {/* HEADLINE (white with subtle white-only glow) */}
-      <h1 className="mt-3 text-3xl md:text-5xl font-semibold glow-white tracking-tight">
-        WHERE COLLECTORS MEET
-      </h1>
-
-      {/* SUBTEXT (soft grey) */}
-      <p className="mt-3 max-w-2xl text-zinc-400">
-        Create your identity. Showcase your collections. Connect with collectors around the world.
-      </p>
-
-      {/* CTA BUTTONS — blue → white */}
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-        {/* Primary: solid white on black */}
-        <Link
-          href="/u/stacy"
-          className="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-black shadow-sm hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/30"
+        {/* MICRO TAGLINE */}
+        <p
+          style={{
+            color: "#ffffff",
+            fontSize: "14px",
+            letterSpacing: "2px",
+            marginBottom: "12px",
+          }}
         >
-          Create your profile
-        </Link>
+          BUILT FOR COLLECTORS
+        </p>
 
-        {/* Secondary: white outline only */}
-        <Link
-          href="/explore"
-          className="inline-flex items-center justify-center rounded-md border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20"
+        {/* MAIN TAGLINE */}
+        <h1
+          style={{
+            fontSize: "36px",
+            fontWeight: 800,
+            marginBottom: "12px",
+            letterSpacing: "-0.5px",
+          }}
         >
-          Explore collectors
-        </Link>
+          WHERE COLLECTORS MEET
+        </h1>
+
+        {/* SUBTAGLINE */}
+        <p
+          style={{
+            fontSize: "18px",
+            color: "#9CA3AF",
+            marginBottom: "40px",
+            lineHeight: 1.5,
+          }}
+        >
+          Create your identity. Showcase your collections.  
+          Connect with collectors around the world.
+        </p>
+
+        {/* CTA BUTTONS */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px",
+            maxWidth: "320px",
+            margin: "0 auto",
+          }}
+        >
+          <Link
+            href="/auth/signup"
+            style={{
+              padding: "14px",
+              background: "#ffffff",
+              color: "#000",
+              borderRadius: "10px",
+              fontWeight: 700,
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Create your profile
+          </Link>
+
+          <Link
+            href="/explore"
+            style={{
+              padding: "14px",
+              border: "1px solid #ffffff",
+              color: "#ffffff",
+              borderRadius: "10px",
+              fontWeight: 600,
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Explore collectors
+          </Link>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -35,15 +35,14 @@ export default function Nav() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* LEFT: Logo + Primary Nav */}
         <div className="flex items-center gap-8">
-          <Link href="/" aria-label="CollectorConnector home" className="flex items-center">
-            {/* Explicit size + object-contain = never squishes */}
+          <Link href="/" className="flex items-center">
             <Image
-              src="/CC-main-logo.png"   // <--- make sure this exact file exists in /public
+              src="/CC-main-logo.png"
               alt="CollectorConnector"
               width={120}
               height={28}
-              priority
               className="h-7 w-auto object-contain"
+              priority
             />
           </Link>
 
@@ -54,7 +53,9 @@ export default function Nav() {
                 <Link
                   key={href}
                   href={href}
-                  className={isActive ? "text-white" : "text-zinc-400 hover:text-zinc-200 transition-colors"}
+                  className={isActive
+                    ? "text-white"
+                    : "text-zinc-400 hover:text-zinc-200 transition-colors"}
                 >
                   {label}
                 </Link>

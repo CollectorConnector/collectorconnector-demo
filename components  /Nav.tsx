@@ -38,7 +38,7 @@ export default function Nav() {
         <div className="flex items-center gap-7">
           <Link href="/" className="flex items-center">
             <Image
-              src="/CC-MAIN-Logo.png"
+              src="/CC-main-logo.png"      // ← matches your exact filename
               alt="CollectorConnector"
               width={128}
               height={32}

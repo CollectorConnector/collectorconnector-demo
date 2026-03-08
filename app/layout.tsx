@@ -2,7 +2,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
-import Navbar from "@/components/Navbar";
+import Nav from "../components/Nav"; // ← use Nav (relative path)
 
 export const metadata: Metadata = {
   title: "CollectorConnector",
@@ -15,16 +15,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="h-full bg-black text-white antialiased">
         <div className="min-h-screen flex flex-col">
           {/* NAVBAR */}
-          <Navbar />
+          <Nav />
 
           {/* MAIN CONTENT */}
           <main className="flex-1">
             {children}
           </main>
 
-          {/* (Optional) Global footer — monochrome, minimal. 
-              If you don't want a global footer, remove this block.
-          */}
+          {/* Minimal monochrome footer (remove if you don't want one) */}
           <footer className="border-t border-white/10">
             <div className="mx-auto max-w-7xl px-6 py-6 text-sm text-zinc-400">
               © {new Date().getFullYear()} CollectorConnector. All rights reserved.

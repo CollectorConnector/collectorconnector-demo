@@ -2,6 +2,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
+{/* TAILWIND TEST BLOCK — remove later */}
+<div className="mt-8 rounded-lg bg-zinc-900 p-4 text-white">
+  <div className="mb-2 font-semibold">Tailwind test</div>
+  <div className="text-zinc-400 text-sm">If this box is NOT dark grey with spacing, Tailwind isn’t running.</div>
+</div>
+
 export default function HomePage() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-16">

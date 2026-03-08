@@ -1,136 +1,46 @@
-"use client";
-
+// app/page.tsx
+import Image from "next/image";
 import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "radial-gradient(circle at top, #0d0d0d 0%, #000000 70%)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "20px",
-        textAlign: "center",
-        color: "#fff",
-        position: "relative",
-      }}
-    >
-      {/* CYAN GLOW */}
-      <div
-        style={{
-          position: "absolute",
-          top: "20%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "420px",
-          height: "420px",
-          background: "radial-gradient(circle, rgba(0,194,255,0.25), transparent 70%)",
-          filter: "blur(60px)",
-          animation: "pulseGlow 12s ease-in-out infinite",
-          zIndex: 0,
-        }}
-      />
-
-      <style>{`
-        @keyframes pulseGlow {
-          0% { opacity: 0.4; transform: translateX(-50%) scale(1); }
-          50% { opacity: 0.7; transform: translateX(-50%) scale(1.15); }
-          100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
-        }
-      `}</style>
-
-      <div style={{ position: "relative", zIndex: 2, maxWidth: "720px", margin: "0 auto" }}>
-        {/* MAIN LOGO */}
-        <img
+    <div className="mx-auto max-w-7xl px-6 py-16">
+      <section className="flex flex-col items-center text-center gap-6">
+        {/* Hero logo (large) */}
+        <Image
           src="/CC-main-logo.png"
           alt="CollectorConnector"
-          style={{
-            width: "200px",
-            display: "block",
-            margin: "0 auto 24px",
-          }}
+          width={240}
+          height={48}
+          className="h-12 w-auto object-contain"
+          priority
         />
 
-        {/* MICRO TAGLINE */}
-        <p
-          style={{
-            color: "#00C2FF",
-            fontSize: "14px",
-            letterSpacing: "2px",
-            marginBottom: "12px",
-          }}
-        >
-          BUILT FOR COLLECTORS
-        </p>
-
-        {/* MAIN TAGLINE */}
-        <h1
-          style={{
-            fontSize: "36px",
-            fontWeight: 800,
-            marginBottom: "12px",
-            letterSpacing: "-0.5px",
-          }}
-        >
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold glow-white">
           WHERE COLLECTORS MEET
         </h1>
 
-        {/* SUBTAGLINE */}
-        <p
-          style={{
-            fontSize: "18px",
-            color: "#9CA3AF",
-            marginBottom: "40px",
-            lineHeight: 1.5,
-          }}
-        >
-          Create your identity. Showcase your collections.  
-          Connect with collectors around the world.
+        <p className="max-w-2xl text-zinc-400">
+          Create your identity. Showcase your collections. Connect with collectors around the world.
         </p>
 
-        {/* CTA BUTTONS */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "14px",
-            maxWidth: "320px",
-            margin: "0 auto",
-          }}
-        >
+        {/* Monochrome buttons */}
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/auth/signup"
-            style={{
-              padding: "14px",
-              background: "#00C2FF",
-              color: "#000",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              fontSize: "16px",
-            }}
+            href="/u/stacy"
+            className="inline-flex items-center justify-center rounded-md border border-white/12 px-4 py-2 text-sm font-medium text-white hover:border-white/25 transition-colors"
           >
-            Create your profile
+            View profile
           </Link>
 
           <Link
             href="/explore"
-            style={{
-              padding: "14px",
-              border: "1px solid #00C2FF",
-              color: "#00C2FF",
-              borderRadius: "10px",
-              fontWeight: 600,
-              textDecoration: "none",
-              fontSize: "16px",
-            }}
+            className="inline-flex items-center justify-center rounded-md border border-white/12 px-4 py-2 text-sm font-medium text-zinc-200 hover:text-white hover:border-white/25 transition-colors"
           >
-            Explore collectors
+            Explore collections
           </Link>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

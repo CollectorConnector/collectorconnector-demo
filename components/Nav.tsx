@@ -23,6 +23,7 @@ const external = [
 
 export default function Nav() {
   const pathname = usePathname();
+
   const active = useMemo(() => {
     if (!pathname || pathname === "/") return "/";
     const first = "/" + pathname.split("/").filter(Boolean)[0];
@@ -34,14 +35,15 @@ export default function Nav() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* LEFT: Logo + Primary Nav */}
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center" aria-label="CollectorConnector home">
+          <Link href="/" aria-label="CollectorConnector home" className="flex items-center">
+            {/* Explicit size + object-contain = never squishes */}
             <Image
-              src="/CC-main-logo.png"   // <-- exact filename + case in /public
+              src="/CC-main-logo.png"   // <--- make sure this exact file exists in /public
               alt="CollectorConnector"
-              width={120}               // intrinsic size (tweak if you want larger/smaller)
+              width={120}
               height={28}
-              className="h-[28px] w-[120px] object-contain"
               priority
+              className="h-7 w-auto object-contain"
             />
           </Link>
 

@@ -2,17 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Force black bg + white text */
+/* Force black bg + white text globally (fallback if Tailwind hiccups) */
 html, body { background: #000; color: #fff; }
 
-/* Monochrome links/buttons */
+/* Links: no browser blue */
 a { color: inherit; text-decoration: none; }
 a:hover { color: #e5e5e5; }
 
+/* Buttons: monochrome default */
 button { color: inherit; background: transparent; border: 1px solid rgba(255,255,255,0.10); }
 button:hover { border-color: rgba(255,255,255,0.22); }
 
-/* Optional: subtle white glow for premium headings */
+/* Premium heading glow (subtle) */
 .glow-white {
   text-shadow: 0 0 16px rgba(255,255,255,0.08), 0 0 32px rgba(255,255,255,0.06);
 }

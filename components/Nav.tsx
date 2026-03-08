@@ -36,14 +36,14 @@ export default function Nav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* LEFT: Logo + Primary Nav */}
         <div className="flex items-center gap-7">
-          <Link href="/" className="flex items-center" aria-label="CollectorConnector">
-            {/* Fixed size prevents squish; fill transparent space with object-contain */}
+          <Link href="/" className="flex items-center">
+            {/* Fixed size + contain prevents squish */}
             <Image
-              src="/CC-main-logo.png" // exact filename you confirmed
+              src="/CC-main-logo.png"
               alt="CollectorConnector"
-              width={132}
+              width={140}
               height={28}
-              className="h-7 w-[132px] object-contain"
+              className="h-7 w-auto object-contain"
               priority
             />
           </Link>

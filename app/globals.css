@@ -31,4 +31,28 @@ button:hover {
   text-shadow:
     0 0 16px rgba(255,255,255,0.08),
     0 0 32px rgba(255,255,255,0.06);
+  /* Monochrome reset for anchor and button defaults */
+a {
+  color: inherit;             /* inherit white/grey, not Tailwind blue */
+  text-decoration: none;
+}
+a:hover {
+  color: #e5e5e5;
+}
+
+button {
+  color: inherit;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+button:hover {
+  border-color: rgba(255,255,255,0.22);
+}
+
+/* Optional: white-only glow utility */
+.glow-white {
+  text-shadow:
+    0 0 16px rgba(255,255,255,0.08),
+    0 0 32px rgba(255,255,255,0.06);
+}
 }

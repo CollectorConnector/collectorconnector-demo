@@ -1,40 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* -----------------------------
-   CollectorConnector — Monochrome Base
-   ----------------------------- */
-
-/* Force black background + white text globally */
-html, body {
-  background: #000;
-  color: #fff;
+/* Type rhythm + rendering */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01" on, "liga" on;
 }
 
-/* Remove browser default blue links */
-a { color: inherit; text-decoration: none; }
-a:hover { color: #e5e5e5; }
-
-/* Buttons: clean monochrome */
-button {
-  color: inherit;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.10);
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  line-height: 1.55;
 }
-button:hover { border-color: rgba(255,255,255,0.22); }
 
-/* If you render markdown/prose */
-.prose a {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: rgba(255,255,255,0.30);
+/* Headings a touch tighter and cleaner */
+h1, h2, h3 {
+  letter-spacing: -0.01em;
 }
-.prose a:hover { text-decoration-color: rgba(255,255,255,0.60); }
 
-/* Subtle white glow for premium headings */
-.glow-white {
-  text-shadow:
-    0 0 16px rgba(255,255,255,0.08),
-    0 0 32px rgba(255,255,255,0.06);
-}
+/* Keep links and buttons monochrome (you already have these; keep them) */

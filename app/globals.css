@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Force black bg + white text (browser fallback) */
+/* Force black bg + white text */
 html, body { background: #000; color: #fff; }
 
 /* Monochrome links/buttons */
@@ -12,7 +12,7 @@ a:hover { color: #e5e5e5; }
 button { color: inherit; background: transparent; border: 1px solid rgba(255,255,255,0.10); }
 button:hover { border-color: rgba(255,255,255,0.22); }
 
-/* Premium heading glow (optional) */
+/* Optional: subtle white glow for premium headings */
 .glow-white {
   text-shadow: 0 0 16px rgba(255,255,255,0.08), 0 0 32px rgba(255,255,255,0.06);
 }

@@ -1,63 +1,46 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Monochrome reset for anchor and button defaults */
+/* -----------------------------
+   CollectorConnector Monochrome Reset
+   ----------------------------- */
+
+/* Remove default browser blue links */
 a {
-  color: inherit;             /* inherit white/grey, not Tailwind blue */
-  text-decoration: none;      /* no underline by default */
-}
-a:hover {
-  color: #e5e5e5;             /* soft grey hover */
-}
-
-button {
   color: inherit;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.10);
-}
-button:hover {
-  border-color: rgba(255,255,255,0.22);
-}
-
-/* If you ever use "prose", neuter its link color */
-.prose a {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: rgba(255,255,255,0.3);
-}
-.prose a:hover {
-  text-decoration-color: rgba(255,255,255,0.6);
-}
-
-/* Optional: white-only glow utility */
-.glow-white {
-  text-shadow:
-    0 0 16px rgba(255,255,255,0.08),
-    0 0 32px rgba(255,255,255,0.06);
-  /* Monochrome reset for anchor and button defaults */
-a {
-  color: inherit;             /* inherit white/grey, not Tailwind blue */
   text-decoration: none;
 }
+
 a:hover {
   color: #e5e5e5;
 }
 
+/* Buttons: clean monochrome */
 button {
   color: inherit;
   background: transparent;
   border: 1px solid rgba(255,255,255,0.10);
 }
+
 button:hover {
   border-color: rgba(255,255,255,0.22);
 }
 
-/* Optional: white-only glow utility */
+/* If using markdown/prose */
+.prose a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,0.30);
+}
+
+.prose a:hover {
+  text-decoration-color: rgba(255,255,255,0.60);
+}
+
+/* Subtle white glow for premium headings */
 .glow-white {
   text-shadow:
     0 0 16px rgba(255,255,255,0.08),
     0 0 32px rgba(255,255,255,0.06);
-}
 }

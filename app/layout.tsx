@@ -15,14 +15,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="h-full bg-black text-white antialiased">
         <div className="min-h-screen flex flex-col">
           <Nav />
-
-          {/* Premium container applied ONCE here so every page is centered */}
           <main className="flex-1">
+            {/* Centered container applied once, so every page sits nicely */}
             <div className="mx-auto max-w-7xl px-6 py-12 md:py-16">
               {children}
             </div>
           </main>
-
           <footer className="border-t border-white/10">
             <div className="mx-auto max-w-7xl px-6 py-8 text-sm text-zinc-400">
               © {new Date().getFullYear()} CollectorConnector. All rights reserved.

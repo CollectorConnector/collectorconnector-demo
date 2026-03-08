@@ -4,25 +4,12 @@ import { useState } from "react";
 import TierBadge from "@/components/TierBadge";
 
 export default function EditProfilePage() {
-  const supabase = createClient();
-
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [niche, setNiche] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [tier, setTier] = useState("");
-
-  const handleSave = async () => {
-    await supabase.from("profiles").update({
-      name,
-      username,
-      bio,
-      niche,
-      avatar_url: avatarUrl,
-      tier,
-    });
-  };
 
   return (
     <div className="max-w-xl mx-auto px-6 py-10 space-y-10">
@@ -109,7 +96,6 @@ export default function EditProfilePage() {
 
       {/* Save Button */}
       <button
-        onClick={handleSave}
         className="w-full py-3 rounded-full bg-black text-white font-medium shadow-md hover:opacity-90 transition"
       >
         Save Changes

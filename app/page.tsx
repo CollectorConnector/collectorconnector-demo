@@ -7,7 +7,7 @@ export default function HomePage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "radial-gradient(circle at top, #1a1a1a 0%, #0a0a0a 70%)",
+        background: "radial-gradient(circle at top, #0d0d0d 0%, #000000 70%)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -17,7 +17,7 @@ export default function HomePage() {
         position: "relative",
       }}
     >
-      {/* ANIMATED GLOW */}
+      {/* CYAN GLOW */}
       <div
         style={{
           position: "absolute",
@@ -26,7 +26,7 @@ export default function HomePage() {
           transform: "translateX(-50%)",
           width: "420px",
           height: "420px",
-          background: "radial-gradient(circle, rgba(74,222,128,0.18), transparent 70%)",
+          background: "radial-gradient(circle, rgba(0,194,255,0.25), transparent 70%)",
           filter: "blur(60px)",
           animation: "pulseGlow 12s ease-in-out infinite",
           zIndex: 0,
@@ -56,7 +56,7 @@ export default function HomePage() {
         {/* MICRO TAGLINE */}
         <p
           style={{
-            color: "#4ADE80",
+            color: "#00C2FF",
             fontSize: "14px",
             letterSpacing: "2px",
             marginBottom: "12px",
@@ -104,7 +104,7 @@ export default function HomePage() {
             href="/auth/signup"
             style={{
               padding: "14px",
-              background: "#4ADE80",
+              background: "#00C2FF",
               color: "#000",
               borderRadius: "10px",
               fontWeight: 700,
@@ -119,8 +119,8 @@ export default function HomePage() {
             href="/explore"
             style={{
               padding: "14px",
-              border: "1px solid #4ADE80",
-              color: "#4ADE80",
+              border: "1px solid #00C2FF",
+              color: "#00C2FF",
               borderRadius: "10px",
               fontWeight: 600,
               textDecoration: "none",

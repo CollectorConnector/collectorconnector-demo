@@ -55,8 +55,8 @@ export default function MessagesPage() {
               <div className="flex items-center gap-2">
                 <span className="font-medium">{c.name}</span>
 
-                {/* TierBadge is now ALWAYS valid */}
-                <TierBadge tier={c.tier} size="xs" />
+                {/* FIXED: size="sm" instead of "xs" */}
+                <TierBadge tier={c.tier} size="sm" />
               </div>
 
               <span className="text-sm text-gray-500">@{c.username}</span>

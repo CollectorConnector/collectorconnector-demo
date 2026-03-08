@@ -1,3 +1,8 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Monochrome reset for anchor and button defaults */
 a {
   color: inherit;             /* inherit white/grey, not Tailwind blue */

@@ -16,7 +16,12 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head />
+      <head>
+        {/* Fixes the question‑mark icon */}
+        <link rel="icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
+      </head>
+
       <body
         className={inter.className}
         style={{
@@ -51,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               />
 
               <img
-                src="/CC-MAIN-Logo.png"
+                src="/CC-main-logo.png"
                 alt="CollectorConnector"
                 style={{ height: 32, objectFit: "contain" }}
               />

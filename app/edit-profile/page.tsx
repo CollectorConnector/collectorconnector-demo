@@ -9,7 +9,11 @@ export default function EditProfilePage() {
   const [bio, setBio] = useState("");
   const [niche, setNiche] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [tier, setTier] = useState("");
+
+  // Allow empty OR valid tier values
+  const [tier, setTier] = useState<
+    "" | "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "DIAMOND"
+  >("");
 
   return (
     <div className="max-w-xl mx-auto px-6 py-10 space-y-10">

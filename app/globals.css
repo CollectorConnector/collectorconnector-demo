@@ -1,32 +1,32 @@
-/* app/globals.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Monochrome foundation */
-:root {
-  --cc-bg: #000000;
-  --cc-text: #ffffff;
-
-  /* Greys tuned to feel premium and soft */
-  --cc-gray-100: #f5f5f5;
-  --cc-gray-200: #e5e5e5;
-  --cc-gray-300: #d4d4d4;
-  --cc-gray-400: #a1a1a1;
-  --cc-gray-500: #737373;
-  --cc-gray-600: #525252;
-  --cc-gray-700: #3f3f3f;
-  --cc-gray-800: #262626;
-  --cc-gray-900: #171717;
+/* Monochrome reset for anchor and button defaults */
+a {
+  color: inherit;             /* inherit white/grey, not Tailwind blue */
+  text-decoration: none;      /* no underline by default */
+}
+a:hover {
+  color: #e5e5e5;             /* soft grey hover */
 }
 
-/* Base reset in case anything slips through */
-html, body {
-  background: var(--cc-bg);
-  color: var(--cc-text);
+button {
+  color: inherit;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+button:hover {
+  border-color: rgba(255,255,255,0.22);
 }
 
-/* Optional: white-only glow utility (for hero headlines, subtle) */
+/* If you ever use "prose", neuter its link color */
+.prose a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,0.3);
+}
+.prose a:hover {
+  text-decoration-color: rgba(255,255,255,0.6);
+}
+
+/* Optional: white-only glow utility */
 .glow-white {
   text-shadow:
     0 0 16px rgba(255,255,255,0.08),

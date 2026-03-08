@@ -1,6 +1,4 @@
-
 // components/Nav.tsx
-
 "use client";
 
 import Link from "next/link";
@@ -12,7 +10,7 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/explore", label: "Explore" },
   { href: "/upload", label: "Upload" },
-  { href: "/u/stacy", label: "Account" }, // swap to dynamic/auth route later
+  { href: "/u/stacy", label: "Account" }, // swap to auth-aware route later
 ];
 
 const external = [
@@ -23,11 +21,10 @@ const external = [
   { href: "https://discord.com", label: "Discord" },
 ];
 
-export default function Navbar() {
+export default function Nav() {
   const pathname = usePathname();
 
   const active = useMemo(() => {
-    // basic active match on first segment
     if (!pathname) return "/";
     if (pathname === "/") return "/";
     const first = "/" + pathname.split("/").filter(Boolean)[0];
@@ -41,11 +38,11 @@ export default function Navbar() {
         <div className="flex items-center gap-7">
           <Link href="/" className="flex items-center">
             <Image
-              src="/CC-MAIN-Logo.png" // ensure file exists under /public
+              src="/CC-MAIN-Logo.png"
               alt="CollectorConnector"
-              width={132}
-              height={28}
-              className="h-7 w-auto"
+              width={128}
+              height={32}
+              className="h-8 w-auto"
               priority
             />
           </Link>
@@ -59,9 +56,7 @@ export default function Navbar() {
                   href={href}
                   className={[
                     "transition-colors",
-                    isActive
-                      ? "text-white"
-                      : "text-zinc-400 hover:text-zinc-200",
+                    isActive ? "text-white" : "text-zinc-400 hover:text-zinc-200",
                   ].join(" ")}
                 >
                   {label}

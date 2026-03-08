@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
 import TierBadge from "@/components/TierBadge";
 
 export default function EditProfilePage() {

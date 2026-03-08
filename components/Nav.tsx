@@ -31,18 +31,16 @@ export default function Nav() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/80 backdrop-blur">
-      {/* Taller, airier bar; tighter type; subtle hover only */}
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* LEFT: Logo + Primary Nav */}
         <div className="flex items-center gap-8">
-          <Link href="/" aria-label="CollectorConnector">
-            {/* Fixed intrinsic size + contain to prevent any distortion */}
+          <Link href="/" className="flex items-center" aria-label="CollectorConnector home">
             <Image
-              src="/CC-main-logo.png"
+              src="/CC-main-logo.png"   // <-- exact filename + case in /public
               alt="CollectorConnector"
-              width={120}
+              width={120}               // intrinsic size (tweak if you want larger/smaller)
               height={28}
-              className="block h-auto w-[120px] object-contain"
+              className="h-[28px] w-[120px] object-contain"
               priority
             />
           </Link>
@@ -54,10 +52,7 @@ export default function Nav() {
                 <Link
                   key={href}
                   href={href}
-                  className={[
-                    "transition-colors",
-                    isActive ? "text-white" : "text-zinc-400 hover:text-zinc-200",
-                  ].join(" ")}
+                  className={isActive ? "text-white" : "text-zinc-400 hover:text-zinc-200 transition-colors"}
                 >
                   {label}
                 </Link>
@@ -66,7 +61,7 @@ export default function Nav() {
           </nav>
         </div>
 
-        {/* RIGHT: External links (neutral only) */}
+        {/* RIGHT: External links */}
         <div className="hidden sm:flex items-center gap-4 text-sm">
           {external.map(({ href, label }) => (
             <a

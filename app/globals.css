@@ -1,11 +1,15 @@
-/* Force black canvas + white text */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Black canvas + white type */
 html, body { background:#000; color:#fff; }
 
-/* Kill browser blue on links */
+/* No browser blue links */
 a { color: inherit; text-decoration: none; }
 a:hover { color: #e5e5e5; }
 
-/* Subtle white-only glow (used on the headline) */
+/* Subtle white‑only glow for the headline */
 .glow-white {
   text-shadow:
     0 0 16px rgba(255,255,255,0.08),

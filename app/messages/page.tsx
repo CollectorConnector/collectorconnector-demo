@@ -3,65 +3,69 @@
 import Link from "next/link";
 import TierBadge from "@/components/TierBadge";
 
-export default function ConversationsList() {
-  // Temporary mock data
+export default function MessagesPage() {
+  // Mock conversations (replace with Supabase later)
   const conversations = [
     {
       id: "1",
-      name: "Richard House",
-      username: "richard",
+      name: "Alex",
+      username: "alex123",
       avatar: "/default-avatar.png",
-      tier: "FOUNDER",
-      lastMessage: "It’s looking amazing already.",
-      time: "2h",
+      tier: "GOLD" as "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "DIAMOND",
+      lastMessage: "Hey! What do you collect?",
     },
     {
       id: "2",
-      name: "Sarah Collins",
-      username: "sarahc",
+      name: "Jamie",
+      username: "jamie_cards",
       avatar: "/default-avatar.png",
-      tier: "GOLD",
-      lastMessage: "Did you see the new card drop?",
-      time: "5h",
+      tier: "SILVER" as "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "DIAMOND",
+      lastMessage: "Got any new pulls?",
+    },
+    {
+      id: "3",
+      name: "Taylor",
+      username: "taylor_collects",
+      avatar: "/default-avatar.png",
+      tier: "BRONZE" as "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "DIAMOND",
+      lastMessage: "Let’s trade sometime!",
     },
   ];
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-6 space-y-4">
+    <div className="p-6 space-y-6 text-white">
 
-      <h1 className="text-2xl font-semibold mb-4">Messages</h1>
+      <h1 className="text-2xl font-bold mb-4">Messages</h1>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {conversations.map((c) => (
           <Link
             key={c.id}
             href={`/messages/${c.id}`}
-            className="flex items-center gap-4 p-3 rounded-2xl border border-gray-200 hover:bg-gray-50 transition"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-gray-900 hover:bg-gray-800 transition"
           >
             {/* Avatar */}
-            <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-sm">
-              <img
-                src={c.avatar}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <img
+              src={c.avatar}
+              className="w-12 h-12 rounded-2xl object-cover"
+            />
 
-            {/* Text */}
-            <div className="flex-1">
+            {/* Name + Tier + Username */}
+            <div className="flex flex-col flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-medium">{c.name}</span>
+
+                {/* TierBadge is now ALWAYS valid */}
                 <TierBadge tier={c.tier} size="xs" />
               </div>
 
               <span className="text-sm text-gray-500">@{c.username}</span>
-
-              <p className="text-sm text-gray-700 mt-1 truncate">
-                {c.lastMessage}
-              </p>
             </div>
 
-            {/* Time */}
-            <span className="text-xs text-gray-400">{c.time}</span>
+            {/* Last message preview */}
+            <span className="text-sm text-gray-400 truncate max-w-[120px]">
+              {c.lastMessage}
+            </span>
           </Link>
         ))}
       </div>

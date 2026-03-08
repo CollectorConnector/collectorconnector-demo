@@ -25,8 +25,7 @@ export default function Nav() {
   const pathname = usePathname();
 
   const active = useMemo(() => {
-    if (!pathname) return "/";
-    if (pathname === "/") return "/";
+    if (!pathname || pathname === "/") return "/";
     const first = "/" + pathname.split("/").filter(Boolean)[0];
     return first;
   }, [pathname]);
@@ -36,14 +35,15 @@ export default function Nav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* LEFT: Logo + Primary Nav */}
         <div className="flex items-center gap-7">
-          <Link href="/" className="flex items-center">
-            {/* Fixed size + contain prevents squish */}
+          <Link href="/" className="flex items-center" aria-label="CollectorConnector">
+            {/* Explicit intrinsic size + object-contain prevents squish.
+               Adjust width/height to your desired visual size. */}
             <Image
               src="/CC-main-logo.png"
               alt="CollectorConnector"
-              width={140}
-              height={28}
-              className="h-7 w-auto object-contain"
+              width={128}
+              height={32}
+              className="h-8 w-auto object-contain"
               priority
             />
           </Link>
@@ -56,7 +56,7 @@ export default function Nav() {
                   key={href}
                   href={href}
                   className={[
-                    "transition-colors no-underline",
+                    "transition-colors",
                     isActive ? "text-white" : "text-zinc-400 hover:text-zinc-200",
                   ].join(" ")}
                 >
@@ -75,7 +75,7 @@ export default function Nav() {
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="hover:text-zinc-200 transition-colors no-underline"
+              className="hover:text-zinc-200 transition-colors"
             >
               {label}
             </a>

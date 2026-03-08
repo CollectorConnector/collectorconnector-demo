@@ -1,34 +1,110 @@
-// app/layout.tsx
 import "./globals.css";
-import type { Metadata } from "next";
-import { ReactNode } from "react";
-import Nav from "../components/Nav";
+import Link from "next/link";
+import React from "react";
+import { Inter } from "next/font/google";
 
-export const metadata: Metadata = {
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+export const metadata = {
   title: "CollectorConnector",
   description: "Where collectors meet",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full bg-black text-white antialiased">
-        <div className="min-h-screen flex flex-col">
-          <Nav />
+    <html lang="en">
+      <head />
+      <body
+        className={inter.className}
+        style={{
+          margin: 0,
+          padding: 0,
+          background: "#000",
+          color: "#fff",
+        }}
+      >
+        {/* NAVBAR */}
+        <header
+          style={{
+            width: "100%",
+            padding: "14px 24px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: "#000",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            position: "sticky",
+            top: 0,
+            zIndex: 50,
+          }}
+        >
+          {/* LEFT SIDE */}
+          <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center" }}>
+              <img
+                src="/CC-MAIN-Logo.png"
+                alt="CollectorConnector"
+                style={{ height: 32, objectFit: "contain" }}
+              />
+            </Link>
 
-          {/* Center every page inside one consistent container */}
-          <main className="flex-1">
-            <div className="mx-auto max-w-5xl px-6 py-14 md:py-20">
-              {children}
-            </div>
-          </main>
+            <nav
+              style={{
+                display: "flex",
+                gap: 20,
+                fontSize: 15,
+                color: "#A1A1A1",
+                fontWeight: 500,
+              }}
+            >
+              <Link href="/" style={{ color: "#A1A1A1", textDecoration: "none" }}>
+                Home
+              </Link>
+              <Link href="/explore" style={{ color: "#A1A1A1", textDecoration: "none" }}>
+                Explore
+              </Link>
+              <Link href="/upload" style={{ color: "#A1A1A1", textDecoration: "none" }}>
+                Upload
+              </Link>
+              <Link href="/profile/1" style={{ color: "#A1A1A1", textDecoration: "none" }}>
+                Account
+              </Link>
+            </nav>
+          </div>
 
-          <footer className="border-t border-white/10">
-            <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-zinc-400">
-              © {new Date().getFullYear()} CollectorConnector. All rights reserved.
-            </div>
-          </footer>
-        </div>
+          {/* RIGHT SIDE */}
+          <div
+            style={{
+              display: "flex",
+              gap: 16,
+              fontSize: 14,
+              alignItems: "center",
+              color: "#A1A1A1",
+            }}
+          >
+            <a href="https://www.ebay.com" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
+              eBay
+            </a>
+            <a href="https://www.whatnot.com" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
+              Whatnot
+            </a>
+            <a href="https://www.instagram.com" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
+              Instagram
+            </a>
+            <a href="https://www.youtube.com" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
+              YouTube
+            </a>
+            <a href="https://discord.com" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
+              Discord
+            </a>
+          </div>
+        </header>
+
+        {/* PAGE CONTENT */}
+        <main style={{ minHeight: "100vh" }}>{children}</main>
       </body>
     </html>
   );

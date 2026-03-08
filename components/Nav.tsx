@@ -10,7 +10,7 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/explore", label: "Explore" },
   { href: "/upload", label: "Upload" },
-  { href: "/u/stacy", label: "Account" }, // swap to auth-aware route later
+  { href: "/u/stacy", label: "Account" },
 ];
 
 const external = [
@@ -23,7 +23,6 @@ const external = [
 
 export default function Nav() {
   const pathname = usePathname();
-
   const active = useMemo(() => {
     if (!pathname || pathname === "/") return "/";
     const first = "/" + pathname.split("/").filter(Boolean)[0];
@@ -32,23 +31,23 @@ export default function Nav() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/80 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+      {/* Taller, airier bar; tighter type; subtle hover only */}
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* LEFT: Logo + Primary Nav */}
-        <div className="flex items-center gap-7">
-          <Link href="/" className="flex items-center" aria-label="CollectorConnector">
-            {/* Explicit intrinsic size + object-contain prevents squish.
-               Adjust width/height to your desired visual size. */}
+        <div className="flex items-center gap-8">
+          <Link href="/" aria-label="CollectorConnector">
+            {/* Fixed intrinsic size + contain to prevent any distortion */}
             <Image
               src="/CC-main-logo.png"
               alt="CollectorConnector"
-              width={128}
-              height={32}
-              className="h-8 w-auto object-contain"
+              width={120}
+              height={28}
+              className="block h-auto w-[120px] object-contain"
               priority
             />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
             {navItems.map(({ href, label }) => {
               const isActive = active === href || pathname === href;
               return (
@@ -67,15 +66,15 @@ export default function Nav() {
           </nav>
         </div>
 
-        {/* RIGHT: External links (neutral grey only) */}
-        <div className="hidden sm:flex items-center gap-4 text-sm text-zinc-400">
+        {/* RIGHT: External links (neutral only) */}
+        <div className="hidden sm:flex items-center gap-4 text-sm">
           {external.map(({ href, label }) => (
             <a
               key={href}
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="hover:text-zinc-200 transition-colors"
+              className="text-zinc-400 hover:text-zinc-200 transition-colors"
             >
               {label}
             </a>

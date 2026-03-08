@@ -36,14 +36,15 @@ export default function Nav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* LEFT: Logo + Primary Nav */}
         <div className="flex items-center gap-7">
-          <Link href="/" className="block" aria-label="CollectorConnector Home">
+          <Link href="/" className="flex items-center" aria-label="CollectorConnector">
+            {/* Fixed size prevents squish; fill transparent space with object-contain */}
             <Image
-              src="/CC-main-logo.png" // <-- exact filename and case in /public
+              src="/CC-main-logo.png" // exact filename you confirmed
               alt="CollectorConnector"
-              width={120}
-              height={32}
+              width={132}
+              height={28}
+              className="h-7 w-[132px] object-contain"
               priority
-              className="h-8 w-auto"
             />
           </Link>
 
@@ -55,7 +56,7 @@ export default function Nav() {
                   key={href}
                   href={href}
                   className={[
-                    "transition-colors",
+                    "transition-colors no-underline",
                     isActive ? "text-white" : "text-zinc-400 hover:text-zinc-200",
                   ].join(" ")}
                 >
@@ -66,7 +67,7 @@ export default function Nav() {
           </nav>
         </div>
 
-        {/* RIGHT: External links (neutral, grey only) */}
+        {/* RIGHT: External links (neutral grey only) */}
         <div className="hidden sm:flex items-center gap-4 text-sm text-zinc-400">
           {external.map(({ href, label }) => (
             <a
@@ -74,7 +75,7 @@ export default function Nav() {
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="hover:text-zinc-200 transition-colors"
+              className="hover:text-zinc-200 transition-colors no-underline"
             >
               {label}
             </a>
@@ -84,4 +85,3 @@ export default function Nav() {
     </header>
   );
 }
-``

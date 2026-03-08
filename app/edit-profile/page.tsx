@@ -53,7 +53,9 @@ export default function EditProfilePage() {
 
       {/* Tier Preview */}
       <div className="flex justify-center">
-        <TierBadge tier={tier} size="md" />
+        {tier !== "" && (
+          <TierBadge tier={tier} size="md" />
+        )}
       </div>
 
       {/* Form */}

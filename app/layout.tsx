@@ -15,12 +15,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="h-full bg-black text-white antialiased">
         <div className="min-h-screen flex flex-col">
           <Nav />
-          <main className="flex-1">
-            {children}
-          </main>
+          <main className="flex-1">{children}</main>
           <footer className="border-t border-white/10">
             <div className="mx-auto max-w-7xl px-6 py-6 text-sm text-zinc-400">
               © {new Date().getFullYear()} CollectorConnector. All rights reserved.
             </div>
           </footer>
-        </div
+        </div>
+      </body>
+    </html>
+  );
+}

@@ -36,14 +36,14 @@ export default function Nav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* LEFT: Logo + Primary Nav */}
         <div className="flex items-center gap-7">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="block" aria-label="CollectorConnector Home">
             <Image
-              src="/CC-main-logo.png"      // ← matches your exact filename
+              src="/CC-main-logo.png" // <-- exact filename and case in /public
               alt="CollectorConnector"
-              width={128}
+              width={120}
               height={32}
-              className="h-8 w-auto"
               priority
+              className="h-8 w-auto"
             />
           </Link>
 
@@ -66,7 +66,7 @@ export default function Nav() {
           </nav>
         </div>
 
-        {/* RIGHT: External links (neutral, grey) */}
+        {/* RIGHT: External links (neutral, grey only) */}
         <div className="hidden sm:flex items-center gap-4 text-sm text-zinc-400">
           {external.map(({ href, label }) => (
             <a
@@ -84,3 +84,4 @@ export default function Nav() {
     </header>
   );
 }
+``

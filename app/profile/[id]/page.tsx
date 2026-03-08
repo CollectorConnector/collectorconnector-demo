@@ -1,74 +1,75 @@
 "use client";
 
-import Link from "next/link";
 import TierBadge from "@/components/TierBadge";
 
-export default function ProfilePage({ params }) {
+export default function ProfilePage({ params }: { params: { id: string } }) {
   const { id } = params;
 
   // TEMP MOCK DATA — replace with Supabase later
-  const mockProfiles = {
-    "1": {
-      name: "Richard House",
-      username: "richard",
-      avatar: "/default-avatar.png",
-      tier: "FOUNDER",
-      bio: "Co-founder energy. Collector of rare things.",
-    },
-    "2": {
-      name: "Sarah Collins",
-      username: "sarahc",
-      avatar: "/default-avatar.png",
-      tier: "GOLD",
-      bio: "Vintage collector & marketplace nerd.",
-    },
-  };
-
-  const profile = mockProfiles[id] || {
-    name: "Unknown User",
-    username: "unknown",
+  const user = {
+    id,
+    name: "Stacy Pearce",
+    username: "stacy_collects",
     avatar: "/default-avatar.png",
-    tier: "BRONZE",
-    bio: "This user has no bio yet.",
+    bio: "Founder of CollectorConnector. Collector of Pokémon, vintage cards, and rare finds.",
+    niche: "Pokémon & Vintage Cards",
+    tier: "FOUNDER" as "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "DIAMOND",
+    collections: [
+      { id: 1, title: "Pokémon Grails", count: 12 },
+      { id: 2, title: "Vintage Cards", count: 8 },
+      { id: 3, title: "Rare Finds", count: 5 },
+    ],
   };
 
   return (
-    <div className="max-w-xl mx-auto px-6 py-8 space-y-6">
+    <div className="max-w-2xl mx-auto px-6 py-10 text-white space-y-10">
 
-      {/* Avatar */}
-      <div className="flex justify-center">
-        <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-md">
-          <img
-            src={profile.avatar}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      </div>
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <img
+          src={user.avatar}
+          className="w-24 h-24 rounded-3xl object-cover border border-gray-700"
+        />
 
-      {/* Name + Tier */}
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-semibold">{profile.name}</h1>
-        <div className="flex justify-center">
-          <TierBadge tier={profile.tier} size="md" />
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold">{user.name}</h1>
+          <span className="text-gray-400">@{user.username}</span>
+
+          <div className="mt-2">
+            <TierBadge tier={user.tier} size="md" />
+          </div>
         </div>
-        <p className="text-gray-500">@{profile.username}</p>
       </div>
 
       {/* Bio */}
-      <p className="text-center text-gray-700">{profile.bio}</p>
+      <div>
+        <h2 className="text-lg font-semibold mb-2">Bio</h2>
+        <p className="text-gray-300">{user.bio}</p>
+      </div>
 
-      {/* MESSAGE BUTTON */}
-      <Link
-        href={`/messages/${id}`}
-        className="block w-full py-3 rounded-full bg-black text-white font-medium text-center"
-      >
-        Message
-      </Link>
+      {/* Niche */}
+      <div>
+        <h2 className="text-lg font-semibold mb-2">Collector Niche</h2>
+        <p className="text-gray-300">{user.niche}</p>
+      </div>
 
-      {/* Placeholder for collections or other sections */}
-      <div className="pt-6 border-t border-gray-200">
-        <h2 className="text-lg font-semibold mb-3">Collections</h2>
-        <p className="text-gray-500">No collections yet.</p>
+      {/* Collections */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Collections</h2>
+
+        <div className="space-y-3">
+          {user.collections.map((col) => (
+            <div
+              key={col.id}
+              className="p-4 rounded-2xl bg-gray-900 border border-gray-800"
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-medium">{col.title}</span>
+                <span className="text-gray-400">{col.count} items</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
     </div>

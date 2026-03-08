@@ -14,11 +14,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         style={{
           margin: 0,
           padding: 0,
-          background: "#0a0a0a",
+          background: "#000",
           color: "#fff",
           fontFamily: "system-ui, sans-serif",
         }}
       >
+        {/* NAVBAR */}
         <header
           style={{
             width: "100%",
@@ -26,14 +27,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            background: "rgba(10,10,10,0.92)",
-            backdropFilter: "blur(12px)",
+            background: "#000",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
             position: "sticky",
             top: 0,
             zIndex: 50,
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
           }}
         >
+          {/* LEFT SIDE */}
           <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
             <Link href="/" style={{ display: "flex", alignItems: "center" }}>
               <img
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </nav>
           </div>
 
+          {/* RIGHT SIDE */}
           <div
             style={{
               display: "flex",
@@ -76,26 +78,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               color: "#A1A1A1",
             }}
           >
-            <a href="https://www.ebay.com" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
+            <a href="https://urldefense.com/v3/__https://www.ebay.com__;!!PueBjVrnR72GDHWe!Tj61KxMSsmqsbnR1tLCk7bK9InOPUe0P-xh4krnitO32W00gsHv6dPgNm6MAA11ugiF8K8YUG2KBqD5BhKJYT05TsuBAKVnpQgY$" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
               eBay
             </a>
-            <a href="https://www.whatnot.com" target="_blank" rel="noreferrer" className="hide-mobile" style={{ color: "#A1A1A1" }}>
+            <a href="https://urldefense.com/v3/__https://www.whatnot.com__;!!PueBjVrnR72GDHWe!Tj61KxMSsmqsbnR1tLCk7bK9InOPUe0P-xh4krnitO32W00gsHv6dPgNm6MAA11ugiF8K8YUG2KBqD5BhKJYT05TsuBAEj4eYMQ$" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
               Whatnot
             </a>
-            <a href="https://www.instagram.com" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
+            <a href="https://urldefense.com/v3/__https://www.instagram.com__;!!PueBjVrnR72GDHWe!Tj61KxMSsmqsbnR1tLCk7bK9InOPUe0P-xh4krnitO32W00gsHv6dPgNm6MAA11ugiF8K8YUG2KBqD5BhKJYT05TsuBAx3HU3wU$" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
               Instagram
             </a>
-            <a href="https://www.youtube.com" target="_blank" rel="noreferrer" className="hide-mobile" style={{ color: "#A1A1A1" }}>
+            <a href="https://urldefense.com/v3/__https://www.youtube.com__;!!PueBjVrnR72GDHWe!Tj61KxMSsmqsbnR1tLCk7bK9InOPUe0P-xh4krnitO32W00gsHv6dPgNm6MAA11ugiF8K8YUG2KBqD5BhKJYT05TsuBASddeiQ4$" target="_blank" rel="noreferrer" style={{ color: "#A1A1A1" }}>
               YouTube
             </a>
-            <a href="https://discord.com" target="_blank" rel="noreferrer" className="hide-mobile" style={{ color: "#A1A1A1" }}>
-              Discord
-            </a>
-          </div>
-        </header>
-
-        {children}
-      </body>
-    </html>
-  );
-}
+            <a href="https://urldefense.com/v3/__https://discord.com__;!!PueBjVrnR72GDHWe!Tj61KxMSsmqsbnR1tLCk7bK9InOPUe0P-xh4krnitO32W00gsHv6dPgNm6MAA11ugiF8K8YUG2KBqD5BhKJYT05TsuBAEI_dAsI$

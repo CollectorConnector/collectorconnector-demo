@@ -2,7 +2,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
-import Nav from "../components/Nav"; // ✅ correct path given your structure
+import Nav from "../components/Nav";
 
 export const metadata: Metadata = {
   title: "CollectorConnector",

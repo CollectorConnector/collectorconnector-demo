@@ -41,9 +41,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             zIndex: 50,
           }}
         >
-          {/* LEFT SIDE */}
+          {/* LEFT SIDE: SMALL LOGO + MAIN LOGO */}
           <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-            <Link href="/" style={{ display: "flex", alignItems: "center" }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <img
+                src="/CC-SML-Logo.png"
+                alt="CC Small Logo"
+                style={{ height: 26, width: 26, objectFit: "contain" }}
+              />
+
               <img
                 src="/CC-MAIN-Logo.png"
                 alt="CollectorConnector"
@@ -51,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               />
             </Link>
 
+            {/* NAV LINKS */}
             <nav
               style={{
                 display: "flex",
@@ -75,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </nav>
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT SIDE: EXTERNAL LINKS */}
           <div
             style={{
               display: "flex",

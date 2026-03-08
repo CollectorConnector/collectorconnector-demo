@@ -9,15 +9,20 @@ export const metadata: Metadata = {
   description: "Where collectors meet",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full">
       <body className="h-full bg-black text-white antialiased">
         <div className="min-h-screen flex flex-col">
           <Nav />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1">
+            {/* Premium container: narrower than full, generous vertical spacing */}
+            <div className="mx-auto max-w-7xl px-6 py-12 md:py-16">
+              {children}
+            </div>
+          </main>
           <footer className="border-t border-white/10">
-            <div className="mx-auto max-w-7xl px-6 py-6 text-sm text-zinc-400">
+            <div className="mx-auto max-w-7xl px-6 py-8 text-sm text-zinc-400">
               © {new Date().getFullYear()} CollectorConnector. All rights reserved.
             </div>
           </footer>

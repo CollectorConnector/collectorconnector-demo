@@ -1,77 +1,176 @@
 "use client";
 
-import TierBadge from "@/components/TierBadge";
+import Image from "next/image";
 
-export default function ProfilePage({ params }: { params: { id: string } }) {
-  const { id } = params;
-
-  // TEMP MOCK DATA — replace with Supabase later
-  const user = {
-    id,
-    name: "Stacy Pearce",
-    username: "stacy_collects",
-    avatar: "/default-avatar.png",
-    bio: "Founder of CollectorConnector. Collector of Pokémon, vintage cards, and rare finds.",
-    niche: "Pokémon & Vintage Cards",
-    tier: "FOUNDER" as "FOUNDER" | "GOLD" | "SILVER" | "BRONZE" | "DIAMOND",
-    collections: [
-      { id: 1, title: "Pokémon Grails", count: 12 },
-      { id: 2, title: "Vintage Cards", count: 8 },
-      { id: 3, title: "Rare Finds", count: 5 },
-    ],
-  };
-
+export default function ProfilePage() {
   return (
-    <div className="max-w-2xl mx-auto px-6 py-10 text-white space-y-10">
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#000",
+        color: "#fff",
+        padding: "24px 20px",
+        fontFamily: "inherit",
+      }}
+    >
+      {/* HEADER: NAME + BADGE */}
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 10,
+            alignItems: "center",
+          }}
+        >
+          <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>
+            Stacy Pearce
+          </h1>
 
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <img
-          src={user.avatar}
-          className="w-24 h-24 rounded-3xl object-cover border border-gray-700"
-        />
+          <img
+            src="/gold.png"
+            alt="Gold Badge"
+            style={{ height: 26, width: 26, objectFit: "contain" }}
+          />
+        </div>
 
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-bold">{user.name}</h1>
-          <span className="text-gray-400">@{user.username}</span>
+        <p style={{ color: "#A1A1A1", marginTop: 6 }}>
+          Collector of watches, Pokémon cards, coins & pub history
+        </p>
 
-          <div className="mt-2">
-            <TierBadge tier={user.tier} size="md" />
+        <p style={{ color: "#A1A1A1", marginTop: 4 }}>Swindon, UK</p>
+      </div>
+
+      {/* STATS */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          background: "#111",
+          padding: "16px 20px",
+          borderRadius: 12,
+          marginBottom: 32,
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>2.1k</p>
+          <p style={{ color: "#A1A1A1", fontSize: 13 }}>Items</p>
+        </div>
+
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>4</p>
+          <p style={{ color: "#A1A1A1", fontSize: 13 }}>Categories</p>
+        </div>
+
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>90.8</p>
+          <p style={{ color: "#A1A1A1", fontSize: 13 }}>Rarity</p>
+        </div>
+      </div>
+
+      {/* COLLECTIONS */}
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+        Collections
+      </h2>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 32,
+        }}
+      >
+        {["Cards", "Watches", "Coins", "Memorabilia"].map((c) => (
+          <div
+            key={c}
+            style={{
+              padding: "10px 16px",
+              background: "#111",
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            {c}
+          </div>
+        ))}
+      </div>
+
+      {/* ACTIVITY */}
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+        Activity
+      </h2>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: 12,
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ position: "relative" }}>
+          <img
+            src="/charizard.png"
+            alt="Featured Card"
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: 10,
+              objectFit: "cover",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: 6,
+              left: 6,
+              background: "#fff",
+              color: "#000",
+              padding: "2px 6px",
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 700,
+            }}
+          >
+            Featured
           </div>
         </div>
+
+        <img
+          src="/watch.png"
+          alt="Watch"
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: 10,
+            objectFit: "cover",
+          }}
+        />
+
+        <img
+          src="/coin.png"
+          alt="Coin"
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: 10,
+            objectFit: "cover",
+          }}
+        />
       </div>
 
-      {/* Bio */}
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Bio</h2>
-        <p className="text-gray-300">{user.bio}</p>
+      {/* POST */}
+      <div style={{ marginBottom: 80 }}>
+        <p style={{ color: "#A1A1A1", fontSize: 13, marginBottom: 6 }}>
+          2 hours ago
+        </p>
+
+        <p style={{ fontSize: 15 }}>
+          Just added this one to the collection. What do you think
+        </p>
       </div>
-
-      {/* Niche */}
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Collector Niche</h2>
-        <p className="text-gray-300">{user.niche}</p>
-      </div>
-
-      {/* Collections */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Collections</h2>
-
-        <div className="space-y-3">
-          {user.collections.map((col) => (
-            <div
-              key={col.id}
-              className="p-4 rounded-2xl bg-gray-900 border border-gray-800"
-            >
-              <div className="flex justify-between items-center">
-                <span className="font-medium">{col.title}</span>
-                <span className="text-gray-400">{col.count} items</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
     </div>
   );
 }

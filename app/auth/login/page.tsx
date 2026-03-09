@@ -12,40 +12,18 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // GOOGLE LOGIN
-  async function handleGoogleLogin() {
+  // SOCIAL LOGIN HANDLERS
+  async function handleOAuth(provider: "google" | "apple" | "facebook") {
     setErrorMessage("");
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) setErrorMessage(error.message);
-  }
-
-  // APPLE LOGIN
-  async function handleAppleLogin() {
-    setErrorMessage("");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) setErrorMessage(error.message);
-  }
-
-  // FACEBOOK LOGIN
-  async function handleFacebookLogin() {
-    setErrorMessage("");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "facebook",
+      provider,
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) setErrorMessage(error.message);
   }
 
   // EMAIL LOGIN
-  async function handleEmailLogin(
-    e: React.FormEvent<HTMLFormElement>
-  ) {
+  async function handleEmailLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMessage("");
     setSubmitting(true);
@@ -69,7 +47,7 @@ export default function LoginPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#0a0a0a",
+        background: "#000",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -81,8 +59,8 @@ export default function LoginPage() {
           width: "100%",
           maxWidth: "420px",
           padding: "32px",
-          background: "#111",
-          border: "1px solid #1F2937",
+          background: "#0d0d0d",
+          border: "1px solid #1a1a1a",
           borderRadius: "14px",
           color: "#fff",
           boxShadow: "0 0 40px rgba(0,0,0,0.4)",
@@ -139,15 +117,15 @@ export default function LoginPage() {
         {/* SOCIAL BUTTONS */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
           <button
-            onClick={handleGoogleLogin}
+            onClick={() => handleOAuth("google")}
             style={{
               width: "100%",
               padding: "12px",
-              background: "#fff",
-              color: "#000",
+              background: "#111",
+              color: "#fff",
               fontWeight: 600,
               borderRadius: 8,
-              border: "none",
+              border: "1px solid #333",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -155,12 +133,12 @@ export default function LoginPage() {
               cursor: "pointer",
             }}
           >
-            <span style={{ fontSize: 20 }}>🟦</span>
+            <span style={{ fontSize: 20 }}>🔍</span>
             Continue with Google
           </button>
 
           <button
-            onClick={handleAppleLogin}
+            onClick={() => handleOAuth("apple")}
             style={{
               width: "100%",
               padding: "12px",
@@ -181,15 +159,15 @@ export default function LoginPage() {
           </button>
 
           <button
-            onClick={handleFacebookLogin}
+            onClick={() => handleOAuth("facebook")}
             style={{
               width: "100%",
               padding: "12px",
-              background: "#1877F2",
+              background: "#111",
               color: "#fff",
               fontWeight: 600,
               borderRadius: 8,
-              border: "none",
+              border: "1px solid #333",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -267,7 +245,7 @@ export default function LoginPage() {
               marginTop: 4,
               width: "100%",
               padding: "12px",
-              background: "#4ADE80",
+              background: "#fff",
               color: "#000",
               fontWeight: 700,
               border: "none",
@@ -282,7 +260,7 @@ export default function LoginPage() {
 
         <div style={{ marginTop: 18, color: "#9CA3AF", fontSize: 14, textAlign: "center" }}>
           New to CollectorConnector{" "}
-          <a href="/auth/signup" style={{ color: "#4ADE80", textDecoration: "none", fontWeight: 600 }}>
+          <a href="/auth/signup" style={{ color: "#fff", textDecoration: "none", fontWeight: 600 }}>
             Create an account
           </a>
         </div>

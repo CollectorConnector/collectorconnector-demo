@@ -33,7 +33,8 @@ export default function AuthCallback() {
       if (!profile) {
         router.push("/edit-profile"); // first time
       } else {
-        router.push("/account"); // returning user
+        router.push(`/profile/${session.user.id}`); // returning user
+
       }
 
       setLoading(false);

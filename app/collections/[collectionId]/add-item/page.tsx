@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
 interface AddItemPageProps {
   params: {
@@ -10,6 +11,17 @@ interface AddItemPageProps {
 
 const AddItemPage = ({ params }: AddItemPageProps) => {
   const { collectionId } = params;
+
+  // Supabase client
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  // -----------------------------
+  // Image upload state
+  // -----------------------------
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   // -----------------------------
   // Currency formatting state + logic
@@ -48,6 +60,32 @@ const AddItemPage = ({ params }: AddItemPageProps) => {
   };
 
   // -----------------------------
+  // Upload image to Supabase Storage
+  // -----------------------------
+  const uploadImage = async () => {
+    if (!imageFile) return null;
+
+    const fileExt = imageFile.name.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = `items/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from("item-images")
+      .upload(filePath, imageFile);
+
+    if (error) {
+      console.error("Upload error:", error);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from("item-images")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
+  // -----------------------------
   // UI
   // -----------------------------
   return (
@@ -66,6 +104,11 @@ const AddItemPage = ({ params }: AddItemPageProps) => {
             <input
               type="file"
               accept="image/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setImageFile(e.target.files[0]);
+                }
+              }}
               className="w-full rounded-md border border-neutral-300 p-2 text-sm"
             />
           </div>
@@ -99,6 +142,10 @@ const AddItemPage = ({ params }: AddItemPageProps) => {
           {/* Submit */}
           <button
             type="button"
+            onClick={async () => {
+              const url = await uploadImage();
+              console.log("Uploaded image URL:", url);
+            }}
             className="w-full rounded-md bg-black py-2 text-white text-sm font-medium"
           >
             Save item

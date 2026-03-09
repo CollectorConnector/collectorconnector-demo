@@ -1,37 +1,53 @@
-// app/collections/[collectionId]/add-item/page.tsx
-import { type FC } from "react";
+<main className="min-h-screen px-4 py-8">
+  <div className="mx-auto w-full max-w-xl">
+    <h1 className="mb-6 text-2xl font-semibold tracking-tight">
+      Add item
+    </h1>
 
-interface AddItemPageProps {
-  params: {
-    collectionId: string;
-  };
-}
-
-const AddItemPage: FC<AddItemPageProps> = ({ params }) => {
-  const { collectionId } = params;
-
-  return (
-    <main className="min-h-screen px-4 py-8">
-      <div className="mx-auto w-full max-w-xl">
-        <h1 className="mb-4 text-2xl font-semibold tracking-tight">
-          Add item
-        </h1>
-        <p className="mb-2 text-sm text-neutral-500">
-          Collection ID: <span className="font-mono text-neutral-700">{collectionId}</span>
-        </p>
-
-        <div className="mt-6 rounded-lg border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
-          This is the Add Item page shell. Next, we’ll wire up:
-          <ul className="mt-2 list-disc pl-5">
-            <li>Image upload</li>
-            <li>Auto-suggested title</li>
-            <li>Formatted value input</li>
-            <li>Save to Supabase</li>
-          </ul>
-        </div>
+    <form className="space-y-6">
+      {/* Image upload */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Image
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          className="w-full rounded-md border border-neutral-300 p-2 text-sm"
+        />
       </div>
-    </main>
-  );
-};
 
-export default AddItemPage;
+      {/* Title */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Title
+        </label>
+        <input
+          type="text"
+          placeholder="e.g. Charizard VMAX"
+          className="w-full rounded-md border border-neutral-300 p-2 text-sm"
+        />
+      </div>
+
+      {/* Estimated value */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Estimated value
+        </label>
+        <input
+          type="text"
+          placeholder="£0.00"
+          className="w-full rounded-md border border-neutral-300 p-2 text-sm"
+        />
+      </div>
+
+      {/* Submit */}
+      <button
+        type="button"
+        className="w-full rounded-md bg-black py-2 text-white text-sm font-medium"
+      >
+        Save item
+      </button>
+    </form>
+  </div>
+</main>

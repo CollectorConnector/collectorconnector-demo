@@ -1,5 +1,8 @@
 import "./globals.css";
+import { Inter } from "next/font/google";
 import Link from "next/link";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "CollectorConnector",
@@ -9,8 +12,8 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-black text-white">
-        
+      <body className={`${inter.className} bg-black text-white`}>
+
         {/* FIXED NAV BAR */}
         <nav className="fixed top-0 left-0 w-full h-14 bg-black/80 backdrop-blur-md border-b border-gray-800 flex items-center justify-between px-4 z-50">
           <Link href="/" className="text-lg font-semibold">
@@ -25,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </nav>
 
-        {/* PAGE CONTENT WRAPPER */}
+        {/* PAGE CONTENT */}
         <main className="pt-16">
           {children}
         </main>

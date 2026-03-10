@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import TierBadge from "@/components/TierBadge";
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -31,38 +30,43 @@ export default function ProfilePage() {
   if (!profile) return <div className="p-6 text-white">Profile not found</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-10">
+    <div className="max-w-3xl mx-auto p-6 space-y-10">
 
-      {/* TOP LOGOS */}
-      <div className="flex justify-between items-center opacity-80">
-        <Image src="/logo-main.png" alt="Logo" width={120} height={40} />
-        <Image src="/logo-icon.png" alt="Icon" width={40} height={40} />
+      {/* MAIN LOGO */}
+      <div className="flex justify-center opacity-90 mb-4">
+        <Image src="/logo-main.png" alt="Logo" width={150} height={50} />
       </div>
 
       {/* HEADER */}
-      <div className="flex items-center gap-6 bg-[#1a1a1a] p-6 rounded-xl shadow-lg">
+      <div className="flex flex-col items-center text-center bg-[#1a1a1a] p-8 rounded-2xl shadow-xl">
+
         {/* Avatar */}
-        <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-700">
+        <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-700 shadow-md mb-4">
           <Image
             src={profile.avatar_url || "/default-avatar.png"}
             alt="Avatar"
-            width={80}
-            height={80}
+            width={96}
+            height={96}
             className="object-cover"
           />
         </div>
 
-        {/* Identity Block */}
-        <div className="flex flex-col">
-          <TierBadge tier={profile.tier} />
+        {/* Name */}
+        <h1 className="text-2xl font-semibold">{profile.display_name}</h1>
+        <p className="text-gray-400">@{profile.username}</p>
 
-          <h1 className="text-2xl font-semibold mt-1">{profile.display_name}</h1>
-          <p className="text-gray-400">@{profile.username}</p>
+        {/* Location */}
+        {profile.location && (
+          <p className="text-gray-500 text-sm mt-1">{profile.location}</p>
+        )}
 
-          {profile.location && (
-            <p className="text-gray-500 text-sm mt-1">{profile.location}</p>
-          )}
-        </div>
+        {/* Tier Badge */}
+        {profile.tier && (
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-gray-200 to-white text-black text-sm font-medium shadow-sm border border-gray-300">
+            <span>💎</span>
+            <span>{profile.tier} Tier</span>
+          </div>
+        )}
       </div>
 
       {/* ACTIVITY FEED */}
@@ -80,7 +84,7 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {/* Placeholder card */}
-          <div className="bg-[#1a1a1a] p-4 rounded-xl flex flex-col items-center justify-center text-gray-400">
+          <div className="bg-[#1a1a1a] p-4 rounded-xl flex flex-col items-center justify-center text-gray-400 h-32">
             <p>No collections yet</p>
           </div>
         </div>

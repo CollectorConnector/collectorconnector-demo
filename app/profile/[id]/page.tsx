@@ -9,44 +9,54 @@ export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
 
   const [profile, setProfile] = useState<any>(null);
+  const [collections, setCollections] = useState<any[]>([]);
+  const [activity, setActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchProfile() {
-      const { data, error } = await supabase
+    async function loadData() {
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", id)
         .single();
 
-      if (!error) setProfile(data);
+      const { data: collectionData } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("user_id", id);
+
+      const { data: activityData } = await supabase
+        .from("items")
+        .select("*")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false });
+
+      setProfile(profileData || null);
+      setCollections(collectionData || []);
+      setActivity(activityData || []);
       setLoading(false);
     }
 
-    fetchProfile();
+    loadData();
   }, [id]);
 
   if (loading) return <div className="p-6 text-white">Loading…</div>;
   if (!profile) return <div className="p-6 text-white">Profile not found</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-10">
+    <div className="max-w-3xl mx-auto px-4 pb-20 space-y-10">
 
-      {/* MAIN LOGO */}
-      <div className="flex justify-center opacity-90 mb-4">
-        <Image src="/logo-main.png" alt="Logo" width={150} height={50} />
-      </div>
-
-      {/* HEADER */}
-      <div className="flex flex-col items-center text-center bg-[#1a1a1a] p-8 rounded-2xl shadow-xl">
+      {/* PROFILE HEADER */}
+      <div className="flex flex-col items-center text-center mt-4">
 
         {/* Avatar */}
-        <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-700 shadow-md mb-4">
+        <div className="w-28 h-28 rounded-full overflow-hidden border border-gray-700 shadow-md mb-4">
           <Image
-            src={profile.avatar_url || "/default-avatar.png"}
+            src={profile.avatar_url || "/diamond.png"}
             alt="Avatar"
-            width={96}
-            height={96}
+            width={112}
+            height={112}
             className="object-cover"
           />
         </div>
@@ -62,32 +72,105 @@ export default function ProfilePage() {
 
         {/* Tier Badge */}
         {profile.tier && (
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-gray-200 to-white text-black text-sm font-medium shadow-sm border border-gray-300">
-            <span>💎</span>
-            <span>{profile.tier} Tier</span>
+          <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-black text-sm font-medium shadow-sm border border-gray-300">
+            <Image
+              src="/diamond.png"
+              alt="Diamond Tier"
+              width={18}
+              height={18}
+            />
+            <span>{profile.tier} Member</span>
           </div>
         )}
+
+        {/* Bio */}
+        {profile.bio && (
+          <p className="text-gray-300 text-sm mt-4 max-w-md">{profile.bio}</p>
+        )}
       </div>
+
+      {/* STATS */}
+      <div className="grid grid-cols-3 text-center bg-[#111] p-4 rounded-xl border border-gray-800">
+        <div>
+          <p className="text-xl font-semibold">{profile.items_count ?? 0}</p>
+          <p className="text-gray-400 text-sm">Items</p>
+        </div>
+        <div>
+          <p className="text-xl font-semibold">{profile.categories_count ?? 0}</p>
+          <p className="text-gray-400 text-sm">Categories</p>
+        </div>
+        <div>
+          <p className="text-xl font-semibold">{profile.rarity_score ?? 0}</p>
+          <p className="text-gray-400 text-sm">Rarity</p>
+        </div>
+      </div>
+
+      {/* COLLECTIONS GRID */}
+      <section>
+        <h2 className="text-xl font-semibold mb-3">Collections</h2>
+
+        {collections.length === 0 ? (
+          <p className="text-gray-400 text-sm">No collections yet</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {collections.map((col) => (
+              <div
+                key={col.id}
+                className="bg-[#111] rounded-xl overflow-hidden shadow-md border border-gray-800"
+              >
+                <div className="relative w-full h-48">
+                  <Image
+                    src={col.cover_image || "/diamond.png"}
+                    alt={col.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-3">
+                  <p className="font-medium">{col.name}</p>
+                  <p className="text-gray-400 text-xs">{col.item_count ?? 0} items</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* ACTIVITY FEED */}
       <section>
         <h2 className="text-xl font-semibold mb-3">Activity</h2>
 
-        <div className="bg-[#1a1a1a] p-4 rounded-xl space-y-3">
+        {activity.length === 0 ? (
           <p className="text-gray-400 text-sm">No recent activity yet</p>
-        </div>
-      </section>
+        ) : (
+          <div className="space-y-6">
+            {activity.map((item) => (
+              <div
+                key={item.id}
+                className="bg-[#111] rounded-xl p-4 border border-gray-800"
+              >
+                <div className="relative w-full h-64 rounded-lg overflow-hidden mb-3">
+                  <Image
+                    src={item.image_url || "/diamond.png"}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
 
-      {/* COLLECTIONS */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">Collections</h2>
+                <p className="font-medium">{item.title}</p>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {/* Placeholder card */}
-          <div className="bg-[#1a1a1a] p-4 rounded-xl flex flex-col items-center justify-center text-gray-400 h-32">
-            <p>No collections yet</p>
+                {item.description && (
+                  <p className="text-gray-400 text-sm mt-1">{item.description}</p>
+                )}
+
+                <p className="text-gray-500 text-xs mt-2">
+                  {new Date(item.created_at).toLocaleString()}
+                </p>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
       </section>
     </div>
   );

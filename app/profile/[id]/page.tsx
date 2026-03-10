@@ -50,35 +50,35 @@ export default function ProfilePage() {
       {/* PROFILE HEADER */}
       <div className="flex flex-col items-center text-center mt-2">
 
-        {/* Avatar — slightly smaller */}
-        <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-700 shadow-md mb-3">
+        {/* Avatar */}
+        <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-700 shadow-md mb-2">
           <Image
             src={profile.avatar_url || "/diamond.png"}
             alt="Avatar"
-            width={96}
-            height={96}
+            width={80}
+            height={80}
             className="object-cover"
           />
         </div>
 
         {/* Name */}
-        <h1 className="text-xl font-semibold leading-tight">{profile.display_name}</h1>
-        <p className="text-gray-400 text-sm">@{profile.username}</p>
+        <h1 className="text-lg font-semibold leading-tight">{profile.display_name}</h1>
+        <p className="text-gray-400 text-xs">@{profile.username}</p>
 
         {/* Location */}
         {profile.location && (
-          <p className="text-gray-500 text-xs mt-0.5">{profile.location}</p>
+          <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
         )}
 
-        {/* Tier Badge — subtle + premium */}
+        {/* Tier Badge — FORCED SIZE */}
         {profile.tier && (
-          <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white text-black text-[10px] font-medium shadow-sm border border-gray-300">
+          <div className="mt-1 inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-white text-black text-[9px] font-medium shadow-sm border border-gray-300">
             <Image
               src="/diamond.png"
               alt="Diamond Tier"
-              width={12}
-              height={12}
-              className="opacity-90"
+              width={10}
+              height={10}
+              className="w-[10px] h-[10px] object-contain"
             />
             <span>{profile.tier}</span>
           </div>

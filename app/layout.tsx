@@ -1,4 +1,5 @@
 import "./globals.css";
+import Link from "next/link";
 
 export const metadata = {
   title: "CollectorConnector",
@@ -8,8 +9,27 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        {children}
+      <body className="bg-black text-white">
+        
+        {/* FIXED NAV BAR */}
+        <nav className="fixed top-0 left-0 w-full h-14 bg-black/80 backdrop-blur-md border-b border-gray-800 flex items-center justify-between px-4 z-50">
+          <Link href="/" className="text-lg font-semibold">
+            CollectorConnector
+          </Link>
+
+          <div className="flex items-center gap-6 text-sm">
+            <Link href="/">Home</Link>
+            <Link href="/explore">Explore</Link>
+            <Link href="/collections/create">Add Item</Link>
+            <Link href="/profile/me">Profile</Link>
+          </div>
+        </nav>
+
+        {/* PAGE CONTENT WRAPPER */}
+        <main className="pt-16">
+          {children}
+        </main>
+
       </body>
     </html>
   );

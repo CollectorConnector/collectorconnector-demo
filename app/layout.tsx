@@ -35,7 +35,7 @@ export default function ProfilePage() {
         .eq("user_id", id)
         .order("created_at", { ascending: false });
 
-      setProfile(profileData);
+      setProfile(profileData || null);
       setCollections(collectionData || []);
       setActivity(activityData || []);
       setLoading(false);
@@ -56,7 +56,7 @@ export default function ProfilePage() {
         {/* Avatar */}
         <div className="w-28 h-28 rounded-full overflow-hidden border border-gray-700 shadow-md mb-4">
           <Image
-            src={profile.avatar_url || "/default-avatar.png"}
+            src={profile.avatar_url || "/diamond.png"}
             alt="Avatar"
             width={112}
             height={112}
@@ -77,7 +77,7 @@ export default function ProfilePage() {
         {profile.tier && (
           <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-black text-sm font-medium shadow-sm border border-gray-300">
             <Image
-              src="/tier-diamond.png"
+              src="/diamond.png"
               alt="Diamond Tier"
               width={18}
               height={18}
@@ -95,15 +95,15 @@ export default function ProfilePage() {
       {/* STATS */}
       <div className="grid grid-cols-3 text-center bg-[#111] p-4 rounded-xl border border-gray-800">
         <div>
-          <p className="text-xl font-semibold">{profile.items_count || 0}</p>
+          <p className="text-xl font-semibold">{profile.items_count ?? 0}</p>
           <p className="text-gray-400 text-sm">Items</p>
         </div>
         <div>
-          <p className="text-xl font-semibold">{profile.categories_count || 0}</p>
+          <p className="text-xl font-semibold">{profile.categories_count ?? 0}</p>
           <p className="text-gray-400 text-sm">Categories</p>
         </div>
         <div>
-          <p className="text-xl font-semibold">{profile.rarity_score || 0}</p>
+          <p className="text-xl font-semibold">{profile.rarity_score ?? 0}</p>
           <p className="text-gray-400 text-sm">Rarity</p>
         </div>
       </div>
@@ -121,9 +121,9 @@ export default function ProfilePage() {
                 key={col.id}
                 className="bg-[#111] rounded-xl overflow-hidden shadow-md border border-gray-800"
               >
-                <div className="relative w-full h-40">
+                <div className="relative w-full h-48">
                   <Image
-                    src={col.cover_image || "/placeholder-portrait.png"}
+                    src={col.cover_image || "/diamond.png"}
                     alt={col.name}
                     fill
                     className="object-cover"
@@ -131,7 +131,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="p-3">
                   <p className="font-medium">{col.name}</p>
-                  <p className="text-gray-400 text-xs">{col.item_count} items</p>
+                  <p className="text-gray-400 text-xs">{col.item_count ?? 0} items</p>
                 </div>
               </div>
             ))}
@@ -154,7 +154,7 @@ export default function ProfilePage() {
               >
                 <div className="relative w-full h-64 rounded-lg overflow-hidden mb-3">
                   <Image
-                    src={item.image_url || "/placeholder-portrait.png"}
+                    src={item.image_url || "/diamond.png"}
                     alt={item.title}
                     fill
                     className="object-cover"

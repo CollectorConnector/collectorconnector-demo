@@ -48,36 +48,36 @@ export default function ProfilePage() {
     <div className="max-w-3xl mx-auto px-4 pb-20 space-y-10">
 
       {/* PROFILE HEADER */}
-      <div className="flex flex-col items-center text-center mt-4">
+      <div className="flex flex-col items-center text-center mt-2">
 
-        {/* Avatar */}
-        <div className="w-28 h-28 rounded-full overflow-hidden border border-gray-700 shadow-md mb-4">
+        {/* Avatar — slightly smaller */}
+        <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-700 shadow-md mb-3">
           <Image
             src={profile.avatar_url || "/diamond.png"}
             alt="Avatar"
-            width={112}
-            height={112}
+            width={96}
+            height={96}
             className="object-cover"
           />
         </div>
 
         {/* Name */}
-        <h1 className="text-2xl font-semibold">{profile.display_name}</h1>
-        <p className="text-gray-400">@{profile.username}</p>
+        <h1 className="text-xl font-semibold leading-tight">{profile.display_name}</h1>
+        <p className="text-gray-400 text-sm">@{profile.username}</p>
 
         {/* Location */}
         {profile.location && (
-          <p className="text-gray-500 text-sm mt-1">{profile.location}</p>
+          <p className="text-gray-500 text-xs mt-0.5">{profile.location}</p>
         )}
 
-        {/* Tier Badge — refined + smaller */}
+        {/* Tier Badge — subtle + premium */}
         {profile.tier && (
-          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-black text-xs font-medium shadow-sm border border-gray-300">
+          <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white text-black text-[10px] font-medium shadow-sm border border-gray-300">
             <Image
               src="/diamond.png"
               alt="Diamond Tier"
-              width={14}
-              height={14}
+              width={12}
+              height={12}
               className="opacity-90"
             />
             <span>{profile.tier}</span>
@@ -86,7 +86,9 @@ export default function ProfilePage() {
 
         {/* Bio */}
         {profile.bio && (
-          <p className="text-gray-300 text-sm mt-4 max-w-md">{profile.bio}</p>
+          <p className="text-gray-300 text-sm mt-3 max-w-md leading-relaxed">
+            {profile.bio}
+          </p>
         )}
       </div>
 

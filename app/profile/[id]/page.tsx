@@ -70,16 +70,17 @@ export default function ProfilePage() {
           <p className="text-gray-500 text-sm mt-1">{profile.location}</p>
         )}
 
-        {/* Tier Badge */}
+        {/* Tier Badge — refined + smaller */}
         {profile.tier && (
-          <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-black text-sm font-medium shadow-sm border border-gray-300">
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-black text-xs font-medium shadow-sm border border-gray-300">
             <Image
               src="/diamond.png"
               alt="Diamond Tier"
-              width={18}
-              height={18}
+              width={14}
+              height={14}
+              className="opacity-90"
             />
-            <span>{profile.tier} Member</span>
+            <span>{profile.tier}</span>
           </div>
         )}
 

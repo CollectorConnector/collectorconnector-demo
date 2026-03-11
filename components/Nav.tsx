@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Header() {
+export default function Nav() {
   return (
-    <header className="w-full bg-[#0d0d0d] border-b border-gray-800 shadow-md">
+    <header className="w-full bg-[#0d0d0d] border-b border-gray-800 shadow-md fixed top-0 left-0 z-50">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
 
         {/* LEFT CLUSTER — MAIN NAV */}
@@ -14,20 +14,19 @@ export default function Header() {
           {/* MAIN LOGO → HOME */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/CC-Logo.png"   // your main logo file
+              src="/CC-Logo.png"
               alt="CollectorConnector Home"
               width={120}
               height={40}
               className="object-contain"
-              style={{ width: "120px", height: "40px" }}
             />
           </Link>
 
           {/* INTERNAL NAV LINKS */}
           <nav className="flex items-center gap-4 text-sm">
             <Link href="/explore" className="hover:text-gray-300 transition">Explore</Link>
-            <Link href="/add" className="hover:text-gray-300 transition">Add Item</Link>
-            <Link href="/profile" className="hover:text-gray-300 transition">Profile</Link>
+            <Link href="/collections/create" className="hover:text-gray-300 transition">Add Item</Link>
+            <Link href="/profile/me" className="hover:text-gray-300 transition">Profile</Link>
           </nav>
         </div>
 

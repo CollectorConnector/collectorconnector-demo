@@ -76,7 +76,7 @@ export default function ProfilePage() {
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#444] to-[#222] blur-xl opacity-40"></div>
             <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-700 shadow-lg relative">
               <Image
-                src={profile.avatar_url || "/tier-diamond.png"}
+                src={profile.avatar_url || "/diamond2.png"}
                 alt="Avatar"
                 width={96}
                 height={96}
@@ -92,25 +92,24 @@ export default function ProfilePage() {
             <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
           )}
 
-          {/* TIER BADGE — 8×8 ICON */}
+          {/* ⭐ TIER BADGE WITH YOUR <Image> FIX */}
           {profile.tier && (
             <div className="mt-2 inline-flex items-center gap-1 px-3 py-[3px] rounded-full bg-[#e5e5e5] text-black text-[10px] font-medium shadow-sm border border-gray-300">
 
-              <img
+              <Image
                 src={
-                  profile.tier === "Diamond" ? "/tier-diamond.png" :
-                  profile.tier === "Founder" ? "/tier-founder.png" :
-                  profile.tier === "Gold" ? "/tier-gold.png" :
-                  profile.tier === "Silver" ? "/tier-silver.png" :
-                  profile.tier === "Bronze" ? "/tier-bronze.png" :
-                  "/tier-diamond.png"
+                  profile.tier === "Diamond" ? "/diamond2.png" :
+                  profile.tier === "Founder" ? "/founder2.png" :
+                  profile.tier === "Gold" ? "/gold2.png" :
+                  profile.tier === "Silver" ? "/silver2.png" :
+                  profile.tier === "Bronze" ? "/bronze2.png" :
+                  "/diamond2.png"
                 }
                 alt={`${profile.tier} Tier`}
-                style={{
-                  width: "8px",
-                  height: "8px",
-                  objectFit: "contain"
-                }}
+                width={16}
+                height={16}
+                style={{ width: "16px", height: "16px" }}
+                className="object-contain"
               />
 
               <span>{profile.tier}</span>
@@ -155,7 +154,7 @@ export default function ProfilePage() {
                 >
                   <div className="relative w-full h-48">
                     <Image
-                      src={col.cover_image || "/tier-diamond.png"}
+                      src={col.cover_image || "/diamond2.png"}
                       alt={col.name}
                       fill
                       className="object-cover"
@@ -186,7 +185,7 @@ export default function ProfilePage() {
                 >
                   <div className="relative w-full h-64 rounded-lg overflow-hidden mb-3">
                     <Image
-                      src={item.image_url || "/tier-diamond.png"}
+                      src={item.image_url || "/diamond2.png"}
                       alt={item.title}
                       fill
                       className="object-cover"

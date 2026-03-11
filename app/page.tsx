@@ -12,6 +12,7 @@ export default function HomePage() {
         flexDirection: "column",
         justifyContent: "center",
         padding: "20px",
+        paddingTop: "80px", // ← ONLY CHANGE
         textAlign: "center",
         color: "#fff",
         position: "relative",

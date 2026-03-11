@@ -63,7 +63,7 @@ export default function ProfilePage() {
 
         <h1 className="text-sm font-semibold text-white">{profile.username}</h1>
 
-        <div className="w-[24px]" /> {/* Spacer for symmetry */}
+        <div className="w-[24px]" />
       </header>
 
       <div className="px-4 space-y-10">
@@ -71,12 +71,12 @@ export default function ProfilePage() {
         {/* PROFILE HEADER */}
         <div className="flex flex-col items-center text-center mt-4 animate-fadeIn">
 
-          {/* Avatar with soft glow */}
+          {/* Avatar */}
           <div className="relative">
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#444] to-[#222] blur-xl opacity-40"></div>
             <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-700 shadow-lg relative">
               <Image
-                src={profile.avatar_url || "/diamond.png"}
+                src={profile.avatar_url || "/diamond2.png"}
                 alt="Avatar"
                 width={96}
                 height={96}
@@ -85,27 +85,25 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Name */}
           <h2 className="text-xl font-semibold mt-3">{profile.display_name}</h2>
           <p className="text-gray-400 text-xs">@{profile.username}</p>
 
-          {/* Location */}
           {profile.location && (
             <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
           )}
 
-          {/* Tier Badge — polished + FIXED */}
+          {/* TIER BADGE — NEW ICONS */}
           {profile.tier && (
             <div className="mt-2 inline-flex items-center gap-1 px-3 py-[3px] rounded-full bg-[#e5e5e5] text-black text-[10px] font-medium shadow-sm border border-gray-300">
 
               <Image
                 src={
-                  profile.tier === "Diamond" ? "/diamond.png" :
-                  profile.tier === "Founder" ? "/founder.png" :
-                  profile.tier === "Gold" ? "/gold.png" :
-                  profile.tier === "Silver" ? "/silver.png" :
-                  profile.tier === "Bronze" ? "/bronze.png" :
-                  "/diamond.png"
+                  profile.tier === "Diamond" ? "/diamond2.png" :
+                  profile.tier === "Founder" ? "/founder2.png" :
+                  profile.tier === "Gold" ? "/gold2.png" :
+                  profile.tier === "Silver" ? "/silver2.png" :
+                  profile.tier === "Bronze" ? "/bronze2.png" :
+                  "/diamond2.png"
                 }
                 alt={`${profile.tier} Tier`}
                 width={16}
@@ -118,7 +116,6 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Bio */}
           {profile.bio && (
             <p className="text-gray-300 text-sm mt-3 max-w-md leading-relaxed">
               {profile.bio}
@@ -157,7 +154,7 @@ export default function ProfilePage() {
                 >
                   <div className="relative w-full h-48">
                     <Image
-                      src={col.cover_image || "/diamond.png"}
+                      src={col.cover_image || "/diamond2.png"}
                       alt={col.name}
                       fill
                       className="object-cover"
@@ -188,7 +185,7 @@ export default function ProfilePage() {
                 >
                   <div className="relative w-full h-64 rounded-lg overflow-hidden mb-3">
                     <Image
-                      src={item.image_url || "/diamond.png"}
+                      src={item.image_url || "/diamond2.png"}
                       alt={item.title}
                       fill
                       className="object-cover"

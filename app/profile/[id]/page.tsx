@@ -45,14 +45,18 @@ export default function ProfilePage() {
   if (!profile) return <div className="p-6 text-white">Profile not found</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0d0d0d] to-black">
-      <div className="pt-20 pb-20">
-        <div className="max-w-3xl mx-auto px-4 space-y-10">
+    <div className="min-h-screen bg-gradient-to-b from-[#0d0d0d] to-black pt-24 pb-20">
+      <div className="max-w-3xl mx-auto px-4 space-y-10">
 
-          {/* HERO PROFILE SECTION */}
-          <section className="relative flex justify-center">
-            <div className="absolute -inset-4 rounded-3xl bg-white/10 blur-2xl opacity-70 pointer-events-none" />
-            <div className="relative w-full rounded-3xl bg-black/70 border border-white/10 shadow-xl px-6 py-6 flex flex-col items-center text-center">
+        {/* FIXED HERO SECTION — Glow now contained */}
+        <section className="flex justify-center">
+          <div className="relative w-full max-w-xl">
+
+            {/* Glow is now safely inside a relative container */}
+            <div className="absolute -inset-4 rounded-3xl bg-white/10 blur-2xl opacity-60 pointer-events-none" />
+
+            {/* Card */}
+            <div className="relative rounded-3xl bg-black/70 border border-white/10 shadow-xl px-6 py-6 flex flex-col items-center text-center">
 
               {/* Avatar */}
               <div className="relative mb-4">
@@ -68,7 +72,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Name / username / location */}
+              {/* Name */}
               <h1 className="text-xl font-semibold text-white">
                 {profile.display_name || profile.username}
               </h1>
@@ -98,116 +102,116 @@ export default function ProfilePage() {
                 Follow / Add Friend
               </button>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* COLLECTIONS */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Collections</h2>
-              <p className="text-[11px] text-gray-400">Swipe to explore</p>
-            </div>
+        {/* COLLECTIONS */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">Collections</h2>
+            <p className="text-[11px] text-gray-400">Swipe to explore</p>
+          </div>
 
-            <div className="relative">
-              <div className="absolute -inset-3 rounded-2xl bg-white/5 blur-xl opacity-60 pointer-events-none" />
-              <div className="relative overflow-x-auto flex gap-4 py-4 px-1">
-                {collections.length === 0 && (
-                  <p className="text-gray-400 text-sm">No collections yet</p>
-                )}
-
-                {collections.map((col) => (
-                  <button
-                    key={col.id}
-                    type="button"
-                    className="shrink-0 w-52 rounded-2xl bg-black/70 border border-white/10 shadow-lg hover:border-white/40 transition-colors flex flex-col overflow-hidden"
-                  >
-                    <div className="relative w-full h-32 bg-black">
-                      <Image
-                        src={col.cover_image || "/diamond2.png"}
-                        alt={col.name}
-                        fill
-                        className="object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    </div>
-                    <div className="p-3 text-left">
-                      <p className="text-sm font-medium text-white truncate">
-                        {col.name}
-                      </p>
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        {col.item_count ?? 0} items
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* STATS */}
-          <section className="relative">
+          <div className="relative">
             <div className="absolute -inset-3 rounded-2xl bg-white/5 blur-xl opacity-40 pointer-events-none" />
-            <div className="relative grid grid-cols-3 text-center bg-black/70 p-4 rounded-2xl border border-white/10 shadow-md">
-              <div>
-                <p className="text-xl font-semibold text-white">
-                  {profile.items_count ?? 0}
-                </p>
-                <p className="text-gray-400 text-xs mt-1">Items</p>
-              </div>
-              <div>
-                <p className="text-xl font-semibold text-white">
-                  {profile.categories_count ?? 0}
-                </p>
-                <p className="text-gray-400 text-xs mt-1">Categories</p>
-              </div>
-              <div>
-                <p className="text-xl font-semibold text-white">
-                  {profile.rarity_score ?? 0}
-                </p>
-                <p className="text-gray-400 text-xs mt-1">Rarity</p>
-              </div>
-            </div>
-          </section>
+            <div className="relative overflow-x-auto flex gap-4 py-4 px-1">
+              {collections.length === 0 && (
+                <p className="text-gray-400 text-sm">No collections yet</p>
+              )}
 
-          {/* ACTIVITY */}
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-white">Activity</h2>
-
-            {activity.length === 0 ? (
-              <p className="text-gray-400 text-sm">No recent activity yet</p>
-            ) : (
-              <div className="space-y-6">
-                {activity.map((item) => (
-                  <article
-                    key={item.id}
-                    className="bg-black/70 rounded-2xl p-4 border border-white/10 shadow-md hover:border-white/40 transition-colors"
-                  >
-                    <div className="relative w-full h-64 rounded-xl overflow-hidden mb-3 bg-black">
-                      <Image
-                        src={item.image_url || "/diamond2.png"}
-                        alt={item.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-
-                    <p className="font-medium text-white">{item.title}</p>
-
-                    {item.description && (
-                      <p className="text-gray-400 text-sm mt-1">
-                        {item.description}
-                      </p>
-                    )}
-
-                    <p className="text-gray-500 text-[11px] mt-2">
-                      {new Date(item.created_at).toLocaleString()}
+              {collections.map((col) => (
+                <button
+                  key={col.id}
+                  type="button"
+                  className="shrink-0 w-52 rounded-2xl bg-black/70 border border-white/10 shadow-lg hover:border-white/40 transition-colors flex flex-col overflow-hidden"
+                >
+                  <div className="relative w-full h-32 bg-black">
+                    <Image
+                      src={col.cover_image || "/diamond2.png"}
+                      alt={col.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  </div>
+                  <div className="p-3 text-left">
+                    <p className="text-sm font-medium text-white truncate">
+                      {col.name}
                     </p>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {col.item_count ?? 0} items
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
 
-        </div>
+        {/* STATS */}
+        <section className="relative">
+          <div className="absolute -inset-3 rounded-2xl bg-white/5 blur-xl opacity-40 pointer-events-none" />
+          <div className="relative grid grid-cols-3 text-center bg-black/70 p-4 rounded-2xl border border-white/10 shadow-md">
+            <div>
+              <p className="text-xl font-semibold text-white">
+                {profile.items_count ?? 0}
+              </p>
+              <p className="text-gray-400 text-xs mt-1">Items</p>
+            </div>
+            <div>
+              <p className="text-xl font-semibold text-white">
+                {profile.categories_count ?? 0}
+              </p>
+              <p className="text-gray-400 text-xs mt-1">Categories</p>
+            </div>
+            <div>
+              <p className="text-xl font-semibold text-white">
+                {profile.rarity_score ?? 0}
+              </p>
+              <p className="text-gray-400 text-xs mt-1">Rarity</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ACTIVITY */}
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold text-white">Activity</h2>
+
+          {activity.length === 0 ? (
+            <p className="text-gray-400 text-sm">No recent activity yet</p>
+          ) : (
+            <div className="space-y-6">
+              {activity.map((item) => (
+                <article
+                  key={item.id}
+                  className="bg-black/70 rounded-2xl p-4 border border-white/10 shadow-md hover:border-white/40 transition-colors"
+                >
+                  <div className="relative w-full h-64 rounded-xl overflow-hidden mb-3 bg-black">
+                    <Image
+                      src={item.image_url || "/diamond2.png"}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+
+                  <p className="font-medium text-white">{item.title}</p>
+
+                  {item.description && (
+                    <p className="text-gray-400 text-sm mt-1">
+                      {item.description}
+                    </p>
+                  )}
+
+                  <p className="text-gray-500 text-[11px] mt-2">
+                    {new Date(item.created_at).toLocaleString()}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
       </div>
     </div>
   );

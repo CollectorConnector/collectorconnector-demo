@@ -1,25 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
 export default function Nav() {
   return (
-    <header className="w-full bg-[#0d0d0d] border-b border-gray-800 shadow-md fixed top-0 left-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <header className="w-full bg-black border-b border-gray-800 shadow-md fixed top-0 left-0 z-50">
+      <div className="w-full px-4 py-3 flex items-center justify-between">
 
         {/* LEFT CLUSTER — MAIN NAV */}
         <div className="flex items-center gap-6">
 
-          {/* MAIN LOGO → HOME */}
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/CC-Logo.png"
-              alt="CollectorConnector Home"
-              width={120}
-              height={40}
-              className="object-contain"
-            />
+          {/* TEXT LOGO → HOME */}
+          <Link href="/" className="text-lg font-semibold">
+            CollectorConnector
           </Link>
 
           {/* INTERNAL NAV LINKS */}

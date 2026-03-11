@@ -1,83 +1,49 @@
-// components/Nav.tsx
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import Link from "next/link";
 
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/explore", label: "Explore" },
-  { href: "/upload", label: "Upload" },
-  { href: "/u/stacy", label: "Account" },
-];
-
-const external = [
-  { href: "https://www.ebay.com", label: "eBay" },
-  { href: "https://www.whatnot.com", label: "Whatnot" },
-  { href: "https://www.instagram.com", label: "Instagram" },
-  { href: "https://www.youtube.com", label: "YouTube" },
-  { href: "https://discord.com", label: "Discord" },
-];
-
-export default function Nav() {
-  const pathname = usePathname();
-
-  const active = useMemo(() => {
-    if (!pathname || pathname === "/") return "/";
-    const first = "/" + pathname.split("/").filter(Boolean)[0];
-    return first;
-  }, [pathname]);
-
+export default function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-        {/* LEFT: Logo + Primary Nav */}
-        <div className="flex items-center gap-8">
-          <Link href="/" aria-label="CollectorConnector">
+    <header className="w-full bg-[#0d0d0d] border-b border-gray-800 shadow-md">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+
+        {/* LEFT CLUSTER — MAIN NAV */}
+        <div className="flex items-center gap-6">
+
+          {/* MAIN LOGO → HOME */}
+          <Link href="/" className="flex items-center">
             <Image
-              src="/CC-main-logo.png"
-              alt="CollectorConnector"
-              width={120}       // tweak if you want it smaller/larger
-              height={28}
+              src="/CC-Logo.png"   // your main logo file
+              alt="CollectorConnector Home"
+              width={120}
+              height={40}
               className="object-contain"
-              priority
+              style={{ width: "120px", height: "40px" }}
             />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            {navItems.map(({ href, label }) => {
-              const isActive = active === href || pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={isActive
-                    ? "text-white"
-                    : "text-zinc-400 hover:text-zinc-200 transition-colors"}
-                >
-                  {label}
-                </Link>
-              );
-            })}
+          {/* INTERNAL NAV LINKS */}
+          <nav className="flex items-center gap-4 text-sm">
+            <Link href="/explore" className="hover:text-gray-300 transition">Explore</Link>
+            <Link href="/add" className="hover:text-gray-300 transition">Add Item</Link>
+            <Link href="/profile" className="hover:text-gray-300 transition">Profile</Link>
           </nav>
         </div>
 
-        {/* RIGHT: External links (grey only) */}
-        <div className="hidden sm:flex items-center gap-4 text-sm">
-          {external.map(({ href, label }) => (
-            <a
-              key={href}
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="text-zinc-400 hover:text-zinc-200 transition-colors"
-            >
-              {label}
-            </a>
-          ))}
-        </div>
+        {/* DIVIDER */}
+        <span className="text-gray-600 text-sm mx-2">|</span>
+
+        {/* RIGHT CLUSTER — EXTERNAL LINKS */}
+        <nav className="flex items-center gap-4 text-sm">
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">Instagram</a>
+          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">eBay</a>
+          <a href="https://stockx.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">StockX</a>
+          <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">Discord</a>
+          <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">Whatnot</a>
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition">X</a>
+        </nav>
+
       </div>
     </header>
   );

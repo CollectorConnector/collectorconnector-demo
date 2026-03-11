@@ -86,6 +86,7 @@ export default function ProfilePage() {
               alt={`${profile.tier} Tier`}
               width={16}
               height={16}
+              style={{ width: "16px", height: "16px" }}
               className="w-[16px] h-[16px] object-contain"
             />
 

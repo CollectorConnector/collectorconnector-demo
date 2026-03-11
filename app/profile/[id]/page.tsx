@@ -92,7 +92,7 @@ export default function ProfilePage() {
             <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
           )}
 
-          {/* TIER BADGE — NEW FILENAMES */}
+          {/* TIER BADGE — 8×8 ICON */}
           {profile.tier && (
             <div className="mt-2 inline-flex items-center gap-1 px-3 py-[3px] rounded-full bg-[#e5e5e5] text-black text-[10px] font-medium shadow-sm border border-gray-300">
 
@@ -107,8 +107,8 @@ export default function ProfilePage() {
                 }
                 alt={`${profile.tier} Tier`}
                 style={{
-                  width: "16px",
-                  height: "16px",
+                  width: "8px",
+                  height: "8px",
                   objectFit: "contain"
                 }}
               />

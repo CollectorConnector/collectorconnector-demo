@@ -26,6 +26,7 @@ type Profile = {
 type Collection = {
   id: string;
   name: string;
+  user_id?: string;
   cover_image?: string | null;
   item_count?: number | null;
   created_at?: string | null;
@@ -33,6 +34,7 @@ type Collection = {
 
 type Item = {
   id: string;
+  user_id?: string;
   title?: string | null;
   description?: string | null;
   image_url?: string | null;
@@ -60,8 +62,16 @@ export default function ProfilePage() {
         const [{ data: profileData }, { data: collectionData }, { data: activityData }] =
           await Promise.all([
             supabase.from("profiles").select("*").eq("id", id).single(),
-            supabase.from("collections").select("*").eq("user_id", id).order("created_at", { ascending: false }),
-            supabase.from("items").select("*").eq("user_id", id).order("created_at", { ascending: false }),
+            supabase
+              .from("collections")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
+            supabase
+              .from("items")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
           ]);
 
         if (!alive) return;
@@ -89,17 +99,20 @@ export default function ProfilePage() {
 
   const displayUsername = profile?.username ? `@${profile.username}` : null;
 
+  // ✅ Safe tier text derivation (no TS error)
   const tierText = useMemo(() => {
     if (!profile) return null;
+
     if (profile.tier) return profile.tier;
 
     const n = profile.member_number;
+    if (typeof n !== "number") return null;
+
     if (n === 1) return "Founder · #1";
     if (n >= 2 && n <= 50) return `Gold · #${n}`;
     if (n >= 51 && n <= 100) return `Silver · #${n}`;
     if (n >= 101 && n <= 500) return `Bronze · #${n}`;
-    if (n) return `Member #${n}`;
-    return null;
+    return `Member #${n}`;
   }, [profile]);
 
   if (loading) {
@@ -138,11 +151,13 @@ export default function ProfilePage() {
   return (
     <div className="min-h-dvh bg-gradient-to-b from-[#0d0d0d] to-black pt-16 pb-20 text-white">
       <Header />
+
       <main className="mx-auto max-w-5xl px-4">
+        {/* Neon aura behind hero */}
         <div className="relative isolate">
           <NeonGlow className="-z-10" />
 
-          {/* HERO STRIP (Version C) */}
+          {/* ---------------- HERO STRIP (Version C) ---------------- */}
           <section className="overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,255,255,0.12)] backdrop-blur-xl ring-1 ring-white/10">
             <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
               {/* Avatar — squircle */}
@@ -161,6 +176,7 @@ export default function ProfilePage() {
               {/* Identity */}
               <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
                 <h1 className="truncate text-2xl font-semibold tracking-tight text-white">{displayName}</h1>
+
                 <p className="truncate text-sm text-white/70">
                   {displayUsername}
                   {displayUsername && profile.location ? " · " : ""}
@@ -183,7 +199,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Collections Gallery */}
+            {/* Collections Gallery (glass-case carousel) */}
             <div className="border-t border-white/10 p-4">
               <CollectionsGallery collections={collections} />
             </div>
@@ -193,7 +209,7 @@ export default function ProfilePage() {
               <ActivityFeed activity={activity} />
             </div>
 
-            {/* Branding footer */}
+            {/* Branding footer inside the strip */}
             <div className="border-t border-white/10 p-3 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
               CC · CollectorConnector
             </div>
@@ -205,20 +221,20 @@ export default function ProfilePage() {
 }
 
 /* -------------------------------------------------------
-   Header (SMALL, CRISP LOGO + no stray characters)
+   Header (SMALL, CRISP LOGO — 20px)
 ------------------------------------------------------- */
 function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-white/5 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="group flex items-center gap-2">
-          {/* Tiny, crisp logo (20px). Use an SVG if you have it for perfect sharpness. */}
+          {/* Tiny, crisp logo (20px). Use an SVG for perfect sharpness if available. */}
           <Image
             src="/CC-SML-Logo.png"
             alt="CollectorConnector"
             width={20}
             height={20}
-            className="h-5 w-5 object-contain select-none"
+            className="h-5 w-5 object-contain"
             priority
           />
           <span className="text-sm font-semibold tracking-wide text-white/80 group-hover:text-white">
@@ -269,7 +285,15 @@ function FollowButton() {
   );
 }
 
-function StatsStrip({ items, categories, rarity }: { items: number; categories: number; rarity: number }) {
+function StatsStrip({
+  items,
+  categories,
+  rarity,
+}: {
+  items: number;
+  categories: number;
+  rarity: number;
+}) {
   const stats = [
     { label: "Items", value: items },
     { label: "Categories", value: categories },

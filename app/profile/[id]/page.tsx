@@ -46,8 +46,9 @@ export default function ProfilePage() {
   if (!profile) return <div className="p-6 text-white">Profile not found</div>;
 
   return (
-    <div className="max-w-3xl mx-auto pb-
+    <div className="max-w-3xl mx-auto pb-20">
 
+      {/* PAGE CONTENT */}
       <div className="px-4 space-y-10">
 
         {/* PROFILE HEADER */}
@@ -74,7 +75,7 @@ export default function ProfilePage() {
             <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
           )}
 
-          {/* ⭐ TIER BADGE WITH YOUR <Image> FIX */}
+          {/* Tier Badge */}
           {profile.tier && (
             <div className="mt-2 inline-flex items-center gap-1 px-3 py-[3px] rounded-full bg-[#e5e5e5] text-black text-[10px] font-medium shadow-sm border border-gray-300">
 
@@ -90,7 +91,6 @@ export default function ProfilePage() {
                 alt={`${profile.tier} Tier`}
                 width={16}
                 height={16}
-                style={{ width: "16px", height: "16px" }}
                 className="object-contain"
               />
 
@@ -188,6 +188,7 @@ export default function ProfilePage() {
             </div>
           )}
         </section>
+
       </div>
     </div>
   );

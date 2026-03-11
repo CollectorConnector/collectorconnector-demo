@@ -14,13 +14,9 @@ type Profile = {
   username?: string | null;
   location?: string | null;
   bio?: string | null;
-
-  // Optional counters if you store them
   items_count?: number | null;
   categories_count?: number | null;
   rarity_score?: number | null;
-
-  // Optional tier fields (if present)
   tier?: string | null;
   member_number?: number | null;
 };
@@ -31,7 +27,7 @@ type Collection = {
   user_id: string;
   cover_image?: string | null;
   item_count?: number | null;
-  // add fields as needed
+  created_at?: string | null;
 };
 
 type Item = {
@@ -41,7 +37,6 @@ type Item = {
   description?: string | null;
   image_url?: string | null;
   created_at?: string | null;
-  // add fields as needed
 };
 
 /** ----------------------- Page ----------------------- */
@@ -63,8 +58,14 @@ export default function ProfilePage() {
         const [{ data: profileData }, { data: collectionData }, { data: activityData }] =
           await Promise.all([
             supabase.from("profiles").select("*").eq("id", id).single(),
-            supabase.from("collections").select("*").eq("user_id", id).order("created_at", { ascending: false }),
-            supabase.from("items").select("*").eq("user_id", id).order("created_at", { ascending: false }),
+            supabase.from("collections")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
+            supabase.from("items")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
           ]);
 
         if (!mounted) return;
@@ -96,7 +97,6 @@ export default function ProfilePage() {
   );
 
   const tierText = useMemo(() => {
-    // Prefer explicit tier; fallback to derived label if member_number present.
     if (profile?.tier) return profile.tier;
     if (profile?.member_number != null) {
       const n = profile.member_number;
@@ -189,11 +189,7 @@ export default function ProfilePage() {
 
               {/* Quick Stats */}
               <div className="w-full max-w-xs sm:w-60">
-                <StatsStrip
-                  items={itemsCount}
-                  categories={categoriesCount}
-                  rarity={rarityScore}
-                />
+                <StatsStrip items={itemsCount} categories={categoriesCount} rarity={rarityScore} />
               </div>
             </div>
 
@@ -218,20 +214,28 @@ export default function ProfilePage() {
   );
 }
 
-/** ----------------------- Header ----------------------- */
+/** ----------------------- Header (with small logo) ----------------------- */
 function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-white/5 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="group flex items-center gap-2">
-          <div className="relative h-7 w-7 overflow-hidden rounded-md ring-1 ring-white/10">
-            {/* Replace with your real logo asset in /public */}
-            <Image src="/CC-SML-Logo.png" alt="CC" fill className="object-contain" />
+          <div className="relative h-5 w-5 overflow-hidden rounded-md ring-1 ring-white/10">
+            {/* Use a tiny, crisp 20px logo */}
+            <Image
+              src="/CC-SML-Logo.png"
+              alt="CollectorConnector"
+              fill
+              sizes="20px"
+              className="object-contain"
+              priority
+            />
           </div>
           <span className="text-sm font-semibold tracking-wide text-white/80 group-hover:text-white">
             Collector<span className="text-emerald-400">Connector</span>
           </span>
         </Link>
+
         {/* Right side reserved for future actions */}
         <div className="text-xs text-white/50">Profile</div>
       </div>
@@ -273,15 +277,7 @@ function FollowButton() {
   );
 }
 
-function StatsStrip({
-  items,
-  categories,
-  rarity,
-}: {
-  items: number;
-  categories: number;
-  rarity: number;
-}) {
+function StatsStrip({ items, categories, rarity }: { items: number; categories: number; rarity: number }) {
   const stats = [
     { label: "Items", value: items },
     { label: "Categories", value: categories },

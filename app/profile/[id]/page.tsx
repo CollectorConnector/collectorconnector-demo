@@ -46,25 +46,7 @@ export default function ProfilePage() {
   if (!profile) return <div className="p-6 text-white">Profile not found</div>;
 
   return (
-    <div className="max-w-3xl mx-auto pb-20">
-
-      {/* HEADER */}
-      <header className="sticky top-0 z-20 bg-gradient-to-b from-[#0d0d0d] to-[#1a1a1a] border-b border-gray-800 shadow-md px-4 py-3 flex items-center justify-between">
-        <button onClick={() => router.push("/")} className="flex items-center">
-          <Image
-            src="/CC-SML-Logo.png"
-            alt="Home"
-            width={24}
-            height={24}
-            style={{ width: "24px", height: "24px" }}
-            className="object-contain"
-          />
-        </button>
-
-        <h1 className="text-sm font-semibold text-white">{profile.username}</h1>
-
-        <div className="w-[24px]" />
-      </header>
+    <div className="max-w-3xl mx-auto pb-
 
       <div className="px-4 space-y-10">
 

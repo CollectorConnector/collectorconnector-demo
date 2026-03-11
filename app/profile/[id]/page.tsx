@@ -94,27 +94,25 @@ export default function ProfilePage() {
             <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
           )}
 
-          {/* Tier Badge — polished */}
+          {/* Tier Badge — polished + FIXED */}
           {profile.tier && (
             <div className="mt-2 inline-flex items-center gap-1 px-3 py-[3px] rounded-full bg-[#e5e5e5] text-black text-[10px] font-medium shadow-sm border border-gray-300">
 
-              <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center border border-gray-300">
-                <Image
-                  src={
-                    profile.tier === "Diamond" ? "/diamond.png" :
-                    profile.tier === "Founder" ? "/founder.png" :
-                    profile.tier === "Gold" ? "/gold.png" :
-                    profile.tier === "Silver" ? "/silver.png" :
-                    profile.tier === "Bronze" ? "/bronze.png" :
-                    "/diamond.png"
-                  }
-                  alt={`${profile.tier} Tier`}
-                  width={16}
-                  height={16}
-                  style={{ width: "16px", height: "16px" }}
-                  className="object-contain"
-                />
-              </div>
+              <Image
+                src={
+                  profile.tier === "Diamond" ? "/diamond.png" :
+                  profile.tier === "Founder" ? "/founder.png" :
+                  profile.tier === "Gold" ? "/gold.png" :
+                  profile.tier === "Silver" ? "/silver.png" :
+                  profile.tier === "Bronze" ? "/bronze.png" :
+                  "/diamond.png"
+                }
+                alt={`${profile.tier} Tier`}
+                width={16}
+                height={16}
+                style={{ width: "16px", height: "16px" }}
+                className="object-contain"
+              />
 
               <span>{profile.tier}</span>
             </div>

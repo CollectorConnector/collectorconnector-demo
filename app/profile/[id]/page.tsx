@@ -53,7 +53,7 @@ export default function ProfilePage() {
         {/* Avatar */}
         <div className="w-20 h-20 rounded-full overflow-hidden border border-gray-700 shadow-md mb-2">
           <Image
-            src={profile.avatar_url || "/diamond.png"}
+            src={profile.avatar_url || "/diamond2.png"}
             alt="Avatar"
             width={80}
             height={80}
@@ -70,16 +70,25 @@ export default function ProfilePage() {
           <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
         )}
 
-        {/* Tier Badge — FORCED SIZE */}
+        {/* Tier Badge — NEW ICONS */}
         {profile.tier && (
           <div className="mt-1 inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-white text-black text-[9px] font-medium shadow-sm border border-gray-300">
+
             <Image
-              src="/diamond.png"
-              alt="Diamond Tier"
-              width={10}
-              height={10}
-              className="w-[10px] h-[10px] object-contain"
+              src={
+                profile.tier === "Diamond" ? "/diamond2.png" :
+                profile.tier === "Founder" ? "/founder2.png" :
+                profile.tier === "Gold" ? "/gold2.png" :
+                profile.tier === "Silver" ? "/silver2.png" :
+                profile.tier === "Bronze" ? "/bronze2.png" :
+                "/diamond2.png"
+              }
+              alt={`${profile.tier} Tier`}
+              width={16}
+              height={16}
+              className="w-[16px] h-[16px] object-contain"
             />
+
             <span>{profile.tier}</span>
           </div>
         )}
@@ -123,7 +132,7 @@ export default function ProfilePage() {
               >
                 <div className="relative w-full h-48">
                   <Image
-                    src={col.cover_image || "/diamond.png"}
+                    src={col.cover_image || "/diamond2.png"}
                     alt={col.name}
                     fill
                     className="object-cover"
@@ -154,7 +163,7 @@ export default function ProfilePage() {
               >
                 <div className="relative w-full h-64 rounded-lg overflow-hidden mb-3">
                   <Image
-                    src={item.image_url || "/diamond.png"}
+                    src={item.image_url || "/diamond2.png"}
                     alt={item.title}
                     fill
                     className="object-cover"

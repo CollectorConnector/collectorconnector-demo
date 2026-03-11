@@ -1,6 +1,20 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import Link from "next/link";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <Nav />
+        {children}
+        <Footer />
+      </body>
+    </html>
+  );
+}
 
 const inter = Inter({ subsets: ["latin"] });
 

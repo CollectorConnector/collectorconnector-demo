@@ -92,11 +92,11 @@ export default function ProfilePage() {
             <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
           )}
 
-          {/* TIER BADGE — NEW ICONS */}
+          {/* TIER BADGE — FIXED WITH <img> */}
           {profile.tier && (
             <div className="mt-2 inline-flex items-center gap-1 px-3 py-[3px] rounded-full bg-[#e5e5e5] text-black text-[10px] font-medium shadow-sm border border-gray-300">
 
-              <Image
+              <img
                 src={
                   profile.tier === "Diamond" ? "/diamond2.png" :
                   profile.tier === "Founder" ? "/founder2.png" :
@@ -106,10 +106,11 @@ export default function ProfilePage() {
                   "/diamond2.png"
                 }
                 alt={`${profile.tier} Tier`}
-                width={16}
-                height={16}
-                style={{ width: "16px", height: "16px" }}
-                className="object-contain"
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  objectFit: "contain"
+                }}
               />
 
               <span>{profile.tier}</span>

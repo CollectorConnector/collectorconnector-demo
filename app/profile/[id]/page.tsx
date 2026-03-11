@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
 
   const [profile, setProfile] = useState<any>(null);
   const [collections, setCollections] = useState<any[]>([]);
@@ -46,9 +45,7 @@ export default function ProfilePage() {
   if (!profile) return <div className="p-6 text-white">Profile not found</div>;
 
   return (
-    <div className="max-w-3xl mx-auto pb-20">
-
-      {/* PAGE CONTENT */}
+    <div className="relative z-0 max-w-3xl mx-auto pt-20 pb-20">
       <div className="px-4 space-y-10">
 
         {/* PROFILE HEADER */}
@@ -75,10 +72,8 @@ export default function ProfilePage() {
             <p className="text-gray-500 text-[11px] mt-0.5">{profile.location}</p>
           )}
 
-          {/* Tier Badge */}
           {profile.tier && (
             <div className="mt-2 inline-flex items-center gap-1 px-3 py-[3px] rounded-full bg-[#e5e5e5] text-black text-[10px] font-medium shadow-sm border border-gray-300">
-
               <Image
                 src={
                   profile.tier === "Diamond" ? "/diamond2.png" :
@@ -93,7 +88,6 @@ export default function ProfilePage() {
                 height={16}
                 className="object-contain"
               />
-
               <span>{profile.tier}</span>
             </div>
           )}

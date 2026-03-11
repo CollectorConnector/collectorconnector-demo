@@ -12,37 +12,14 @@ export default function HomePage() {
         flexDirection: "column",
         justifyContent: "center",
         padding: "20px",
-        paddingTop: "80px", // ← ONLY CHANGE
+        paddingTop: "80px",
         textAlign: "center",
         color: "#fff",
-        position: "relative",
       }}
     >
-      {/* WHITE GLOW */}
-      <div
-        style={{
-          position: "absolute",
-          top: "20%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "420px",
-          height: "420px",
-          background: "radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%)",
-          filter: "blur(60px)",
-          animation: "pulseGlow 12s ease-in-out infinite",
-          zIndex: 0,
-        }}
-      />
-
-      <style>{`
-        @keyframes pulseGlow {
-          0% { opacity: 0.4; transform: translateX(-50%) scale(1); }
-          50% { opacity: 0.7; transform: translateX(-50%) scale(1.15); }
-          100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
-        }
-      `}</style>
-
-      <div style={{ position: "relative", zIndex: 2, maxWidth: "720px", margin: "0 auto" }}>
+      {/* MAIN CONTENT WRAPPER */}
+      <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+        
         {/* MAIN LOGO */}
         <img
           src="/CC-main-logo.png"

@@ -96,22 +96,24 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-black pt-24 pb-20 text-white">
-        <Header />
-        <div className="mx-auto max-w-5xl px-4">
-          <div className="mt-10 text-white/60">Loading…</div>
+      <div className="min-h-dvh bg-black text-white">
+        <Nav />
+        <div className="mx-auto max-w-5xl px-4 pt-32">
+          <div className="text-white/60">Loading…</div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-dvh bg-black pt-24 pb-20 text-white">
-        <Header />
-        <div className="mx-auto max-w-5xl px-4">
-          <div className="mt-10 text-white/60">Profile not found.</div>
+      <div className="min-h-dvh bg-black text-white">
+        <Nav />
+        <div className="mx-auto max-w-5xl px-4 pt-32">
+          <div className="text-white/60">Profile not found.</div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -121,23 +123,44 @@ export default function ProfilePage() {
   const rarityScore = profile.rarity_score ?? 0;
 
   return (
-    <div className="min-h-dvh bg-black pt-16 pb-20 text-white">
-      <Header />
+    <div className="min-h-dvh bg-black text-white">
+      <Nav />
 
-      <main className="mx-auto max-w-5xl px-4">
-        {/* Hero Card — NO IMAGES */}
-        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-lg p-6 space-y-6">
+      {/* -------------------------------------------------------
+         HERO SECTION
+      ------------------------------------------------------- */}
+      <section className="pt-28 pb-20 text-center">
+        <img
+          src="/CC-main-logo.png"
+          alt="CollectorConnector Logo"
+          className="mx-auto h-20 w-auto opacity-90"
+        />
+        <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+          Where Collectors Meet
+        </h1>
+        <p className="mt-3 text-white/60 max-w-xl mx-auto text-sm">
+          Discover, showcase, and celebrate your collections with a community that
+          shares your passion.
+        </p>
+      </section>
 
-          {/* Avatar Upload ONLY */}
+      <main className="mx-auto max-w-5xl px-4 space-y-32 pb-32">
+
+        {/* -------------------------------------------------------
+           PROFILE CARD (ELEVATED)
+        ------------------------------------------------------- */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_40px_rgba(255,255,255,0.15)] p-8 space-y-8">
+
+          {/* Avatar */}
           <div className="flex justify-center">
             <AvatarUpload userId={profile.id} currentAvatar={null} />
           </div>
 
           {/* Identity */}
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-white">
+            <h2 className="text-2xl font-semibold tracking-tight text-white">
               {displayName}
-            </h1>
+            </h2>
 
             <p className="text-sm text-white/70">
               {displayUsername}
@@ -148,7 +171,7 @@ export default function ProfilePage() {
             <FollowButton />
 
             {profile.bio ? (
-              <p className="text-sm leading-relaxed text-white/80">
+              <p className="text-sm leading-relaxed text-white/80 max-w-xl mx-auto">
                 {profile.bio}
               </p>
             ) : null}
@@ -162,8 +185,8 @@ export default function ProfilePage() {
           />
 
           {/* Collections */}
-          <div className="border-t border-white/10 pt-4">
-            <h2 className="text-white/80 text-sm mb-2">Collections</h2>
+          <div className="border-t border-white/10 pt-6">
+            <h3 className="text-white/80 text-sm mb-3">Collections</h3>
             {collections.length === 0 ? (
               <p className="text-white/60 text-sm">No collections yet.</p>
             ) : (
@@ -178,8 +201,8 @@ export default function ProfilePage() {
           </div>
 
           {/* Activity */}
-          <div className="border-t border-white/10 pt-4">
-            <h2 className="text-white/80 text-sm mb-2">Recent Activity</h2>
+          <div className="border-t border-white/10 pt-6">
+            <h3 className="text-white/80 text-sm mb-3">Recent Activity</h3>
             {activity.length === 0 ? (
               <p className="text-white/60 text-sm">No recent activity yet.</p>
             ) : (
@@ -194,28 +217,84 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="border-t border-white/10 pt-3 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
+          <div className="border-t border-white/10 pt-4 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
             CC · CollectorConnector
           </div>
         </section>
+
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 1 — MANAGE YOUR INFORMATION
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Manage Your Information"
+          subtitle="Take control of your profile and data"
+          body="Easily update your personal details, location, and collector identity. Your profile is your digital presence — keep it accurate, expressive, and uniquely yours."
+          align="left"
+        />
+
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 2 — PERSONALIZE YOUR PROFILE
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Personalize Your Profile"
+          subtitle="Craft a presence that reflects who you are"
+          body="Customize your avatar, bio, and collector details to create a profile that stands out. Your collection tells a story — let your profile tell the rest."
+          align="right"
+        />
+
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 3 — HIGHLIGHT YOUR BEST WORKS
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Highlight Your Best Works"
+          subtitle="Showcase your most prized items"
+          body="Organize and display your collections with clarity and pride. Whether you're a seasoned collector or just starting out, your best pieces deserve the spotlight."
+          align="left"
+        />
+
       </main>
+
+      <Footer />
     </div>
   );
 }
 
 /* -------------------------------------------------------
-   Header
+   Editorial Section Component
 ------------------------------------------------------- */
-function Header() {
+function EditorialSection({
+  title,
+  subtitle,
+  body,
+  align,
+}: {
+  title: string;
+  subtitle: string;
+  body: string;
+  align: "left" | "right";
+}) {
+  const isLeft = align === "left";
+
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/40">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="text-sm font-semibold tracking-wide text-white/80">
-          CollectorConnector
-        </Link>
-        <div className="text-xs text-white/50">Profile</div>
-      </div>
-    </header>
+    <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      {isLeft && (
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-white/70 text-sm">{subtitle}</p>
+          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
+        </div>
+      )}
+
+      <div />
+
+      {!isLeft && (
+        <div className="space-y-3 md:col-start-2">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-white/70 text-sm">{subtitle}</p>
+          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -229,7 +308,7 @@ function FollowButton() {
       type="button"
       className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-md"
     >
-      Follow · Add Friend
+      Follow
     </button>
   );
 }

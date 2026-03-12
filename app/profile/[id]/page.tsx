@@ -20,22 +20,17 @@ type Profile = {
   items_count?: number | null;
   categories_count?: number | null;
   rarity_score?: number | null;
-  tier?: string | null;
-  member_number?: number | null;
 };
 
 type Collection = {
   id: string;
   name: string;
-  user_id?: string;
   cover_image?: string | null;
   item_count?: number | null;
-  created_at?: string | null;
 };
 
 type Item = {
   id: string;
-  user_id?: string;
   title?: string | null;
   description?: string | null;
   image_url?: string | null;
@@ -77,9 +72,9 @@ export default function ProfilePage() {
 
         if (!alive) return;
 
-        setProfile((profileData as Profile) || null);
-        setCollections((collectionData as Collection[]) || []);
-        setActivity((activityData as Item[]) || []);
+        setProfile(profileData || null);
+        setCollections(collectionData || []);
+        setActivity(activityData || []);
       } catch (e) {
         console.error("Failed to load profile page data:", e);
       } finally {
@@ -102,7 +97,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-gradient-to-b from-[#0d0d0d] to-black pt-24 pb-20 text-white">
+      <div className="min-h-dvh bg-black pt-24 pb-20 text-white">
         <Header />
         <div className="mx-auto max-w-5xl px-4">
           <div className="mt-10 animate-pulse space-y-6">
@@ -118,7 +113,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-dvh bg-gradient-to-b from-[#0d0d0d] to-black pt-24 pb-20 text-white">
+      <div className="min-h-dvh bg-black pt-24 pb-20 text-white">
         <Header />
         <div className="mx-auto max-w-5xl px-4">
           <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-white/80">
@@ -134,13 +129,14 @@ export default function ProfilePage() {
   const rarityScore = profile.rarity_score ?? 0;
 
   return (
-    <div className="min-h-dvh bg-gradient-to-b from-[#0d0d0d] to-black pt-16 pb-20 text-white">
+    <div className="min-h-dvh bg-black pt-16 pb-20 text-white">
       <Header />
 
       <main className="mx-auto max-w-5xl px-4">
-        {/* Hero Card */}
-        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_40px_rgba(255,255,255,0.08)] backdrop-blur-xl ring-1 ring-white/10">
+        {/* Hero Card — NO BLUR, NO GLOW */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-lg">
           <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
+            
             {/* Avatar + upload */}
             <div className="shrink-0">
               <AvatarUpload userId={profile.id} currentAvatar={profile.avatar_url} />
@@ -158,7 +154,6 @@ export default function ProfilePage() {
                 {profile.location}
               </p>
 
-              {/* Tier badge removed */}
               {/* Follow button only */}
               <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
                 <FollowButton />
@@ -181,12 +176,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Collections Gallery */}
+          {/* Collections */}
           <div className="border-t border-white/10 p-4">
             <CollectionsGallery collections={collections} />
           </div>
 
-          {/* Activity Feed */}
+          {/* Activity */}
           <div className="border-t border-white/10 p-4">
             <ActivityFeed activity={activity} />
           </div>
@@ -205,7 +200,7 @@ export default function ProfilePage() {
 ------------------------------------------------------- */
 function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-white/5 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="group flex items-center gap-2">
           <Image
@@ -234,7 +229,7 @@ function FollowButton() {
   return (
     <button
       type="button"
-      className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(255,255,255,0.25)] transition hover:shadow-[0_0_28px_rgba(255,255,255,0.35)]"
+      className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-md"
     >
       Follow · Add Friend
     </button>
@@ -279,11 +274,11 @@ function CollectionsGallery({ collections }: { collections: Collection[] }) {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2 backdrop-blur">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2">
       <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {collections.map((col) => (
           <div key={col.id} className="snap-start shrink-0">
-            <div className="group relative h-40 w-56 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.08)]">
+            <div className="group relative h-40 w-56 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md">
               <Image
                 src={col.cover_image || "/diamond2.png"}
                 alt={col.name}
@@ -321,7 +316,7 @@ function ActivityFeed({ activity }: { activity: Item[] }) {
       {activity.map((item) => (
         <article
           key={item.id}
-          className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-md transition hover:border-white/30"
+          className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-md"
         >
           <div className="relative mb-3 h-64 w-full overflow-hidden rounded-xl bg-black">
             <Image

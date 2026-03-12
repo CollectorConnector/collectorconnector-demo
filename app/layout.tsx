@@ -1,17 +1,19 @@
-// app/auth/layout.tsx
+// app/layout.tsx
 
-import "../globals.css";
+import "./globals.css";
+import type { ReactNode } from "react";
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // This layout wraps all pages inside /auth (login, signup, callback)
-  // It inherits the root layout's <html> and <body>, so fonts stay consistent.
+export const metadata = {
+  title: "CollectorConnector",
+  description: "Collect. Connect. Showcase.",
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <>
-      {children}
-    </>
+    <html lang="en">
+      <body className="bg-black text-white">
+        {children}
+      </body>
+    </html>
   );
 }

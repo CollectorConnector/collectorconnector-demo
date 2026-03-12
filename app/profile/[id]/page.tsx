@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
 
@@ -25,7 +24,6 @@ type Profile = {
 type Collection = {
   id: string;
   name: string;
-  cover_image?: string | null;
   item_count?: number | null;
 };
 
@@ -33,7 +31,6 @@ type Item = {
   id: string;
   title?: string | null;
   description?: string | null;
-  image_url?: string | null;
   created_at?: string | null;
 };
 
@@ -100,12 +97,7 @@ export default function ProfilePage() {
       <div className="min-h-dvh bg-black pt-24 pb-20 text-white">
         <Header />
         <div className="mx-auto max-w-5xl px-4">
-          <div className="mt-10 animate-pulse space-y-6">
-            <div className="h-40 rounded-3xl bg-white/5" />
-            <div className="h-6 w-48 rounded bg-white/10" />
-            <div className="h-28 rounded-2xl bg-white/5" />
-            <div className="h-72 rounded-2xl bg-white/5" />
-          </div>
+          <div className="mt-10 text-white/60">Loading…</div>
         </div>
       </div>
     );
@@ -116,9 +108,7 @@ export default function ProfilePage() {
       <div className="min-h-dvh bg-black pt-24 pb-20 text-white">
         <Header />
         <div className="mx-auto max-w-5xl px-4">
-          <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-white/80">
-            Profile not found.
-          </div>
+          <div className="mt-10 text-white/60">Profile not found.</div>
         </div>
       </div>
     );
@@ -133,60 +123,76 @@ export default function ProfilePage() {
       <Header />
 
       <main className="mx-auto max-w-5xl px-4">
-        {/* Hero Card — NO BLUR, NO GLOW */}
-        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-lg">
-          <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
-            
-            {/* Avatar + upload */}
-            <div className="shrink-0">
-              <AvatarUpload userId={profile.id} currentAvatar={profile.avatar_url} />
-            </div>
+        {/* Hero Card — NO IMAGES */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-lg p-6 space-y-6">
 
-            {/* Identity */}
-            <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
-              <h1 className="truncate text-2xl font-semibold tracking-tight text-white">
-                {displayName}
-              </h1>
-
-              <p className="truncate text-sm text-white/70">
-                {displayUsername}
-                {displayUsername && profile.location ? " · " : ""}
-                {profile.location}
-              </p>
-
-              {/* Follow button only */}
-              <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
-                <FollowButton />
-              </div>
-
-              {profile.bio ? (
-                <p className="text-pretty text-sm leading-relaxed text-white/80">
-                  {profile.bio}
-                </p>
-              ) : null}
-            </div>
-
-            {/* Quick Stats */}
-            <div className="w-full max-w-xs sm:w-60">
-              <StatsStrip
-                items={itemsCount}
-                categories={categoriesCount}
-                rarity={rarityScore}
-              />
-            </div>
+          {/* Avatar Upload ONLY */}
+          <div className="flex justify-center">
+            <AvatarUpload userId={profile.id} currentAvatar={null} />
           </div>
 
+          {/* Identity */}
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-white">
+              {displayName}
+            </h1>
+
+            <p className="text-sm text-white/70">
+              {displayUsername}
+              {displayUsername && profile.location ? " · " : ""}
+              {profile.location}
+            </p>
+
+            <FollowButton />
+
+            {profile.bio ? (
+              <p className="text-sm leading-relaxed text-white/80">
+                {profile.bio}
+              </p>
+            ) : null}
+          </div>
+
+          {/* Stats */}
+          <StatsStrip
+            items={itemsCount}
+            categories={categoriesCount}
+            rarity={rarityScore}
+          />
+
           {/* Collections */}
-          <div className="border-t border-white/10 p-4">
-            <CollectionsGallery collections={collections} />
+          <div className="border-t border-white/10 pt-4">
+            <h2 className="text-white/80 text-sm mb-2">Collections</h2>
+            {collections.length === 0 ? (
+              <p className="text-white/60 text-sm">No collections yet.</p>
+            ) : (
+              <ul className="space-y-2 text-white/80 text-sm">
+                {collections.map((col) => (
+                  <li key={col.id}>
+                    {col.name} — {col.item_count ?? 0} items
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* Activity */}
-          <div className="border-t border-white/10 p-4">
-            <ActivityFeed activity={activity} />
+          <div className="border-t border-white/10 pt-4">
+            <h2 className="text-white/80 text-sm mb-2">Recent Activity</h2>
+            {activity.length === 0 ? (
+              <p className="text-white/60 text-sm">No recent activity yet.</p>
+            ) : (
+              <ul className="space-y-2 text-white/80 text-sm">
+                {activity.map((item) => (
+                  <li key={item.id}>
+                    <strong>{item.title}</strong>
+                    {item.description ? ` — ${item.description}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
-          <div className="border-t border-white/10 p-3 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
+          <div className="border-t border-white/10 pt-3 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
             CC · CollectorConnector
           </div>
         </section>
@@ -200,20 +206,10 @@ export default function ProfilePage() {
 ------------------------------------------------------- */
 function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/40 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/40">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="group flex items-center gap-2">
-          <Image
-            src="/CC-SML-Logo.png"
-            alt="CollectorConnector"
-            width={20}
-            height={20}
-            className="h-5 w-5 object-contain"
-            priority
-          />
-          <span className="text-sm font-semibold tracking-wide text-white/80 group-hover:text-white">
-            Collector<span className="text-emerald-400">Connector</span>
-          </span>
+        <Link href="/" className="text-sm font-semibold tracking-wide text-white/80">
+          CollectorConnector
         </Link>
         <div className="text-xs text-white/50">Profile</div>
       </div>
@@ -245,101 +241,20 @@ function StatsStrip({
   categories: number;
   rarity: number;
 }) {
-  const stats = [
-    { label: "Items", value: items },
-    { label: "Categories", value: categories },
-    { label: "Rarity", value: rarity },
-  ];
   return (
-    <div className="grid grid-cols-3 divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] text-center">
-      {stats.map((s) => (
-        <div key={s.label} className="px-4 py-3">
-          <div className="text-lg font-semibold text-white">{s.value}</div>
-          <div className="text-xs uppercase tracking-wider text-white/60">
-            {s.label}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CollectionsGallery({ collections }: { collections: Collection[] }) {
-  if (!collections || collections.length === 0) {
-    return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60">
-        No collections yet.
+    <div className="grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10 bg-white/[0.04] text-center">
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{items}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Items</div>
       </div>
-    );
-  }
-
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2">
-      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {collections.map((col) => (
-          <div key={col.id} className="snap-start shrink-0">
-            <div className="group relative h-40 w-56 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-md">
-              <Image
-                src={col.cover_image || "/diamond2.png"}
-                alt={col.name}
-                fill
-                className="object-cover transition group-hover:scale-105"
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute bottom-2 left-2 right-2">
-                <p className="truncate text-sm font-medium text-white">
-                  {col.name}
-                </p>
-                <p className="text-[11px] text-white/70">
-                  {col.item_count ?? 0} items
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{categories}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Categories</div>
       </div>
-    </div>
-  );
-}
-
-function ActivityFeed({ activity }: { activity: Item[] }) {
-  if (!activity || activity.length === 0) {
-    return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60">
-        No recent activity yet.
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{rarity}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Rarity</div>
       </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {activity.map((item) => (
-        <article
-          key={item.id}
-          className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-md"
-        >
-          <div className="relative mb-3 h-64 w-full overflow-hidden rounded-xl bg-black">
-            <Image
-              src={item.image_url || "/diamond2.png"}
-              alt={item.title || "Item"}
-              fill
-              className="object-cover"
-            />
-          </div>
-
-          {item.title ? (
-            <p className="font-medium text-white">{item.title}</p>
-          ) : null}
-          {item.description ? (
-            <p className="mt-1 text-sm text-white/70">{item.description}</p>
-          ) : null}
-          {item.created_at ? (
-            <p className="mt-2 text-[11px] text-white/50">
-              {new Date(item.created_at).toLocaleString()}
-            </p>
-          ) : null}
-        </article>
-      ))}
     </div>
   );
 }

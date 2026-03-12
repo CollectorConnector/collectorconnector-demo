@@ -54,6 +54,7 @@ export default function LoginPage() {
         padding: "20px",
       }}
     >
+      {/* ✨ GLOW CARD — patched correctly */}
       <div
         style={{
           width: "100%",
@@ -63,7 +64,7 @@ export default function LoginPage() {
           border: "1px solid #1a1a1a",
           borderRadius: "14px",
           color: "#fff",
-          boxShadow: "0 0 40px rgba(0,0,0,0.4)",
+          boxShadow: "0 0 40px rgba(255,255,255,0.15)", // ← WHITE NEON GLOW
         }}
       >
         {/* LOGO */}

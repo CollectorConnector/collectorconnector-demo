@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Nav() {
   return (
-    <header className="w-full bg-black border-b border-gray-800 shadow-md fixed top-0 left-0 z-50">
+    <header className="w-full bg-black border-b border-gray-800 shadow-[0_0_40px_rgba(255,255,255,0.15)] fixed top-0 left-0 z-50">
       <div className="w-full px-4 py-3 flex items-center justify-between">
 
         {/* LEFT CLUSTER — MAIN NAV */}

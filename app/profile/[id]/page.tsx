@@ -100,21 +100,6 @@ export default function ProfilePage() {
 
   const displayUsername = profile?.username ? `@${profile.username}` : null;
 
-  const tierText = useMemo(() => {
-    if (!profile) return null;
-
-    if (profile.tier) return profile.tier;
-
-    const n = profile.member_number;
-    if (typeof n !== "number") return null;
-
-    if (n === 1) return "Founder · #1";
-    if (n >= 2 && n <= 50) return `Gold · #${n}`;
-    if (n >= 51 && n <= 100) return `Silver · #${n}`;
-    if (n >= 101 && n <= 500) return `Bronze · #${n}`;
-    return `Member #${n}`;
-  }, [profile]);
-
   if (loading) {
     return (
       <div className="min-h-dvh bg-gradient-to-b from-[#0d0d0d] to-black pt-24 pb-20 text-white">
@@ -154,7 +139,7 @@ export default function ProfilePage() {
 
       <main className="mx-auto max-w-5xl px-4">
         {/* Hero Card */}
-        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,255,255,0.12)] backdrop-blur-xl ring-1 ring-white/10">
+        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_40px_rgba(255,255,255,0.08)] backdrop-blur-xl ring-1 ring-white/10">
           <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
             {/* Avatar + upload */}
             <div className="shrink-0">
@@ -173,8 +158,9 @@ export default function ProfilePage() {
                 {profile.location}
               </p>
 
+              {/* Tier badge removed */}
+              {/* Follow button only */}
               <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
-                {tierText ? <TierBadge text={tierText} /> : null}
                 <FollowButton />
               </div>
 
@@ -243,14 +229,6 @@ function Header() {
 /* -------------------------------------------------------
    Shared UI
 ------------------------------------------------------- */
-function TierBadge({ text }: { text: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
-      {text}
-    </span>
-  );
-}
 
 function FollowButton() {
   return (

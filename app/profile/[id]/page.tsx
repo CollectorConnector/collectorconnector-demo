@@ -96,12 +96,18 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-dvh bg-black text-white">
-        <div className="w-full">
+        {/* FULL-WIDTH HEADER */}
+        <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15)]">
           <Nav />
         </div>
-        <div className="mx-auto max-w-5xl px-4 pt-32">
+
+        {/* FULL-WIDTH SPACER */}
+        <div className="h-16 w-full bg-black" />
+
+        <div className="mx-auto max-w-5xl px-4 pt-10">
           <div className="text-white/60">Loading…</div>
         </div>
+
         <Footer />
       </div>
     );
@@ -110,12 +116,18 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="min-h-dvh bg-black text-white">
-        <div className="w-full">
+        {/* FULL-WIDTH HEADER */}
+        <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15)]">
           <Nav />
         </div>
-        <div className="mx-auto max-w-5xl px-4 pt-32">
+
+        {/* FULL-WIDTH SPACER */}
+        <div className="h-16 w-full bg-black" />
+
+        <div className="mx-auto max-w-5xl px-4 pt-10">
           <div className="text-white/60">Profile not found.</div>
         </div>
+
         <Footer />
       </div>
     );
@@ -129,14 +141,14 @@ export default function ProfilePage() {
     <div className="min-h-dvh bg-black text-white">
 
       {/* -------------------------------------------------------
-         FULL-WIDTH HEADER
+         FULL-WIDTH HEADER (VISUALLY FIXED)
       ------------------------------------------------------- */}
-      <div className="w-full fixed top-0 left-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+      <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.25)]">
         <Nav />
       </div>
 
-      {/* Spacer so content doesn't hide behind fixed header */}
-      <div className="h-16" />
+      {/* FULL-WIDTH SPACER */}
+      <div className="h-16 w-full bg-black" />
 
       {/* -------------------------------------------------------
          HERO SECTION — FULL WIDTH

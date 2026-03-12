@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import AvatarUpload from "./AvatarUpload";
 
 /* -------------------------------------------------------
    Types
@@ -99,7 +100,6 @@ export default function ProfilePage() {
 
   const displayUsername = profile?.username ? `@${profile.username}` : null;
 
-  // ✅ Safe tier text derivation (no TS error)
   const tierText = useMemo(() => {
     if (!profile) return null;
 
@@ -153,29 +153,21 @@ export default function ProfilePage() {
       <Header />
 
       <main className="mx-auto max-w-5xl px-4">
-        {/* Neon aura behind hero */}
         <div className="relative isolate">
           <NeonGlow className="-z-10" />
 
-          {/* ---------------- HERO STRIP (Version C) ---------------- */}
-          <section className="overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,255,255,0.12)] backdrop-blur-xl ring-1 ring-white/10">
+          <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,255,255,0.12)] backdrop-blur-xl ring-1 ring-white/10">
             <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
-              {/* Avatar — squircle */}
+              {/* Avatar + upload */}
               <div className="shrink-0">
-                <div className="overflow-hidden rounded-[28%] border border-white/15 ring-1 ring-white/10 shadow-[0_0_40px_rgba(255,255,255,0.12)]">
-                  <Image
-                    src={profile.avatar_url || "/diamond2.png"}
-                    alt={`${displayName} avatar`}
-                    width={128}
-                    height={128}
-                    className="h-28 w-28 object-cover sm:h-32 sm:w-32"
-                  />
-                </div>
+                <AvatarUpload userId={profile.id} currentAvatar={profile.avatar_url} />
               </div>
 
               {/* Identity */}
               <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
-                <h1 className="truncate text-2xl font-semibold tracking-tight text-white">{displayName}</h1>
+                <h1 className="truncate text-2xl font-semibold tracking-tight text-white">
+                  {displayName}
+                </h1>
 
                 <p className="truncate text-sm text-white/70">
                   {displayUsername}
@@ -189,17 +181,23 @@ export default function ProfilePage() {
                 </div>
 
                 {profile.bio ? (
-                  <p className="text-pretty text-sm leading-relaxed text-white/80">{profile.bio}</p>
+                  <p className="text-pretty text-sm leading-relaxed text-white/80">
+                    {profile.bio}
+                  </p>
                 ) : null}
               </div>
 
               {/* Quick Stats */}
               <div className="w-full max-w-xs sm:w-60">
-                <StatsStrip items={itemsCount} categories={categoriesCount} rarity={rarityScore} />
+                <StatsStrip
+                  items={itemsCount}
+                  categories={categoriesCount}
+                  rarity={rarityScore}
+                />
               </div>
             </div>
 
-            {/* Collections Gallery (glass-case carousel) */}
+            {/* Collections Gallery */}
             <div className="border-t border-white/10 p-4">
               <CollectionsGallery collections={collections} />
             </div>
@@ -209,7 +207,6 @@ export default function ProfilePage() {
               <ActivityFeed activity={activity} />
             </div>
 
-            {/* Branding footer inside the strip */}
             <div className="border-t border-white/10 p-3 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
               CC · CollectorConnector
             </div>
@@ -221,14 +218,13 @@ export default function ProfilePage() {
 }
 
 /* -------------------------------------------------------
-   Header (SMALL, CRISP LOGO — 20px)
+   Header
 ------------------------------------------------------- */
 function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-white/5 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="group flex items-center gap-2">
-          {/* Tiny, crisp logo (20px). Use an SVG for perfect sharpness if available. */}
           <Image
             src="/CC-SML-Logo.png"
             alt="CollectorConnector"
@@ -241,8 +237,6 @@ function Header() {
             Collector<span className="text-emerald-400">Connector</span>
           </span>
         </Link>
-
-        {/* Right side placeholder */}
         <div className="text-xs text-white/50">Profile</div>
       </div>
     </header>
@@ -304,7 +298,9 @@ function StatsStrip({
       {stats.map((s) => (
         <div key={s.label} className="px-4 py-3">
           <div className="text-lg font-semibold text-white">{s.value}</div>
-          <div className="text-xs uppercase tracking-wider text-white/60">{s.label}</div>
+          <div className="text-xs uppercase tracking-wider text-white/60">
+            {s.label}
+          </div>
         </div>
       ))}
     </div>
@@ -334,8 +330,12 @@ function CollectionsGallery({ collections }: { collections: Collection[] }) {
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-2 left-2 right-2">
-                <p className="truncate text-sm font-medium text-white">{col.name}</p>
-                <p className="text-[11px] text-white/70">{col.item_count ?? 0} items</p>
+                <p className="truncate text-sm font-medium text-white">
+                  {col.name}
+                </p>
+                <p className="text-[11px] text-white/70">
+                  {col.item_count ?? 0} items
+                </p>
               </div>
             </div>
           </div>
@@ -370,10 +370,16 @@ function ActivityFeed({ activity }: { activity: Item[] }) {
             />
           </div>
 
-          {item.title ? <p className="font-medium text-white">{item.title}</p> : null}
-          {item.description ? <p className="mt-1 text-sm text-white/70">{item.description}</p> : null}
+          {item.title ? (
+            <p className="font-medium text-white">{item.title}</p>
+          ) : null}
+          {item.description ? (
+            <p className="mt-1 text-sm text-white/70">{item.description}</p>
+          ) : null}
           {item.created_at ? (
-            <p className="mt-2 text-[11px] text-white/50">{new Date(item.created_at).toLocaleString()}</p>
+            <p className="mt-2 text-[11px] text-white/50">
+              {new Date(item.created_at).toLocaleString()}
+            </p>
           ) : null}
         </article>
       ))}

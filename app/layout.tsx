@@ -1,12 +1,6 @@
-import "./globals.css";
-import type { ReactNode } from "react";
+import "../globals.css";
 
-export const metadata = {
-  title: "CollectorConnector",
-  description: "Collect. Connect. Showcase.",
-};
-
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="bg-black text-white">

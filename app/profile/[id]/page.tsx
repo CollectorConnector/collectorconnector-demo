@@ -153,9 +153,13 @@ export default function ProfilePage() {
       <Header />
 
       <main className="mx-auto max-w-5xl px-4">
-        <div className="relative isolate">
-          <NeonGlow className="-z-10" />
+        {/* Glow safely behind the hero */}
+        <div className="relative">
+          <div className="absolute inset-0 -z-10 pointer-events-none">
+            <NeonGlow />
+          </div>
 
+          {/* Hero Card */}
           <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,255,255,0.12)] backdrop-blur-xl ring-1 ring-white/10">
             <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
               {/* Avatar + upload */}
@@ -246,11 +250,11 @@ function Header() {
 /* -------------------------------------------------------
    Shared UI
 ------------------------------------------------------- */
-function NeonGlow({ className = "" }: { className?: string }) {
+function NeonGlow() {
   return (
     <div
       aria-hidden
-      className={`pointer-events-none absolute inset-0 blur-3xl ${className}`}
+      className="w-full h-full blur-3xl"
       style={{
         background:
           "radial-gradient(80% 60% at 50% 30%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0) 70%)",

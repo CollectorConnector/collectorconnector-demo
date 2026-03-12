@@ -105,6 +105,7 @@ export default function CreateProfilePage() {
         padding: "20px",
       }}
     >
+      {/* ✨ GLOW CARD — patched correctly */}
       <div
         style={{
           width: "100%",
@@ -114,7 +115,7 @@ export default function CreateProfilePage() {
           border: "1px solid #1F2937",
           borderRadius: "14px",
           color: "#fff",
-          boxShadow: "0 0 40px rgba(0,0,0,0.4)",
+          boxShadow: "0 0 40px rgba(255,255,255,0.15)", // ← WHITE NEON GLOW
         }}
       >
         {/* LOGO */}

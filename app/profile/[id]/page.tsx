@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
@@ -97,7 +96,9 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-dvh bg-black text-white">
-        <Nav />
+        <div className="w-full">
+          <Nav />
+        </div>
         <div className="mx-auto max-w-5xl px-4 pt-32">
           <div className="text-white/60">Loading…</div>
         </div>
@@ -109,7 +110,9 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="min-h-dvh bg-black text-white">
-        <Nav />
+        <div className="w-full">
+          <Nav />
+        </div>
         <div className="mx-auto max-w-5xl px-4 pt-32">
           <div className="text-white/60">Profile not found.</div>
         </div>
@@ -124,12 +127,21 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-dvh bg-black text-white">
-      <Nav />
 
       {/* -------------------------------------------------------
-         HERO SECTION
+         FULL-WIDTH HEADER
       ------------------------------------------------------- */}
-      <section className="pt-28 pb-20 text-center">
+      <div className="w-full fixed top-0 left-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+        <Nav />
+      </div>
+
+      {/* Spacer so content doesn't hide behind fixed header */}
+      <div className="h-16" />
+
+      {/* -------------------------------------------------------
+         HERO SECTION — FULL WIDTH
+      ------------------------------------------------------- */}
+      <section className="w-full bg-black pt-20 pb-20 text-center">
         <img
           src="/CC-main-logo.png"
           alt="CollectorConnector Logo"
@@ -308,7 +320,7 @@ function FollowButton() {
       type="button"
       className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-md"
     >
-      Follow
+      Follow · Add Friend
     </button>
   );
 }

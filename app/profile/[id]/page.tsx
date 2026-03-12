@@ -153,69 +153,62 @@ export default function ProfilePage() {
       <Header />
 
       <main className="mx-auto max-w-5xl px-4">
-        {/* Glow safely behind the hero */}
-        <div className="relative">
-          <div className="absolute inset-0 -z-10 pointer-events-none">
-            <NeonGlow />
+        {/* Hero Card */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,255,255,0.12)] backdrop-blur-xl ring-1 ring-white/10">
+          <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
+            {/* Avatar + upload */}
+            <div className="shrink-0">
+              <AvatarUpload userId={profile.id} currentAvatar={profile.avatar_url} />
+            </div>
+
+            {/* Identity */}
+            <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
+              <h1 className="truncate text-2xl font-semibold tracking-tight text-white">
+                {displayName}
+              </h1>
+
+              <p className="truncate text-sm text-white/70">
+                {displayUsername}
+                {displayUsername && profile.location ? " · " : ""}
+                {profile.location}
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+                {tierText ? <TierBadge text={tierText} /> : null}
+                <FollowButton />
+              </div>
+
+              {profile.bio ? (
+                <p className="text-pretty text-sm leading-relaxed text-white/80">
+                  {profile.bio}
+                </p>
+              ) : null}
+            </div>
+
+            {/* Quick Stats */}
+            <div className="w-full max-w-xs sm:w-60">
+              <StatsStrip
+                items={itemsCount}
+                categories={categoriesCount}
+                rarity={rarityScore}
+              />
+            </div>
           </div>
 
-          {/* Hero Card */}
-          <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,255,255,0.12)] backdrop-blur-xl ring-1 ring-white/10">
-            <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
-              {/* Avatar + upload */}
-              <div className="shrink-0">
-                <AvatarUpload userId={profile.id} currentAvatar={profile.avatar_url} />
-              </div>
+          {/* Collections Gallery */}
+          <div className="border-t border-white/10 p-4">
+            <CollectionsGallery collections={collections} />
+          </div>
 
-              {/* Identity */}
-              <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
-                <h1 className="truncate text-2xl font-semibold tracking-tight text-white">
-                  {displayName}
-                </h1>
+          {/* Activity Feed */}
+          <div className="border-t border-white/10 p-4">
+            <ActivityFeed activity={activity} />
+          </div>
 
-                <p className="truncate text-sm text-white/70">
-                  {displayUsername}
-                  {displayUsername && profile.location ? " · " : ""}
-                  {profile.location}
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
-                  {tierText ? <TierBadge text={tierText} /> : null}
-                  <FollowButton />
-                </div>
-
-                {profile.bio ? (
-                  <p className="text-pretty text-sm leading-relaxed text-white/80">
-                    {profile.bio}
-                  </p>
-                ) : null}
-              </div>
-
-              {/* Quick Stats */}
-              <div className="w-full max-w-xs sm:w-60">
-                <StatsStrip
-                  items={itemsCount}
-                  categories={categoriesCount}
-                  rarity={rarityScore}
-                />
-              </div>
-            </div>
-
-            {/* Collections Gallery */}
-            <div className="border-t border-white/10 p-4">
-              <CollectionsGallery collections={collections} />
-            </div>
-
-            {/* Activity Feed */}
-            <div className="border-t border-white/10 p-4">
-              <ActivityFeed activity={activity} />
-            </div>
-
-            <div className="border-t border-white/10 p-3 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
-              CC · CollectorConnector
-            </div>
-          </section>
-        </div>
+          <div className="border-t border-white/10 p-3 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
+            CC · CollectorConnector
+          </div>
+        </section>
       </main>
     </div>
   );
@@ -250,19 +243,6 @@ function Header() {
 /* -------------------------------------------------------
    Shared UI
 ------------------------------------------------------- */
-function NeonGlow() {
-  return (
-    <div
-      aria-hidden
-      className="w-full h-full blur-3xl"
-      style={{
-        background:
-          "radial-gradient(80% 60% at 50% 30%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0) 70%)",
-      }}
-    />
-  );
-}
-
 function TierBadge({ text }: { text: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">

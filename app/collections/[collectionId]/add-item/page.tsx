@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 export default function AddTenPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  // ⭐ REPLACE your old uploadImage with this one
   const uploadImage = async () => {
     if (!imageFile) return null;
 
@@ -27,7 +28,7 @@ export default function AddTenPage() {
 
     // 3. Upload to the correct bucket
     const { error: uploadError } = await supabase.storage
-      .from("item-photos")
+      .from("items") // <-- make sure this matches your bucket name
       .upload(filePath, imageFile);
 
     if (uploadError) {
@@ -37,10 +38,25 @@ export default function AddTenPage() {
 
     // 4. Get the public URL
     const { data: publicUrlData } = supabase.storage
-      .from("item-photos")
+      .from("items")
       .getPublicUrl(filePath);
 
-    return publicUrlData.publicUrl;
+    const imageUrl = publicUrlData.publicUrl;
+
+    // 5. Insert into the database
+    const { error: insertError } = await supabase.from("items").insert({
+      user_id: user.id,
+      title: "Untitled Item", // replace later with real inputs
+      description: "",
+      image_url: imageUrl,
+    });
+
+    if (insertError) {
+      console.error("Insert error:", insertError);
+      return null;
+    }
+
+    return imageUrl;
   };
 
   return (

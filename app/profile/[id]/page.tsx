@@ -1,224 +1,365 @@
-/* eslint-disable @next/next/no-img-element */
-import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
+import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
 
-export const revalidate = 0;
-
-export const metadata: Metadata = {
-  title: "Profile • CollectorConnector",
-};
-
-// Create Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-);
-
+/* -------------------------------------------------------
+   Types
+------------------------------------------------------- */
 type Profile = {
   id: string;
-  username: string | null;
-  name: string | null;
-  bio: string | null;
-  location: string | null;
-  avatar_url: string | null;
-  member_number: number | null;
-  instagram?: string | null;
-  ebay?: string | null;
-  discord?: string | null;
-  x?: string | null;
-  whatnot?: string | null;
+  avatar_url?: string | null;
+  display_name?: string | null;
+  username?: string | null;
+  location?: string | null;
+  bio?: string | null;
+  items_count?: number | null;
+  categories_count?: number | null;
+  rarity_score?: number | null;
 };
 
-async function getProfile(id: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(
-      "id, username, name, bio, location, avatar_url, member_number, instagram, ebay, discord, x, whatnot"
-    )
-    .eq("id", id)
-    .single();
+type Collection = {
+  id: string;
+  name: string;
+  item_count?: number | null;
+};
 
-  if (error || !data) return null;
-  return data as unknown as Profile;
-}
+type Item = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  created_at?: string | null;
+};
 
-// Tier label helper
-function tierLabel(n?: number | null) {
-  if (!n) return null;
-  if (n === 1) return "Founder · #1";
-  if (n >= 2 && n <= 50) return `Gold · #${n}`;
-  if (n >= 51 && n <= 100) return `Silver · #${n}`;
-  if (n >= 101 && n <= 500) return `Bronze · #${n}`;
-  return `Member · #${n}`;
-}
+/* -------------------------------------------------------
+   Page
+------------------------------------------------------- */
+export default function ProfilePage() {
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
-// Simple, safe brand mark
-function BrandMark() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="relative h-7 w-7">
-        <Image
-          src="/CC-SML-Logo.svg"
-          alt="CC Logo"
-          fill
-          className="object-contain"
-        />
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [activity, setActivity] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+
+    let alive = true;
+    async function run() {
+      try {
+        const [{ data: profileData }, { data: collectionData }, { data: activityData }] =
+          await Promise.all([
+            supabase.from("profiles").select("*").eq("id", id).single(),
+            supabase
+              .from("collections")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
+            supabase
+              .from("items")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
+          ]);
+
+        if (!alive) return;
+
+        setProfile(profileData || null);
+        setCollections(collectionData || []);
+        setActivity(activityData || []);
+      } catch (e) {
+        console.error("Failed to load profile page data:", e);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  const displayName = useMemo(
+    () => profile?.display_name || profile?.username || "Collector",
+    [profile]
+  );
+
+  const displayUsername = profile?.username ? `@${profile.username}` : null;
+
+  if (loading) {
+    return (
+      <div className="min-h-dvh bg-black text-white">
+        {/* FULL-WIDTH HEADER */}
+        <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+          <Nav />
+        </div>
+
+        {/* FULL-WIDTH SPACER */}
+        <div className="h-16 w-full bg-black" />
+
+        <div className="mx-auto max-w-5xl px-4 pt-10">
+          <div className="text-white/60">Loading…</div>
+        </div>
+
+        <Footer />
       </div>
-      <span className="select-none text-sm font-semibold tracking-wide">
-        CollectorConnector
-      </span>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-dvh bg-black text-white">
+        {/* FULL-WIDTH HEADER */}
+        <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+          <Nav />
+        </div>
+
+        {/* FULL-WIDTH SPACER */}
+        <div className="h-16 w-full bg-black" />
+
+        <div className="mx-auto max-w-5xl px-4 pt-10">
+          <div className="text-white/60">Profile not found.</div>
+        </div>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  const itemsCount = profile.items_count ?? activity.length ?? 0;
+  const categoriesCount = profile.categories_count ?? collections.length ?? 0;
+  const rarityScore = profile.rarity_score ?? 0;
+
+  return (
+    <div className="min-h-dvh bg-black text-white">
+
+      {/* -------------------------------------------------------
+         FULL-WIDTH HEADER (VISUALLY FIXED)
+      ------------------------------------------------------- */}
+      <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.25)]">
+        <Nav />
+      </div>
+
+      {/* FULL-WIDTH SPACER */}
+      <div className="h-16 w-full bg-black" />
+
+      {/* -------------------------------------------------------
+         HERO SECTION — FULL WIDTH
+      ------------------------------------------------------- */}
+      <section className="w-full bg-black pt-20 pb-20 text-center">
+        <img
+          src="/CC-main-logo.png"
+          alt="CollectorConnector Logo"
+          className="mx-auto h-20 w-auto opacity-90"
+        />
+        <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+          Where Collectors Meet
+        </h1>
+        <p className="mt-3 text-white/60 max-w-xl mx-auto text-sm">
+          Discover, showcase, and celebrate your collections with a community that
+          shares your passion.
+        </p>
+      </section>
+
+      <main className="mx-auto max-w-5xl px-4 space-y-32 pb-32">
+
+        {/* -------------------------------------------------------
+           PROFILE CARD (ELEVATED)
+        ------------------------------------------------------- */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_40px_rgba(255,255,255,0.15)] p-8 space-y-8">
+
+          {/* Avatar */}
+          <div className="flex justify-center">
+            <AvatarUpload userId={profile.id} currentAvatar={null} />
+          </div>
+
+          {/* Identity */}
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight text-white">
+              {displayName}
+            </h2>
+
+            <p className="text-sm text-white/70">
+              {displayUsername}
+              {displayUsername && profile.location ? " · " : ""}
+              {profile.location}
+            </p>
+
+            <FollowButton />
+
+            {profile.bio ? (
+              <p className="text-sm leading-relaxed text-white/80 max-w-xl mx-auto">
+                {profile.bio}
+              </p>
+            ) : null}
+          </div>
+
+          {/* Stats */}
+          <StatsStrip
+            items={itemsCount}
+            categories={categoriesCount}
+            rarity={rarityScore}
+          />
+
+          {/* Collections */}
+          <div className="border-t border-white/10 pt-6">
+            <h3 className="text-white/80 text-sm mb-3">Collections</h3>
+            {collections.length === 0 ? (
+              <p className="text-white/60 text-sm">No collections yet.</p>
+            ) : (
+              <ul className="space-y-2 text-white/80 text-sm">
+                {collections.map((col) => (
+                  <li key={col.id}>
+                    {col.name} — {col.item_count ?? 0} items
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Activity */}
+          <div className="border-t border-white/10 pt-6">
+            <h3 className="text-white/80 text-sm mb-3">Recent Activity</h3>
+            {activity.length === 0 ? (
+              <p className="text-white/60 text-sm">No recent activity yet.</p>
+            ) : (
+              <ul className="space-y-2 text-white/80 text-sm">
+                {activity.map((item) => (
+                  <li key={item.id}>
+                    <strong>{item.title}</strong>
+                    {item.description ? ` — ${item.description}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="border-t border-white/10 pt-4 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
+            CC · CollectorConnector
+          </div>
+        </section>
+
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 1 — MANAGE YOUR INFORMATION
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Manage Your Information"
+          subtitle="Take control of your profile and data"
+          body="Easily update your personal details, location, and collector identity. Your profile is your digital presence — keep it accurate, expressive, and uniquely yours."
+          align="left"
+        />
+
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 2 — PERSONALIZE YOUR PROFILE
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Personalize Your Profile"
+          subtitle="Craft a presence that reflects who you are"
+          body="Customize your avatar, bio, and collector details to create a profile that stands out. Your collection tells a story — let your profile tell the rest."
+          align="right"
+        />
+
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 3 — HIGHLIGHT YOUR BEST WORKS
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Highlight Your Best Works"
+          subtitle="Showcase your most prized items"
+          body="Organize and display your collections with clarity and pride. Whether you're a seasoned collector or just starting out, your best pieces deserve the spotlight."
+          align="left"
+        />
+
+      </main>
+
+      <Footer />
     </div>
   );
 }
 
-// Simple monochrome icons
-function Icon({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-zinc-300 hover:opacity-80 transition-opacity">
-      {children}
-    </span>
-  );
-}
-
-function SocialLink({
-  href,
-  children,
+/* -------------------------------------------------------
+   Editorial Section Component
+------------------------------------------------------- */
+function EditorialSection({
+  title,
+  subtitle,
+  body,
+  align,
 }: {
-  href?: string | null;
-  children: React.ReactNode;
+  title: string;
+  subtitle: string;
+  body: string;
+  align: "left" | "right";
 }) {
-  if (!href) {
-    return (
-      <span className="text-zinc-600 cursor-not-allowed">{children}</span>
-    );
-  }
-  return (
-    <Link
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-zinc-300 hover:opacity-80 transition-opacity"
-    >
-      {children}
-    </Link>
-  );
-}
+  const isLeft = align === "left";
 
-function HeaderBar({ profile }: { profile: Profile }) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/70 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <BrandMark />
-          <div className="hidden sm:block h-5 w-px bg-white/10" />
-          <span className="truncate text-sm text-zinc-400">
-            @{profile.username}
-          </span>
+    <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      {isLeft && (
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-white/70 text-sm">{subtitle}</p>
+          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
         </div>
+      )}
 
-        <nav className="flex items-center gap-4 text-zinc-300">
-          <SocialLink href={profile.ebay}>eBay</SocialLink>
-          <SocialLink href={profile.instagram}>Instagram</SocialLink>
-          <SocialLink href={profile.discord}>Discord</SocialLink>
-          <SocialLink href={profile.x}>X</SocialLink>
-          <SocialLink href={profile.whatnot}>Whatnot</SocialLink>
-        </nav>
-      </div>
-    </header>
+      <div />
+
+      {!isLeft && (
+        <div className="space-y-3 md:col-start-2">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-white/70 text-sm">{subtitle}</p>
+          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
+        </div>
+      )}
+    </section>
   );
 }
 
-export default async function ProfilePage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const profile = await getProfile(params.id);
-  if (!profile) return notFound();
+/* -------------------------------------------------------
+   Shared UI
+------------------------------------------------------- */
 
-  const tier = tierLabel(profile.member_number);
-
+function FollowButton() {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <HeaderBar profile={profile} />
+    <button
+      type="button"
+      className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-md"
+    >
+      Follow · Add Friend
+    </button>
+  );
+}
 
-      <main className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="h-6" />
-
-        {/* Instagram‑style layout */}
-        <section className="grid grid-cols-1 gap-8 md:grid-cols-[220px_1fr]">
-          {/* Left column: Avatar */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative aspect-square w-[180px] overflow-hidden rounded-full border border-white/10">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt="Avatar"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-zinc-500">
-                  No avatar
-                </div>
-              )}
-            </div>
-
-            <div className="w-full">
-              <AvatarUpload userId={profile.id} />
-            </div>
-          </div>
-
-          {/* Right column: Info */}
-          <div className="flex min-w-0 flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <h1 className="truncate text-2xl font-semibold">
-                @{profile.username}
-              </h1>
-              {tier && (
-                <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-wide text-zinc-400">
-                  {tier}
-                </span>
-              )}
-            </div>
-
-            <div className="text-sm text-zinc-300">
-              <div className="flex flex-wrap items-center gap-3">
-                {profile.name && (
-                  <span className="font-medium text-zinc-200">
-                    {profile.name}
-                  </span>
-                )}
-                {profile.location && (
-                  <>
-                    <span className="text-zinc-600">•</span>
-                    <span className="text-zinc-400">{profile.location}</span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {profile.bio && (
-              <p className="max-w-prose text-sm leading-relaxed text-zinc-300">
-                {profile.bio}
-              </p>
-            )}
-
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-              <SocialLink href={profile.ebay}>eBay</SocialLink>
-              <SocialLink href={profile.instagram}>Instagram</SocialLink>
-              <SocialLink href={profile.discord}>Discord</SocialLink>
-              <SocialLink href={profile.x}>X</SocialLink>
-              <SocialLink href={profile.whatnot}>Whatnot</SocialLink>
-            </div>
-          </div>
-        </section>
-
-        <div className="h-16" />
-      </main>
+function StatsStrip({
+  items,
+  categories,
+  rarity,
+}: {
+  items: number;
+  categories: number;
+  rarity: number;
+}) {
+  return (
+    <div className="grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10 bg-white/[0.04] text-center">
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{items}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Items</div>
+      </div>
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{categories}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Categories</div>
+      </div>
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{rarity}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Rarity</div>
+      </div>
     </div>
   );
 }

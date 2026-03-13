@@ -77,23 +77,25 @@ function tierLabel(n?: number | null) {
 }
 
 /** ---- Simple inline brand mark (uses file if present, text fallback) ---- */
+
 function BrandMark() {
-  // If /public/CC-SML-Logo.svg exists, this will render. If not, we show text.
   return (
     <div className="flex items-center gap-3">
       <div className="relative h-7 w-7">
-        {/* If your logo filename differs, update the src path below */}
         <Image
           src="/CC-SML-Logo.svg"
           alt="CollectorConnector"
           fill
           className="object-contain"
-          sizes="28px"
-          priority
-          onError={(e) => {
-            // @ts-ignore – gracefully degrade to text on error
-            e.currentTarget.style.display = 'none';
-          }}
+        />
+      </div>
+      <span className="select-none text-sm font-semibold tracking-wide">
+        CollectorConnector
+      </span>
+    </div>
+  );
+}
+
         />
       </div>
       <span className="select-none text-sm font-semibold tracking-wide">CollectorConnector</span>

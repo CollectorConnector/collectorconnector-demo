@@ -6,81 +6,6 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-
-export default function Nav() {
-  const pathname = usePathname();
-
-  return (
-    <nav className="w-full text-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-0">
-        {/* Left: Brand */}
-        <div className="flex min-w-0 items-center gap-3">
-          {/* Logo: ALWAYS constrain size; never leave it to natural dimensions */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="relative h-7 w-auto">
-              {/* Use width/height to hard cap rendering; Next/Image preserves aspect ratio */}
-              <Image
-                src="/CC-SML-Logo.png"  // <-- change if your filename differs
-                alt="CollectorConnector"
-                width={28}               // hard limit: ~28px tall
-                height={28}
-                priority
-                className="h-7 w-auto object-contain"
-              />
-            </div>
-            <span className="select-none text-sm font-semibold tracking-wide">
-              CollectorConnector
-            </span>
-          </Link>
-        </div>
-
-        {/* Right: Simple nav (adjust as needed) */}
-        <div className="flex items-center gap-6">
-          <HeaderLink href="/" active={pathname === "/"}>Home</HeaderLink>
-          <HeaderLink href="/explore" active={pathname?.startsWith("/explore")}>Explore</HeaderLink>
-          <HeaderLink href="/profile" active={pathname?.startsWith("/profile")}>Profile</HeaderLink>
-
-          {/* If you render any raster/social logos here, constrain them too */}
-          {/* Example icon image (if you ever use an image file): */}
-          {/* 
-          <Image
-            src="/icons/instagram.png"
-            alt="Instagram"
-            width={20}
-            height={20}
-            className="h-5 w-5 object-contain opacity-80 hover:opacity-100"
-          />
-          */}
-        </div>
-      </div>
-    </nav>
-  );
-}
-
-function HeaderLink({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`text-sm transition-opacity ${
-        active ? "text-zinc-200" : "text-zinc-400 hover:text-zinc-200"
-      }`}
-    >
-      {children}
-    </Link>
-  );
-}
-
 
 /* -------------------------------------------------------
    Types
@@ -96,7 +21,7 @@ type Profile = {
   categories_count?: number | null;
   rarity_score?: number | null;
 
-  // New / optional fields used by the UI below
+  // Optional fields used below
   member_number?: number | null;
   instagram?: string | null;
   ebay?: string | null;
@@ -138,7 +63,7 @@ function formatLink(url?: string | null): string | null {
   // If the user stored a full URL, keep it.
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
 
-  // If they stored a handle like "@name" for Instagram: make a sensible guess.
+  // If they stored a handle like "@name" (best-guess for Instagram).
   if (trimmed.startsWith("@")) return `https://instagram.com/${trimmed.slice(1)}`;
 
   // Otherwise, add https as a safe default.
@@ -146,7 +71,7 @@ function formatLink(url?: string | null): string | null {
 }
 
 /* -------------------------------------------------------
-   Monochrome Social Icons + Link
+   Social Icon + Link (monochrome)
 ------------------------------------------------------- */
 function SocialIcon({
   name,
@@ -230,7 +155,7 @@ function SocialLink({
 }
 
 /* -------------------------------------------------------
-   Page
+   Page (Client-side)
 ------------------------------------------------------- */
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -250,16 +175,8 @@ export default function ProfilePage() {
         const [{ data: profileData }, { data: collectionData }, { data: activityData }] =
           await Promise.all([
             supabase.from("profiles").select("*").eq("id", id).single(),
-            supabase
-              .from("collections")
-              .select("*")
-              .eq("user_id", id)
-              .order("created_at", { ascending: false }),
-            supabase
-              .from("items")
-              .select("*")
-              .eq("user_id", id)
-              .order("created_at", { ascending: false }),
+            supabase.from("collections").select("*").eq("user_id", id).order("created_at", { ascending: false }),
+            supabase.from("items").select("*").eq("user_id", id).order("created_at", { ascending: false }),
           ]);
 
         if (!alive) return;
@@ -290,13 +207,12 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-dvh bg-black text-white">
-        {/* PREMIUM CC HEADER */}
+        {/* Premium header wrapper */}
         <div className="w-full fixed top-0 left-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center">
             <Nav />
           </div>
         </div>
-        {/* Spacer */}
         <div className="h-16 w-full" />
 
         <div className="mx-auto max-w-6xl px-4 pt-10">
@@ -311,13 +227,12 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="min-h-dvh bg-black text-white">
-        {/* PREMIUM CC HEADER */}
+        {/* Premium header wrapper */}
         <div className="w-full fixed top-0 left-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center">
             <Nav />
           </div>
         </div>
-        {/* Spacer */}
         <div className="h-16 w-full" />
 
         <div className="mx-auto max-w-6xl px-4 pt-10">
@@ -336,27 +251,24 @@ export default function ProfilePage() {
   return (
     <div className="min-h-dvh bg-black text-white">
       {/* -------------------------------------------------------
-         PREMIUM CC HEADER
+         PREMIUM CC HEADER (fixed) — keeps <Nav /> content clean
       ------------------------------------------------------- */}
       <div className="w-full fixed top-0 left-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center">
           <Nav />
         </div>
       </div>
-      {/* Spacer under fixed header */}
       <div className="h-16 w-full" />
 
       {/* -------------------------------------------------------
          MAIN (No hero section)
       ------------------------------------------------------- */}
       <main className="mx-auto max-w-6xl px-4 sm:px-6 space-y-16 pb-28">
-        {/* -------------------------------------------------------
-           A) PROFILE TOP — Avatar left, info right (robust flex layout)
-        ------------------------------------------------------- */}
+        {/* A) PROFILE TOP — Avatar left, info right (robust flex) */}
         <section className="flex flex-col md:flex-row md:items-start md:gap-10 gap-8">
-          {/* Left: Avatar + upload (fixed sizing: 180x180, never stretches) */}
+          {/* Left: Avatar (locked size — no stretching ever) */}
           <div className="md:w-[220px] flex md:block justify-center">
-            <div className="h-[180px] w-[180px] min-w-[180px] max-w-[180px] overflow-hidden rounded-full border border-white/10 bg-zinc-900">
+            <div className="h-44 w-44 overflow-hidden rounded-full border border-white/10 bg-zinc-900">
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -419,9 +331,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* -------------------------------------------------------
-           Stats (clean, premium)
-        ------------------------------------------------------- */}
+        {/* Stats */}
         <section className="rounded-xl border border-white/10 bg-white/[0.04]">
           <div className="grid grid-cols-3 divide-x divide-white/10 text-center">
             <div className="px-4 py-4">
@@ -439,9 +349,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* -------------------------------------------------------
-           Collections
-        ------------------------------------------------------- */}
+        {/* Collections */}
         <section className="border-t border-white/10 pt-6">
           <h3 className="text-white/80 text-sm mb-3">Collections</h3>
           {collections.length === 0 ? (
@@ -457,9 +365,7 @@ export default function ProfilePage() {
           )}
         </section>
 
-        {/* -------------------------------------------------------
-           Activity
-        ------------------------------------------------------- */}
+        {/* Activity */}
         <section className="border-t border-white/10 pt-6">
           <h3 className="text-white/80 text-sm mb-3">Recent Activity</h3>
           {activity.length === 0 ? (

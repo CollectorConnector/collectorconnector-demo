@@ -1,57 +1,26 @@
+// app/profile/[id]/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Nav from "@/components/Nav";
+import Nav from "@/components/Nav";           // assuming this exists
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
 
-type Profile = {
-  id: string;
-  avatar_url?: string | null;
-  display_name?: string | null;
-  username?: string | null;
-  location?: string | null;
-  bio?: string | null;
-  items_count?: number | null;
-  categories_count?: number | null;
-  rarity_score?: number | null;
-};
-
-type Collection = {
-  id: string;
-  name: string;
-  description?: string | null;
-  category?: string | null;
-  item_count?: number | null;
-};
-
-type Item = {
-  id: string;
-  title?: string | null;
-  description?: string | null;
-  created_at?: string | null;
-};
-
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const userId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [activity, setActivity] = useState<Item[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-  // Collection creation modal state
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newDesc, setNewDesc] = useState("");
-  const [newCategory, setNewCategory] = useState("Trading Cards");
+  // For demo - local state collection photos (replace with real Supabase storage later)
+  const [collectionPhotos, setCollectionPhotos] = useState<string[]>([]);
 
   useEffect(() => {
     if (!userId) {
@@ -59,371 +28,232 @@ export default function ProfilePage() {
       return;
     }
 
-    let aborted = false;
-
-    async function fetchProfileData() {
+    async function loadData() {
       try {
         setLoading(true);
-        setError(null);
 
+        // Check ownership
         const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id === userId) setIsOwnProfile(true);
-
-        const [{ data: profileData, error: pErr }, { data: collData }, { data: actData }] =
-          await Promise.all([
-            supabase.from("profiles").select("*").eq("id", userId).single(),
-            supabase
-              .from("collections")
-              .select("*")
-              .eq("user_id", userId)
-              .order("created_at", { ascending: false }),
-            supabase
-              .from("items")
-              .select("*")
-              .eq("user_id", userId)
-              .order("created_at", { ascending: false })
-              .limit(8),
-          ]);
-
-        if (aborted) return;
-
-        if (pErr || !profileData) {
-          setError("Profile not found");
-          return;
+        if (user?.id === userId) {
+          setIsOwnProfile(true);
         }
 
-        setProfile(profileData);
-        setCollections(collData ?? []);
-        setActivity(actData ?? []);
-      } catch (err) {
-        console.error("Profile load failed:", err);
-        if (!aborted) setError("Something went wrong while loading the profile.");
+        // Fetch profile
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+        if (error) throw error;
+        setProfile(data);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || "Failed to load profile");
       } finally {
-        if (!aborted) setLoading(false);
+        setLoading(false);
       }
     }
 
-    fetchProfileData();
-    return () => { aborted = true; };
+    loadData();
   }, [userId, router]);
 
-  const displayName = useMemo(
-    () => profile?.display_name || profile?.username || "Collector",
-    [profile]
-  );
-  const displayUsername = profile?.username ? `@${profile.username}` : null;
+  const displayName = profile?.display_name || profile?.username || "Collector";
+  const username = profile?.username ? `@${profile.username}` : null;
 
-  // Create new collection
-  async function handleCreateCollection() {
-    if (!newName.trim() || !profile) return;
+  // Demo: handle multiple photo upload (local only for now)
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
 
-    const { data, error } = await supabase
-      .from("collections")
-      .insert({
-        user_id: profile.id,
-        name: newName.trim(),
-        description: newDesc.trim() || null,
-        category: newCategory,
-      })
-      .select()
-      .single();
+    const newUrls = files.map(file => URL.createObjectURL(file));
+    setCollectionPhotos(prev => [...prev, ...newUrls]);
+  };
 
-    if (error) {
-      alert("Failed to create collection: " + error.message);
-    } else {
-      setCollections([data, ...collections]);
-      setShowCreateModal(false);
-      setNewName("");
-      setNewDesc("");
-      setNewCategory("Trading Cards");
-    }
-  }
+  const clearPhotos = () => setCollectionPhotos([]);
 
-  if (loading) return <ProfileSkeleton />;
-  if (error || !profile) {
+  if (loading) {
     return (
-      <div className="min-h-dvh bg-black text-white flex flex-col">
-        <div className="w-full fixed top-0 z-50 bg-black border-b border-white/10">
-          <Nav />
-        </div>
-        <div className="h-16" />
-        <div className="flex-1 flex items-center justify-center px-6 text-center">
-          <div>
-            <h1 className="text-3xl font-semibold mb-4">Oops…</h1>
-            <p className="text-white/70 mb-8 max-w-md mx-auto">{error || "Profile not found."}</p>
-            <button onClick={() => router.back()} className="rounded-lg bg-white/10 px-5 py-2.5 text-sm hover:bg-white/15 transition">
-              Go Back
-            </button>
-          </div>
-        </div>
-        <Footer />
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
       </div>
     );
   }
 
-  const itemsCount = profile.items_count ?? activity.length ?? 0;
-  const categoriesCount = profile.categories_count ?? collections.length ?? 0;
-  const rarityScore = profile.rarity_score ?? 0;
+  if (error || !profile) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center">
+        <h1 className="text-3xl mb-4">Error</h1>
+        <p>{error || "Profile not found"}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-dvh bg-black text-white flex flex-col">
-      {/* Navbar with small logo */}
-      <header className="w-full fixed top-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0a0a0a] text-white pb-20">
+      {/* Top bar / Header */}
+      <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2.5">
-              <img src="/CC-main-logo.png" alt="CollectorConnector" className="h-7 sm:h-8 w-auto" />
-              <span className="text-lg font-semibold tracking-tight hidden sm:block">CollectorConnector</span>
-            </Link>
+            <div className="flex items-center gap-6">
+              <div className="font-bold text-lg tracking-tight flex items-center gap-2">
+                <span className="text-blue-400">⟠</span> COLLECTORCONNECTOR
+              </div>
 
-            <div className="flex items-center gap-5 sm:gap-7">
-              <a href="https://www.ebay.com/usr/yourusername" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-300 hover:text-white transition-colors">eBay</a>
-              <a href="https://instagram.com/yourusername" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-300 hover:text-white transition-colors">Instagram</a>
-              <a href="https://x.com/yourusername" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-300 hover:text-white transition-colors">X</a>
-              <a href="https://discord.gg/yourserver" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-300 hover:text-white transition-colors">Discord</a>
-              <Nav />
+              <nav className="hidden md:flex items-center gap-5 text-sm">
+                <Link href="/dashboard" className="hover:text-gray-300 transition">Dashboard</Link>
+                <Link href={`/profile/${userId}`} className="text-white font-medium">Profile</Link>
+                <span className="text-gray-500">•</span>
+                <a href="#" className="hover:text-gray-300 transition">eBay</a>
+                <a href="#" className="hover:text-gray-300 transition">PSA</a>
+                <a href="#" className="hover:text-gray-300 transition">Goldin</a>
+                <a href="#" className="hover:text-gray-300 transition">Whatnot</a>
+                <a href="#" className="hover:text-gray-300 transition">Sports Card Investor</a>
+              </nav>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-400">DEMO v0.7.4</div>
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt="User"
+                  className="w-8 h-8 rounded-full object-cover border border-gray-700"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gray-700" />
+              )}
             </div>
           </div>
         </div>
       </header>
 
-      <div className="h-16 shrink-0" />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+        {/* Dashboard header card */}
+        <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-6 mb-10">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={displayName}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-700"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center text-2xl">
+                  👤
+                </div>
+              )}
 
-      {/* Small hero */}
-      <section className="pt-12 pb-16 text-center">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">Where Collectors Meet</h1>
-        <p className="mt-5 text-lg text-white/70 max-w-2xl mx-auto px-4">
-          Discover, showcase, and celebrate your collections with a community that shares your passion.
-        </p>
-      </section>
-
-      <main className="mx-auto w-full max-w-5xl px-5 sm:px-6 lg:px-8 space-y-24 pb-32 flex-1">
-        {/* Profile Card – Avatar + Username / Location / Bio */}
-        <section className="relative rounded-3xl border border-white/12 bg-gradient-to-b from-white/[0.07] to-white/[0.03] shadow-2xl shadow-black/40 p-8 sm:p-12">
-          <div className="flex flex-col items-center text-center space-y-8">
-            {/* Avatar */}
-            <AvatarUpload
-              userId={profile.id}
-              currentUrl={profile.avatar_url}
-              editable={isOwnProfile}
-            />
-
-            {/* Username, Location & Bio – right next to avatar */}
-            <div className="space-y-3 max-w-lg">
-              <h2 className="text-4xl font-semibold tracking-tight">{displayName}</h2>
-              
-              <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-white/70">
-                {displayUsername && <span>{displayUsername}</span>}
-                {profile.location && <span>· {profile.location}</span>}
-              </div>
-
-              {profile.bio && (
-                <p className="text-base leading-relaxed text-white/80 max-w-2xl mx-auto">
-                  {profile.bio}
+              <div>
+                <h1 className="text-2xl font-bold">{displayName}</h1>
+                <p className="text-gray-400 text-sm mt-1">
+                  A calm overview of your world of pieces.
                 </p>
-              )}
+                <div className="flex gap-3 mt-3">
+                  <span className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-xs font-medium">
+                    {profile?.collections_count || 0} COLLECTIONS
+                  </span>
+                  <span className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-xs font-medium">
+                    {profile?.items_count || 0} PIECES
+                  </span>
+                  <span className="bg-purple-900/40 text-purple-300 px-3 py-1 rounded-full text-xs font-medium border border-purple-800/50">
+                    PRIVATE
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <FollowButton />
+            <button className="bg-red-900/50 hover:bg-red-800/70 text-red-300 px-5 py-2 rounded-lg text-sm transition">
+              Log out
+            </button>
+          </div>
+        </div>
 
-            {/* Stats */}
-            <StatsStrip
-              items={itemsCount}
-              categories={categoriesCount}
-              rarity={rarityScore}
-            />
-
-            {/* CREATE COLLECTION BUTTON – only visible to owner */}
-            {isOwnProfile && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="mt-4 flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-3 text-sm font-medium transition"
-              >
-                <span>📦</span>
-                Create New Collection
-              </button>
-            )}
+        {/* Stats grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Collections</h3>
+            <div className="text-3xl font-bold mb-1">{profile?.collections_count || 0}</div>
+            <div className="text-sm text-gray-500">Total</div>
           </div>
 
-          {/* Collections + Activity */}
-          <div className="mt-16 grid md:grid-cols-2 gap-10 border-t border-white/10 pt-12">
-            <div>
-              <h3 className="text-lg font-medium mb-4 flex items-center justify-between">
-                My Collections
-                <span className="text-xs text-white/50">({collections.length})</span>
-              </h3>
-              {collections.length === 0 ? (
-                <p className="text-white/50 text-sm">No collections yet. Create your first one above!</p>
-              ) : (
-                <ul className="space-y-3">
-                  {collections.map((col) => (
-                    <li key={col.id} className="bg-white/5 rounded-xl p-4 flex justify-between items-center">
-                      <div>
-                        <div className="font-medium">{col.name}</div>
-                        {col.description && <p className="text-sm text-white/60 mt-1 line-clamp-1">{col.description}</p>}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs uppercase text-white/50">{col.category}</div>
-                        <div className="text-lg font-semibold">{col.item_count ?? 0}</div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Pieces</h3>
+            <div className="text-3xl font-bold mb-1">{profile?.items_count || 0}</div>
+            <div className="text-sm text-gray-500">Total</div>
+          </div>
 
-            <div>
-              <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
-              {activity.length === 0 ? (
-                <p className="text-white/50 text-sm">No recent activity yet.</p>
-              ) : (
-                <ul className="space-y-2.5 text-sm text-white/80">
-                  {activity.map((item) => (
-                    <li key={item.id}>
-                      <strong>{item.title}</strong>
-                      {item.description && ` — ${item.description}`}
-                    </li>
-                  ))}
-                </ul>
-              )}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 col-span-1 md:col-span-2 lg:col-span-1">
+            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Favourite Piece</h3>
+            <div className="aspect-square bg-gray-800 rounded-lg mb-3 overflow-hidden">
+              {/* Placeholder for favourite item image */}
+              <div className="w-full h-full flex items-center justify-center text-gray-600 text-4xl">
+                ?
+              </div>
+            </div>
+            <button className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm w-full mb-2">
+              Upload photo
+            </button>
+            <button className="bg-gray-800 hover:bg-gray-700 text-red-400 px-4 py-2 rounded-lg text-sm w-full">
+              Remove photo
+            </button>
+          </div>
+
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 col-span-1 md:col-span-2 lg:col-span-1">
+            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Profile Photo</h3>
+            <div className="aspect-square rounded-full overflow-hidden border-4 border-gray-800 mb-4 mx-auto max-w-[180px]">
+              <AvatarUpload
+                userId={userId}
+                currentUrl={profile?.avatar_url}
+                editable={isOwnProfile}
+              />
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Editorial sections (optional – keep for now) */}
-        <div className="space-y-32">
-          <EditorialSection title="Manage Your Information" subtitle="Take control of your profile and data" body="Easily update your personal details, location, and collector identity." align="left" />
-          <EditorialSection title="Personalize Your Profile" subtitle="Craft a presence that reflects who you are" body="Customize your avatar, bio, and collector details to create a profile that stands out." align="right" />
+        {/* Collection Photos - multi upload demo */}
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+          <h3 className="text-xl font-semibold mb-4">Your Collection Photos</h3>
+          <p className="text-gray-400 text-sm mb-6">
+            Add photos of your pieces. (This version stores them temporarily in browser memory)
+          </p>
+
+          <div className="mb-6">
+            <label className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-lg cursor-pointer inline-block">
+              Choose Files
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          {collectionPhotos.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+              {collectionPhotos.map((url, i) => (
+                <div key={i} className="aspect-square rounded-lg overflow-hidden bg-black border border-gray-800">
+                  <img src={url} alt="collection item" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {collectionPhotos.length > 0 && (
+            <button
+              onClick={clearPhotos}
+              className="text-red-400 hover:text-red-300 text-sm"
+            >
+              Clear all photos
+            </button>
+          )}
         </div>
       </main>
 
       <Footer />
-
-      {/* CREATE COLLECTION MODAL */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
-          <div className="bg-zinc-900 border border-white/20 rounded-3xl max-w-md w-full p-8">
-            <h3 className="text-2xl font-semibold mb-6">Create New Collection</h3>
-
-            <div className="space-y-5">
-              <div>
-                <label className="text-xs uppercase tracking-widest text-white/60 mb-1 block">Collection Name</label>
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="e.g. 2024 Pokémon TCG"
-                  className="w-full bg-black border border-white/20 rounded-2xl px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs uppercase tracking-widest text-white/60 mb-1 block">Category</label>
-                <select
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full bg-black border border-white/20 rounded-2xl px-4 py-3 text-white focus:outline-none"
-                >
-                  <option>Trading Cards</option>
-                  <option>Comics</option>
-                  <option>Stamps</option>
-                  <option>LEGO</option>
-                  <option>Beanie Babies</option>
-                  <option>Action Figures</option>
-                  <option>Coins</option>
-                  <option>Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs uppercase tracking-widest text-white/60 mb-1 block">Description (optional)</label>
-                <textarea
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="My complete Base Set collection..."
-                  className="w-full bg-black border border-white/20 rounded-2xl px-4 py-3 text-white h-24 resize-y min-h-[100px]"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="flex-1 py-3 text-sm font-medium border border-white/20 rounded-2xl hover:bg-white/10"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateCollection}
-                disabled={!newName.trim()}
-                className="flex-1 py-3 text-sm font-semibold bg-white text-black rounded-2xl hover:bg-gray-200 disabled:opacity-50"
-              >
-                Create Collection
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ───────────────────────────────────────────────
-   Reusable components (unchanged)
-─────────────────────────────────────────────── */
-function ProfileSkeleton() {
-  return (
-    <div className="min-h-dvh bg-black text-white">
-      <div className="w-full fixed top-0 z-50 bg-black border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 h-16" />
-      </div>
-      <div className="h-16" />
-      <div className="mx-auto max-w-5xl px-6 pt-20 animate-pulse">
-        <div className="h-24 w-24 rounded-full bg-white/10 mx-auto mb-6" />
-        <div className="h-9 w-64 bg-white/10 rounded mx-auto mb-3" />
-        <div className="h-5 w-48 bg-white/10 rounded mx-auto mb-8" />
-        <div className="h-12 w-80 bg-white/5 rounded-xl mx-auto mb-12" />
-      </div>
-    </div>
-  );
-}
-
-function EditorialSection({ title, subtitle, body, align = "left" }: { title: string; subtitle: string; body: string; align?: "left" | "right"; }) {
-  const isLeft = align === "left";
-  return (
-    <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-      {isLeft ? (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">{title}</h2>
-          <p className="text-white/70">{subtitle}</p>
-          <p className="text-white/60 leading-relaxed">{body}</p>
-        </div>
-      ) : (
-        <div className="space-y-4 md:col-start-2">
-          <h2 className="text-2xl font-semibold">{title}</h2>
-          <p className="text-white/70">{subtitle}</p>
-          <p className="text-white/60 leading-relaxed">{body}</p>
-        </div>
-      )}
-      <div className="hidden md:block" />
-    </section>
-  );
-}
-
-function FollowButton() {
-  return (
-    <button type="button" className="rounded-xl bg-white px-7 py-2.5 text-sm font-semibold text-black hover:bg-gray-200 transition shadow-lg">
-      Follow
-    </button>
-  );
-}
-
-function StatsStrip({ items, categories, rarity }: { items: number; categories: number; rarity: number; }) {
-  return (
-    <div className="grid grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden text-center">
-      <div className="px-5 py-4"><div className="text-2xl font-semibold">{items}</div><div className="text-xs uppercase tracking-wider text-white/60 mt-1">Items</div></div>
-      <div className="px-5 py-4"><div className="text-2xl font-semibold">{categories}</div><div className="text-xs uppercase tracking-wider text-white/60 mt-1">Collections</div></div>
-      <div className="px-5 py-4"><div className="text-2xl font-semibold">{rarity}</div><div className="text-xs uppercase tracking-wider text-white/60 mt-1">Rarity Score</div></div>
     </div>
   );
 }

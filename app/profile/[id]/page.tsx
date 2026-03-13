@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
@@ -57,7 +58,6 @@ export default function ProfilePage() {
         setLoading(true);
         setError(null);
 
-        // Check if this is the current user's profile
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id === userId) {
           setIsOwnProfile(true);
@@ -112,10 +112,7 @@ export default function ProfilePage() {
 
   const displayUsername = profile?.username ? `@${profile.username}` : null;
 
-  if (loading) {
-    return <ProfileSkeleton />;
-  }
-
+  if (loading) return <ProfileSkeleton />;
   if (error || !profile) {
     return (
       <div className="min-h-dvh bg-black text-white flex flex-col">
@@ -148,21 +145,72 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-dvh bg-black text-white flex flex-col">
-      <div className="w-full fixed top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-white/10">
-        <Nav />
-      </div>
+      {/* Fixed Header / Navbar with logo on left */}
+      <header className="w-full fixed top-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo left */}
+            <Link href="/" className="flex items-center gap-2.5">
+              <img
+                src="/CC-main-logo.png"
+                alt="CollectorConnector"
+                className="h-8 w-auto"
+              />
+              <span className="text-lg font-semibold tracking-tight hidden sm:block">
+                CollectorConnector
+              </span>
+            </Link>
+
+            {/* Right side: social links + Nav */}
+            <div className="flex items-center gap-5 sm:gap-7">
+              <a
+                href="https://www.ebay.com/usr/yourusername"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-white transition"
+              >
+                eBay
+              </a>
+              <a
+                href="https://instagram.com/yourusername"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-white transition"
+              >
+                Instagram
+              </a>
+              <a
+                href="https://x.com/yourusername"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-white transition"
+              >
+                X
+              </a>
+              <a
+                href="https://discord.gg/yourserver"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-300 hover:text-white transition"
+              >
+                Discord
+              </a>
+
+              {/* Your original Nav component (if it has more links) */}
+              <Nav />
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="h-16 shrink-0" />
 
-      <section className="w-full bg-gradient-to-b from-black via-black to-transparent pt-16 pb-24 text-center">
-        <img
-          src="/CC-main-logo.png"
-          alt="CollectorConnector Logo"
-          className="mx-auto h-20 w-auto opacity-90"
-        />
-        <h1 className="mt-8 text-3xl sm:text-4xl font-semibold tracking-tight">
+      {/* Smaller hero section without big logo */}
+      <section className="pt-12 pb-16 text-center">
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
           Where Collectors Meet
         </h1>
-        <p className="mt-4 text-white/60 max-w-xl mx-auto text-base sm:text-lg">
+        <p className="mt-5 text-lg text-white/70 max-w-2xl mx-auto px-4">
           Discover, showcase, and celebrate your collections with a community that shares your passion.
         </p>
       </section>
@@ -184,6 +232,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Changed to just "Follow" */}
             <FollowButton />
 
             {profile.bio && (
@@ -259,14 +308,17 @@ export default function ProfilePage() {
   );
 }
 
-/* ───────────────────────────────────────────────
-   Skeleton (loading state)
-─────────────────────────────────────────────── */
+// ───────────────────────────────────────────────
+//  Skeleton, EditorialSection, StatsStrip remain the same
+// ───────────────────────────────────────────────
+
 function ProfileSkeleton() {
   return (
     <div className="min-h-dvh bg-black text-white">
       <div className="w-full fixed top-0 z-50 bg-black border-b border-white/10">
-        <Nav />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+          <div className="h-16" />
+        </div>
       </div>
       <div className="h-16" />
       <div className="mx-auto max-w-5xl px-6 pt-20 animate-pulse">
@@ -284,9 +336,6 @@ function ProfileSkeleton() {
   );
 }
 
-/* ───────────────────────────────────────────────
-   Supporting components
-─────────────────────────────────────────────── */
 function EditorialSection({
   title,
   subtitle,
@@ -323,9 +372,9 @@ function FollowButton() {
   return (
     <button
       type="button"
-      className="rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-gray-200 transition shadow-lg"
+      className="rounded-xl bg-white px-7 py-2.5 text-sm font-semibold text-black hover:bg-gray-200 transition shadow-lg"
     >
-      Follow · Add Friend
+      Follow
     </button>
   );
 }

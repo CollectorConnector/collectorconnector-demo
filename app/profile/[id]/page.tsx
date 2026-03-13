@@ -33,7 +33,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-  // For demo - local state collection photos (replace with real Supabase storage later)
+  // Local demo gallery
   const [collectionPhotos, setCollectionPhotos] = useState<string[]>([]);
 
   useEffect(() => {
@@ -46,13 +46,11 @@ export default function ProfilePage() {
       try {
         setLoading(true);
 
-        // Check ownership
         const {
           data: { user },
         } = await supabase.auth.getUser();
         if (user?.id === userId) setIsOwnProfile(true);
 
-        // Fetch profile
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -62,11 +60,19 @@ export default function ProfilePage() {
         if (error) throw error;
         setProfile(data);
 
-        // (Optional) Fetch collections and items if you want to show stats elsewhere
-        const [{ data: collectionData }, { data: activityData }] = await Promise.all([
-          supabase.from("collections").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-          supabase.from("items").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-        ]);
+        const [{ data: collectionData }, { data: activityData }] =
+          await Promise.all([
+            supabase
+              .from("collections")
+              .select("*")
+              .eq("user_id", userId)
+              .order("created_at", { ascending: false }),
+            supabase
+              .from("items")
+              .select("*")
+              .eq("user_id", userId)
+              .order("created_at", { ascending: false }),
+          ]);
 
         setCollections((collectionData as Collection[]) || []);
         setActivity((activityData as Item[]) || []);
@@ -85,67 +91,73 @@ export default function ProfilePage() {
     () => profile?.display_name || profile?.username || "Collector",
     [profile]
   );
-  const username = profile?.username ? `@${profile.username}` : null;
 
-  // Demo: handle multiple photo upload (local only for now)
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files);
-    const newUrls = files.map((file) => URL.createObjectURL(file));
-    setCollectionPhotos((prev) => [...prev, ...newUrls]);
-  };
-  const clearPhotos = () => setCollectionPhotos([]);
-
-  // --- Header (reusable) ---
+  // ---- Header component that matches your mock exactly ----
   function Header({ avatarUrl }: { avatarUrl?: string | null }) {
     return (
       <>
-        {/* Fixed, full-width, premium header */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex h-16 items-center justify-between">
-              {/* LEFT: Logo + brand */}
-              <div className="flex items-center gap-6">
-                <Link href="/" className="flex items-center gap-3">
-                  {/* Hard-limit logo size so it never blows up */}
+            <div className="flex h-16 items-center justify-between gap-4">
+              {/* LEFT: brand + subtitle + primary pills */}
+              <div className="flex min-w-0 items-center gap-6">
+                {/* Brand mark */}
+                <div className="flex items-center gap-3">
+                  {/* Hard-limit logo to avoid any oversizing */}
                   <img
                     src="/CC-main-logo.png"
                     alt="CollectorConnector"
                     className="h-6 sm:h-7 w-auto object-contain"
-                    draggable={false}
                   />
-                  <span className="sr-only">CollectorConnector</span>
-                </Link>
+                  <div className="leading-tight">
+                    <div className="text-sm font-semibold tracking-wide text-white">
+                      COLLECTORCONNECTOR
+                    </div>
+                    <div className="text-[11px] text-zinc-500">
+                      A home for collectors
+                    </div>
+                  </div>
+                </div>
 
-                {/* Optional nav links (internal) */}
-                <nav className="hidden md:flex items-center gap-5 text-sm text-zinc-400">
-                  <Link href="/dashboard" className="hover:text-white transition">
-                    Dashboard
-                  </Link>
-                  <Link href={`/profile/${userId}`} className="hover:text-white transition">
-                    Profile
-                  </Link>
+                {/* Primary nav pills (Dashboard / Profile) */}
+                <nav className="hidden md:flex items-center gap-2">
+                  <HeaderPill href="/dashboard" label="Dashboard" />
+                  <HeaderPill href={`/profile/${userId}`} label="Profile" active />
                 </nav>
               </div>
 
-              {/* RIGHT: Version + Avatar */}
-              <div className="flex items-center gap-4">
-                <span className="text-xs text-zinc-500">DEMO v0.7.4</span>
+              {/* CENTER: rounded group of external links (as in your mock) */}
+              <div className="hidden lg:flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1">
+                <HeaderPill href="#" label="eBay" subtle />
+                <HeaderPill href="#" label="PSA" subtle />
+                <HeaderPill href="#" label="Goldin" subtle />
+                <HeaderPill href="#" label="Whatnot" subtle />
+                <HeaderPill href="#" label="Sports Card Investor" subtle />
+              </div>
+
+              {/* RIGHT: DEMO + version + avatar */}
+              <div className="flex items-center gap-3">
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-300">
+                  Demo
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-400">
+                  v0.7.4
+                </span>
+
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
-                    alt="User"
-                    className="h-8 w-8 rounded-full object-cover border border-gray-700"
+                    alt="User avatar"
+                    className="h-8 w-8 rounded-full object-cover border border-white/15"
                   />
                 ) : (
-                  <div className="h-8 w-8 rounded-full bg-gray-700" />
+                  <div className="h-8 w-8 rounded-full bg-zinc-700/60 border border-white/10" />
                 )}
               </div>
             </div>
           </div>
         </header>
-
-        {/* Spacer to offset fixed header height */}
+        {/* Spacer under fixed header */}
         <div className="h-16 w-full" />
       </>
     );
@@ -176,13 +188,22 @@ export default function ProfilePage() {
     );
   }
 
+  const username = profile?.username ? `@${profile.username}` : null;
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    const newUrls = files.map((file) => URL.createObjectURL(file));
+    setCollectionPhotos((prev) => [...prev, ...newUrls]);
+  };
+  const clearPhotos = () => setCollectionPhotos([]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pb-20">
-      {/* Premium full-width header with CC-main-logo */}
       <Header avatarUrl={profile?.avatar_url} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-        {/* Dashboard header card */}
+        {/* Dashboard header card (kept from your version) */}
         <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-6 mb-10">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
@@ -226,22 +247,33 @@ export default function ProfilePage() {
         {/* Stats grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Collections</h3>
-            <div className="text-3xl font-bold mb-1">{profile?.collections_count || 0}</div>
+            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">
+              Collections
+            </h3>
+            <div className="text-3xl font-bold mb-1">
+              {profile?.collections_count || 0}
+            </div>
             <div className="text-sm text-gray-500">Total</div>
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Pieces</h3>
-            <div className="text-3xl font-bold mb-1">{profile?.items_count || 0}</div>
+            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">
+              Pieces
+            </h3>
+            <div className="text-3xl font-bold mb-1">
+              {profile?.items_count || 0}
+            </div>
             <div className="text-sm text-gray-500">Total</div>
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 col-span-1 md:col-span-2 lg:col-span-1">
-            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Favourite Piece</h3>
+            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">
+              Favourite Piece
+            </h3>
             <div className="aspect-square bg-gray-800 rounded-lg mb-3 overflow-hidden">
-              {/* Placeholder for favourite item image */}
-              <div className="w-full h-full flex items-center justify-center text-gray-600 text-4xl">?</div>
+              <div className="w-full h-full flex items-center justify-center text-gray-600 text-4xl">
+                ?
+              </div>
             </div>
             <button className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm w-full mb-2">
               Upload photo
@@ -252,9 +284,15 @@ export default function ProfilePage() {
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 col-span-1 md:col-span-2 lg:grid lg:col-span-1">
-            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Profile Photo</h3>
+            <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">
+              Profile Photo
+            </h3>
             <div className="aspect-square rounded-full overflow-hidden border-4 border-gray-800 mb-4 mx-auto max-w-[180px]">
-              <AvatarUpload userId={userId} currentUrl={profile?.avatar_url} editable={isOwnProfile} />
+              <AvatarUpload
+                userId={userId}
+                currentUrl={profile?.avatar_url}
+                editable={isOwnProfile}
+              />
             </div>
           </div>
         </div>
@@ -263,28 +301,53 @@ export default function ProfilePage() {
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
           <h3 className="text-xl font-semibold mb-4">Your Collection Photos</h3>
           <p className="text-gray-400 text-sm mb-6">
-            Add photos of your pieces. (This version stores them temporarily in browser memory)
+            Add photos of your pieces. (This version stores them temporarily in
+            browser memory)
           </p>
 
           <div className="mb-6">
             <label className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-lg cursor-pointer inline-block">
               Choose Files
-              <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => {
+                  const files = e.target.files
+                    ? Array.from(e.target.files)
+                    : [];
+                  const newUrls = files.map((file) =>
+                    URL.createObjectURL(file)
+                  );
+                  setCollectionPhotos((prev) => [...prev, ...newUrls]);
+                }}
+                className="hidden"
+              />
             </label>
           </div>
 
           {collectionPhotos.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
               {collectionPhotos.map((url, i) => (
-                <div key={i} className="aspect-square rounded-lg overflow-hidden bg-black border border-gray-800">
-                  <img src={url} alt="collection item" className="w-full h-full object-cover" />
+                <div
+                  key={i}
+                  className="aspect-square rounded-lg overflow-hidden bg-black border border-gray-800"
+                >
+                  <img
+                    src={url}
+                    alt="collection item"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               ))}
             </div>
           )}
 
           {collectionPhotos.length > 0 && (
-            <button onClick={clearPhotos} className="text-red-400 hover:text-red-300 text-sm">
+            <button
+              onClick={() => setCollectionPhotos([])}
+              className="text-red-400 hover:text-red-300 text-sm"
+            >
               Clear all photos
             </button>
           )}
@@ -293,5 +356,41 @@ export default function ProfilePage() {
 
       <Footer />
     </div>
+  );
+}
+
+/* ---------------------------
+   Header pill component
+---------------------------- */
+function HeaderPill({
+  href,
+  label,
+  active = false,
+  subtle = false,
+}: {
+  href: string;
+  label: string;
+  active?: boolean;
+  subtle?: boolean; // for the center rounded group
+}) {
+  const base =
+    "rounded-full border px-4 py-1.5 text-sm transition-colors whitespace-nowrap";
+  const activeClasses =
+    "border-white/20 bg-white/10 text-zinc-100 hover:bg-white/15";
+  const normalClasses =
+    "border-white/10 bg-transparent text-zinc-200 hover:bg-white/5";
+  const subtleClasses =
+    "border-white/10 bg-transparent text-zinc-300 hover:bg-white/10";
+
+  const cls = subtle
+    ? `${base} ${subtleClasses}`
+    : active
+    ? `${base} ${activeClasses}`
+    : `${base} ${normalClasses}`;
+
+  return (
+    <Link href={href} className={cls}>
+      {label}
+    </Link>
   );
 }

@@ -4,10 +4,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Nav from "@/components/Nav";           // assuming this exists
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
+
+type Collection = {
+  id: string;
+  name: string;
+  item_count?: number | null;
+};
+
+type Item = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  created_at?: string | null;
+};
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -15,6 +27,8 @@ export default function ProfilePage() {
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
   const [profile, setProfile] = useState<any>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [activity, setActivity] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -33,10 +47,10 @@ export default function ProfilePage() {
         setLoading(true);
 
         // Check ownership
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id === userId) {
-          setIsOwnProfile(true);
-        }
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user?.id === userId) setIsOwnProfile(true);
 
         // Fetch profile
         const { data, error } = await supabase
@@ -47,6 +61,15 @@ export default function ProfilePage() {
 
         if (error) throw error;
         setProfile(data);
+
+        // (Optional) Fetch collections and items if you want to show stats elsewhere
+        const [{ data: collectionData }, { data: activityData }] = await Promise.all([
+          supabase.from("collections").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+          supabase.from("items").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+        ]);
+
+        setCollections((collectionData as Collection[]) || []);
+        setActivity((activityData as Item[]) || []);
       } catch (err: any) {
         console.error(err);
         setError(err.message || "Failed to load profile");
@@ -58,75 +81,105 @@ export default function ProfilePage() {
     loadData();
   }, [userId, router]);
 
-  const displayName = profile?.display_name || profile?.username || "Collector";
+  const displayName = useMemo(
+    () => profile?.display_name || profile?.username || "Collector",
+    [profile]
+  );
   const username = profile?.username ? `@${profile.username}` : null;
 
   // Demo: handle multiple photo upload (local only for now)
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
-
-    const newUrls = files.map(file => URL.createObjectURL(file));
-    setCollectionPhotos(prev => [...prev, ...newUrls]);
+    const newUrls = files.map((file) => URL.createObjectURL(file));
+    setCollectionPhotos((prev) => [...prev, ...newUrls]);
   };
-
   const clearPhotos = () => setCollectionPhotos([]);
+
+  // --- Header (reusable) ---
+  function Header({ avatarUrl }: { avatarUrl?: string | null }) {
+    return (
+      <>
+        {/* Fixed, full-width, premium header */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 items-center justify-between">
+              {/* LEFT: Logo + brand */}
+              <div className="flex items-center gap-6">
+                <Link href="/" className="flex items-center gap-3">
+                  {/* Hard-limit logo size so it never blows up */}
+                  <img
+                    src="/CC-main-logo.png"
+                    alt="CollectorConnector"
+                    className="h-6 sm:h-7 w-auto object-contain"
+                    draggable={false}
+                  />
+                  <span className="sr-only">CollectorConnector</span>
+                </Link>
+
+                {/* Optional nav links (internal) */}
+                <nav className="hidden md:flex items-center gap-5 text-sm text-zinc-400">
+                  <Link href="/dashboard" className="hover:text-white transition">
+                    Dashboard
+                  </Link>
+                  <Link href={`/profile/${userId}`} className="hover:text-white transition">
+                    Profile
+                  </Link>
+                </nav>
+              </div>
+
+              {/* RIGHT: Version + Avatar */}
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-zinc-500">DEMO v0.7.4</span>
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="User"
+                    className="h-8 w-8 rounded-full object-cover border border-gray-700"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-gray-700" />
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Spacer to offset fixed header height */}
+        <div className="h-16 w-full" />
+      </>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <Header avatarUrl={null} />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-xl">Loading...</div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center">
-        <h1 className="text-3xl mb-4">Error</h1>
-        <p>{error || "Profile not found"}</p>
+      <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <Header avatarUrl={null} />
+        <div className="flex flex-col items-center justify-center py-20">
+          <h1 className="text-3xl mb-2">Error</h1>
+          <p className="text-white/70">{error || "Profile not found"}</p>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pb-20">
-      {/* Top bar / Header */}
-      <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-6">
-              <div className="font-bold text-lg tracking-tight flex items-center gap-2">
-                <span className="text-blue-400">⟠</span> COLLECTORCONNECTOR
-              </div>
-
-              <nav className="hidden md:flex items-center gap-5 text-sm">
-                <Link href="/dashboard" className="hover:text-gray-300 transition">Dashboard</Link>
-                <Link href={`/profile/${userId}`} className="text-white font-medium">Profile</Link>
-                <span className="text-gray-500">•</span>
-                <a href="#" className="hover:text-gray-300 transition">eBay</a>
-                <a href="#" className="hover:text-gray-300 transition">PSA</a>
-                <a href="#" className="hover:text-gray-300 transition">Goldin</a>
-                <a href="#" className="hover:text-gray-300 transition">Whatnot</a>
-                <a href="#" className="hover:text-gray-300 transition">Sports Card Investor</a>
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-400">DEMO v0.7.4</div>
-              {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt="User"
-                  className="w-8 h-8 rounded-full object-cover border border-gray-700"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-gray-700" />
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Premium full-width header with CC-main-logo */}
+      <Header avatarUrl={profile?.avatar_url} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         {/* Dashboard header card */}
@@ -150,7 +203,7 @@ export default function ProfilePage() {
                 <p className="text-gray-400 text-sm mt-1">
                   A calm overview of your world of pieces.
                 </p>
-                <div className="flex gap-3 mt-3">
+                <div className="flex flex-wrap gap-3 mt-3">
                   <span className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-xs font-medium">
                     {profile?.collections_count || 0} COLLECTIONS
                   </span>
@@ -188,9 +241,7 @@ export default function ProfilePage() {
             <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Favourite Piece</h3>
             <div className="aspect-square bg-gray-800 rounded-lg mb-3 overflow-hidden">
               {/* Placeholder for favourite item image */}
-              <div className="w-full h-full flex items-center justify-center text-gray-600 text-4xl">
-                ?
-              </div>
+              <div className="w-full h-full flex items-center justify-center text-gray-600 text-4xl">?</div>
             </div>
             <button className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm w-full mb-2">
               Upload photo
@@ -200,14 +251,10 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 col-span-1 md:col-span-2 lg:col-span-1">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 col-span-1 md:col-span-2 lg:grid lg:col-span-1">
             <h3 className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Profile Photo</h3>
             <div className="aspect-square rounded-full overflow-hidden border-4 border-gray-800 mb-4 mx-auto max-w-[180px]">
-              <AvatarUpload
-                userId={userId}
-                currentUrl={profile?.avatar_url}
-                editable={isOwnProfile}
-              />
+              <AvatarUpload userId={userId} currentUrl={profile?.avatar_url} editable={isOwnProfile} />
             </div>
           </div>
         </div>
@@ -222,13 +269,7 @@ export default function ProfilePage() {
           <div className="mb-6">
             <label className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-lg cursor-pointer inline-block">
               Choose Files
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="hidden"
-              />
+              <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
             </label>
           </div>
 
@@ -243,10 +284,7 @@ export default function ProfilePage() {
           )}
 
           {collectionPhotos.length > 0 && (
-            <button
-              onClick={clearPhotos}
-              className="text-red-400 hover:text-red-300 text-sm"
-            >
+            <button onClick={clearPhotos} className="text-red-400 hover:text-red-300 text-sm">
               Clear all photos
             </button>
           )}

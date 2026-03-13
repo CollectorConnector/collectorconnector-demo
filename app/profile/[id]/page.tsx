@@ -87,14 +87,13 @@ export default function ProfilePage() {
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
         {/* If you want the content to truly span edge-to-edge, replace max-w-7xl with w-full */}
-        <div className="mx-auto max-w-7xl px-6">
+        <div className="mx-auto max-w-full px-6">
           <div className="flex h-16 items-center justify-between gap-6">
             {/* LEFT: Logo + subtitle + Dashboard/Profile pills */}
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                 <img
                   src="/CC-main-logo.png"
-                  alt="CollectorConnector"
                   className="h-5 w-auto object-contain"
                 />
                 <div className="leading-tight">

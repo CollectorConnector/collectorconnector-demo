@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
 
-/* -------------------------------------------------------
+/* ───────────────────────────────────────────────
    Types
-------------------------------------------------------- */
+─────────────────────────────────────────────── */
 type Profile = {
   id: string;
   avatar_url?: string | null;
@@ -35,56 +35,77 @@ type Item = {
   created_at?: string | null;
 };
 
-/* -------------------------------------------------------
-   Page
-------------------------------------------------------- */
+/* ───────────────────────────────────────────────
+   Profile Page
+─────────────────────────────────────────────── */
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
-  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const router = useRouter();
+  const userId = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [activity, setActivity] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Very basic — replace with real auth (e.g. supabase.auth.getUser())
+  const isOwnProfile = false; // ← TODO: implement real check
 
   useEffect(() => {
-    if (!id) return;
+    if (!userId) {
+      router.replace("/not-found");
+      return;
+    }
 
-    let alive = true;
-    async function run() {
+    let aborted = false;
+
+    async function fetchProfileData() {
       try {
-        const [{ data: profileData }, { data: collectionData }, { data: activityData }] =
+        setLoading(true);
+        setError(null);
+
+        const [{ data: profileData, error: pErr }, { data: collData }, { data: actData }] =
           await Promise.all([
-            supabase.from("profiles").select("*").eq("id", id).single(),
+            supabase.from("profiles").select("*").eq("id", userId).single(),
             supabase
               .from("collections")
               .select("*")
-              .eq("user_id", id)
-              .order("created_at", { ascending: false }),
+              .eq("user_id", userId)
+              .order("created_at", { ascending: false })
+              .limit(5), // ← optional: limit recent ones
             supabase
               .from("items")
               .select("*")
-              .eq("user_id", id)
-              .order("created_at", { ascending: false }),
+              .eq("user_id", userId)
+              .order("created_at", { ascending: false })
+              .limit(8),
           ]);
 
-        if (!alive) return;
+        if (aborted) return;
 
-        setProfile(profileData || null);
-        setCollections(collectionData || []);
-        setActivity(activityData || []);
-      } catch (e) {
-        console.error("Failed to load profile page data:", e);
+        if (pErr || !profileData) {
+          setError("Profile not found");
+          return;
+        }
+
+        setProfile(profileData);
+        setCollections(collData ?? []);
+        setActivity(actData ?? []);
+      } catch (err) {
+        console.error("Profile load failed:", err);
+        if (!aborted) setError("Something went wrong while loading the profile.");
       } finally {
-        if (alive) setLoading(false);
+        if (!aborted) setLoading(false);
       }
     }
 
-    run();
+    fetchProfileData();
+
     return () => {
-      alive = false;
+      aborted = true;
     };
-  }, [id]);
+  }, [userId, router]);
 
   const displayName = useMemo(
     () => profile?.display_name || profile?.username || "Collector",
@@ -94,40 +115,28 @@ export default function ProfilePage() {
   const displayUsername = profile?.username ? `@${profile.username}` : null;
 
   if (loading) {
-    return (
-      <div className="min-h-dvh bg-black text-white">
-        {/* FULL-WIDTH HEADER */}
-        <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15)]">
-          <Nav />
-        </div>
-
-        {/* FULL-WIDTH SPACER */}
-        <div className="h-16 w-full bg-black" />
-
-        <div className="mx-auto max-w-5xl px-4 pt-10">
-          <div className="text-white/60">Loading…</div>
-        </div>
-
-        <Footer />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
-  if (!profile) {
+  if (error || !profile) {
     return (
-      <div className="min-h-dvh bg-black text-white">
-        {/* FULL-WIDTH HEADER */}
-        <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+      <div className="min-h-dvh bg-black text-white flex flex-col">
+        <div className="w-full fixed top-0 z-50 bg-black border-b border-white/10">
           <Nav />
         </div>
-
-        {/* FULL-WIDTH SPACER */}
-        <div className="h-16 w-full bg-black" />
-
-        <div className="mx-auto max-w-5xl px-4 pt-10">
-          <div className="text-white/60">Profile not found.</div>
+        <div className="h-16" />
+        <div className="flex-1 flex items-center justify-center px-6 text-center">
+          <div>
+            <h1 className="text-3xl font-semibold mb-4">Oops…</h1>
+            <p className="text-white/70 mb-8 max-w-md mx-auto">{error || "Profile not found."}</p>
+            <button
+              onClick={() => router.back()}
+              className="rounded-lg bg-white/10 px-5 py-2.5 text-sm hover:bg-white/15 transition"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
-
         <Footer />
       </div>
     );
@@ -138,144 +147,116 @@ export default function ProfilePage() {
   const rarityScore = profile.rarity_score ?? 0;
 
   return (
-    <div className="min-h-dvh bg-black text-white">
-
-      {/* -------------------------------------------------------
-         FULL-WIDTH HEADER (VISUALLY FIXED)
-      ------------------------------------------------------- */}
-      <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.25)]">
+    <div className="min-h-dvh bg-black text-white flex flex-col">
+      {/* Fixed Header */}
+      <div className="w-full fixed top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-white/10">
         <Nav />
       </div>
+      <div className="h-16 shrink-0" />
 
-      {/* FULL-WIDTH SPACER */}
-      <div className="h-16 w-full bg-black" />
-
-      {/* -------------------------------------------------------
-         HERO SECTION — FULL WIDTH
-      ------------------------------------------------------- */}
-      <section className="w-full bg-black pt-20 pb-20 text-center">
+      {/* Hero / Branding */}
+      <section className="w-full bg-gradient-to-b from-black via-black to-transparent pt-16 pb-24 text-center">
         <img
           src="/CC-main-logo.png"
           alt="CollectorConnector Logo"
           className="mx-auto h-20 w-auto opacity-90"
         />
-        <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+        <h1 className="mt-8 text-3xl sm:text-4xl font-semibold tracking-tight">
           Where Collectors Meet
         </h1>
-        <p className="mt-3 text-white/60 max-w-xl mx-auto text-sm">
-          Discover, showcase, and celebrate your collections with a community that
-          shares your passion.
+        <p className="mt-4 text-white/60 max-w-xl mx-auto text-base sm:text-lg">
+          Discover, showcase, and celebrate your collections with a community that shares your passion.
         </p>
       </section>
 
-      <main className="mx-auto max-w-5xl px-4 space-y-32 pb-32">
+      <main className="mx-auto w-full max-w-5xl px-5 sm:px-6 lg:px-8 space-y-24 pb-32 flex-1">
+        {/* Profile Card */}
+        <section className="relative rounded-3xl border border-white/12 bg-gradient-to-b from-white/[0.07] to-white/[0.03] shadow-2xl shadow-black/40 p-7 sm:p-10">
+          <div className="flex flex-col items-center text-center space-y-6">
+            {/* Avatar */}
+            <AvatarUpload
+              userId={profile.id}
+              currentAvatar={profile.avatar_url}
+              editable={isOwnProfile}
+            />
 
-        {/* -------------------------------------------------------
-           PROFILE CARD (ELEVATED)
-        ------------------------------------------------------- */}
-        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_40px_rgba(255,255,255,0.15)] p-8 space-y-8">
-
-          {/* Avatar */}
-          <div className="flex justify-center">
-            <AvatarUpload userId={profile.id} currentAvatar={null} />
-          </div>
-
-          {/* Identity */}
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight text-white">
-              {displayName}
-            </h2>
-
-            <p className="text-sm text-white/70">
-              {displayUsername}
-              {displayUsername && profile.location ? " · " : ""}
-              {profile.location}
-            </p>
+            {/* Name & meta */}
+            <div className="space-y-2">
+              <h2 className="text-3xl font-semibold tracking-tight">{displayName}</h2>
+              <div className="text-sm text-white/70 flex flex-wrap justify-center gap-x-4 gap-y-1">
+                {displayUsername && <span>{displayUsername}</span>}
+                {profile.location && <span>· {profile.location}</span>}
+              </div>
+            </div>
 
             <FollowButton />
 
-            {profile.bio ? (
-              <p className="text-sm leading-relaxed text-white/80 max-w-xl mx-auto">
+            {profile.bio && (
+              <p className="text-base leading-relaxed text-white/80 max-w-2xl mx-auto">
                 {profile.bio}
               </p>
-            ) : null}
-          </div>
-
-          {/* Stats */}
-          <StatsStrip
-            items={itemsCount}
-            categories={categoriesCount}
-            rarity={rarityScore}
-          />
-
-          {/* Collections */}
-          <div className="border-t border-white/10 pt-6">
-            <h3 className="text-white/80 text-sm mb-3">Collections</h3>
-            {collections.length === 0 ? (
-              <p className="text-white/60 text-sm">No collections yet.</p>
-            ) : (
-              <ul className="space-y-2 text-white/80 text-sm">
-                {collections.map((col) => (
-                  <li key={col.id}>
-                    {col.name} — {col.item_count ?? 0} items
-                  </li>
-                ))}
-              </ul>
             )}
+
+            <StatsStrip items={itemsCount} categories={categoriesCount} rarity={rarityScore} />
           </div>
 
-          {/* Activity */}
-          <div className="border-t border-white/10 pt-6">
-            <h3 className="text-white/80 text-sm mb-3">Recent Activity</h3>
-            {activity.length === 0 ? (
-              <p className="text-white/60 text-sm">No recent activity yet.</p>
-            ) : (
-              <ul className="space-y-2 text-white/80 text-sm">
-                {activity.map((item) => (
-                  <li key={item.id}>
-                    <strong>{item.title}</strong>
-                    {item.description ? ` — ${item.description}` : ""}
-                  </li>
-                ))}
-              </ul>
-            )}
+          {/* Collections + Activity – side by side on larger screens */}
+          <div className="mt-12 grid md:grid-cols-2 gap-10 border-t border-white/10 pt-10">
+            {/* Collections */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Collections</h3>
+              {collections.length === 0 ? (
+                <p className="text-white/50 text-sm">No collections yet.</p>
+              ) : (
+                <ul className="space-y-2.5 text-sm text-white/80">
+                  {collections.map((col) => (
+                    <li key={col.id} className="flex justify-between">
+                      <span>{col.name}</span>
+                      <span className="text-white/50">{col.item_count ?? 0} items</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Recent Activity */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
+              {activity.length === 0 ? (
+                <p className="text-white/50 text-sm">No recent activity yet.</p>
+              ) : (
+                <ul className="space-y-2.5 text-sm text-white/80">
+                  {activity.map((item) => (
+                    <li key={item.id}>
+                      <strong>{item.title}</strong>
+                      {item.description && ` — ${item.description}`}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
-          <div className="border-t border-white/10 pt-4 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
+          <div className="mt-10 pt-6 border-t border-white/10 text-center text-xs uppercase tracking-widest text-white/30">
             CC · CollectorConnector
           </div>
         </section>
 
-        {/* -------------------------------------------------------
-           EDITORIAL SECTION 1 — MANAGE YOUR INFORMATION
-        ------------------------------------------------------- */}
-        <EditorialSection
-          title="Manage Your Information"
-          subtitle="Take control of your profile and data"
-          body="Easily update your personal details, location, and collector identity. Your profile is your digital presence — keep it accurate, expressive, and uniquely yours."
-          align="left"
-        />
-
-        {/* -------------------------------------------------------
-           EDITORIAL SECTION 2 — PERSONALIZE YOUR PROFILE
-        ------------------------------------------------------- */}
-        <EditorialSection
-          title="Personalize Your Profile"
-          subtitle="Craft a presence that reflects who you are"
-          body="Customize your avatar, bio, and collector details to create a profile that stands out. Your collection tells a story — let your profile tell the rest."
-          align="right"
-        />
-
-        {/* -------------------------------------------------------
-           EDITORIAL SECTION 3 — HIGHLIGHT YOUR BEST WORKS
-        ------------------------------------------------------- */}
-        <EditorialSection
-          title="Highlight Your Best Works"
-          subtitle="Showcase your most prized items"
-          body="Organize and display your collections with clarity and pride. Whether you're a seasoned collector or just starting out, your best pieces deserve the spotlight."
-          align="left"
-        />
-
+        {/* Editorial sections – you can keep or remove them */}
+        <div className="space-y-32">
+          <EditorialSection
+            title="Manage Your Information"
+            subtitle="Take control of your profile and data"
+            body="Easily update your personal details, location, and collector identity. Your profile is your digital presence — keep it accurate, expressive, and uniquely yours."
+            align="left"
+          />
+          <EditorialSection
+            title="Personalize Your Profile"
+            subtitle="Craft a presence that reflects who you are"
+            body="Customize your avatar, bio, and collector details to create a profile that stands out."
+            align="right"
+          />
+        </div>
       </main>
 
       <Footer />
@@ -283,54 +264,71 @@ export default function ProfilePage() {
   );
 }
 
-/* -------------------------------------------------------
-   Editorial Section Component
-------------------------------------------------------- */
+/* ───────────────────────────────────────────────
+   Skeleton (loading state)
+─────────────────────────────────────────────── */
+function ProfileSkeleton() {
+  return (
+    <div className="min-h-dvh bg-black text-white">
+      <div className="w-full fixed top-0 z-50 bg-black border-b border-white/10">
+        <Nav />
+      </div>
+      <div className="h-16" />
+      <div className="mx-auto max-w-5xl px-6 pt-20 animate-pulse">
+        <div className="h-24 w-24 rounded-full bg-white/10 mx-auto mb-6" />
+        <div className="h-9 w-64 bg-white/10 rounded mx-auto mb-3" />
+        <div className="h-5 w-48 bg-white/10 rounded mx-auto mb-8" />
+        <div className="h-12 w-80 bg-white/5 rounded-xl mx-auto mb-12" />
+        <div className="grid md:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-28 bg-white/5 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────────────────────────────
+   Existing components (slightly improved)
+─────────────────────────────────────────────── */
 function EditorialSection({
   title,
   subtitle,
   body,
-  align,
+  align = "left",
 }: {
   title: string;
   subtitle: string;
   body: string;
-  align: "left" | "right";
+  align?: "left" | "right";
 }) {
   const isLeft = align === "left";
-
   return (
     <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-      {isLeft && (
-        <div className="space-y-3">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <p className="text-white/70 text-sm">{subtitle}</p>
-          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
+      {isLeft ? (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold">{title}</h2>
+          <p className="text-white/70">{subtitle}</p>
+          <p className="text-white/60 leading-relaxed">{body}</p>
+        </div>
+      ) : (
+        <div className="space-y-4 md:col-start-2">
+          <h2 className="text-2xl font-semibold">{title}</h2>
+          <p className="text-white/70">{subtitle}</p>
+          <p className="text-white/60 leading-relaxed">{body}</p>
         </div>
       )}
-
-      <div />
-
-      {!isLeft && (
-        <div className="space-y-3 md:col-start-2">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <p className="text-white/70 text-sm">{subtitle}</p>
-          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
-        </div>
-      )}
+      <div className="hidden md:block" /> {/* spacer */}
     </section>
   );
 }
-
-/* -------------------------------------------------------
-   Shared UI
-------------------------------------------------------- */
 
 function FollowButton() {
   return (
     <button
       type="button"
-      className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-md"
+      className="rounded-xl bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-gray-200 transition shadow-lg"
     >
       Follow · Add Friend
     </button>
@@ -347,18 +345,18 @@ function StatsStrip({
   rarity: number;
 }) {
   return (
-    <div className="grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10 bg-white/[0.04] text-center">
-      <div className="px-4 py-3">
-        <div className="text-lg font-semibold text-white">{items}</div>
-        <div className="text-xs uppercase tracking-wider text-white/60">Items</div>
+    <div className="grid grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden text-center">
+      <div className="px-5 py-4">
+        <div className="text-2xl font-semibold">{items}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60 mt-1">Items</div>
       </div>
-      <div className="px-4 py-3">
-        <div className="text-lg font-semibold text-white">{categories}</div>
-        <div className="text-xs uppercase tracking-wider text-white/60">Categories</div>
+      <div className="px-5 py-4">
+        <div className="text-2xl font-semibold">{categories}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60 mt-1">Categories</div>
       </div>
-      <div className="px-4 py-3">
-        <div className="text-lg font-semibold text-white">{rarity}</div>
-        <div className="text-xs uppercase tracking-wider text-white/60">Rarity</div>
+      <div className="px-5 py-4">
+        <div className="text-2xl font-semibold">{rarity}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60 mt-1">Rarity Score</div>
       </div>
     </div>
   );

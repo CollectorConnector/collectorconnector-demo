@@ -21,7 +21,7 @@ type Profile = {
   categories_count?: number | null;
   rarity_score?: number | null;
 
-  // Optional fields for new UI elements
+  // New / optional fields used by the UI below
   member_number?: number | null;
   instagram?: string | null;
   ebay?: string | null;
@@ -47,7 +47,7 @@ type Item = {
    Helpers
 ------------------------------------------------------- */
 function tierLabel(n?: number | null) {
-  if (!n) return null;
+  if (n == null) return null;
   if (n === 1) return "Founder · #1";
   if (n >= 2 && n <= 50) return `Gold · #${n}`;
   if (n >= 51 && n <= 100) return `Silver · #${n}`;
@@ -59,17 +59,27 @@ function formatLink(url?: string | null): string | null {
   if (!url) return null;
   const trimmed = url.trim();
   if (!trimmed) return null;
-  // If the user stored just a handle or missing protocol, try to normalize minimally
+
+  // If the user stored a full URL, keep it.
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  // If they stored a handle like "@name" for Instagram: make a sensible guess.
   if (trimmed.startsWith("@")) return `https://instagram.com/${trimmed.slice(1)}`;
-  // Fallback: add https
+
+  // Otherwise, add https as a safe default.
   return `https://${trimmed}`;
 }
 
 /* -------------------------------------------------------
-   Monochrome Icons
+   Monochrome Social Icons + Link
 ------------------------------------------------------- */
-function SocialIcon({ name, className = "h-5 w-5" }: { name: "instagram" | "ebay" | "discord" | "x" | "whatnot"; className?: string }) {
+function SocialIcon({
+  name,
+  className = "h-5 w-5",
+}: {
+  name: "instagram" | "ebay" | "discord" | "x" | "whatnot";
+  className?: string;
+}) {
   switch (name) {
     case "instagram":
       return (
@@ -80,7 +90,6 @@ function SocialIcon({ name, className = "h-5 w-5" }: { name: "instagram" | "ebay
         </svg>
       );
     case "ebay":
-      // Monochrome "e"-style badge
       return (
         <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" />
@@ -128,17 +137,17 @@ function SocialLink({
   icon: "instagram" | "ebay" | "discord" | "x" | "whatnot";
 }) {
   const href = formatLink(url);
-  const classes = "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-opacity";
+  const base = "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-opacity";
   if (!href) {
     return (
-      <span className={`${classes} text-zinc-600 cursor-not-allowed`}>
+      <span className={`${base} text-zinc-600 cursor-not-allowed`}>
         <SocialIcon name={icon} />
         <span className="hidden sm:inline">{label}</span>
       </span>
     );
   }
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={`${classes} text-zinc-200 hover:opacity-80`}>
+    <a href={href} target="_blank" rel="noopener noreferrer" className={`${base} text-zinc-200 hover:opacity-80`}>
       <SocialIcon name={icon} />
       <span className="hidden sm:inline">{label}</span>
     </a>
@@ -200,7 +209,6 @@ export default function ProfilePage() {
     () => profile?.display_name || profile?.username || "Collector",
     [profile]
   );
-
   const displayUsername = profile?.username ? `@${profile.username}` : null;
   const tier = tierLabel(profile?.member_number);
 
@@ -213,7 +221,7 @@ export default function ProfilePage() {
             <Nav />
           </div>
         </div>
-        {/* HEADER SPACER */}
+        {/* Spacer */}
         <div className="h-16 w-full" />
 
         <div className="mx-auto max-w-6xl px-4 pt-10">
@@ -234,7 +242,7 @@ export default function ProfilePage() {
             <Nav />
           </div>
         </div>
-        {/* HEADER SPACER */}
+        {/* Spacer */}
         <div className="h-16 w-full" />
 
         <div className="mx-auto max-w-6xl px-4 pt-10">
@@ -260,37 +268,20 @@ export default function ProfilePage() {
           <Nav />
         </div>
       </div>
-      {/* HEADER SPACER */}
+      {/* Spacer under fixed header */}
       <div className="h-16 w-full" />
 
       {/* -------------------------------------------------------
-         HERO (kept as-is; feel free to remove if you want the profile at top)
-      ------------------------------------------------------- */}
-      <section className="w-full bg-black pt-20 pb-16 text-center">
-        <img
-          src="/CC-main-logo.png"
-          alt="CollectorConnector Logo"
-          className="mx-auto h-16 w-auto opacity-90"
-        />
-        <h1 className="mt-5 text-3xl font-semibold tracking-tight">
-          Where Collectors Meet
-        </h1>
-        <p className="mt-3 text-white/60 max-w-xl mx-auto text-sm">
-          Discover, showcase, and celebrate your collections with a community that shares your passion.
-        </p>
-      </section>
-
-      {/* -------------------------------------------------------
-         MAIN
+         MAIN (No hero section)
       ------------------------------------------------------- */}
       <main className="mx-auto max-w-6xl px-4 sm:px-6 space-y-16 pb-28">
         {/* -------------------------------------------------------
-           A) PROFILE TOP — Avatar left, info right
+           A) PROFILE TOP — Avatar left, info right (robust flex layout)
         ------------------------------------------------------- */}
-        <section className="grid grid-cols-1 gap-8 md:grid-cols-[220px_1fr]">
-          {/* Left: Avatar + upload */}
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative aspect-square w-[180px] overflow-hidden rounded-full border border-white/10 bg-zinc-900">
+        <section className="flex flex-col md:flex-row md:items-start md:gap-10 gap-8">
+          {/* Left: Avatar + upload (fixed sizing: 180x180, never stretches) */}
+          <div className="md:w-[220px] flex md:block justify-center">
+            <div className="h-[180px] w-[180px] min-w-[180px] max-w-[180px] overflow-hidden rounded-full border border-white/10 bg-zinc-900">
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -303,20 +294,15 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
-
-            {/* Keep your existing uploader API to avoid prop errors */}
-            <div className="w-full">
-              <AvatarUpload userId={profile.id} currentAvatar={null} />
-            </div>
           </div>
 
           {/* Right: Identity + bio + socials */}
-          <div className="flex min-w-0 flex-col gap-4">
+          <div className="min-w-0 flex-1">
             {/* Name + Tier */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <h2 className="truncate text-2xl font-semibold leading-tight">
+              <h1 className="truncate text-2xl font-semibold leading-tight">
                 {displayName}
-              </h2>
+              </h1>
               {tier && (
                 <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-wide text-zinc-400">
                   {tier}
@@ -326,7 +312,7 @@ export default function ProfilePage() {
 
             {/* Username / location */}
             {(displayUsername || profile.location) && (
-              <div className="text-sm text-zinc-400">
+              <div className="mt-1 text-sm text-zinc-400">
                 <div className="flex flex-wrap items-center gap-3">
                   {displayUsername && <span className="text-zinc-300">{displayUsername}</span>}
                   {displayUsername && profile.location && <span className="text-zinc-600">•</span>}
@@ -337,18 +323,23 @@ export default function ProfilePage() {
 
             {/* Bio */}
             {profile.bio && (
-              <p className="max-w-prose text-sm leading-relaxed text-zinc-300">
+              <p className="mt-3 max-w-prose text-sm leading-relaxed text-zinc-300">
                 {profile.bio}
               </p>
             )}
 
             {/* C) Social links row */}
-            <div className="mt-1 flex flex-wrap items-center gap-2">
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <SocialLink url={profile.ebay} label="eBay" icon="ebay" />
               <SocialLink url={profile.instagram} label="Instagram" icon="instagram" />
               <SocialLink url={profile.discord} label="Discord" icon="discord" />
               <SocialLink url={profile.x} label="X" icon="x" />
               <SocialLink url={profile.whatnot} label="Whatnot" icon="whatnot" />
+            </div>
+
+            {/* Upload (kept here so it's visually linked to the avatar) */}
+            <div className="mt-6 max-w-sm">
+              <AvatarUpload userId={profile.id} currentAvatar={null} />
             </div>
           </div>
         </section>
@@ -409,70 +400,9 @@ export default function ProfilePage() {
             </ul>
           )}
         </section>
-
-        {/* -------------------------------------------------------
-           Editorial Sections (kept)
-        ------------------------------------------------------- */}
-        <EditorialSection
-          title="Manage Your Information"
-          subtitle="Take control of your profile and data"
-          body="Easily update your personal details, location, and collector identity. Your profile is your digital presence — keep it accurate, expressive, and uniquely yours."
-          align="left"
-        />
-        <EditorialSection
-          title="Personalize Your Profile"
-          subtitle="Craft a presence that reflects who you are"
-          body="Customize your avatar, bio, and collector details to create a profile that stands out. Your collection tells a story — let your profile tell the rest."
-          align="right"
-        />
-        <EditorialSection
-          title="Highlight Your Best Works"
-          subtitle="Showcase your most prized items"
-          body="Organize and display your collections with clarity and pride. Whether you're a seasoned collector or just starting out, your best pieces deserve the spotlight."
-          align="left"
-        />
       </main>
 
       <Footer />
     </div>
-  );
-}
-
-/* -------------------------------------------------------
-   Editorial Section Component
-------------------------------------------------------- */
-function EditorialSection({
-  title,
-  subtitle,
-  body,
-  align,
-}: {
-  title: string;
-  subtitle: string;
-  body: string;
-  align: "left" | "right";
-}) {
-  const isLeft = align === "left";
-
-  return (
-    <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-      {isLeft && (
-        <div className="space-y-3">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <p className="text-white/70 text-sm">{subtitle}</p>
-          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
-        </div>
-      )}
-
-      <div />
-
-      {!isLeft && (
-        <div className="space-y-3 md:col-start-2">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <p className="text-white/70 text-sm">{subtitle}</p>
-          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
-        </div>
-      )}
-    </section>
   );
 }

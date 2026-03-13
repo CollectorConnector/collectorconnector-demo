@@ -7,9 +7,6 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
 
-/* ───────────────────────────────────────────────
-   Types
-─────────────────────────────────────────────── */
 type Profile = {
   id: string;
   avatar_url?: string | null;
@@ -35,9 +32,6 @@ type Item = {
   created_at?: string | null;
 };
 
-/* ───────────────────────────────────────────────
-   Profile Page
-─────────────────────────────────────────────── */
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -48,9 +42,7 @@ export default function ProfilePage() {
   const [activity, setActivity] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Very basic — replace with real auth (e.g. supabase.auth.getUser())
-  const isOwnProfile = false; // ← TODO: implement real check
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
     if (!userId) {
@@ -65,6 +57,12 @@ export default function ProfilePage() {
         setLoading(true);
         setError(null);
 
+        // Check if this is the current user's profile
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id === userId) {
+          setIsOwnProfile(true);
+        }
+
         const [{ data: profileData, error: pErr }, { data: collData }, { data: actData }] =
           await Promise.all([
             supabase.from("profiles").select("*").eq("id", userId).single(),
@@ -73,7 +71,7 @@ export default function ProfilePage() {
               .select("*")
               .eq("user_id", userId)
               .order("created_at", { ascending: false })
-              .limit(5), // ← optional: limit recent ones
+              .limit(5),
             supabase
               .from("items")
               .select("*")
@@ -128,7 +126,9 @@ export default function ProfilePage() {
         <div className="flex-1 flex items-center justify-center px-6 text-center">
           <div>
             <h1 className="text-3xl font-semibold mb-4">Oops…</h1>
-            <p className="text-white/70 mb-8 max-w-md mx-auto">{error || "Profile not found."}</p>
+            <p className="text-white/70 mb-8 max-w-md mx-auto">
+              {error || "Profile not found."}
+            </p>
             <button
               onClick={() => router.back()}
               className="rounded-lg bg-white/10 px-5 py-2.5 text-sm hover:bg-white/15 transition"
@@ -148,13 +148,11 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-dvh bg-black text-white flex flex-col">
-      {/* Fixed Header */}
       <div className="w-full fixed top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-white/10">
         <Nav />
       </div>
       <div className="h-16 shrink-0" />
 
-      {/* Hero / Branding */}
       <section className="w-full bg-gradient-to-b from-black via-black to-transparent pt-16 pb-24 text-center">
         <img
           src="/CC-main-logo.png"
@@ -170,17 +168,14 @@ export default function ProfilePage() {
       </section>
 
       <main className="mx-auto w-full max-w-5xl px-5 sm:px-6 lg:px-8 space-y-24 pb-32 flex-1">
-        {/* Profile Card */}
         <section className="relative rounded-3xl border border-white/12 bg-gradient-to-b from-white/[0.07] to-white/[0.03] shadow-2xl shadow-black/40 p-7 sm:p-10">
           <div className="flex flex-col items-center text-center space-y-6">
-            {/* Avatar */}
             <AvatarUpload
               userId={profile.id}
-              currentAvatar={profile.avatar_url}
+              currentUrl={profile.avatar_url}
               editable={isOwnProfile}
             />
 
-            {/* Name & meta */}
             <div className="space-y-2">
               <h2 className="text-3xl font-semibold tracking-tight">{displayName}</h2>
               <div className="text-sm text-white/70 flex flex-wrap justify-center gap-x-4 gap-y-1">
@@ -197,12 +192,14 @@ export default function ProfilePage() {
               </p>
             )}
 
-            <StatsStrip items={itemsCount} categories={categoriesCount} rarity={rarityScore} />
+            <StatsStrip
+              items={itemsCount}
+              categories={categoriesCount}
+              rarity={rarityScore}
+            />
           </div>
 
-          {/* Collections + Activity – side by side on larger screens */}
           <div className="mt-12 grid md:grid-cols-2 gap-10 border-t border-white/10 pt-10">
-            {/* Collections */}
             <div>
               <h3 className="text-lg font-medium mb-4">Collections</h3>
               {collections.length === 0 ? (
@@ -219,7 +216,6 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Recent Activity */}
             <div>
               <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
               {activity.length === 0 ? (
@@ -242,7 +238,6 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* Editorial sections – you can keep or remove them */}
         <div className="space-y-32">
           <EditorialSection
             title="Manage Your Information"
@@ -290,7 +285,7 @@ function ProfileSkeleton() {
 }
 
 /* ───────────────────────────────────────────────
-   Existing components (slightly improved)
+   Supporting components
 ─────────────────────────────────────────────── */
 function EditorialSection({
   title,
@@ -319,7 +314,7 @@ function EditorialSection({
           <p className="text-white/60 leading-relaxed">{body}</p>
         </div>
       )}
-      <div className="hidden md:block" /> {/* spacer */}
+      <div className="hidden md:block" />
     </section>
   );
 }

@@ -20,14 +20,6 @@ type Profile = {
   items_count?: number | null;
   categories_count?: number | null;
   rarity_score?: number | null;
-
-  // Optional fields used below
-  member_number?: number | null;
-  instagram?: string | null;
-  ebay?: string | null;
-  discord?: string | null;
-  x?: string | null; // X (Twitter)
-  whatnot?: string | null;
 };
 
 type Collection = {
@@ -44,118 +36,7 @@ type Item = {
 };
 
 /* -------------------------------------------------------
-   Helpers
-------------------------------------------------------- */
-function tierLabel(n?: number | null) {
-  if (n == null) return null;
-  if (n === 1) return "Founder · #1";
-  if (n >= 2 && n <= 50) return `Gold · #${n}`;
-  if (n >= 51 && n <= 100) return `Silver · #${n}`;
-  if (n >= 101 && n <= 500) return `Bronze · #${n}`;
-  return `Member · #${n}`;
-}
-
-function formatLink(url?: string | null): string | null {
-  if (!url) return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-
-  // If the user stored a full URL, keep it.
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-
-  // If they stored a handle like "@name" (best-guess for Instagram).
-  if (trimmed.startsWith("@")) return `https://instagram.com/${trimmed.slice(1)}`;
-
-  // Otherwise, add https as a safe default.
-  return `https://${trimmed}`;
-}
-
-/* -------------------------------------------------------
-   Social Icon + Link (monochrome)
-------------------------------------------------------- */
-function SocialIcon({
-  name,
-  className = "h-5 w-5",
-}: {
-  name: "instagram" | "ebay" | "discord" | "x" | "whatnot";
-  className?: string;
-}) {
-  switch (name) {
-    case "instagram":
-      return (
-        <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.5" fill="none" />
-          <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" fill="none" />
-          <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
-        </svg>
-      );
-    case "ebay":
-      return (
-        <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" />
-          <path
-            d="M8 12c0-2 1.5-3.5 4-3.5 1.7 0 3 .7 3 .7v2s-1.2-.7-2.7-.7c-1.7 0-2.8 1.1-2.8 2.5s1.1 2.5 2.8 2.5c1.6 0 2.9-.8 2.9-.8v2s-1.4.8-3.2.8C9.5 18.5 8 16.9 8 15z"
-            fill="currentColor"
-          />
-        </svg>
-      );
-    case "discord":
-      return (
-        <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M7.6 6.6C9.2 5.9 10.9 5.6 12 5.6s2.8.3 4.4 1l.4.2a9.6 9.6 0 0 1 2.6 6.8c0 0-1.1 1.9-4 2.6l-.9-1.4c2.6-.7 3.5-2 3.5-2-.7.5-1.6.9-2.5 1.2-.5.2-1 .3-1.5.4-.3.1-.6.1-.9.1l-.6-.9a12 12 0 0 1-1.1 0l-.6.9c-.3 0-.6 0-.9-.1-.5-.1-1-.2-1.5-.4-.9-.3-1.8-.7-2.5-1.2 0 0 .9 1.3 3.5 2l-.9 1.4c-2.9-.7-4-2.6-4-2.6a9.6 9.6 0 0 1 2.6-6.8l.4-.2Z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.2"
-          />
-          <circle cx="9.5" cy="12" r="1" fill="currentColor" />
-          <circle cx="14.5" cy="12" r="1" fill="currentColor" />
-        </svg>
-      );
-    case "x":
-      return (
-        <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 4l16 16M20 4 4 20" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      );
-    case "whatnot":
-      return (
-        <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v8l-6-3-6 3V8Z" fill="none" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      );
-  }
-}
-
-function SocialLink({
-  url,
-  label,
-  icon,
-}: {
-  url?: string | null;
-  label: string;
-  icon: "instagram" | "ebay" | "discord" | "x" | "whatnot";
-}) {
-  const href = formatLink(url);
-  const base = "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-opacity";
-  if (!href) {
-    return (
-      <span className={`${base} text-zinc-600 cursor-not-allowed`}>
-        <SocialIcon name={icon} />
-        <span className="hidden sm:inline">{label}</span>
-      </span>
-    );
-  }
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className={`${base} text-zinc-200 hover:opacity-80`}>
-      <SocialIcon name={icon} />
-      <span className="hidden sm:inline">{label}</span>
-    </a>
-  );
-}
-
-/* -------------------------------------------------------
-   Page (Client-side)
+   Page
 ------------------------------------------------------- */
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -175,15 +56,23 @@ export default function ProfilePage() {
         const [{ data: profileData }, { data: collectionData }, { data: activityData }] =
           await Promise.all([
             supabase.from("profiles").select("*").eq("id", id).single(),
-            supabase.from("collections").select("*").eq("user_id", id).order("created_at", { ascending: false }),
-            supabase.from("items").select("*").eq("user_id", id).order("created_at", { ascending: false }),
+            supabase
+              .from("collections")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
+            supabase
+              .from("items")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
           ]);
 
         if (!alive) return;
 
-        setProfile((profileData as Profile) || null);
-        setCollections((collectionData as Collection[]) || []);
-        setActivity((activityData as Item[]) || []);
+        setProfile(profileData || null);
+        setCollections(collectionData || []);
+        setActivity(activityData || []);
       } catch (e) {
         console.error("Failed to load profile page data:", e);
       } finally {
@@ -201,21 +90,21 @@ export default function ProfilePage() {
     () => profile?.display_name || profile?.username || "Collector",
     [profile]
   );
+
   const displayUsername = profile?.username ? `@${profile.username}` : null;
-  const tier = tierLabel(profile?.member_number);
 
   if (loading) {
     return (
       <div className="min-h-dvh bg-black text-white">
-        {/* Premium header wrapper */}
-        <div className="w-full fixed top-0 left-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center">
-            <Nav />
-          </div>
+        {/* FULL-WIDTH HEADER */}
+        <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+          <Nav />
         </div>
-        <div className="h-16 w-full" />
 
-        <div className="mx-auto max-w-6xl px-4 pt-10">
+        {/* FULL-WIDTH SPACER */}
+        <div className="h-16 w-full bg-black" />
+
+        <div className="mx-auto max-w-5xl px-4 pt-10">
           <div className="text-white/60">Loading…</div>
         </div>
 
@@ -227,15 +116,15 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="min-h-dvh bg-black text-white">
-        {/* Premium header wrapper */}
-        <div className="w-full fixed top-0 left-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center">
-            <Nav />
-          </div>
+        {/* FULL-WIDTH HEADER */}
+        <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+          <Nav />
         </div>
-        <div className="h-16 w-full" />
 
-        <div className="mx-auto max-w-6xl px-4 pt-10">
+        {/* FULL-WIDTH SPACER */}
+        <div className="h-16 w-full bg-black" />
+
+        <div className="mx-auto max-w-5xl px-4 pt-10">
           <div className="text-white/60">Profile not found.</div>
         </div>
 
@@ -250,140 +139,227 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-dvh bg-black text-white">
-      {/* -------------------------------------------------------
-         PREMIUM CC HEADER (fixed) — keeps <Nav /> content clean
-      ------------------------------------------------------- */}
-      <div className="w-full fixed top-0 left-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center">
-          <Nav />
-        </div>
-      </div>
-      <div className="h-16 w-full" />
 
       {/* -------------------------------------------------------
-         MAIN (No hero section)
+         FULL-WIDTH HEADER (VISUALLY FIXED)
       ------------------------------------------------------- */}
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 space-y-16 pb-28">
-        {/* A) PROFILE TOP — Avatar left, info right (robust flex) */}
-        <section className="flex flex-col md:flex-row md:items-start md:gap-10 gap-8">
-          {/* Left: Avatar (locked size — no stretching ever) */}
-          <div className="md:w-[220px] flex md:block justify-center">
-            <div className="h-44 w-44 overflow-hidden rounded-full border border-white/10 bg-zinc-900">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={displayName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-zinc-500">
-                  No avatar
-                </div>
-              )}
-            </div>
+      <div className="w-full fixed top-0 left-0 z-50 bg-black border-b border-white/10 shadow-[0_0_40px_rgba(255,255,255,0.25)]">
+        <Nav />
+      </div>
+
+      {/* FULL-WIDTH SPACER */}
+      <div className="h-16 w-full bg-black" />
+
+      {/* -------------------------------------------------------
+         HERO SECTION — FULL WIDTH
+      ------------------------------------------------------- */}
+      <section className="w-full bg-black pt-20 pb-20 text-center">
+        <img
+          src="/CC-main-logo.png"
+          alt="CollectorConnector Logo"
+          className="mx-auto h-20 w-auto opacity-90"
+        />
+        <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+          Where Collectors Meet
+        </h1>
+        <p className="mt-3 text-white/60 max-w-xl mx-auto text-sm">
+          Discover, showcase, and celebrate your collections with a community that
+          shares your passion.
+        </p>
+      </section>
+
+      <main className="mx-auto max-w-5xl px-4 space-y-32 pb-32">
+
+        {/* -------------------------------------------------------
+           PROFILE CARD (ELEVATED)
+        ------------------------------------------------------- */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_40px_rgba(255,255,255,0.15)] p-8 space-y-8">
+
+          {/* Avatar */}
+          <div className="flex justify-center">
+            <AvatarUpload userId={profile.id} currentAvatar={null} />
           </div>
 
-          {/* Right: Identity + bio + socials */}
-          <div className="min-w-0 flex-1">
-            {/* Name + Tier */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <h1 className="truncate text-2xl font-semibold leading-tight">
-                {displayName}
-              </h1>
-              {tier && (
-                <span className="rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-wide text-zinc-400">
-                  {tier}
-                </span>
-              )}
-            </div>
+          {/* Identity */}
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight text-white">
+              {displayName}
+            </h2>
 
-            {/* Username / location */}
-            {(displayUsername || profile.location) && (
-              <div className="mt-1 text-sm text-zinc-400">
-                <div className="flex flex-wrap items-center gap-3">
-                  {displayUsername && <span className="text-zinc-300">{displayUsername}</span>}
-                  {displayUsername && profile.location && <span className="text-zinc-600">•</span>}
-                  {profile.location && <span className="text-zinc-400">{profile.location}</span>}
-                </div>
-              </div>
-            )}
+            <p className="text-sm text-white/70">
+              {displayUsername}
+              {displayUsername && profile.location ? " · " : ""}
+              {profile.location}
+            </p>
 
-            {/* Bio */}
-            {profile.bio && (
-              <p className="mt-3 max-w-prose text-sm leading-relaxed text-zinc-300">
+            <FollowButton />
+
+            {profile.bio ? (
+              <p className="text-sm leading-relaxed text-white/80 max-w-xl mx-auto">
                 {profile.bio}
               </p>
+            ) : null}
+          </div>
+
+          {/* Stats */}
+          <StatsStrip
+            items={itemsCount}
+            categories={categoriesCount}
+            rarity={rarityScore}
+          />
+
+          {/* Collections */}
+          <div className="border-t border-white/10 pt-6">
+            <h3 className="text-white/80 text-sm mb-3">Collections</h3>
+            {collections.length === 0 ? (
+              <p className="text-white/60 text-sm">No collections yet.</p>
+            ) : (
+              <ul className="space-y-2 text-white/80 text-sm">
+                {collections.map((col) => (
+                  <li key={col.id}>
+                    {col.name} — {col.item_count ?? 0} items
+                  </li>
+                ))}
+              </ul>
             )}
+          </div>
 
-            {/* C) Social links row */}
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <SocialLink url={profile.ebay} label="eBay" icon="ebay" />
-              <SocialLink url={profile.instagram} label="Instagram" icon="instagram" />
-              <SocialLink url={profile.discord} label="Discord" icon="discord" />
-              <SocialLink url={profile.x} label="X" icon="x" />
-              <SocialLink url={profile.whatnot} label="Whatnot" icon="whatnot" />
-            </div>
+          {/* Activity */}
+          <div className="border-t border-white/10 pt-6">
+            <h3 className="text-white/80 text-sm mb-3">Recent Activity</h3>
+            {activity.length === 0 ? (
+              <p className="text-white/60 text-sm">No recent activity yet.</p>
+            ) : (
+              <ul className="space-y-2 text-white/80 text-sm">
+                {activity.map((item) => (
+                  <li key={item.id}>
+                    <strong>{item.title}</strong>
+                    {item.description ? ` — ${item.description}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-            {/* Upload (kept here so it's visually linked to the avatar) */}
-            <div className="mt-6 max-w-sm">
-              <AvatarUpload userId={profile.id} currentAvatar={null} />
-            </div>
+          <div className="border-t border-white/10 pt-4 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
+            CC · CollectorConnector
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="rounded-xl border border-white/10 bg-white/[0.04]">
-          <div className="grid grid-cols-3 divide-x divide-white/10 text-center">
-            <div className="px-4 py-4">
-              <div className="text-lg font-semibold text-white">{itemsCount}</div>
-              <div className="text-xs uppercase tracking-wider text-white/60">Items</div>
-            </div>
-            <div className="px-4 py-4">
-              <div className="text-lg font-semibold text-white">{categoriesCount}</div>
-              <div className="text-xs uppercase tracking-wider text-white/60">Categories</div>
-            </div>
-            <div className="px-4 py-4">
-              <div className="text-lg font-semibold text-white">{rarityScore}</div>
-              <div className="text-xs uppercase tracking-wider text-white/60">Rarity</div>
-            </div>
-          </div>
-        </section>
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 1 — MANAGE YOUR INFORMATION
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Manage Your Information"
+          subtitle="Take control of your profile and data"
+          body="Easily update your personal details, location, and collector identity. Your profile is your digital presence — keep it accurate, expressive, and uniquely yours."
+          align="left"
+        />
 
-        {/* Collections */}
-        <section className="border-t border-white/10 pt-6">
-          <h3 className="text-white/80 text-sm mb-3">Collections</h3>
-          {collections.length === 0 ? (
-            <p className="text-white/60 text-sm">No collections yet.</p>
-          ) : (
-            <ul className="space-y-2 text-white/80 text-sm">
-              {collections.map((col) => (
-                <li key={col.id}>
-                  {col.name} — {col.item_count ?? 0} items
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 2 — PERSONALIZE YOUR PROFILE
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Personalize Your Profile"
+          subtitle="Craft a presence that reflects who you are"
+          body="Customize your avatar, bio, and collector details to create a profile that stands out. Your collection tells a story — let your profile tell the rest."
+          align="right"
+        />
 
-        {/* Activity */}
-        <section className="border-t border-white/10 pt-6">
-          <h3 className="text-white/80 text-sm mb-3">Recent Activity</h3>
-          {activity.length === 0 ? (
-            <p className="text-white/60 text-sm">No recent activity yet.</p>
-          ) : (
-            <ul className="space-y-2 text-white/80 text-sm">
-              {activity.map((item) => (
-                <li key={item.id}>
-                  <strong>{item.title}</strong>
-                  {item.description ? ` — ${item.description}` : ""}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        {/* -------------------------------------------------------
+           EDITORIAL SECTION 3 — HIGHLIGHT YOUR BEST WORKS
+        ------------------------------------------------------- */}
+        <EditorialSection
+          title="Highlight Your Best Works"
+          subtitle="Showcase your most prized items"
+          body="Organize and display your collections with clarity and pride. Whether you're a seasoned collector or just starting out, your best pieces deserve the spotlight."
+          align="left"
+        />
+
       </main>
 
       <Footer />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------
+   Editorial Section Component
+------------------------------------------------------- */
+function EditorialSection({
+  title,
+  subtitle,
+  body,
+  align,
+}: {
+  title: string;
+  subtitle: string;
+  body: string;
+  align: "left" | "right";
+}) {
+  const isLeft = align === "left";
+
+  return (
+    <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      {isLeft && (
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-white/70 text-sm">{subtitle}</p>
+          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
+        </div>
+      )}
+
+      <div />
+
+      {!isLeft && (
+        <div className="space-y-3 md:col-start-2">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-white/70 text-sm">{subtitle}</p>
+          <p className="text-white/60 text-sm leading-relaxed">{body}</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* -------------------------------------------------------
+   Shared UI
+------------------------------------------------------- */
+
+function FollowButton() {
+  return (
+    <button
+      type="button"
+      className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-md"
+    >
+      Follow · Add Friend
+    </button>
+  );
+}
+
+function StatsStrip({
+  items,
+  categories,
+  rarity,
+}: {
+  items: number;
+  categories: number;
+  rarity: number;
+}) {
+  return (
+    <div className="grid grid-cols-3 divide-x divide-white/10 rounded-xl border border-white/10 bg-white/[0.04] text-center">
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{items}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Items</div>
+      </div>
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{categories}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Categories</div>
+      </div>
+      <div className="px-4 py-3">
+        <div className="text-lg font-semibold text-white">{rarity}</div>
+        <div className="text-xs uppercase tracking-wider text-white/60">Rarity</div>
+      </div>
     </div>
   );
 }

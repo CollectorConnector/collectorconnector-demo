@@ -240,7 +240,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
 
             {/* Keep your existing upload component */}
             <div className="w-full">
-              <AvatarUpload />
+              <AvatarUpload userId={profile.id} />
             </div>
           </div>
 

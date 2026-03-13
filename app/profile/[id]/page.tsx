@@ -63,8 +63,8 @@ async function getProfile(id: string): Promise<Profile | null> {
   if (error) {
     console.error(error);
     return null;
-  }
-  return data as Profile;
+  }  
+  return data as unknown as Profile;
 }
 
 function tierLabel(n?: number | null) {

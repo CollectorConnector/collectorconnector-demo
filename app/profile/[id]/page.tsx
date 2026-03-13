@@ -145,16 +145,16 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-dvh bg-black text-white flex flex-col">
-      {/* Fixed Header / Navbar with logo on left */}
+      {/* Fixed Header / Navbar with smaller logo */}
       <header className="w-full fixed top-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo left */}
+            {/* Logo left – smaller size */}
             <Link href="/" className="flex items-center gap-2.5">
               <img
                 src="/CC-main-logo.png"
                 alt="CollectorConnector"
-                className="h-8 w-auto"
+                className="h-7 sm:h-8 w-auto"
               />
               <span className="text-lg font-semibold tracking-tight hidden sm:block">
                 CollectorConnector
@@ -167,7 +167,7 @@ export default function ProfilePage() {
                 href="https://www.ebay.com/usr/yourusername"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-gray-300 hover:text-white transition"
+                className="text-sm text-gray-300 hover:text-white transition-colors"
               >
                 eBay
               </a>
@@ -175,7 +175,7 @@ export default function ProfilePage() {
                 href="https://instagram.com/yourusername"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-gray-300 hover:text-white transition"
+                className="text-sm text-gray-300 hover:text-white transition-colors"
               >
                 Instagram
               </a>
@@ -183,7 +183,7 @@ export default function ProfilePage() {
                 href="https://x.com/yourusername"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-gray-300 hover:text-white transition"
+                className="text-sm text-gray-300 hover:text-white transition-colors"
               >
                 X
               </a>
@@ -191,12 +191,11 @@ export default function ProfilePage() {
                 href="https://discord.gg/yourserver"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-gray-300 hover:text-white transition"
+                className="text-sm text-gray-300 hover:text-white transition-colors"
               >
                 Discord
               </a>
 
-              {/* Your original Nav component (if it has more links) */}
               <Nav />
             </div>
           </div>
@@ -232,7 +231,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Changed to just "Follow" */}
             <FollowButton />
 
             {profile.bio && (
@@ -308,10 +306,9 @@ export default function ProfilePage() {
   );
 }
 
-// ───────────────────────────────────────────────
-//  Skeleton, EditorialSection, StatsStrip remain the same
-// ───────────────────────────────────────────────
-
+/* ───────────────────────────────────────────────
+   Skeleton (loading state)
+─────────────────────────────────────────────── */
 function ProfileSkeleton() {
   return (
     <div className="min-h-dvh bg-black text-white">
@@ -336,6 +333,9 @@ function ProfileSkeleton() {
   );
 }
 
+/* ───────────────────────────────────────────────
+   Supporting components
+─────────────────────────────────────────────── */
 function EditorialSection({
   title,
   subtitle,

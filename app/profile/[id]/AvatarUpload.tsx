@@ -1,70 +1,134 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
-type AvatarUploadProps = {
+interface AvatarUploadProps {
   userId: string;
-  currentAvatar?: string | null;
-};
+  currentUrl?: string | null;
+  editable?: boolean;
+  onSaved?: (url: string) => void;
+}
 
-export default function AvatarUpload({ userId, currentAvatar }: AvatarUploadProps) {
+export default function AvatarUpload({
+  userId,
+  currentUrl,
+  editable = false,
+  onSaved,
+}: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | undefined>(currentUrl ?? undefined);
 
-  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!editable) return;
+
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+
     try {
-      const file = e.target.files?.[0];
-      if (!file) return;
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
 
-      setUploading(true);
-
-      const ext = file.name.split(".").pop();
-      const filePath = `${userId}/avatar-${Date.now()}.${ext}`;
-
+      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true });
+        .from('item-photos') // ← change to 'avatars' if you create a dedicated bucket
+        .upload(filePath, file, {
+          upsert: true,
+          cacheControl: '3600',
+        });
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('item-photos')
+        .getPublicUrl(filePath);
+
       const publicUrl = urlData.publicUrl;
 
+      if (!publicUrl) throw new Error('No public URL returned');
+
+      // Update local preview
+      setPreview(publicUrl);
+
+      // Optional: notify parent (if you want to do something extra)
+      onSaved?.(publicUrl);
+
+      // IMPORTANT: Save URL to profiles table
       const { error: updateError } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update({ avatar_url: publicUrl })
-        .eq("id", userId);
+        .eq('id', userId);
 
-      if (updateError) throw updateError;
-
-      window.location.reload();
-    } catch (err) {
-      console.error("Avatar upload error:", err);
+      if (updateError) {
+        console.error('Failed to update profile avatar_url:', updateError);
+        // You might want to show a toast/notification here in production
+      }
+    } catch (err: any) {
+      console.error('Avatar upload failed:', err);
+      alert(err.message || 'Failed to upload avatar');
     } finally {
       setUploading(false);
     }
   }
 
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="overflow-hidden rounded-[28%] border border-white/15 ring-1 ring-white/10 shadow-[0_0_40px_rgba(255,255,255,0.12)]">
-        <img
-          src={currentAvatar || "/diamond2.png"}
-          alt="Avatar"
-          className="h-28 w-28 sm:h-32 sm:w-32 object-cover"
-        />
-      </div>
+  const defaultAvatar = (
+    <div className="w-32 h-32 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center text-gray-500 text-xl">
+      No photo
+    </div>
+  );
 
-      <label className="text-[11px] text-white/70 cursor-pointer">
-        {uploading ? "Uploading…" : "Change avatar"}
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleChange}
-          disabled={uploading}
+  return (
+    <div className="flex flex-col items-center gap-4">
+      {/* Preview / Placeholder */}
+      {preview ? (
+        <img
+          src={preview}
+          alt="Profile avatar"
+          className="w-32 h-32 rounded-full object-cover border-2 border-gray-600 shadow-md"
+          onError={(e) => {
+            e.currentTarget.src = '/default-avatar.png'; // fallback if image fails
+            e.currentTarget.onerror = null;
+          }}
         />
-      </label>
+      ) : (
+        defaultAvatar
+      )}
+
+      {/* Upload controls – only shown when editable */}
+      {editable && (
+        <div className="flex flex-col items-center gap-2">
+          <label
+            htmlFor="avatar-upload"
+            className={`
+              px-5 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition
+              ${
+                uploading
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600/20 text-blue-300 hover:bg-blue-600/40 border border-blue-500/30'
+              }
+            `}
+          >
+            {uploading ? 'Uploading...' : 'Change avatar'}
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+
+          <p className="text-xs text-gray-500">
+            JPG, PNG or GIF • Max 5MB
+          </p>
+        </div>
+      )}
     </div>
   );
 }

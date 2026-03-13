@@ -1,3 +1,4 @@
+// app/profile/[id]/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -41,7 +42,9 @@ export default function ProfilePage() {
       try {
         setLoading(true);
 
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user?.id === userId) setIsOwnProfile(true);
 
         const { data, error } = await supabase
@@ -71,27 +74,28 @@ export default function ProfilePage() {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
-    const newUrls = files.map(file => URL.createObjectURL(file));
-    setCollectionPhotos(prev => [...prev, ...newUrls]);
+    const newUrls = files.map((file) => URL.createObjectURL(file));
+    setCollectionPhotos((prev) => [...prev, ...newUrls]);
   };
 
   const clearPhotos = () => setCollectionPhotos([]);
 
   // ───────────────────────────────────────────────
-  //  Header – matches your exact mockup
+  //  Header – desktop-first, full-width, no DEMO/version
   // ───────────────────────────────────────────────
   const Header = () => (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+        {/* If you want the content to truly span edge-to-edge, replace max-w-7xl with w-full */}
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex h-16 items-center justify-between gap-6">
             {/* LEFT: Logo + subtitle + Dashboard/Profile pills */}
-            <div className="flex min-w-0 items-center gap-6">
+            <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                 <img
                   src="/CC-main-logo.png"
                   alt="CollectorConnector"
-                  className="h-6 sm:h-7 w-auto object-contain"
+                  className="h-5 w-auto object-contain"
                 />
                 <div className="leading-tight">
                   <div className="text-sm font-semibold tracking-wide text-white">
@@ -103,29 +107,25 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <nav className="hidden md:flex items-center gap-2">
+              {/* Primary nav pills (always visible; desktop-first) */}
+              <nav className="flex items-center gap-2">
                 <HeaderPill href="/dashboard" label="Dashboard" />
                 <HeaderPill href={`/profile/${userId}`} label="Profile" active />
               </nav>
             </div>
 
-            {/* CENTER: rounded group of external links */}
-            <div className="hidden lg:flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1">
-              {["eBay", "PSA", "Goldin", "Whatnot", "Sports Card Investor"].map(label => (
-                <HeaderPill key={label} href="#" label={label} subtle />
-              ))}
+            {/* CENTER: Rounded group of external links (desktop-first) */}
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1">
+              <HeaderPill href="#" label="eBay" subtle />
+              <HeaderPill href="#" label="PSA" subtle />
+              <HeaderPill href="#" label="Goldin" subtle />
+              <HeaderPill href="#" label="Whatnot" subtle />
+              <HeaderPill href="#" label="Sports Card Investor" subtle />
             </div>
 
-            {/* RIGHT: DEMO + version + avatar */}
-            <div className="flex items-center gap-3">
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-300">
-                Demo
-              </span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-400">
-                v0.7.4
-              </span>
-
-              <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-white/20">
+            {/* RIGHT: Avatar only (no DEMO/version) */}
+            <div className="flex items-center">
+              <div className="h-8 w-8 rounded-full overflow-hidden border border-white/15">
                 {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
@@ -133,7 +133,7 @@ export default function ProfilePage() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-400">
+                  <div className="h-full w-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300">
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -143,7 +143,7 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      {/* Spacer */}
+      {/* Spacer under fixed header */}
       <div className="h-16" />
     </>
   );
@@ -177,7 +177,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-[#0a0a0a] text-white pb-20">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <main className="mx-auto max-w-7xl px-6 pt-8">
         {/* Profile / Dashboard header card */}
         <div className="bg-gradient-to-b from-gray-900/80 to-black border border-gray-800 rounded-2xl p-6 mb-10 shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
@@ -237,17 +237,11 @@ export default function ProfilePage() {
           <div className="bg-gray-900/80 border border-gray-800 rounded-xl p-6 lg:col-span-1">
             <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-3">Favourite Piece</h3>
             <div className="aspect-[3/4] bg-gray-800 rounded-lg mb-4 overflow-hidden border border-gray-700">
-              <div className="w-full h-full flex items-center justify-center text-gray-600 text-5xl">
-                ?
-              </div>
+              <div className="w-full h-full flex items-center justify-center text-gray-600 text-5xl">?</div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <button className="bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">
-                Upload photo
-              </button>
-              <button className="bg-gray-800 hover:bg-gray-700 text-red-400 py-2 rounded-lg text-sm">
-                Remove photo
-              </button>
+              <button className="bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">Upload photo</button>
+              <button className="bg-gray-800 hover:bg-gray-700 text-red-400 py-2 rounded-lg text-sm">Remove photo</button>
             </div>
           </div>
 
@@ -255,11 +249,7 @@ export default function ProfilePage() {
           <div className="bg-gray-900/80 border border-gray-800 rounded-xl p-6">
             <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-3">Profile Photo</h3>
             <div className="w-40 h-40 mx-auto rounded-full overflow-hidden border-4 border-gray-800 shadow-inner">
-              <AvatarUpload
-                userId={userId}
-                currentUrl={profile?.avatar_url}
-                editable={isOwnProfile}
-              />
+              <AvatarUpload userId={userId} currentUrl={profile?.avatar_url} editable={isOwnProfile} />
             </div>
           </div>
         </div>
@@ -273,22 +263,13 @@ export default function ProfilePage() {
 
           <label className="inline-block bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg cursor-pointer mb-6">
             Choose Files
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handlePhotoUpload}
-              className="hidden"
-            />
+            <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
           </label>
 
           {collectionPhotos.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
               {collectionPhotos.map((url, i) => (
-                <div
-                  key={i}
-                  className="aspect-square rounded-lg overflow-hidden bg-black border border-gray-800 shadow-md"
-                >
+                <div key={i} className="aspect-square rounded-lg overflow-hidden bg-black border border-gray-800 shadow-md">
                   <img src={url} alt={`item ${i}`} className="w-full h-full object-cover" />
                 </div>
               ))}
@@ -296,10 +277,7 @@ export default function ProfilePage() {
           )}
 
           {collectionPhotos.length > 0 && (
-            <button
-              onClick={clearPhotos}
-              className="text-red-400 hover:text-red-300 text-sm font-medium"
-            >
+            <button onClick={clearPhotos} className="text-red-400 hover:text-red-300 text-sm font-medium">
               Clear all photos
             </button>
           )}
@@ -312,7 +290,7 @@ export default function ProfilePage() {
 }
 
 // ───────────────────────────────────────────────
-//  Reusable pill button for header
+//  Reusable pill button for header (pure monochrome)
 // ───────────────────────────────────────────────
 function HeaderPill({
   href,
@@ -325,16 +303,13 @@ function HeaderPill({
   active?: boolean;
   subtle?: boolean;
 }) {
-  const base = "px-4 py-1.5 text-sm font-medium rounded-full transition-all whitespace-nowrap";
-  const activeStyle = "bg-blue-600/20 text-blue-300 border border-blue-500/40 hover:bg-blue-600/30";
+  const base = "px-4 py-1.5 text-sm font-medium rounded-full transition-colors whitespace-nowrap";
+  const activeStyle = "bg-white/10 text-zinc-100 border border-white/20 hover:bg-white/15";
   const normalStyle = "bg-white/5 text-zinc-200 border border-white/10 hover:bg-white/10 hover:border-white/20";
   const subtleStyle = "bg-transparent text-zinc-300 border border-white/10 hover:bg-white/5";
 
   return (
-    <Link
-      href={href}
-      className={`${base} ${active ? activeStyle : subtle ? subtleStyle : normalStyle}`}
-    >
+    <Link href={href} className={`${base} ${active ? activeStyle : subtle ? subtleStyle : normalStyle}`}>
       {label}
     </Link>
   );

@@ -6,6 +6,81 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+
+export default function Nav() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="w-full text-white">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-0">
+        {/* Left: Brand */}
+        <div className="flex min-w-0 items-center gap-3">
+          {/* Logo: ALWAYS constrain size; never leave it to natural dimensions */}
+          <Link href="/" className="flex items-center gap-3">
+            <div className="relative h-7 w-auto">
+              {/* Use width/height to hard cap rendering; Next/Image preserves aspect ratio */}
+              <Image
+                src="/CC-SML-Logo.png"  // <-- change if your filename differs
+                alt="CollectorConnector"
+                width={28}               // hard limit: ~28px tall
+                height={28}
+                priority
+                className="h-7 w-auto object-contain"
+              />
+            </div>
+            <span className="select-none text-sm font-semibold tracking-wide">
+              CollectorConnector
+            </span>
+          </Link>
+        </div>
+
+        {/* Right: Simple nav (adjust as needed) */}
+        <div className="flex items-center gap-6">
+          <HeaderLink href="/" active={pathname === "/"}>Home</HeaderLink>
+          <HeaderLink href="/explore" active={pathname?.startsWith("/explore")}>Explore</HeaderLink>
+          <HeaderLink href="/profile" active={pathname?.startsWith("/profile")}>Profile</HeaderLink>
+
+          {/* If you render any raster/social logos here, constrain them too */}
+          {/* Example icon image (if you ever use an image file): */}
+          {/* 
+          <Image
+            src="/icons/instagram.png"
+            alt="Instagram"
+            width={20}
+            height={20}
+            className="h-5 w-5 object-contain opacity-80 hover:opacity-100"
+          />
+          */}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function HeaderLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`text-sm transition-opacity ${
+        active ? "text-zinc-200" : "text-zinc-400 hover:text-zinc-200"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
 
 /* -------------------------------------------------------
    Types

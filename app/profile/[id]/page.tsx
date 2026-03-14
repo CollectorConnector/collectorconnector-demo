@@ -68,7 +68,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
-        <Header />
+        <Header avatarUrl={null} displayName="Loading..." />
         <div className="flex items-center justify-center h-[80vh] text-xl">
           Loading...
         </div>
@@ -80,7 +80,7 @@ export default function ProfilePage() {
   if (error || !profile) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
-        <Header />
+        <Header avatarUrl={null} displayName="Error" />
         <div className="flex flex-col items-center justify-center h-[80vh]">
           <h1 className="text-3xl mb-4">Error</h1>
           <p className="text-white/70">{error || "Profile not found"}</p>
@@ -95,12 +95,10 @@ export default function ProfilePage() {
       <Header avatarUrl={profile.avatar_url} displayName={displayName} />
 
       <main className="w-full px-5 sm:px-8 md:px-12 pt-6 max-w-6xl mx-auto">
-
         {/* Profile Card */}
         <div className="bg-gradient-to-b from-gray-900/70 to-black/90 border border-gray-800/80 rounded-2xl p-6 md:p-8 shadow-2xl mb-12">
           <div className="flex flex-col sm:flex-row sm:items-start gap-6 md:gap-8">
-
-            {/* Avatar – reduced size */}
+            {/* Avatar */}
             <div className="shrink-0">
               <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl overflow-hidden border-2 border-gray-700/80 shadow-lg">
                 {profile.avatar_url ? (
@@ -116,10 +114,13 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Only show upload if own profile */}
               {isOwnProfile && (
                 <div className="mt-4">
-                  <AvatarUpload userId={userId} currentUrl={profile.avatar_url} />
+                  <AvatarUpload
+                    userId={userId}
+                    currentUrl={profile.avatar_url}
+                    editable={true}
+                  />
                 </div>
               )}
             </div>
@@ -139,7 +140,7 @@ export default function ProfilePage() {
                 </p>
               )}
 
-              {/* Stats pills */}
+              {/* Stats */}
               <div className="flex flex-wrap gap-4">
                 <div className="bg-gray-800/70 border border-gray-700 rounded-full px-5 py-2 text-center min-w-[110px]">
                   <div className="text-xl font-semibold">
@@ -161,7 +162,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Edit button (own profile only) */}
+            {/* Edit button */}
             {isOwnProfile && (
               <Link
                 href="/edit-profile"
@@ -172,8 +173,6 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-
-        {/* You can add collections / items list here later */}
       </main>
 
       <Footer />
@@ -182,14 +181,14 @@ export default function ProfilePage() {
 }
 
 // ───────────────────────────────────────────────
-//  Modern header component (matches your mock)
+//  Header – pill nav style matching your mock
 // ───────────────────────────────────────────────
 function Header({
   avatarUrl,
-  displayName,
+  displayName = "Collector",
 }: {
   avatarUrl?: string | null;
-  displayName: string;
+  displayName?: string;
 }) {
   return (
     <>
@@ -251,7 +250,6 @@ function Header({
         </div>
       </header>
 
-      {/* Spacer */}
       <div className="h-14 sm:h-16" />
     </>
   );

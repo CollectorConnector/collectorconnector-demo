@@ -42,17 +42,46 @@ export default function Nav() {
         </Link>
 
         {/* MIDDLE: Social Icons */}
-        <div className="hidden sm:flex items-center gap-4 text-zinc-400">
-          <Link href="https://instagram.com" target="_blank">IG</Link>
-          <Link href="https://facebook.com" target="_blank">FB</Link>
-          <Link href="https://discord.com" target="_blank">DS</Link>
-          <Link href="https://x.com" target="_blank">X</Link>
+        <div className="flex items-center gap-4 text-zinc-400">
+
+          {/* Instagram */}
+          <Link href="https://instagram.com" target="_blank" aria-label="Instagram">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="2" y="2" width="14" height="14" rx="4" />
+              <circle cx="9" cy="9" r="3" />
+              <circle cx="13" cy="5" r="1" fill="currentColor" />
+            </svg>
+          </Link>
+
+          {/* Facebook */}
+          <Link href="https://facebook.com" target="_blank" aria-label="Facebook">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M10 6h2V3h-2c-2 0-3 1-3 3v2H5v3h2v6h3v-6h2.2l.3-3H10V6z" />
+            </svg>
+          </Link>
+
+          {/* Discord */}
+          <Link href="https://discord.com" target="_blank" aria-label="Discord">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M6 5c2-1 4-1 6 0l1 2c1 0 2 1 2 2v3c0 1-1 2-2 2-2 1-4 1-6 0-1 0-2-1-2-2V9c0-1 1-2 2-2l1-2z" />
+              <circle cx="7.5" cy="10" r="1" fill="currentColor" />
+              <circle cx="10.5" cy="10" r="1" fill="currentColor" />
+            </svg>
+          </Link>
+
+          {/* X */}
+          <Link href="https://x.com" target="_blank" aria-label="X">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M3 3l12 12M15 3L3 15" />
+            </svg>
+          </Link>
+
         </div>
 
         {/* RIGHT: Avatar */}
         <div className="flex items-center">
           {avatarUrl ? (
-            <div className="h-9 w-9 rounded-[12px] overflow-hidden border border-white/20">
+            <div className="h-7 w-7 rounded-[10px] overflow-hidden border border-white/20">
               <img
                 src={avatarUrl}
                 alt="User"
@@ -60,7 +89,7 @@ export default function Nav() {
               />
             </div>
           ) : (
-            <div className="h-9 w-9 rounded-[12px] bg-zinc-700 border border-white/20" />
+            <div className="h-7 w-7 rounded-[10px] bg-zinc-700 border border-white/20" />
           )}
         </div>
 

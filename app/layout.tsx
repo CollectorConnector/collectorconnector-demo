@@ -1,5 +1,4 @@
 import "./globals.css";
-import Nav from "@/components/Nav";
 import type { ReactNode } from "react";
 
 export const metadata = {

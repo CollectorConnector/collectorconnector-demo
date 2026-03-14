@@ -107,17 +107,19 @@ export default function ProfilePage() {
 
             {/* Avatar */}
             <div className="flex items-center gap-5">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt="Avatar"
-                  className="h-20 w-20 rounded-full object-cover border border-white/20"
-                />
-              ) : (
-                <div className="h-20 w-20 rounded-full bg-zinc-700 flex items-center justify-center text-3xl font-bold text-zinc-300 border border-white/20">
-                  {displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <div className="h-16 w-16 rounded-[18px] overflow-hidden border border-white/20">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-zinc-700 flex items-center justify-center text-2xl font-bold text-zinc-300">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
 
               <div>
                 <h1 className="text-2xl font-semibold">{displayName}</h1>

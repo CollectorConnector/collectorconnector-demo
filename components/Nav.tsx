@@ -27,20 +27,20 @@ export default function Nav() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-      <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-8">
+      <div className="w-full max-w-7xl mx-auto h-16 px-4 sm:px-8 flex items-center justify-between">
 
-        {/* LEFT GROUP: Logo + Social Icons */}
-        <div className="flex items-center gap-6">
+        {/* LEFT GROUP: SML Logo + Social Icons */}
+        <div className="flex items-center gap-5">
 
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 min-w-0">
+          {/* SML Logo */}
+          <Link href="/" className="flex items-center">
             <Image
-              src="/CC-main-logo.png"
+              src="/CC-SML-Logo.png"
               alt="CollectorConnector"
-              width={180}
+              width={120}
               height={40}
               priority
-              className="w-auto h-8 object-contain select-none"
+              className="h-7 w-auto object-contain"
             />
           </Link>
 

@@ -6,72 +6,64 @@ import Image from "next/image";
 export default function Nav() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-      <div className="w-full max-w-7xl mx-auto h-16 px-4 sm:px-8 flex items-center">
+      <div className="w-full max-w-7xl mx-auto h-16 px-4 sm:px-8 flex items-center justify-between">
 
-        {/* LEFT GROUP: Main Logo */}
-        <div className="flex items-center gap-6 flex-nowrap">
-center">
+        {/* LEFT: Main Logo */}
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/CC-main-logo.png"
+            alt="CollectorConnector"
+            width={180}
+            height={40}
+            priority
+            className="h-8 w-auto object-contain"
+          />
+        </Link>
 
-        {/* RIGHT GROUP: Social Icons */}
-        <div className="flex items-center gap-6 flex-nowrap">
+        {/* RIGHT: Social Icons */}
+        <div className="flex items-center gap-4 text-zinc-300">
 
-          {/* Main CC Logo */}
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/CC-main-logo.png"
-              alt="CollectorConnector"
-              width={180}
-              height={40}
-              priority
-              className="h-8 w-auto object-contain shrink-0"
-            />
+          {/* Instagram */}
+          <Link href="https://instagram.com" target="_blank" aria-label="Instagram">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="2" y="2" width="14" height="14" rx="4" />
+              <circle cx="9" cy="9" r="3" />
+              <circle cx="13" cy="5" r="1" fill="currentColor" />
+            </svg>
           </Link>
 
-          {/* Social Icons */}
-          <div className="flex items-center gap-4 text-zinc-300 flex-nowrap">
+          {/* Facebook */}
+          <Link href="https://facebook.com" target="_blank" aria-label="Facebook">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M10 6h2V3h-2c-2 0-3 1-3 3v2H5v3h2v6h3v-6h2.2l.3-3H10V6z" />
+            </svg>
+          </Link>
 
-            {/* Instagram */}
-            <Link href="https://instagram.com" target="_blank" aria-label="Instagram">
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="2" y="2" width="14" height="14" rx="4" />
-                <circle cx="9" cy="9" r="3" />
-                <circle cx="13" cy="5" r="1" fill="currentColor" />
-              </svg>
-            </Link>
+          {/* Discord */}
+          <Link href="https://discord.com" target="_blank" aria-label="Discord">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M6 5c2-1 4-1 6 0l1 2c1 0 2 1 2 2v3c0 1-1 2-2 2-2 1-4 1-6 0-1 0-2-1-2-2V9c0-1 1-2 2-2l1-2z" />
+              <circle cx="7.5" cy="10" r="1" fill="currentColor" />
+              <circle cx="10.5" cy="10" r="1" fill="currentColor" />
+            </svg>
+          </Link>
 
-            {/* Facebook */}
-            <Link href="https://facebook.com" target="_blank" aria-label="Facebook">
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M10 6h2V3h-2c-2 0-3 1-3 3v2H5v3h2v6h3v-6h2.2l.3-3H10V6z" />
-              </svg>
-            </Link>
+          {/* X */}
+          <Link href="https://x.com" target="_blank" aria-label="X">
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M3 3l12 12M15 3L3 15" />
+            </svg>
+          </Link>
 
-            {/* Discord */}
-            <Link href="https://discord.com" target="_blank" aria-label="Discord">
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M6 5c2-1 4-1 6 0l1 2c1 0 2 1 2 2v3c0 1-1 2-2 2-2 1-4 1-6 0-1 0-2-1-2-2V9c0-1 1-2 2-2l1-2z" />
-                <circle cx="7.5" cy="10" r="1" fill="currentColor" />
-                <circle cx="10.5" cy="10" r="1" fill="currentColor" />
-              </svg>
-            </Link>
+          {/* eBay */}
+          <Link href="https://ebay.com" target="_blank" aria-label="eBay">
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.4">
+              <path d="M3 10c0-3 2-5 5-5 2 0 3 .8 4 2l-1.5.8c-.5-.8-1.2-1.3-2.5-1.3-2 0-3.5 1.6-3.5 3.5s1.5 3.5 3.5 3.5c1.3 0 2-.5 2.5-1.3l1.5.8c-1 1.2-2 2-4 2-3 0-5-2-5-5z" />
+              <path d="M12 7h2v6h-2z" />
+              <path d="M14 10c0-2 1.5-3 3-3s3 1 3 3v3h-2v-3c0-.8-.5-1.5-1.5-1.5S15 9.2 15 10v3h-2v-3z" />
+            </svg>
+          </Link>
 
-            {/* X */}
-            <Link href="https://x.com" target="_blank" aria-label="X">
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M3 3l12 12M15 3L3 15" />
-              </svg>
-            </Link>
-
-            {/* eBay */}
-            <Link href="https://ebay.com" target="_blank" aria-label="eBay">
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.4">
-                <path d="M3 10c0-3 2-5 5-5 2 0 3 .8 4 2l-1.5.8c-.5-.8-1.2-1.3-2.5-1.3-2 0-3.5 1.6-3.5 3.5s1.5 3.5 3.5 3.5c1.3 0 2-.5 2.5-1.3l1.5.8c-1 1.2-2 2-4 2-3 0-5-2-5-5z" />
-                <path d="M12 7h2v6h-2z" />
-                <path d="M14 10c0-2 1.5-3 3-3s3 1 3 3v3h-2v-3c0-.8-.5-1.5-1.5-1.5S15 9.2 15 10v3h-2v-3z" />
-              </svg>
-            </Link>
-
-          </div>
         </div>
 
       </div>

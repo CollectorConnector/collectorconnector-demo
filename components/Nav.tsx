@@ -8,7 +8,11 @@ export default function Nav() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
       <div className="w-full max-w-7xl mx-auto h-16 px-4 sm:px-8 flex items-center">
 
-        {/* LEFT GROUP: Main Logo + Social Icons */}
+        {/* LEFT GROUP: Main Logo */}
+        <div className="flex items-center gap-6 flex-nowrap">
+center">
+
+        {/* RIGHT GROUP: Social Icons */}
         <div className="flex items-center gap-6 flex-nowrap">
 
           {/* Main CC Logo */}

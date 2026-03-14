@@ -2,50 +2,29 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
 
 export default function Nav() {
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadAvatar() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase
-        .from("profiles")
-        .select("avatar_url")
-        .eq("id", user.id)
-        .single();
-
-      setAvatarUrl(data?.avatar_url || null);
-    }
-
-    loadAvatar();
-  }, []);
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-      <div className="w-full max-w-7xl mx-auto h-16 px-4 sm:px-8 flex items-center justify-between">
+      <div className="w-full max-w-7xl mx-auto h-16 px-4 sm:px-8 flex items-center">
 
-        {/* LEFT GROUP: SML Logo + Social Icons */}
-        <div className="flex items-center gap-5">
+        {/* LEFT GROUP: Main Logo + Social Icons */}
+        <div className="flex items-center gap-6 flex-nowrap">
 
-          {/* SML Logo */}
+          {/* Main CC Logo */}
           <Link href="/" className="flex items-center">
             <Image
-              src="/CC-SML-Logo.png"
+              src="/CC-main-logo.png"
               alt="CollectorConnector"
-              width={120}
+              width={180}
               height={40}
               priority
-              className="h-7 w-auto object-contain"
+              className="h-8 w-auto object-contain shrink-0"
             />
           </Link>
 
           {/* Social Icons */}
-          <div className="flex items-center gap-4 text-zinc-300">
+          <div className="flex items-center gap-4 text-zinc-300 flex-nowrap">
 
             {/* Instagram */}
             <Link href="https://instagram.com" target="_blank" aria-label="Instagram">
@@ -89,21 +68,6 @@ export default function Nav() {
             </Link>
 
           </div>
-        </div>
-
-        {/* RIGHT: Avatar */}
-        <div className="flex items-center">
-          {avatarUrl ? (
-            <div className="h-7 w-7 rounded-[10px] overflow-hidden border border-white/20">
-              <img
-                src={avatarUrl}
-                alt="User"
-                className="h-full w-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="h-7 w-7 rounded-[10px] bg-zinc-700 border border-white/20" />
-          )}
         </div>
 
       </div>

@@ -45,7 +45,7 @@ export default function Nav() {
           </Link>
 
           {/* Social Icons */}
-          <div className="flex items-center gap-4 text-zinc-400">
+          <div className="flex items-center gap-4 text-zinc-300">
 
             {/* Instagram */}
             <Link href="https://instagram.com" target="_blank" aria-label="Instagram">

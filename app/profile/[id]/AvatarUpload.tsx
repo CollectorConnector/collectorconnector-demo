@@ -77,7 +77,7 @@ export default function AvatarUpload({
   }
 
   const defaultAvatar = (
-    <div className="w-32 h-32 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center text-gray-500 text-xl">
+    <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center text-gray-500 text-xl">
       No photo
     </div>
   );

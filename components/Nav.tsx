@@ -1,72 +1,128 @@
+// @/components/Nav.tsx
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export default function Nav() {
+  const pathname = usePathname();
+
+  // You can pass user data via context/provider later; for now hardcoded demo
+  const avatarUrl = "/default-avatar.png"; // replace with real logic when you have user state
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-      <div className="w-full max-w-7xl mx-auto h-16 px-4 sm:px-8 flex items-center justify-between">
-
-        {/* LEFT: Main Logo */}
-        <Link href="/" className="flex items-center">
-          <Image
-            src="/CC-main-logo.png"
-            alt="CollectorConnector"
-            width={180}
-            height={40}
-            priority
-            className="h-8 w-auto object-contain"
-          />
-        </Link>
-
-        {/* RIGHT: Social Icons */}
-        <div className="flex items-center gap-4 text-zinc-300">
-
-          {/* Instagram */}
-          <Link href="https://instagram.com" target="_blank" aria-label="Instagram">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <rect x="2" y="2" width="14" height="14" rx="4" />
-              <circle cx="9" cy="9" r="3" />
-              <circle cx="13" cy="5" r="1" fill="currentColor" />
-            </svg>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-4">
+          {/* LEFT: Logo + subtitle */}
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/CC-main-logo.png"
+              alt="CollectorConnector"
+              width={180}
+              height={40}
+              priority
+              className="h-7 sm:h-8 w-auto object-contain"
+            />
+            <div className="hidden sm:block leading-tight">
+              <div className="text-base font-semibold tracking-tight text-white">
+                COLLECTORCONNECTOR
+              </div>
+              <div className="text-xs text-zinc-500">
+                A home for collectors
+              </div>
+            </div>
           </Link>
 
-          {/* Facebook */}
-          <Link href="https://facebook.com" target="_blank" aria-label="Facebook">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M10 6h2V3h-2c-2 0-3 1-3 3v2H5v3h2v6h3v-6h2.2l.3-3H10V6z" />
-            </svg>
-          </Link>
+          {/* CENTER: Pill nav links */}
+          <nav className="hidden md:flex items-center gap-2">
+            <NavPill href="/dashboard" label="Dashboard" active={pathname === "/dashboard"} />
+            <NavPill href="/profile/[id]" label="Profile" active={pathname.startsWith("/profile")} />
 
-          {/* Discord */}
-          <Link href="https://discord.com" target="_blank" aria-label="Discord">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M6 5c2-1 4-1 6 0l1 2c1 0 2 1 2 2v3c0 1-1 2-2 2-2 1-4 1-6 0-1 0-2-1-2-2V9c0-1 1-2 2-2l1-2z" />
-              <circle cx="7.5" cy="10" r="1" fill="currentColor" />
-              <circle cx="10.5" cy="10" r="1" fill="currentColor" />
-            </svg>
-          </Link>
+            {/* Grouped external links in rounded container */}
+            <div className="ml-4 flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2 py-1">
+              <NavPill href="#" label="eBay" subtle />
+              <NavPill href="#" label="PSA" subtle />
+              <NavPill href="#" label="Goldin" subtle />
+              <NavPill href="#" label="Whatnot" subtle />
+              <NavPill href="#" label="Sports Card Investor" subtle />
+            </div>
+          </nav>
 
-          {/* X */}
-          <Link href="https://x.com" target="_blank" aria-label="X">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M3 3l12 12M15 3L3 15" />
-            </svg>
-          </Link>
+          {/* RIGHT: DEMO + version + avatar */}
+          <div className="flex items-center gap-3 sm:gap-5">
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="rounded-full bg-white/5 border border-white/10 px-2.5 py-0.5 text-xs uppercase tracking-wider text-zinc-300">
+                DEMO
+              </span>
+              <span className="text-xs text-zinc-500">v0.7.4</span>
+            </div>
 
-          {/* eBay */}
-          <Link href="https://ebay.com" target="_blank" aria-label="eBay">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.4">
-              <path d="M3 10c0-3 2-5 5-5 2 0 3 .8 4 2l-1.5.8c-.5-.8-1.2-1.3-2.5-1.3-2 0-3.5 1.6-3.5 3.5s1.5 3.5 3.5 3.5c1.3 0 2-.5 2.5-1.3l1.5.8c-1 1.2-2 2-4 2-3 0-5-2-5-5z" />
-              <path d="M12 7h2v6h-2z" />
-              <path d="M14 10c0-2 1.5-3 3-3s3 1 3 3v3h-2v-3c0-.8-.5-1.5-1.5-1.5S15 9.2 15 10v3h-2v-3z" />
-            </svg>
-          </Link>
-
+            <div className="h-8 w-8 rounded-full overflow-hidden border border-white/20 shadow-sm">
+              {avatarUrl ? (
+                <Image
+                  src={avatarUrl}
+                  alt="User avatar"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-400">
+                  C
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-
       </div>
     </header>
+  );
+}
+
+// Reusable pill link component
+function NavPill({
+  href,
+  label,
+  active = false,
+  subtle = false,
+}: {
+  href: string;
+  label: string;
+  active?: boolean;
+  subtle?: boolean;
+}) {
+  const baseClasses = "px-3.5 py-1.5 text-sm font-medium rounded-full transition-all whitespace-nowrap";
+  
+  if (active) {
+    return (
+      <Link
+        href={href}
+        className={`${baseClasses} bg-blue-600/20 text-blue-300 border border-blue-500/40 hover:bg-blue-600/30`}
+      >
+        {label}
+      </Link>
+    );
+  }
+
+  if (subtle) {
+    return (
+      <Link
+        href={href}
+        className={`${baseClasses} bg-transparent text-zinc-300 border border-transparent hover:bg-white/5 hover:border-white/10`}
+      >
+        {label}
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className={`${baseClasses} bg-white/5 text-zinc-200 border border-white/10 hover:bg-white/10 hover:border-white/20`}
+    >
+      {label}
+    </Link>
   );
 }

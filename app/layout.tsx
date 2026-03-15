@@ -1,5 +1,5 @@
 import "./globals.css";
-import Header from "@/components/Header";
+import Nav from "@/components/Nav";
 import type { ReactNode } from "react";
 
 export const metadata = {
@@ -12,9 +12,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body className="bg-black text-white">
 
-        <Header />
+        <Nav />
 
-        <main className="pt-14">
+        <main className="pt-16">
           {children}
         </main>
 

@@ -8,9 +8,9 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
 
-/* ───────────────────────────────────────────────
+/* -------------------------------------------------------
    Types
-─────────────────────────────────────────────── */
+------------------------------------------------------- */
 type Profile = {
   id: string;
   avatar_url?: string | null;
@@ -24,16 +24,16 @@ type Profile = {
 
 type Collection = {
   id: string;
-  title: string; // ← using your real column name from earlier
+  title: string;
 };
 
-/* ───────────────────────────────────────────────
+/* -------------------------------------------------------
    Page
-─────────────────────────────────────────────── */
+------------------------------------------------------- */
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const userId = Array.isArray(params?.id) ? params?.id[0] : params?.id || "";
+  const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -51,11 +51,11 @@ export default function ProfilePage() {
       try {
         setLoading(true);
 
-        // ownership
+        // Ownership
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id === userId) setIsOwnProfile(true);
 
-        // profile
+        // Profile
         const { data: pData, error: pErr } = await supabase
           .from("profiles")
           .select("*")
@@ -63,10 +63,10 @@ export default function ProfilePage() {
           .single();
         if (pErr) throw pErr;
 
-        // collections (for pills)
+        // Collections (for pills)
         const { data: cData } = await supabase
           .from("collections")
-          .select("id,title")
+          .select("id, title")
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
@@ -114,27 +114,25 @@ export default function ProfilePage() {
     );
   }
 
-  /* ——— Simple defaults for the mock ——— */
   const location = profile.location || "Swindon, UK";
   const bio =
     profile.bio ||
     "Collector Connector CEO, Collects Cards, Comics, Sneakers, Beanie Babies & Coca-Cola";
 
-  // Top four pills from collections (fallback set if none)
+  // Top 4 collections for pills (fallbacks if none)
   const pillTitles =
-    collections.slice(0, 4).map((c) => c.title) ||
-    ["Sports Cards", "TCG Cards", "Comic Books", "Sneakers"];
+    (collections.length ? collections.slice(0, 4).map((c) => c.title) : [])
+      || ["Sports Cards", "TCG Cards", "Comic Books", "Sneakers"];
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Top bar header (page‑local, not global) */}
       <HeaderBar />
 
       <main className="max-w-6xl mx-auto px-6 pb-24">
-        {/* ——— Centered avatar + name block ——— */}
+        {/* Avatar + Name block */}
         <section className="pt-14 text-center">
           <div className="relative inline-block">
-            {/* avatar frame */}
+            {/* Avatar frame */}
             <div className="w-40 h-40 rounded-lg border border-white/30 mx-auto overflow-hidden bg-zinc-900">
               {profile.avatar_url ? (
                 <img
@@ -149,29 +147,28 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* diagonal ribbon */}
+            {/* Diagonal label */}
             <div className="absolute -top-3 -left-6 -rotate-12 select-none">
               <div className="border border-white/30 text-[11px] text-zinc-300 px-3 py-1 bg-black rounded">
                 Avatar (Profile Pic)
               </div>
             </div>
 
-            {/* CC badge circle */}
+            {/* CC badge */}
             <div className="absolute -right-3 bottom-2 h-8 w-8 rounded-full border border-white/40 bg-black flex items-center justify-center text-xs">
               CC
             </div>
           </div>
 
-          {/* name + subtitle + location + bio */}
+          {/* Identity */}
           <h1 className="mt-6 text-3xl font-semibold tracking-tight">{displayName}</h1>
           <div className="mt-1 text-sm text-zinc-400">Collector Connector 1</div>
           <div className="mt-1 text-sm text-zinc-400">{location}</div>
-
           <div className="mt-3 text-sm text-zinc-300 max-w-2xl mx-auto leading-relaxed">
             Bio: {bio}
           </div>
 
-          {/* Follow button */}
+          {/* Follow */}
           {!isOwnProfile && (
             <button
               type="button"
@@ -181,11 +178,11 @@ export default function ProfilePage() {
             </button>
           )}
 
-          {/* thin divider */}
+          {/* Divider */}
           <div className="mt-8 h-px w-64 mx-auto bg-white/30" />
         </section>
 
-        {/* ——— Pills row ——— */}
+        {/* Pills row */}
         <section className="mt-8 flex flex-wrap items-center justify-center gap-3">
           {(pillTitles.length ? pillTitles : ["Sports Cards", "TCG Cards", "Comic Books", "Sneakers"]).map(
             (t, i) => (
@@ -199,12 +196,12 @@ export default function ProfilePage() {
           )}
         </section>
 
-        {/* ——— Collections Gallery ——— */}
+        {/* Collections Gallery */}
         <section className="mt-10">
           <h2 className="text-xl font-semibold text-center mb-5">Collections Gallery</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Niche Families list card */}
+            {/* Niche families */}
             <div className="border border-white/30 rounded-lg p-5">
               <h3 className="font-medium mb-3">Niche Families</h3>
               <ul className="text-sm text-zinc-300 space-y-1">
@@ -221,7 +218,7 @@ export default function ProfilePage() {
               <div className="text-6xl tracking-tight">CC</div>
             </div>
 
-            {/* News card */}
+            {/* News */}
             <div className="border border-white/30 rounded-lg p-5">
               <h3 className="font-medium mb-2">News + Upcoming Events</h3>
               <p className="text-sm text-zinc-300">
@@ -232,13 +229,13 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* ——— Live Feed ——— */}
+        {/* Live Feed */}
         <section className="mt-12">
           <div className="border border-white/30 rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Live Feed</h2>
 
             <div className="flex items-start gap-4">
-              {/* small initials circle */}
+              {/* initials circle */}
               <div className="h-12 w-12 rounded-full border border-white/30 flex items-center justify-center text-sm">
                 RC
               </div>
@@ -257,44 +254,43 @@ export default function ProfilePage() {
         </section>
       </main>
 
-      {/* Your site footer component */}
       <Footer />
     </div>
   );
 }
 
-/* ───────────────────────────────────────────────
-   Header Bar — desktop-first, page‑local only
-   (brand text + centered search + right socials)
-─────────────────────────────────────────────── */
+/* -------------------------------------------------------
+   HeaderBar — NO AVATAR, NO LOGO. Full-width desktop bar.
+   Left: brand text, Center: search stub, Right: socials.
+------------------------------------------------------- */
 function HeaderBar() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/15">
         <div className="w-full h-12 flex items-center justify-between px-4">
-          {/* left: brand text */}
-          <div className="leading-tight">
+          {/* Left: brand text */}
+          <div className="leading-tight select-none">
             <div className="text-[13px] font-semibold tracking-wide">Collector Connector</div>
             <div className="text-[10px] text-zinc-500 -mt-0.5">where collectors meet</div>
           </div>
 
-          {/* center: search bar */}
+          {/* Center: search stub */}
           <div className="flex-1 max-w-md mx-4">
-            <div className="w-full h-8 rounded-md border border-white/20 px-3 text-[13px] flex items-center text-zinc-400">
+            <div className="w-full h-8 rounded-md border border-white/20 px-3 text-[13px] flex items-center text-zinc-400 select-none">
               search bar
             </div>
           </div>
 
-          {/* right: socials row */}
-          <nav className="flex items-center gap-4 text-[13px]">
-            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:opacity-80">insta</a>
-            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:opacity-80">Discord</a>
-            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:opacity-80">X</a>
-            <a href="https://www.whatnot.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:opacity-80">whatnot</a>
+          {/* Right: socials */}
+          <nav className="flex items-center gap-3 text-[13px]">
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-white">insta</a>
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-white">Discord</a>
+            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-white">X</a>
+            <a href="https://www.whatnot.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-white">whatnot</a>
           </nav>
         </div>
       </header>
-      {/* spacer */}
+      {/* spacer to offset fixed header height */}
       <div className="h-12" />
     </>
   );

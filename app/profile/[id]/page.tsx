@@ -108,11 +108,11 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white font-sans">
       <Header />
 
-      <main className="px-5 sm:px-8 pt-6 pb-20 max-w-5xl mx-auto">
-        {/* Avatar + Profile info – all centred */}
-        <div className="text-center mb-10">
-          <div className="relative inline-block mb-5">
-            <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-xl overflow-hidden border-4 border-zinc-800 shadow-2xl mx-auto">
+      <main className="px-4 sm:px-6 pt-6 pb-24 max-w-5xl mx-auto">
+        {/* Centred profile block */}
+        <div className="text-center mb-12">
+          <div className="relative inline-block mb-6">
+            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl overflow-hidden border-4 border-zinc-800 shadow-2xl mx-auto">
               {profile.avatar_url ? (
                 <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -122,13 +122,13 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Diagonal "Avatar (Profile Pic)" text */}
-            <div className="absolute -top-1 -right-4 rotate-12 bg-zinc-900 border border-zinc-700 text-xs px-4 py-1 rounded-md text-zinc-400">
+            {/* Diagonal text */}
+            <div className="absolute -top-2 -right-8 rotate-12 bg-zinc-900 border border-zinc-700 text-xs px-4 py-1 rounded-md text-zinc-400">
               Avatar (Profile Pic)
             </div>
 
             {/* CC badge */}
-            <div className="absolute bottom-3 right-3 w-9 h-9 bg-black rounded-full flex items-center justify-center text-white font-bold border-2 border-zinc-700">
+            <div className="absolute -bottom-2 right-0 w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-bold border-2 border-zinc-700">
               CC
             </div>
           </div>
@@ -144,29 +144,29 @@ export default function ProfilePage() {
           </p>
 
           {!isOwnProfile && (
-            <button className="mt-8 px-12 py-4 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition text-lg">
+            <button className="mt-8 px-12 py-4 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition text-lg mx-auto block">
               Follow
             </button>
           )}
         </div>
 
-        {/* Stats – centred */}
+        {/* Centred stats */}
         <div className="flex flex-wrap justify-center gap-6 mb-14">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-10 py-5 text-center min-w-[160px]">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-5 text-center min-w-[160px]">
             <div className="text-4xl font-bold">{profile.items_count || 0}</div>
             <div className="text-zinc-500 text-base">Items</div>
           </div>
-          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-10 py-5 text-center min-w-[160px]">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-5 text-center min-w-[160px]">
             <div className="text-4xl font-bold">{collections.length}</div>
             <div className="text-zinc-500 text-base">Collections</div>
           </div>
-          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-10 py-5 text-center min-w-[160px]">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-5 text-center min-w-[160px]">
             <div className="text-4xl font-bold">90.8</div>
             <div className="text-zinc-500 text-base">Rarity</div>
           </div>
         </div>
 
-        {/* Collections pills – centred */}
+        {/* Centred collections pills */}
         <h2 className="text-3xl font-bold mb-6 text-center">Collections</h2>
         <div className="flex flex-wrap justify-center gap-4 mb-16">
           {collections.length > 0 ? (
@@ -185,19 +185,19 @@ export default function ProfilePage() {
           {isOwnProfile && (
             <Link
               href="/create-collection"
-              className="px-8 py-4 bg-white/10 border border-white/20 rounded-full text-base font-medium hover:bg-white/15 transition flex items-center gap-2"
+              className="px-8 py-4 bg-white/10 border border-white/20 rounded-full text-base font-medium hover:bg-white/15 transition flex items-center gap-2 mx-auto"
             >
               + Create Collection
             </Link>
           )}
         </div>
 
-        {/* Collections Gallery – centred */}
+        {/* Centred gallery */}
         <h2 className="text-3xl font-bold mb-8 text-center">Collections Gallery</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 text-center">
             <h3 className="text-xl font-semibold mb-5">Niche Families</h3>
-            <ul className="space-y-3 text-base text-zinc-300">
+            <ul className="space-y-3 text-sm text-zinc-300 inline-block text-left">
               <li>1,500 - Sports Cards</li>
               <li>1,321 - TCG Cards</li>
               <li>1,525 - Comics</li>
@@ -211,7 +211,7 @@ export default function ProfilePage() {
             <div className="text-8xl font-black text-zinc-700">CC</div>
           </div>
 
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 text-center">
             <h3 className="text-xl font-semibold mb-5">News + Upcoming Events</h3>
             <p className="text-zinc-400 text-base">
               New feature launch coming soon...<br />
@@ -220,11 +220,11 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Live Feed – centred */}
+        {/* Centred live feed */}
         <h2 className="text-3xl font-bold mt-20 mb-8 text-center">Live Feed</h2>
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 max-w-4xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-start gap-6">
-            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-4xl text-zinc-500 shrink-0 mx-auto sm:mx-0">
+          <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
+            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-4xl text-zinc-500 shrink-0">
               RC
             </div>
             <div className="text-center sm:text-left">
@@ -243,18 +243,18 @@ export default function ProfilePage() {
   );
 }
 
-// Full-width header – logo now considerably smaller
+// Full-width header – logo now tiny
 function Header() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
         <div className="w-full px-5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
-          {/* Left – downsized logo + tagline */}
+          {/* Left – tiny logo */}
           <div className="flex items-center gap-3">
             <img
               src="/CC-main-logo.png"
               alt="Collector Connector"
-              className="h-5 max-w-[80px] sm:h-6 sm:max-w-[100px] w-auto object-contain scale-85 sm:scale-95"
+              className="h-4 max-w-[70px] sm:h-5 sm:max-w-[90px] w-auto object-contain scale-75 sm:scale-90"
             />
             <div className="hidden sm:block text-xs text-gray-400">
               where collectors meet

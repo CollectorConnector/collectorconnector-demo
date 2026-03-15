@@ -183,25 +183,15 @@ export default function ProfilePage() {
 function ProfileHeader() {
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-        <div className="w-full px-5 sm:px-8 h-16 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
+        <div className="w-full px-5 sm:px-8 h-14 flex items-center justify-between">
 
-          {/* Logo + tagline */}
-          <div className="flex items-center gap-3">
-            <img
-              src="/CC-main-logo.png"
-              alt="CollectorConnector"
-              className="h-8 w-auto object-contain"
-            />
-            <div className="hidden sm:block leading-tight">
-              <div className="text-sm font-semibold tracking-tight text-white">
-                COLLECTOR CONNECTOR
-              </div>
-              <div className="text-[10px] text-zinc-500 -mt-0.5">
-                where collectors meet
-              </div>
-            </div>
-          </div>
+          {/* Small CC Logo */}
+          <img
+            src="/CC-main-logo.png"
+            alt="CollectorConnector"
+            className="h-6 w-auto object-contain"
+          />
 
           {/* Search bar */}
           <div className="flex-1 hidden sm:flex mx-6">
@@ -223,7 +213,7 @@ function ProfileHeader() {
         </div>
       </header>
 
-      <div className="h-16" />
+      <div className="h-14" />
     </>
   );
 }

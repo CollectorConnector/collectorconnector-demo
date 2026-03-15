@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
 
+  // LOAD DATA
   useEffect(() => {
     if (!userId) {
       router.replace("/not-found");
@@ -57,14 +58,13 @@ export default function ProfilePage() {
 
         const { data: collData } = await supabase
           .from("collections")
-          .select("id, title") // ← fixed: using your actual column "title"
+          .select("id, title")
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
         setProfile(profileData);
         setCollections(collData || []);
       } catch (err: any) {
-        console.error(err);
         setError(err.message || "Failed to load profile");
       } finally {
         setLoading(false);
@@ -83,9 +83,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-black text-white">
         <Header />
-        <div className="flex items-center justify-center h-[80vh] text-xl">
-          Loading...
-        </div>
+        <div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div>
         <Footer />
       </div>
     );
@@ -109,12 +107,13 @@ export default function ProfilePage() {
       <Header />
 
       <main className="px-5 sm:px-8 pt-6 pb-20 max-w-6xl mx-auto">
-        {/* Profile header */}
+
+        {/* PROFILE HEADER CARD */}
         <div className="text-center mb-10">
           <div className="relative inline-block mb-4">
             <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-4 border-zinc-800 shadow-2xl mx-auto">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                <img src={profile.avatar_url} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-4xl text-zinc-600">
                   {displayName.charAt(0)}
@@ -122,7 +121,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Diagonal "Avatar (Profile Pic)" text */}
+            {/* Rotated text */}
             <div className="absolute -top-2 -right-6 rotate-12 bg-zinc-900 border border-zinc-700 text-xs px-3 py-1 rounded-md text-zinc-400">
               Avatar (Profile Pic)
             </div>
@@ -150,24 +149,16 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Stats */}
+        {/* STATS */}
         <div className="flex flex-wrap justify-center gap-6 mb-12">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-4 text-center min-w-[140px]">
-            <div className="text-3xl font-bold">{profile.items_count || 0}</div>
-            <div className="text-zinc-500 text-sm">Items</div>
-          </div>
-          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-4 text-center min-w-[140px]">
-            <div className="text-3xl font-bold">{collections.length}</div>
-            <div className="text-zinc-500 text-sm">Collections</div>
-          </div>
-          <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-4 text-center min-w-[140px]">
-            <div className="text-3xl font-bold">90.8</div>
-            <div className="text-zinc-500 text-sm">Rarity</div>
-          </div>
+          <Stat title="Items" value={profile.items_count || 0} />
+          <Stat title="Collections" value={collections.length} />
+          <Stat title="Rarity" value={90.8} />
         </div>
 
-        {/* Collections pills – now dynamic from your Supabase table */}
+        {/* COLLECTION PILLS */}
         <h2 className="text-2xl font-bold mb-4 text-center">Collections</h2>
+
         <div className="flex flex-wrap justify-center gap-3 mb-16">
           {collections.length > 0 ? (
             collections.map((col) => (
@@ -185,25 +176,26 @@ export default function ProfilePage() {
           {isOwnProfile && (
             <Link
               href="/create-collection"
-              className="px-6 py-3 bg-white/10 border border-white/20 rounded-full text-sm font-medium hover:bg-white/15 transition flex items-center gap-2"
+              className="px-6 py-3 bg-white/10 border border-white/20 rounded-full text-sm font-medium hover:bg-white/15 transition"
             >
               + Create Collection
             </Link>
           )}
         </div>
 
-        {/* Collections Gallery */}
+        {/* COLLECTIONS GALLERY */}
         <h2 className="text-2xl font-bold mb-6 text-center">Collections Gallery</h2>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Niche Families</h3>
             <ul className="space-y-2 text-sm text-zinc-300">
-              <li>1,500 - Sports Cards</li>
-              <li>1,321 - TCG Cards</li>
-              <li>1,525 - Comics</li>
-              <li>1,778 - Sneakers</li>
-              <li>1,776 - Beanie Babies</li>
-              <li>1,323 - Beanie Babies</li>
+              <li>1500 - Sports Cards</li>
+              <li>1321 - TCG Cards</li>
+              <li>1525 - Comics</li>
+              <li>1778 - Sneakers</li>
+              <li>1776 - Beanie Babies</li>
+              <li>1323 - Coca-Cola</li>
             </ul>
           </div>
 
@@ -214,14 +206,15 @@ export default function ProfilePage() {
           <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">News + Upcoming Events</h3>
             <p className="text-zinc-400 text-sm">
-              New feature launch coming soon...<br />
+              New feature launch coming soon…<br />
               Community meetup – London – April 2026
             </p>
           </div>
         </div>
 
-        {/* Live Feed */}
+        {/* LIVE FEED */}
         <h2 className="text-2xl font-bold mt-16 mb-6 text-center">Live Feed</h2>
+
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 max-w-3xl mx-auto">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-zinc-800 flex items-center justify-center text-2xl text-zinc-500">
@@ -230,12 +223,14 @@ export default function ProfilePage() {
             <div>
               <p className="font-medium text-lg">Richard House</p>
               <p className="text-zinc-500 text-sm">New upload</p>
+
               <div className="mt-3 p-4 bg-black rounded-lg border border-zinc-800">
                 (RH) - New Rare Card: Shohei Ohtani Rookie
               </div>
             </div>
           </div>
         </div>
+
       </main>
 
       <Footer />
@@ -243,39 +238,69 @@ export default function ProfilePage() {
   );
 }
 
-// Full-width header – matches your mock
+/* HEADER — NO LOGO — DESKTOP-FIRST */
 function Header() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-        <div className="w-full px-5 sm:px-8 h-14 flex items-center justify-between">
-          {/* Left – logo + tagline */}
-          <div className="flex items-center gap-4">
-            <img src="/CC-main-logo.png" alt="Collector Connector" className="h-7 w-auto object-contain" />
-            <div className="hidden sm:block text-sm text-gray-400">
-              where collectors meet
+        <div className="w-full px-8 h-16 flex items-center justify-between">
+
+          {/* LEFT: no logo, text only */}
+          <div className="flex items-center gap-6">
+            <div className="leading-tight">
+              <div className="text-sm font-semibold tracking-wide text-white">
+                COLLECTORCONNECTOR
+              </div>
+              <div className="text-[11px] text-zinc-500">
+                A home for collectors
+              </div>
             </div>
+
+            <nav className="flex items-center gap-3">
+              /dashboard
+              <HeaderPill href="#" label="Profile" active />
+            </nav>
           </div>
 
-          {/* Center – search bar */}
-          <div className="hidden md:flex flex-1 justify-center max-w-xl">
-            <div className="w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-full px-5 py-2 text-sm text-zinc-400">
-              Search collections, users...
-            </div>
+          {/* RIGHT: avatar placeholder */}
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-zinc-700 border border-white/15" />
           </div>
 
-          {/* Right – social icons */}
-          <div className="flex items-center gap-5 text-zinc-400">
-            <a href="#" aria-label="Instagram">insta</a>
-            <a href="#" aria-label="Facebook">f</a>
-            <a href="#" aria-label="Discord">Disord</a>
-            <a href="#" aria-label="X">X</a>
-            <a href="#" aria-label="Whatnot">whatnot</a>
-          </div>
         </div>
       </header>
 
-      <div className="h-14" />
+      <div className="h-16" />
     </>
+  );
+}
+
+/* REUSABLE PILL BUTTON */
+function HeaderPill({
+  href,
+  label,
+  active = false,
+}: {
+  href: string;
+  label: string;
+  active?: boolean;
+}) {
+  const base =
+    "px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors";
+  const activeStyle =
+    "bg-white/10 text-zinc-100 border border-white/20 hover:bg-white/15";
+  const normalStyle =
+    "bg-white/5 text-zinc-200 border border-white/10 hover:bg-white/10 hover:border-white/20";
+
+  return <Link href={href} className={`${base} ${active ? activeStyle : normalStyle}`}>{label}</Link>;
+}
+
+/* STAT CIRCLE PILL */
+function Stat({ title, value }: { title: string; value: number }) {
+  return (
+    <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-4 text-center min-w-[140px]">
+      <div className="text-3xl font-bold">{value}</div>
+      <div className="text-zinc-500 text-sm">{title}</div>
+    </div>
   );
 }

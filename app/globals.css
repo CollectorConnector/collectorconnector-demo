@@ -1,1 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Black background everywhere */
+html, body {
+  background: #000;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+/* Apple-style system font */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove blue link styling */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+a:hover {
+  color: #e5e5e5;
+}
 

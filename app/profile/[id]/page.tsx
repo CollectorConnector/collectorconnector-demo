@@ -92,7 +92,7 @@ export default function ProfilePage() {
           <img
             src={profile.avatar_url || "/default-avatar.png"}
             alt="Avatar"
-            className="w-28 h-28 rounded-full mx-auto mb-4 object-cover border border-white/20"
+            className="w-16 h-16 rounded-full mx-auto mb-4 object-cover border border-white/20"
           />
 
           <h1 className="text-3xl font-bold">{displayName}</h1>

@@ -34,7 +34,6 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-  // LOAD DATA
   useEffect(() => {
     if (!userId) {
       router.replace("/not-found");
@@ -82,7 +81,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Header />
+        <Header userId={userId} />
         <div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div>
         <Footer />
       </div>
@@ -92,7 +91,7 @@ export default function ProfilePage() {
   if (error || !profile) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Header />
+        <Header userId={userId} />
         <div className="flex flex-col items-center justify-center h-[80vh]">
           <h1 className="text-3xl mb-4">Error</h1>
           <p className="text-white/70">{error || "Profile not found"}</p>
@@ -104,7 +103,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
-      <Header />
+      <Header userId={userId} />
 
       <main className="px-5 sm:px-8 pt-6 pb-20 max-w-6xl mx-auto">
 
@@ -176,7 +175,7 @@ export default function ProfilePage() {
           {isOwnProfile && (
             <Link
               href="/create-collection"
-              className="px-6 py-3 bg-white/10 border border-white/20 rounded-full text-sm font-medium hover:bg-white/15 transition"
+              className="px-6 py-3 bg-white/10 border border-white/20 rounded-full text-sm font-medium hover:bg-white/15 transition flex items-center gap-2"
             >
               + Create Collection
             </Link>
@@ -187,50 +186,15 @@ export default function ProfilePage() {
         <h2 className="text-2xl font-bold mb-6 text-center">Collections Gallery</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Niche Families</h3>
-            <ul className="space-y-2 text-sm text-zinc-300">
-              <li>1500 - Sports Cards</li>
-              <li>1321 - TCG Cards</li>
-              <li>1525 - Comics</li>
-              <li>1778 - Sneakers</li>
-              <li>1776 - Beanie Babies</li>
-              <li>1323 - Coca-Cola</li>
-            </ul>
-          </div>
-
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 flex items-center justify-center">
-            <div className="text-7xl font-black text-zinc-700">CC</div>
-          </div>
-
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">News + Upcoming Events</h3>
-            <p className="text-zinc-400 text-sm">
-              New feature launch coming soon…<br />
-              Community meetup – London – April 2026
-            </p>
-          </div>
+          <GalleryCard />
+          <GalleryLogo />
+          <GalleryNews />
         </div>
 
         {/* LIVE FEED */}
         <h2 className="text-2xl font-bold mt-16 mb-6 text-center">Live Feed</h2>
 
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 max-w-3xl mx-auto">
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-full bg-zinc-800 flex items-center justify-center text-2xl text-zinc-500">
-              RC
-            </div>
-            <div>
-              <p className="font-medium text-lg">Richard House</p>
-              <p className="text-zinc-500 text-sm">New upload</p>
-
-              <div className="mt-3 p-4 bg-black rounded-lg border border-zinc-800">
-                (RH) - New Rare Card: Shohei Ohtani Rookie
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <LiveFeed />
       </main>
 
       <Footer />
@@ -238,35 +202,46 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER — NO LOGO — DESKTOP-FIRST */
-function Header() {
+/* ───────────────────────────────────────────────
+   HEADER — NO LOGO, NO AVATAR, FULL-WIDTH
+   ─────────────────────────────────────────────── */
+function Header({ userId }: { userId: string }) {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-        <div className="w-full px-8 h-16 flex items-center justify-between">
+        <div className="w-full px-8">
+          <div className="flex h-16 items-center justify-between gap-8">
 
-          {/* LEFT: no logo, text only */}
-          <div className="flex items-center gap-6">
-            <div className="leading-tight">
-              <div className="text-sm font-semibold tracking-wide text-white">
-                COLLECTORCONNECTOR
+            {/* LEFT SIDE */}
+            <div className="flex items-center gap-8">
+              <div className="leading-tight">
+                <div className="text-sm font-semibold tracking-wide text-white">
+                  COLLECTORCONNECTOR
+                </div>
+                <div className="text-[11px] text-zinc-500">
+                  A home for collectors
+                </div>
               </div>
-              <div className="text-[11px] text-zinc-500">
-                A home for collectors
-              </div>
+
+              {/* Pills */}
+              <nav className="flex items-center gap-3">
+                <HeaderPill href="/dashboard" label="Dashboard" />
+                <HeaderPill href={`/profile/${userId}`} label="Profile" active />
+              </nav>
             </div>
 
-            <nav className="flex items-center gap-3">
-              /dashboard
-              <HeaderPill href="#" label="Profile" active />
-            </nav>
-          </div>
+            {/* CENTER SOCIALS */}
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
+              <HeaderPill href="https://www.ebay.co.uk" label="eBay" subtle />
+              <HeaderPill href="https://www.psacard.com" label="PSA" subtle />
+              <HeaderPill href="https://www.goldin.co" label="Goldin" subtle />
+              <HeaderPill href="https://www.whatnot.com" label="Whatnot" subtle />
+              <HeaderPill href="https://x.com" label="X" subtle />
+            </div>
 
-          {/* RIGHT: avatar placeholder */}
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-zinc-700 border border-white/15" />
+            {/* RIGHT — EMPTY (no logo, no avatar) */}
+            <div className="w-8" />
           </div>
-
         </div>
       </header>
 
@@ -275,15 +250,17 @@ function Header() {
   );
 }
 
-/* REUSABLE PILL BUTTON */
+/* Pill button */
 function HeaderPill({
   href,
   label,
   active = false,
+  subtle = false,
 }: {
   href: string;
   label: string;
   active?: boolean;
+  subtle?: boolean;
 }) {
   const base =
     "px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors";
@@ -291,16 +268,96 @@ function HeaderPill({
     "bg-white/10 text-zinc-100 border border-white/20 hover:bg-white/15";
   const normalStyle =
     "bg-white/5 text-zinc-200 border border-white/10 hover:bg-white/10 hover:border-white/20";
+  const subtleStyle =
+    "bg-transparent text-zinc-300 border border-white/10 hover:bg-white/5";
 
-  return <Link href={href} className={`${base} ${active ? activeStyle : normalStyle}`}>{label}</Link>;
+  const classes = subtle
+    ? `${base} ${subtleStyle}`
+    : active
+    ? `${base} ${activeStyle}`
+    : `${base} ${normalStyle}`;
+
+  const external = href.startsWith("http");
+
+  return (
+    <a
+      href={href}
+      className={classes}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
+      {label}
+    </a>
+  );
 }
 
-/* STAT CIRCLE PILL */
+/* Stat circle */
 function Stat({ title, value }: { title: string; value: number }) {
   return (
     <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-4 text-center min-w-[140px]">
       <div className="text-3xl font-bold">{value}</div>
       <div className="text-zinc-500 text-sm">{title}</div>
+    </div>
+  );
+}
+
+/* Gallery cards */
+function GalleryCard() {
+  return (
+    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
+      <h3 className="text-lg font-semibold mb-4">Niche Families</h3>
+      <ul className="space-y-2 text-sm text-zinc-300">
+        <li>1,500 - Sports Cards</li>
+        <li>1,321 - TCG Cards</li>
+        <li>1,525 - Comics</li>
+        <li>1,778 - Sneakers</li>
+        <li>1,776 - Beanie Babies</li>
+        <li>1,323 - Coca-Cola</li>
+      </ul>
+    </div>
+  );
+}
+
+function GalleryLogo() {
+  return (
+    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 flex items-center justify-center">
+      <div className="text-7xl font-black text-zinc-700">CC</div>
+    </div>
+  );
+}
+
+function GalleryNews() {
+  return (
+    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
+      <h3 className="text-lg font-semibold mb-4">News + Upcoming Events</h3>
+      <p className="text-zinc-400 text-sm">
+        New feature launch coming soon…<br />
+        Community meetup – London – April 2026
+      </p>
+    </div>
+  );
+}
+
+/* Live feed */
+function LiveFeed() {
+  return (
+    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 max-w-3xl mx-auto">
+      <div className="flex items-start gap-4">
+
+        {/* Placeholder profile circle */}
+        <div className="w-14 h-14 rounded-full bg-zinc-800 flex items-center justify-center text-2xl text-zinc-500">
+          RC
+        </div>
+
+        <div>
+          <p className="font-medium text-lg">Richard House</p>
+          <p className="text-zinc-500 text-sm">New upload</p>
+
+          <div className="mt-3 p-4 bg-black rounded-lg border border-zinc-800">
+            (RH) - New Rare Card: Shohei Ohtani Rookie
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

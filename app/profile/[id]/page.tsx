@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import Footer from "@/components/Footer";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import AvatarUpload from "./AvatarUpload";
 
+/* -------------------------------------------------------
+   Types
+------------------------------------------------------- */
 type Profile = {
   id: string;
   avatar_url?: string | null;
@@ -15,286 +17,366 @@ type Profile = {
   location?: string | null;
   bio?: string | null;
   items_count?: number | null;
-  collections_count?: number | null;
+  categories_count?: number | null;
+  rarity_score?: number | null;
+  tier?: string | null;
+  member_number?: number | null;
 };
 
+type Collection = {
+  id: string;
+  name: string;
+  user_id?: string;
+  cover_image?: string | null;
+  item_count?: number | null;
+  created_at?: string | null;
+};
+
+type Item = {
+  id: string;
+  user_id?: string;
+  title?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  created_at?: string | null;
+};
+
+/* -------------------------------------------------------
+   Page
+------------------------------------------------------- */
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [activity, setActivity] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
-    if (!userId) {
-      router.replace("/not-found");
-      return;
-    }
+    if (!id) return;
 
-    async function loadData() {
+    let alive = true;
+    async function run() {
       try {
-        setLoading(true);
+        const [{ data: profileData }, { data: collectionData }, { data: activityData }] =
+          await Promise.all([
+            supabase.from("profiles").select("*").eq("id", id).single(),
+            supabase
+              .from("collections")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
+            supabase
+              .from("items")
+              .select("*")
+              .eq("user_id", id)
+              .order("created_at", { ascending: false }),
+          ]);
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id === userId) setIsOwnProfile(true);
+        if (!alive) return;
 
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .single();
-
-        if (error) throw error;
-        setProfile(data);
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message || "Failed to load profile");
+        setProfile((profileData as Profile) || null);
+        setCollections((collectionData as Collection[]) || []);
+        setActivity((activityData as Item[]) || []);
+      } catch (e) {
+        console.error("Failed to load profile page data:", e);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     }
 
-    loadData();
-  }, [userId, router]);
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [id]);
 
   const displayName = useMemo(
-    () => profile?.display_name || profile?.username || "Unnamed Collector",
+    () => profile?.display_name || profile?.username || "Collector",
     [profile]
   );
 
+  const displayUsername = profile?.username ? `@${profile.username}` : null;
+
+  // ✅ Safe tier text derivation (no TS error)
+  const tierText = useMemo(() => {
+    if (!profile) return null;
+
+    if (profile.tier) return profile.tier;
+
+    const n = profile.member_number;
+    if (typeof n !== "number") return null;
+
+    if (n === 1) return "Founder · #1";
+    if (n >= 2 && n <= 50) return `Gold · #${n}`;
+    if (n >= 51 && n <= 100) return `Silver · #${n}`;
+    if (n >= 101 && n <= 500) return `Bronze · #${n}`;
+    return `Member #${n}`;
+  }, [profile]);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
-        <Header avatarUrl={null} displayName="Loading..." userId={userId} />
-        <div className="flex items-center justify-center h-[80vh] text-xl">
-          Loading...
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white">
-        <Header avatarUrl={null} displayName="Error" userId={userId} />
-        <div className="flex flex-col items-center justify-center h-[80vh]">
-          <h1 className="text-3xl mb-4">Error</h1>
-          <p className="text-white/70">{error || "Profile not found"}</p>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white pb-20">
-      <Header avatarUrl={profile.avatar_url} displayName={displayName} userId={userId} />
-
-      <main className="w-full px-5 sm:px-8 md:px-12 pt-6 max-w-6xl mx-auto">
-        {/* Profile Card */}
-        <div className="bg-gradient-to-b from-gray-900/70 to-black/90 border border-gray-800/80 rounded-2xl p-6 md:p-8 shadow-2xl mb-12">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-6 md:gap-8">
-            {/* Avatar */}
-            <div className="shrink-0">
-              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl overflow-hidden border-2 border-gray-700/80 shadow-lg">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={displayName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-gray-800 to-gray-950 flex items-center justify-center text-3xl font-bold text-gray-400">
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              {isOwnProfile && (
-                <div className="mt-4">
-                  <AvatarUpload
-                    userId={userId}
-                    currentUrl={profile.avatar_url}
-                    editable={true}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold mb-1">{displayName}</h1>
-
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400 mb-3">
-                {profile.username && <span>@{profile.username}</span>}
-                {profile.location && <span>• {profile.location}</span>}
-              </div>
-
-              {profile.bio && (
-                <p className="text-gray-300 leading-relaxed max-w-3xl mb-6">
-                  {profile.bio}
-                </p>
-              )}
-
-              {/* Stats */}
-              <div className="flex flex-wrap gap-4">
-                <div className="bg-gray-800/70 border border-gray-700 rounded-full px-5 py-2 text-center min-w-[110px]">
-                  <div className="text-xl font-semibold">
-                    {profile.collections_count || 0}
-                  </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide mt-0.5">
-                    Collections
-                  </div>
-                </div>
-
-                <div className="bg-gray-800/70 border border-gray-700 rounded-full px-5 py-2 text-center min-w-[110px]">
-                  <div className="text-xl font-semibold">
-                    {profile.items_count || 0}
-                  </div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide mt-0.5">
-                    Items
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Edit button */}
-            {isOwnProfile && (
-              <Link
-                href="/edit-profile"
-                className="self-start sm:self-center px-6 py-2.5 bg-white/10 hover:bg-white/15 border border-white/20 rounded-lg text-sm font-medium transition whitespace-nowrap"
-              >
-                Edit Profile
-              </Link>
-            )}
+      <div className="min-h-dvh bg-gradient-to-b from-[#0d0d0d] to-black pt-24 pb-20 text-white">
+        <Header />
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="mt-10 animate-pulse space-y-6">
+            <div className="h-40 rounded-3xl bg-white/5" />
+            <div className="h-6 w-48 rounded bg-white/10" />
+            <div className="h-28 rounded-2xl bg-white/5" />
+            <div className="h-72 rounded-2xl bg-white/5" />
           </div>
         </div>
-      </main>
+      </div>
+    );
+  }
 
-      <Footer />
+  if (!profile) {
+    return (
+      <div className="min-h-dvh bg-gradient-to-b from-[#0d0d0d] to-black pt-24 pb-20 text-white">
+        <Header />
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="mt-10 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-white/80">
+            Profile not found.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const itemsCount = profile.items_count ?? activity.length ?? 0;
+  const categoriesCount = profile.categories_count ?? collections.length ?? 0;
+  const rarityScore = profile.rarity_score ?? 0;
+
+  return (
+    <div className="min-h-dvh bg-gradient-to-b from-[#0d0d0d] to-black pt-16 pb-20 text-white">
+      <Header />
+
+      <main className="mx-auto max-w-5xl px-4">
+        {/* Neon aura behind hero */}
+        <div className="relative isolate">
+          <NeonGlow className="-z-10" />
+
+          {/* ---------------- HERO STRIP (Version C) ---------------- */}
+          <section className="overflow-hidden rounded-3xl border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,255,255,0.12)] backdrop-blur-xl ring-1 ring-white/10">
+            <div className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch">
+              {/* Avatar — squircle */}
+              <div className="shrink-0">
+                <div className="overflow-hidden rounded-[28%] border border-white/15 ring-1 ring-white/10 shadow-[0_0_40px_rgba(255,255,255,0.12)]">
+                  <Image
+                    src={profile.avatar_url || "/diamond2.png"}
+                    alt={`${displayName} avatar`}
+                    width={128}
+                    height={128}
+                    className="h-28 w-28 object-cover sm:h-32 sm:w-32"
+                  />
+                </div>
+              </div>
+
+              {/* Identity */}
+              <div className="min-w-0 flex-1 space-y-2 text-center sm:text-left">
+                <h1 className="truncate text-2xl font-semibold tracking-tight text-white">{displayName}</h1>
+
+                <p className="truncate text-sm text-white/70">
+                  {displayUsername}
+                  {displayUsername && profile.location ? " · " : ""}
+                  {profile.location}
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+                  {tierText ? <TierBadge text={tierText} /> : null}
+                  <FollowButton />
+                </div>
+
+                {profile.bio ? (
+                  <p className="text-pretty text-sm leading-relaxed text-white/80">{profile.bio}</p>
+                ) : null}
+              </div>
+
+              {/* Quick Stats */}
+              <div className="w-full max-w-xs sm:w-60">
+                <StatsStrip items={itemsCount} categories={categoriesCount} rarity={rarityScore} />
+              </div>
+            </div>
+
+            {/* Collections Gallery (glass-case carousel) */}
+            <div className="border-t border-white/10 p-4">
+              <CollectionsGallery collections={collections} />
+            </div>
+
+            {/* Activity Feed */}
+            <div className="border-t border-white/10 p-4">
+              <ActivityFeed activity={activity} />
+            </div>
+
+            {/* Branding footer inside the strip */}
+            <div className="border-t border-white/10 p-3 text-center text-[10px] uppercase tracking-[0.3em] text-white/30">
+              CC · CollectorConnector
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
   );
 }
 
-// ───────────────────────────────────────────────
-//  Header component – now correctly receives userId
-// ───────────────────────────────────────────────
-function Header({
-  avatarUrl,
-  displayName = "Collector",
-  userId,
-}: {
-  avatarUrl?: string | null;
-  displayName?: string;
-  userId: string;
-}) {
+/* -------------------------------------------------------
+   Header (SMALL, CRISP LOGO — 20px)
+------------------------------------------------------- */
+function Header() {
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 sm:h-16 items-center justify-between gap-4">
-            {/* Left – logo + text */}
-            <Link href="/" className="flex items-center gap-3">
-              <img
-                src="/CC-main-logo.png"
-                alt="CollectorConnector"
-                className="h-7 sm:h-8 w-auto object-contain"
-              />
-              <div className="hidden sm:block leading-tight">
-                <div className="text-base font-semibold tracking-tight text-white">
-                  COLLECTORCONNECTOR
-                </div>
-                <div className="text-xs text-zinc-500">
-                  A home for collectors
-                </div>
-              </div>
-            </Link>
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-white/5 backdrop-blur-xl">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+        <Link href="/" className="group flex items-center gap-2">
+          {/* Tiny, crisp logo (20px). Use an SVG for perfect sharpness if available. */}
+          <Image
+            src="/CC-SML-Logo.png"
+            alt="CollectorConnector"
+            width={20}
+            height={20}
+            className="h-5 w-5 object-contain"
+            priority
+          />
+          <span className="text-sm font-semibold tracking-wide text-white/80 group-hover:text-white">
+            Collector<span className="text-emerald-400">Connector</span>
+          </span>
+        </Link>
 
-            {/* Center – pill nav */}
-            <nav className="hidden md:flex items-center gap-2.5">
-              <PillLink href="/dashboard" label="Dashboard" />
-              <PillLink href={`/profile/${userId}`} label="Profile" active />
-              <PillLink href="#" label="eBay" subtle />
-              <PillLink href="#" label="PSA" subtle />
-              <PillLink href="#" label="Goldin" subtle />
-              <PillLink href="#" label="Whatnot" subtle />
-              <PillLink href="#" label="Sports Card Investor" subtle />
-            </nav>
-
-            {/* Right – DEMO + version + avatar */}
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="hidden sm:flex items-center gap-2">
-                <span className="px-2.5 py-1 text-[11px] uppercase tracking-wider bg-white/5 border border-white/10 rounded-full text-zinc-300">
-                  DEMO
-                </span>
-                <span className="text-xs text-zinc-500">v0.7.4</span>
-              </div>
-
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full overflow-hidden border border-white/20 shadow-sm">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt={displayName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-xs font-bold text-zinc-400">
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="h-14 sm:h-16" />
-    </>
+        {/* Right side placeholder */}
+        <div className="text-xs text-white/50">Profile</div>
+      </div>
+    </header>
   );
 }
 
-function PillLink({
-  href,
-  label,
-  active = false,
-  subtle = false,
-}: {
-  href: string;
-  label: string;
-  active?: boolean;
-  subtle?: boolean;
-}) {
-  const base = "px-4 py-1.5 text-sm rounded-full transition-all whitespace-nowrap";
-  if (active) {
-    return (
-      <Link
-        href={href}
-        className={`${base} bg-blue-600/20 text-blue-300 border border-blue-500/40 hover:bg-blue-600/30`}
-      >
-        {label}
-      </Link>
-    );
-  }
-  if (subtle) {
-    return (
-      <Link
-        href={href}
-        className={`${base} bg-white/5 text-zinc-300 border border-white/10 hover:bg-white/10 hover:border-white/20`}
-      >
-        {label}
-      </Link>
-    );
-  }
+/* -------------------------------------------------------
+   Shared UI
+------------------------------------------------------- */
+function NeonGlow({ className = "" }: { className?: string }) {
   return (
-    <Link
-      href={href}
-      className={`${base} bg-white/5 text-zinc-200 border border-white/10 hover:bg-white/10 hover:border-white/20`}
+    <div
+      aria-hidden
+      className={`pointer-events-none absolute inset-0 blur-3xl ${className}`}
+      style={{
+        background:
+          "radial-gradient(80% 60% at 50% 30%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0) 70%)",
+      }}
+    />
+  );
+}
+
+function TierBadge({ text }: { text: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]" />
+      {text}
+    </span>
+  );
+}
+
+function FollowButton() {
+  return (
+    <button
+      type="button"
+      className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-[0_0_18px_rgba(255,255,255,0.25)] transition hover:shadow-[0_0_28px_rgba(255,255,255,0.35)]"
     >
-      {label}
-    </Link>
+      Follow · Add Friend
+    </button>
+  );
+}
+
+function StatsStrip({
+  items,
+  categories,
+  rarity,
+}: {
+  items: number;
+  categories: number;
+  rarity: number;
+}) {
+  const stats = [
+    { label: "Items", value: items },
+    { label: "Categories", value: categories },
+    { label: "Rarity", value: rarity },
+  ];
+  return (
+    <div className="grid grid-cols-3 divide-x divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] text-center">
+      {stats.map((s) => (
+        <div key={s.label} className="px-4 py-3">
+          <div className="text-lg font-semibold text-white">{s.value}</div>
+          <div className="text-xs uppercase tracking-wider text-white/60">{s.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CollectionsGallery({ collections }: { collections: Collection[] }) {
+  if (!collections || collections.length === 0) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60">
+        No collections yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-2 backdrop-blur">
+      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {collections.map((col) => (
+          <div key={col.id} className="snap-start shrink-0">
+            <div className="group relative h-40 w-56 overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.08)]">
+              <Image
+                src={col.cover_image || "/diamond2.png"}
+                alt={col.name}
+                fill
+                className="object-cover transition group-hover:scale-105"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-2 left-2 right-2">
+                <p className="truncate text-sm font-medium text-white">{col.name}</p>
+                <p className="text-[11px] text-white/70">{col.item_count ?? 0} items</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ActivityFeed({ activity }: { activity: Item[] }) {
+  if (!activity || activity.length === 0) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60">
+        No recent activity yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {activity.map((item) => (
+        <article
+          key={item.id}
+          className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-md transition hover:border-white/30"
+        >
+          <div className="relative mb-3 h-64 w-full overflow-hidden rounded-xl bg-black">
+            <Image
+              src={item.image_url || "/diamond2.png"}
+              alt={item.title || "Item"}
+              fill
+              className="object-cover"
+            />
+          </div>
+
+          {item.title ? <p className="font-medium text-white">{item.title}</p> : null}
+          {item.description ? <p className="mt-1 text-sm text-white/70">{item.description}</p> : null}
+          {item.created_at ? (
+            <p className="mt-2 text-[11px] text-white/50">{new Date(item.created_at).toLocaleString()}</p>
+          ) : null}
+        </article>
+      ))}
+    </div>
   );
 }

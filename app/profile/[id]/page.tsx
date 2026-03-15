@@ -254,7 +254,7 @@ function Header() {
             <img
               src="/CC-main-logo.png"
               alt="Collector Connector"
-              className="h-4 max-w-[70px] sm:h-5 sm:max-w-[90px] w-auto object-contain scale-75 sm:scale-90"
+              className="h-2 max-w-[70px] sm:h-3 sm:max-w-[90px] w-auto object-contain scale-75 sm:scale-90"
             />
             <div className="hidden sm:block text-xs text-gray-400">
               where collectors meet

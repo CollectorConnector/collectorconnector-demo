@@ -191,15 +191,8 @@ function ProfileHeader() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
         <div className="w-full px-5 sm:px-8 h-14 flex items-center justify-between">
 
-          {/* SMALL LOGO */}
-          <img
-            src="/CC-SML-Logo.png"
-            alt="CollectorConnector"
-            className="h-6 w-auto object-contain"
-          />
-
           {/* SEARCH BAR */}
-          <form onSubmit={handleSearch} className="flex-1 flex mx-4">
+          <form onSubmit={handleSearch} className="flex-1 flex">
             <input
               type="text"
               value={query}
@@ -210,7 +203,7 @@ function ProfileHeader() {
           </form>
 
           {/* SOCIAL ICONS */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ml-4">
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
               <img src="/icons/instagram.png" className="h-5 w-5 opacity-80" alt="Instagram" />
             </a>

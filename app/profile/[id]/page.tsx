@@ -176,24 +176,20 @@ export default function ProfilePage() {
   );
 }
 
-/* ─────────────────────────────────────────────── */
-/* HEADER ONLY FOR PROFILE PAGE                    */
-/* ─────────────────────────────────────────────── */
-
 function ProfileHeader() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
         <div className="w-full px-5 sm:px-8 h-14 flex items-center justify-between">
 
-          {/* Small CC Logo */}
+          {/* SMALL LOGO */}
           <img
-            src="/CC-main-logo.png"
+            src="/CC-SML-Logo.png"
             alt="CollectorConnector"
-            className="h-5 w-auto object-contain"
+            className="h-4 w-auto object-contain"
           />
 
-          {/* Search bar */}
+          {/* SEARCH */}
           <div className="flex-1 hidden sm:flex mx-6">
             <input
               type="text"
@@ -202,7 +198,7 @@ function ProfileHeader() {
             />
           </div>
 
-          {/* Social icons */}
+          {/* SOCIAL ICONS */}
           <div className="flex items-center gap-3">
             <img src="/icons/instagram.png" className="h-5 w-5 opacity-80" alt="Instagram" />
             <img src="/icons/facebook.png" className="h-5 w-5 opacity-80" alt="Facebook" />

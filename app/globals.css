@@ -31,10 +31,5 @@ svg {
   width: 14px !important;
   height: 14px !important;
   flex-shrink: 0 !important;
-  display: inline-block !important; /* prevents vertical stacking */
-}
-
-/* Prevent ANY flex wrapping in headers */
-header, header * {
-  white-space: nowrap !important;
+  display: inline-block !important;
 }

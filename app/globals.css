@@ -24,5 +24,12 @@ a {
 }
 a:hover {
   color: #e5e5e5;
+  /* Force all SVG icons to a predictable size */
+svg {
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0 !important;
+}
+
 }
 

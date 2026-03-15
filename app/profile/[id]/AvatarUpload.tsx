@@ -89,7 +89,7 @@ export default function AvatarUpload({
         <img
           src={preview}
           alt="Profile avatar"
-          className="w-32 h-32 rounded-full object-cover border-2 border-gray-600 shadow-md"
+          className="w-12 h-12 rounded-full object-cover border-2 border-gray-600 shadow-md"
           onError={(e) => {
             e.currentTarget.src = '/default-avatar.png'; // fallback if image fails
             e.currentTarget.onerror = null;

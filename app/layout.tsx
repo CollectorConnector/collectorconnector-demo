@@ -8,6 +8,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {/* Global theming only — no header, no metadata, no providers for now */}
       <body className="bg-black text-white antialiased">
         {children}
       </body>

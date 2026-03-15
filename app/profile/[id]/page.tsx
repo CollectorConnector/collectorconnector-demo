@@ -57,7 +57,7 @@ export default function ProfilePage() {
 
         const { data: collData } = await supabase
           .from("collections")
-          .select("id, title") // ← fixed: using your actual column "title"
+          .select("id, title")
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
@@ -109,7 +109,7 @@ export default function ProfilePage() {
       <Header />
 
       <main className="px-5 sm:px-8 pt-6 pb-20 max-w-6xl mx-auto">
-        {/* Profile header */}
+        {/* Avatar + Profile info */}
         <div className="text-center mb-10">
           <div className="relative inline-block mb-4">
             <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-4 border-zinc-800 shadow-2xl mx-auto">
@@ -166,7 +166,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Collections pills – now dynamic from your Supabase table */}
+        {/* Collections pills – dynamic */}
         <h2 className="text-2xl font-bold mb-4 text-center">Collections</h2>
         <div className="flex flex-wrap justify-center gap-3 mb-16">
           {collections.length > 0 ? (
@@ -243,16 +243,20 @@ export default function ProfilePage() {
   );
 }
 
-// Full-width header – matches your mock
+// Full-width header – logo downsized
 function Header() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-        <div className="w-full px-5 sm:px-8 h-14 flex items-center justify-between">
-          {/* Left – logo + tagline */}
-          <div className="flex items-center gap-4">
-            <img src="/CC-main-logo.png" alt="Collector Connector" className="h-7 w-auto object-contain" />
-            <div className="hidden sm:block text-sm text-gray-400">
+        <div className="w-full px-5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
+          {/* Left – smaller logo + tagline */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/CC-main-logo.png"
+              alt="Collector Connector"
+              className="h-5 sm:h-6 w-auto object-contain"
+            />
+            <div className="hidden sm:block text-xs text-gray-400">
               where collectors meet
             </div>
           </div>
@@ -265,7 +269,7 @@ function Header() {
           </div>
 
           {/* Right – social icons */}
-          <div className="flex items-center gap-5 text-zinc-400">
+          <div className="flex items-center gap-4 sm:gap-6 text-zinc-400">
             <a href="#" aria-label="Instagram">insta</a>
             <a href="#" aria-label="Facebook">f</a>
             <a href="#" aria-label="Discord">Disord</a>
@@ -275,7 +279,7 @@ function Header() {
         </div>
       </header>
 
-      <div className="h-14" />
+      <div className="h-12 sm:h-14" />
     </>
   );
 }

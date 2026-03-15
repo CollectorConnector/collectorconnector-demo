@@ -185,10 +185,10 @@ function ProfileHeader() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
-        <div className="w-full px-5 sm:px-8 h-14 flex items-center justify-between">
+        <div className="w-full px-5 sm:px-8 h-14 flex items-center">
 
-          {/* LEFT: MAIN LOGO */}
-          <div className="flex items-center">
+          {/* LEFT: LOGO */}
+          <div className="flex items-center mr-6">
             <img
               src="/CC-main-logo.png"
               alt="Collector Connector"
@@ -197,7 +197,10 @@ function ProfileHeader() {
           </div>
 
           {/* CENTRE: SOCIAL ICONS */}
-          <div className="flex items-center gap-4">
+          <div
+            className="flex items-center gap-4 whitespace-nowrap flex-1 justify-center"
+            style={{ minWidth: "260px" }}
+          >
 
             {/* Instagram */}
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
@@ -246,7 +249,11 @@ function ProfileHeader() {
           </div>
 
           {/* RIGHT: SEARCH BAR */}
-          <form onSubmit={handleSearch} className="flex items-center ml-4" style={{ width: "180px" }}>
+          <form
+            onSubmit={handleSearch}
+            className="flex items-center ml-6"
+            style={{ width: "180px" }}
+          >
             <input
               type="text"
               value={query}

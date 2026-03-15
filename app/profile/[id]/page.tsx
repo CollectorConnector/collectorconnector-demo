@@ -1,94 +1,176 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import Image from "next/image";
-import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
-  const { id } = useParams<{ id: string }>();
-
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchProfile() {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (!error) setProfile(data);
-      setLoading(false);
-    }
-
-    fetchProfile();
-  }, [id]);
-
-  if (loading) return <div className="p-6 text-white">Loading…</div>;
-  if (!profile) return <div className="p-6 text-white">Profile not found</div>;
-
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-10">
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#000",
+        color: "#fff",
+        padding: "24px 20px",
+        fontFamily: "inherit",
+      }}
+    >
+      {/* HEADER: NAME + BADGE */}
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 10,
+            alignItems: "center",
+          }}
+        >
+          <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>
+            Stacy Pearce
+          </h1>
 
-      {/* MAIN LOGO */}
-      <div className="flex justify-center opacity-90 mb-4">
-        <Image src="/logo-main.png" alt="Logo" width={150} height={50} />
-      </div>
-
-      {/* HEADER */}
-      <div className="flex flex-col items-center text-center bg-[#1a1a1a] p-8 rounded-2xl shadow-xl">
-
-        {/* Avatar */}
-        <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-700 shadow-md mb-4">
-          <Image
-            src={profile.avatar_url || "/default-avatar.png"}
-            alt="Avatar"
-            width={96}
-            height={96}
-            className="object-cover"
+          <img
+            src="/gold.png"
+            alt="Gold Badge"
+            style={{ height: 26, width: 26, objectFit: "contain" }}
           />
         </div>
 
-        {/* Name */}
-        <h1 className="text-2xl font-semibold">{profile.display_name}</h1>
-        <p className="text-gray-400">@{profile.username}</p>
+        <p style={{ color: "#A1A1A1", marginTop: 6 }}>
+          Collector of watches, Pokémon cards, coins & pub history
+        </p>
 
-        {/* Location */}
-        {profile.location && (
-          <p className="text-gray-500 text-sm mt-1">{profile.location}</p>
-        )}
-
-        {/* Tier Badge */}
-        {profile.tier && (
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-gray-200 to-white text-black text-sm font-medium shadow-sm border border-gray-300">
-            <span>💎</span>
-            <span>{profile.tier} Tier</span>
-          </div>
-        )}
+        <p style={{ color: "#A1A1A1", marginTop: 4 }}>Swindon, UK</p>
       </div>
 
-      {/* ACTIVITY FEED */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">Activity</h2>
-
-        <div className="bg-[#1a1a1a] p-4 rounded-xl space-y-3">
-          <p className="text-gray-400 text-sm">No recent activity yet</p>
+      {/* STATS */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          background: "#111",
+          padding: "16px 20px",
+          borderRadius: 12,
+          marginBottom: 32,
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>2.1k</p>
+          <p style={{ color: "#A1A1A1", fontSize: 13 }}>Items</p>
         </div>
-      </section>
+
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>4</p>
+          <p style={{ color: "#A1A1A1", fontSize: 13 }}>Categories</p>
+        </div>
+
+        <div style={{ textAlign: "center" }}>
+          <p style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>90.8</p>
+          <p style={{ color: "#A1A1A1", fontSize: 13 }}>Rarity</p>
+        </div>
+      </div>
 
       {/* COLLECTIONS */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">Collections</h2>
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+        Collections
+      </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {/* Placeholder card */}
-          <div className="bg-[#1a1a1a] p-4 rounded-xl flex flex-col items-center justify-center text-gray-400 h-32">
-            <p>No collections yet</p>
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 32,
+        }}
+      >
+        {["Cards", "Watches", "Coins", "Memorabilia"].map((c) => (
+          <div
+            key={c}
+            style={{
+              padding: "10px 16px",
+              background: "#111",
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            {c}
+          </div>
+        ))}
+      </div>
+
+      {/* ACTIVITY */}
+      <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+        Activity
+      </h2>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: 12,
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ position: "relative" }}>
+          <img
+            src="/charizard.png"
+            alt="Featured Card"
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: 10,
+              objectFit: "cover",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: 6,
+              left: 6,
+              background: "#fff",
+              color: "#000",
+              padding: "2px 6px",
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 700,
+            }}
+          >
+            Featured
           </div>
         </div>
-      </section>
+
+        <img
+          src="/watch.png"
+          alt="Watch"
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: 10,
+            objectFit: "cover",
+          }}
+        />
+
+        <img
+          src="/coin.png"
+          alt="Coin"
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: 10,
+            objectFit: "cover",
+          }}
+        />
+      </div>
+
+      {/* POST */}
+      <div style={{ marginBottom: 80 }}>
+        <p style={{ color: "#A1A1A1", fontSize: 13, marginBottom: 6 }}>
+          2 hours ago
+        </p>
+
+        <p style={{ fontSize: 15 }}>
+          Just added this one to the collection. What do you think
+        </p>
+      </div>
     </div>
   );
 }

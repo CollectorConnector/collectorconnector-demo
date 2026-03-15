@@ -1,375 +1,229 @@
-// app/profile/[id]/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import AvatarUpload from "./AvatarUpload";
+import Footer from "@/components/Footer";
 
-/* ───────────────────────────────────────────────
-   Types
-─────────────────────────────────────────────── */
 type Profile = {
   id: string;
+  avatar_url?: string | null;
   display_name?: string | null;
   username?: string | null;
   location?: string | null;
   bio?: string | null;
-  avatar_url?: string | null;
-  items_count?: number | null;         // optional counters if you use them
-  collections_count?: number | null;   // optional counters if you use them
+  items_count?: number | null;
+  collections_count?: number | null;
 };
 
-type Photo = {
-  id: string;
-  user_id: string;
-  url: string;
-  created_at: string;
-};
-
-/* ───────────────────────────────────────────────
-   Page
-─────────────────────────────────────────────── */
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
-  const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploadingMany, setUploadingMany] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const isOwner = authUserId === userId;
-
-  // Load profile + auth + photos
   useEffect(() => {
     if (!userId) {
       router.replace("/not-found");
       return;
     }
 
-    let alive = true;
-
-    (async () => {
+    async function loadData() {
       try {
         setLoading(true);
 
-        // who am I?
-        const { data: auth } = await supabase.auth.getUser();
-        if (!alive) return;
-        setAuthUserId(auth.user?.id || null);
-
-        // profile
-        const { data: p, error: perr } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .single();
-        if (perr) throw perr;
-        if (!alive) return;
-        setProfile(p as Profile);
 
-        // collection photos
-        const { data: ph, error: phErr } = await supabase
-          .from("collection_photos")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false });
-        if (phErr) throw phErr;
-        if (!alive) return;
-        setPhotos((ph as Photo[]) || []);
-      } catch (e) {
-        console.error(e);
+        if (error) throw error;
+        setProfile(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load profile");
       } finally {
-        if (alive) setLoading(false);
+        setLoading(false);
       }
-    })();
+    }
 
-    return () => {
-      alive = false;
-    };
+    loadData();
   }, [userId, router]);
 
-  // Display name preference
-  const name = useMemo(
-    () => profile?.display_name || profile?.username || "Collector",
+  const displayName = useMemo(
+    () => profile?.display_name || profile?.username || "Unnamed Collector",
     [profile]
   );
-
-  const location = profile?.location || "Swindon, UK";
-  const bio =
-    profile?.bio ||
-    "Collector Connector CEO, Collects Cards, Comics, Sneakers, beanie babies & Coca-Cola";
-
-  // Static pills per your wireframe (change later to dynamic if you want)
-  const pills = ["Sports Cards", "TCG Cards", "Comic Books", "Sneakers"];
-
-  // Multi-upload collection photos → Storage('item-photos') + DB insert
-  async function handleAddCollectionPhotos(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || !isOwner) return;
-
-    setUploadingMany(true);
-    try {
-      const newRows: Photo[] = [];
-
-      for (const file of Array.from(files)) {
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const name = `${crypto.randomUUID()}.${ext}`;
-        const path = `collections/${userId}/${name}`;
-
-        // upload (same bucket you used in AvatarUpload: 'item-photos')
-        const { error: upErr } = await supabase
-          .storage
-          .from("item-photos")
-          .upload(path, file, { upsert: false, contentType: file.type, cacheControl: "3600" });
-        if (upErr) throw upErr;
-
-        // public URL
-        const { data } = supabase.storage.from("item-photos").getPublicUrl(path);
-        const publicUrl = data.publicUrl;
-
-        // insert DB row
-        const { data: inserted, error: insErr } = await supabase
-          .from("collection_photos")
-          .insert({ user_id: userId, url: publicUrl })
-          .select()
-          .single();
-        if (insErr) throw insErr;
-
-        newRows.push(inserted as Photo);
-      }
-
-      // prepend new photos
-      setPhotos((prev) => [...newRows, ...prev]);
-      // reset input
-      e.currentTarget.value = "";
-    } catch (err) {
-      console.error("Upload failed:", err);
-      alert("Upload failed. Check console for details.");
-    } finally {
-      setUploadingMany(false);
-    }
-  }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <main className="mx-auto max-w-6xl px-6 pt-16">
-          <div className="text-center text-zinc-400">Loading…</div>
-        </main>
+        <ProfileHeader />
+        <div className="flex items-center justify-center h-[80vh] text-xl">
+          Loading...
+        </div>
       </div>
     );
   }
 
-  if (!profile) {
+  if (error || !profile) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <main className="mx-auto max-w-6xl px-6 pt-16">
-          <div className="text-center">
-            <h1 className="text-2xl font-semibold">Profile not found</h1>
-          </div>
-        </main>
+        <ProfileHeader />
+        <div className="flex flex-col items-center justify-center h-[80vh]">
+          <h1 className="text-3xl mb-4">Error</h1>
+          <p className="text-white/70">{error || "Profile not found"}</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* NO HEADER (per your request) */}
+      <ProfileHeader />
 
-      <main className="mx-auto max-w-6xl px-6 pb-24">
-        {/* ───────────────────────────────────────────────
-            Profile Identity Block
-        ─────────────────────────────────────────────── */}
-        <section className="pt-10 text-center">
-          {/* Avatar cluster (square with diagonal tag and CC badge) */}
-          <div className="relative inline-block">
-            <div className="mx-auto h-44 w-44 overflow-hidden rounded-lg border border-white/40 bg-zinc-900">
-              {profile.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-5xl text-zinc-600">
-                  {name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
+      <main className="px-5 sm:px-8 pt-6 pb-20 max-w-3xl mx-auto">
 
-            {/* Diagonal label */}
-            <div className="pointer-events-none absolute -top-4 -left-8 -rotate-12">
-              <div className="rounded border border-white/40 bg-black px-3 py-1 text-[11px] text-zinc-300">
-                Avatar (Profile Pic)
-              </div>
-            </div>
+        {/* PROFILE HEADER */}
+        <div className="text-center mb-7">
+          <img
+            src={profile.avatar_url || "/default-avatar.png"}
+            alt="Avatar"
+            className="w-28 h-28 rounded-full mx-auto mb-4 object-cover border border-white/20"
+          />
 
-            {/* CC badge */}
-            <div className="pointer-events-none absolute -right-3 bottom-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/40 bg-black text-xs">
-              CC
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold">{displayName}</h1>
 
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight">{name}</h1>
-          <div className="mt-1 text-sm text-zinc-400">Collector Connector 1</div>
-          <div className="mt-1 text-sm text-zinc-400">{location}</div>
-
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-zinc-300">
-            Bio: {bio}
+          <p className="text-gray-400 text-base mt-2">
+            {profile.bio || "Collector of watches, Pokémon cards, coins & pub history"}
           </p>
 
-          {/* Follow (only when viewing someone else) */}
-          {!isOwner && (
-            <button
-              type="button"
-              className="mt-6 inline-flex items-center justify-center rounded-md border border-white/40 px-5 py-2 text-sm hover:bg-white/5"
-            >
-              Follow
-            </button>
-          )}
+          <p className="text-gray-500 text-sm mt-1">
+            {profile.location || "Swindon, UK"}
+          </p>
+        </div>
 
-          {/* Owner-only: change avatar (uses YOUR AvatarUpload) */}
-          {isOwner && (
-            <div className="mt-5 flex items-center justify-center">
-              <AvatarUpload
-                userId={userId}
-                currentUrl={profile.avatar_url}
-                editable={true}
-                onSaved={(url) => setProfile((p) => (p ? { ...p, avatar_url: url } : p))}
-              />
+        {/* STATS */}
+        <div className="flex justify-between bg-zinc-950 border border-zinc-800 rounded-xl p-5 mb-10">
+          <div className="text-center">
+            <p className="text-2xl font-bold">{profile.items_count || "2.1k"}</p>
+            <p className="text-gray-500 text-sm">Items</p>
+          </div>
+
+          <div className="text-center">
+            <p className="text-2xl font-bold">{profile.collections_count || "4"}</p>
+            <p className="text-gray-500 text-sm">Categories</p>
+          </div>
+
+          <div className="text-center">
+            <p className="text-2xl font-bold">90.8</p>
+            <p className="text-gray-500 text-sm">Rarity</p>
+          </div>
+        </div>
+
+        {/* COLLECTION TAGS */}
+        <h2 className="text-2xl font-bold mb-4">Collections</h2>
+
+        <div className="flex flex-wrap gap-3 mb-10">
+          {["Cards", "Watches", "Coins", "Memorabilia"].map((c) => (
+            <div
+              key={c}
+              className="px-5 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-sm font-medium"
+            >
+              {c}
             </div>
-          )}
-
-          {/* Divider */}
-          <div className="mx-auto mt-8 h-px w-64 bg-white/40" />
-        </section>
-
-        {/* Pills row */}
-        <section className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {pills.map((label) => (
-            <span
-              key={label}
-              className="inline-flex items-center rounded border border-white/40 px-4 py-2 text-sm"
-            >
-              {label}
-            </span>
           ))}
-        </section>
+        </div>
 
-        {/* ───────────────────────────────────────────────
-            Collections Gallery
-        ─────────────────────────────────────────────── */}
-        <section className="mt-12">
-          <h2 className="mb-5 text-center text-xl font-semibold">Collections Gallery</h2>
+        {/* ACTIVITY */}
+        <h2 className="text-2xl font-bold mb-4">Activity</h2>
 
-          {/* Owner-only multi-upload */}
-          {isOwner && (
-            <div className="mb-5 flex items-center justify-center">
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded border border-white/40 px-4 py-2 text-sm hover:bg-white/5">
-                {uploadingMany ? "Uploading…" : "Add collection photos"}
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAddCollectionPhotos}
-                  disabled={uploadingMany}
-                />
-              </label>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {/* Left card: Niche Families */}
-            <div className="rounded-lg border border-white/40 p-5">
-              <h3 className="mb-3 font-medium">Niche Families</h3>
-              <ul className="space-y-1 text-sm text-zinc-300">
-                <li>1,500 – Sports Cards</li>
-                <li>1,321 – TCG Cards</li>
-                <li>1,525 – Comics</li>
-                <li>1,778 – Sneakers</li>
-                <li>1,323 – Beanie Babies</li>
-              </ul>
-            </div>
-
-            {/* Center tile: CC or newest uploaded image */}
-            <div className="flex items-center justify-center rounded-lg border border-white/40 p-5">
-              {photos.length === 0 ? (
-                <div className="text-6xl font-semibold tracking-tight">CC</div>
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={photos[0].url}
-                  alt="Latest"
-                  className="h-48 w-full max-w-sm rounded object-cover"
-                />
-              )}
-            </div>
-
-            {/* Right card: News */}
-            <div className="rounded-lg border border-white/40 p-5">
-              <h3 className="mb-2 font-medium">News + Upcoming Events</h3>
-              <p className="text-sm text-zinc-300">
-                New feature launch coming soon… <br />
-                Community meetup – London – April 2026
-              </p>
+        <div className="grid grid-cols-3 gap-3 mb-10">
+          <div className="relative aspect-square rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800">
+            <img
+              src="/charizard.png"
+              alt="Featured Card"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-2 left-2 bg-white text-black text-xs font-bold px-2 py-0.5 rounded-md">
+              Featured
             </div>
           </div>
 
-          {/* Grid of uploaded photos (below the three cards) */}
-          {photos.length > 0 && (
-            <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-              {photos.slice(0, 12).map((p) => (
-                <div key={p.id} className="overflow-hidden rounded border border-white/20">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.url} alt="" className="h-40 w-full object-cover" />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+          <div className="aspect-square rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800">
+            <img src="/watch.png" alt="Watch" className="w-full h-full object-cover" />
+          </div>
 
-        {/* ───────────────────────────────────────────────
-            Live Feed (wireframe)
-        ─────────────────────────────────────────────── */}
-        <section className="mt-12">
-          <div className="rounded-lg border border-white/40 p-6">
-            <h2 className="mb-4 text-xl font-semibold">Live Feed</h2>
+          <div className="aspect-square rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800">
+            <img src="/coin.png" alt="Coin" className="w-full h-full object-cover" />
+          </div>
+        </div>
 
-            <div className="flex items-start gap-5">
-              {/* Simple stick-figure */}
-              <svg
-                width="80"
-                height="100"
-                viewBox="0 0 80 100"
-                className="text-white"
-                aria-hidden="true"
-              >
-                <circle cx="30" cy="20" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
-                <line x1="30" y1="30" x2="30" y2="60" stroke="currentColor" strokeWidth="2" />
-                <line x1="10" y1="40" x2="50" y2="40" stroke="currentColor" strokeWidth="2" />
-                <line x1="30" y1="60" x2="15" y2="85" stroke="currentColor" strokeWidth="2" />
-                <line x1="30" y1="60" x2="45" y2="85" stroke="currentColor" strokeWidth="2" />
-                <text x="58" y="24" fill="currentColor" fontSize="10" fontFamily="monospace">
-                  RC
-                </text>
-              </svg>
+        <div className="mb-20">
+          <p className="text-gray-500 text-sm mb-1">2 hours ago</p>
+          <p className="text-base">
+            Just added this one to the collection. What do you think?
+          </p>
+        </div>
 
-              <div className="flex-1">
-                <p className="text-lg font-medium">Richard House</p>
-                <p className="text-sm text-zinc-500">New upload</p>
+      </main>
 
-                <div className="mt-3 inline-block rounded border border-white/40 bg-black px-3 py-2 text-sm">
-                  (RH) – New Rare Card
-                  <br />
-                  Shohei Ohtani Rookie
-                </div>
+      <Footer />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────── */
+/* HEADER ONLY FOR PROFILE PAGE                    */
+/* ─────────────────────────────────────────────── */
+
+function ProfileHeader() {
+  return (
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
+        <div className="w-full px-5 sm:px-8 h-16 flex items-center justify-between">
+
+          {/* Logo + tagline */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/CC-main-logo.png"
+              alt="CollectorConnector"
+              className="h-8 w-auto object-contain"
+            />
+            <div className="hidden sm:block leading-tight">
+              <div className="text-sm font-semibold tracking-tight text-white">
+                COLLECTOR CONNECTOR
+              </div>
+              <div className="text-[10px] text-zinc-500 -mt-0.5">
+                where collectors meet
               </div>
             </div>
           </div>
-        </section>
-      </main>
-    </div>
+
+          {/* Search bar */}
+          <div className="flex-1 hidden sm:flex mx-6">
+            <input
+              type="text"
+              placeholder="Search collectors, cards, comics..."
+              className="w-full bg-zinc-900 border border-zinc-700 text-sm text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Social icons */}
+          <div className="flex items-center gap-3">
+            <img src="/icons/instagram.png" className="h-5 w-5 opacity-80" alt="Instagram" />
+            <img src="/icons/facebook.png" className="h-5 w-5 opacity-80" alt="Facebook" />
+            <img src="/icons/discord.png" className="h-5 w-5 opacity-80" alt="Discord" />
+            <img src="/icons/whatnot.png" className="h-5 w-5 opacity-80" alt="Whatnot" />
+          </div>
+
+        </div>
+      </header>
+
+      <div className="h-16" />
+    </>
   );
 }

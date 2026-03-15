@@ -108,7 +108,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white font-sans">
       <Header />
 
-      <main className="px-4 sm:px-6 pt-6 pb-24 max-w-5xl mx-auto">
+      <main className="px-5 sm:px-8 pt-6 pb-20 max-w-6xl mx-auto">
         {/* Centred profile block */}
         <div className="text-center mb-12">
           <div className="relative inline-block mb-6">
@@ -122,8 +122,8 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Diagonal text */}
-            <div className="absolute -top-2 -right-8 rotate-12 bg-zinc-900 border border-zinc-700 text-xs px-4 py-1 rounded-md text-zinc-400">
+            {/* Diagonal "Avatar (Profile Pic)" text */}
+            <div className="absolute -top-2 -right-6 rotate-12 bg-zinc-900 border border-zinc-700 text-xs px-4 py-1 rounded-md text-zinc-400">
               Avatar (Profile Pic)
             </div>
 
@@ -224,7 +224,7 @@ export default function ProfilePage() {
         <h2 className="text-3xl font-bold mt-20 mb-8 text-center">Live Feed</h2>
         <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 max-w-4xl mx-auto">
           <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
-            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-4xl text-zinc-500 shrink-0">
+            <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-4xl text-zinc-500 shrink-0 mx-auto sm:mx-0">
               RC
             </div>
             <div className="text-center sm:text-left">
@@ -243,26 +243,17 @@ export default function ProfilePage() {
   );
 }
 
-// Full-width header – logo now tiny
+// Full-width header – NO LOGO at all
 function Header() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
         <div className="w-full px-5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
-          {/* Left – tiny logo */}
-          <div className="flex items-center gap-3">
-            <img
-              src="/CC-main-logo.png"
-              alt="Collector Connector"
-              className="h-2 max-w-[70px] sm:h-3 sm:max-w-[90px] w-auto object-contain scale-75 sm:scale-90"
-            />
-            <div className="hidden sm:block text-xs text-gray-400">
-              where collectors meet
-            </div>
-          </div>
+          {/* Left – empty (no logo) */}
+          <div className="flex-1" />
 
           {/* Center – search bar */}
-          <div className="hidden md:flex flex-1 justify-center max-w-xl">
+          <div className="flex-1 flex justify-center max-w-xl">
             <div className="w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-full px-5 py-2 text-sm text-zinc-400">
               Search collections, users...
             </div>

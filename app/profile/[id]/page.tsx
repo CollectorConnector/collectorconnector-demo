@@ -68,7 +68,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
-        <Header avatarUrl={null} displayName="Loading..." />
+        <Header avatarUrl={null} displayName="Loading..." userId={userId} />
         <div className="flex items-center justify-center h-[80vh] text-xl">
           Loading...
         </div>
@@ -80,7 +80,7 @@ export default function ProfilePage() {
   if (error || !profile) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white">
-        <Header avatarUrl={null} displayName="Error" />
+        <Header avatarUrl={null} displayName="Error" userId={userId} />
         <div className="flex flex-col items-center justify-center h-[80vh]">
           <h1 className="text-3xl mb-4">Error</h1>
           <p className="text-white/70">{error || "Profile not found"}</p>
@@ -92,7 +92,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pb-20">
-      <Header avatarUrl={profile.avatar_url} displayName={displayName} />
+      <Header avatarUrl={profile.avatar_url} displayName={displayName} userId={userId} />
 
       <main className="w-full px-5 sm:px-8 md:px-12 pt-6 max-w-6xl mx-auto">
         {/* Profile Card */}
@@ -181,14 +181,16 @@ export default function ProfilePage() {
 }
 
 // ───────────────────────────────────────────────
-//  Header – pill nav style matching your mock
+//  Header component – now correctly receives userId
 // ───────────────────────────────────────────────
 function Header({
   avatarUrl,
   displayName = "Collector",
+  userId,
 }: {
   avatarUrl?: string | null;
   displayName?: string;
+  userId: string;
 }) {
   return (
     <>

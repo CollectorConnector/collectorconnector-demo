@@ -109,7 +109,7 @@ export default function ProfilePage() {
       <Header />
 
       <main className="px-5 sm:px-8 pt-6 pb-20 max-w-6xl mx-auto">
-        {/* Avatar + Profile info */}
+        {/* Profile header */}
         <div className="text-center mb-10">
           <div className="relative inline-block mb-4">
             <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-4 border-zinc-800 shadow-2xl mx-auto">
@@ -243,18 +243,18 @@ export default function ProfilePage() {
   );
 }
 
-// Full-width header – logo downsized
+// Full-width header – logo downsized even more
 function Header() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
         <div className="w-full px-5 sm:px-8 h-12 sm:h-14 flex items-center justify-between">
-          {/* Left – smaller logo + tagline */}
+          {/* Left – even smaller logo + tagline */}
           <div className="flex items-center gap-3">
             <img
               src="/CC-main-logo.png"
               alt="Collector Connector"
-              className="h-5 sm:h-6 w-auto object-contain"
+              className="h-5 max-w-[100px] sm:h-6 sm:max-w-[120px] w-auto object-contain scale-90 sm:scale-100"
             />
             <div className="hidden sm:block text-xs text-gray-400">
               where collectors meet

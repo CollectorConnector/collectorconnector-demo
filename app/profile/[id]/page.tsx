@@ -1,180 +1,136 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import Image from "next/image";
-import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
-export default function ProfilePage() {
-  const { id } = useParams<{ id: string }>();
-
-  const [profile, setProfile] = useState<any>(null);
-  const [collections, setCollections] = useState<any[]>([]);
-  const [activity, setActivity] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      const { data: collectionData } = await supabase
-        .from("collections")
-        .select("*")
-        .eq("user_id", id);
-
-      const { data: activityData } = await supabase
-        .from("items")
-        .select("*")
-        .eq("user_id", id)
-        .order("created_at", { ascending: false });
-
-      setProfile(profileData || null);
-      setCollections(collectionData || []);
-      setActivity(activityData || []);
-      setLoading(false);
-    }
-
-    loadData();
-  }, [id]);
-
-  if (loading) return <div className="p-6 text-white">Loading…</div>;
-  if (!profile) return <div className="p-6 text-white">Profile not found</div>;
-
+export default function HomePage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 pb-20 space-y-10">
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "radial-gradient(circle at top, #0d0d0d 0%, #000000 70%)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "20px",
+        textAlign: "center",
+        color: "#fff",
+        position: "relative",
+      }}
+    >
+      {/* WHITE GLOW */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "420px",
+          height: "420px",
+          background: "radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%)",
+          filter: "blur(60px)",
+          animation: "pulseGlow 12s ease-in-out infinite",
+          zIndex: 0,
+        }}
+      />
 
-      {/* PROFILE HEADER */}
-      <div className="flex flex-col items-center text-center mt-2">
+      <style>{`
+        @keyframes pulseGlow {
+          0% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+          50% { opacity: 0.7; transform: translateX(-50%) scale(1.15); }
+          100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+        }
+      `}</style>
 
-        {/* Avatar — slightly smaller */}
-        <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-700 shadow-md mb-3">
-          <Image
-            src={profile.avatar_url || "/diamond.png"}
-            alt="Avatar"
-            width={96}
-            height={96}
-            className="object-cover"
-          />
+      <div style={{ position: "relative", zIndex: 2, maxWidth: "720px", margin: "0 auto" }}>
+        {/* MAIN LOGO */}
+        <img
+          src="/CC-main-logo.png"
+          alt="CollectorConnector"
+          style={{
+            width: "200px",
+            display: "block",
+            margin: "0 auto 24px",
+          }}
+        />
+
+        {/* MICRO TAGLINE */}
+        <p
+          style={{
+            color: "#ffffff",
+            fontSize: "14px",
+            letterSpacing: "2px",
+            marginBottom: "12px",
+          }}
+        >
+          BUILT FOR COLLECTORS
+        </p>
+
+        {/* MAIN TAGLINE */}
+        <h1
+          style={{
+            fontSize: "36px",
+            fontWeight: 800,
+            marginBottom: "12px",
+            letterSpacing: "-0.5px",
+          }}
+        >
+          WHERE COLLECTORS MEET
+        </h1>
+
+        {/* SUBTAGLINE */}
+        <p
+          style={{
+            fontSize: "18px",
+            color: "#9CA3AF",
+            marginBottom: "40px",
+            lineHeight: 1.5,
+          }}
+        >
+          Create your identity. Showcase your collections.  
+          Connect with collectors around the world.
+        </p>
+
+        {/* CTA BUTTONS */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px",
+            maxWidth: "320px",
+            margin: "0 auto",
+          }}
+        >
+          <Link
+            href="/auth/signup"
+            style={{
+              padding: "14px",
+              background: "#ffffff",
+              color: "#000",
+              borderRadius: "10px",
+              fontWeight: 700,
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Create your profile
+          </Link>
+
+          <Link
+            href="/explore"
+            style={{
+              padding: "14px",
+              border: "1px solid #ffffff",
+              color: "#ffffff",
+              borderRadius: "10px",
+              fontWeight: 600,
+              textDecoration: "none",
+              fontSize: "16px",
+            }}
+          >
+            Explore collectors
+          </Link>
         </div>
-
-        {/* Name */}
-        <h1 className="text-xl font-semibold leading-tight">{profile.display_name}</h1>
-        <p className="text-gray-400 text-sm">@{profile.username}</p>
-
-        {/* Location */}
-        {profile.location && (
-          <p className="text-gray-500 text-xs mt-0.5">{profile.location}</p>
-        )}
-
-        {/* Tier Badge — subtle + premium */}
-        {profile.tier && (
-          <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white text-black text-[10px] font-medium shadow-sm border border-gray-300">
-            <Image
-              src="/diamond.png"
-              alt="Diamond Tier"
-              width={12}
-              height={12}
-              className="opacity-90"
-            />
-            <span>{profile.tier}</span>
-          </div>
-        )}
-
-        {/* Bio */}
-        {profile.bio && (
-          <p className="text-gray-300 text-sm mt-3 max-w-md leading-relaxed">
-            {profile.bio}
-          </p>
-        )}
       </div>
-
-      {/* STATS */}
-      <div className="grid grid-cols-3 text-center bg-[#111] p-4 rounded-xl border border-gray-800">
-        <div>
-          <p className="text-xl font-semibold">{profile.items_count ?? 0}</p>
-          <p className="text-gray-400 text-sm">Items</p>
-        </div>
-        <div>
-          <p className="text-xl font-semibold">{profile.categories_count ?? 0}</p>
-          <p className="text-gray-400 text-sm">Categories</p>
-        </div>
-        <div>
-          <p className="text-xl font-semibold">{profile.rarity_score ?? 0}</p>
-          <p className="text-gray-400 text-sm">Rarity</p>
-        </div>
-      </div>
-
-      {/* COLLECTIONS GRID */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">Collections</h2>
-
-        {collections.length === 0 ? (
-          <p className="text-gray-400 text-sm">No collections yet</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {collections.map((col) => (
-              <div
-                key={col.id}
-                className="bg-[#111] rounded-xl overflow-hidden shadow-md border border-gray-800"
-              >
-                <div className="relative w-full h-48">
-                  <Image
-                    src={col.cover_image || "/diamond.png"}
-                    alt={col.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-3">
-                  <p className="font-medium">{col.name}</p>
-                  <p className="text-gray-400 text-xs">{col.item_count ?? 0} items</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* ACTIVITY FEED */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">Activity</h2>
-
-        {activity.length === 0 ? (
-          <p className="text-gray-400 text-sm">No recent activity yet</p>
-        ) : (
-          <div className="space-y-6">
-            {activity.map((item) => (
-              <div
-                key={item.id}
-                className="bg-[#111] rounded-xl p-4 border border-gray-800"
-              >
-                <div className="relative w-full h-64 rounded-lg overflow-hidden mb-3">
-                  <Image
-                    src={item.image_url || "/diamond.png"}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-
-                <p className="font-medium">{item.title}</p>
-
-                {item.description && (
-                  <p className="text-gray-400 text-sm mt-1">{item.description}</p>
-                )}
-
-                <p className="text-gray-500 text-xs mt-2">
-                  {new Date(item.created_at).toLocaleString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

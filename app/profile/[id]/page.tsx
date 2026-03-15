@@ -1,3 +1,4 @@
+// app/profile/[id]/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -7,6 +8,9 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import AvatarUpload from "./AvatarUpload";
 
+/* ───────────────────────────────────────────────
+   Types
+─────────────────────────────────────────────── */
 type Profile = {
   id: string;
   avatar_url?: string | null;
@@ -20,13 +24,16 @@ type Profile = {
 
 type Collection = {
   id: string;
-  title: string;
+  title: string; // ← using your real column name from earlier
 };
 
+/* ───────────────────────────────────────────────
+   Page
+─────────────────────────────────────────────── */
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
+  const userId = Array.isArray(params?.id) ? params?.id[0] : params?.id || "";
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -44,27 +51,29 @@ export default function ProfilePage() {
       try {
         setLoading(true);
 
+        // ownership
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id === userId) setIsOwnProfile(true);
 
-        const { data: profileData, error: pErr } = await supabase
+        // profile
+        const { data: pData, error: pErr } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .single();
-
         if (pErr) throw pErr;
 
-        const { data: collData } = await supabase
+        // collections (for pills)
+        const { data: cData } = await supabase
           .from("collections")
-          .select("id, title")
+          .select("id,title")
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
-        setProfile(profileData);
-        setCollections(collData || []);
-      } catch (err: any) {
-        setError(err.message || "Failed to load profile");
+        setProfile(pData as Profile);
+        setCollections((cData as Collection[]) || []);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load profile");
       } finally {
         setLoading(false);
       }
@@ -74,15 +83,17 @@ export default function ProfilePage() {
   }, [userId, router]);
 
   const displayName = useMemo(
-    () => profile?.display_name || profile?.username || "Unnamed Collector",
+    () => profile?.display_name || profile?.username || "Collector",
     [profile]
   );
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Header userId={userId} />
-        <div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div>
+        <HeaderBar />
+        <main className="max-w-6xl mx-auto px-6 pt-10">
+          <div className="text-center text-zinc-400">Loading…</div>
+        </main>
         <Footer />
       </div>
     );
@@ -91,273 +102,200 @@ export default function ProfilePage() {
   if (error || !profile) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <Header userId={userId} />
-        <div className="flex flex-col items-center justify-center h-[80vh]">
-          <h1 className="text-3xl mb-4">Error</h1>
-          <p className="text-white/70">{error || "Profile not found"}</p>
-        </div>
+        <HeaderBar />
+        <main className="max-w-6xl mx-auto px-6 pt-10">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold">Profile not found</h1>
+            <p className="text-zinc-500 mt-2">{error || "This profile could not be loaded."}</p>
+          </div>
+        </main>
         <Footer />
       </div>
     );
   }
 
+  /* ——— Simple defaults for the mock ——— */
+  const location = profile.location || "Swindon, UK";
+  const bio =
+    profile.bio ||
+    "Collector Connector CEO, Collects Cards, Comics, Sneakers, Beanie Babies & Coca-Cola";
+
+  // Top four pills from collections (fallback set if none)
+  const pillTitles =
+    collections.slice(0, 4).map((c) => c.title) ||
+    ["Sports Cards", "TCG Cards", "Comic Books", "Sneakers"];
+
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
-      <Header userId={userId} />
+    <div className="min-h-screen bg-black text-white">
+      {/* Top bar header (page‑local, not global) */}
+      <HeaderBar />
 
-      <main className="px-5 sm:px-8 pt-6 pb-20 max-w-6xl mx-auto">
-
-        {/* PROFILE HEADER CARD */}
-        <div className="text-center mb-10">
-          <div className="relative inline-block mb-4">
-            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden border-4 border-zinc-800 shadow-2xl mx-auto">
+      <main className="max-w-6xl mx-auto px-6 pb-24">
+        {/* ——— Centered avatar + name block ——— */}
+        <section className="pt-14 text-center">
+          <div className="relative inline-block">
+            {/* avatar frame */}
+            <div className="w-40 h-40 rounded-lg border border-white/30 mx-auto overflow-hidden bg-zinc-900">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} className="w-full h-full object-cover" />
+                <img
+                  src={profile.avatar_url}
+                  alt="Avatar"
+                  className="h-full w-full object-cover"
+                />
               ) : (
-                <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-4xl text-zinc-600">
+                <div className="h-full w-full flex items-center justify-center text-5xl text-zinc-600">
                   {displayName.charAt(0)}
                 </div>
               )}
             </div>
 
-            {/* Rotated text */}
-            <div className="absolute -top-2 -right-6 rotate-12 bg-zinc-900 border border-zinc-700 text-xs px-3 py-1 rounded-md text-zinc-400">
-              Avatar (Profile Pic)
+            {/* diagonal ribbon */}
+            <div className="absolute -top-3 -left-6 -rotate-12 select-none">
+              <div className="border border-white/30 text-[11px] text-zinc-300 px-3 py-1 bg-black rounded">
+                Avatar (Profile Pic)
+              </div>
             </div>
 
-            {/* CC badge */}
-            <div className="absolute bottom-2 right-2 w-8 h-8 bg-black rounded-full flex items-center justify-center text-white font-bold border-2 border-zinc-700">
+            {/* CC badge circle */}
+            <div className="absolute -right-3 bottom-2 h-8 w-8 rounded-full border border-white/40 bg-black flex items-center justify-center text-xs">
               CC
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold mb-2">{displayName}</h1>
+          {/* name + subtitle + location + bio */}
+          <h1 className="mt-6 text-3xl font-semibold tracking-tight">{displayName}</h1>
+          <div className="mt-1 text-sm text-zinc-400">Collector Connector 1</div>
+          <div className="mt-1 text-sm text-zinc-400">{location}</div>
 
-          <p className="text-zinc-400 text-lg mb-1">
-            Collector Connector 1 • {profile.location || "Swindon, UK"}
-          </p>
+          <div className="mt-3 text-sm text-zinc-300 max-w-2xl mx-auto leading-relaxed">
+            Bio: {bio}
+          </div>
 
-          <p className="text-zinc-400 max-w-3xl mx-auto">
-            {profile.bio || "Collector Connector CEO, Collects Cards, Comics, Sneakers, Beanie Babies & Coca-Cola"}
-          </p>
-
+          {/* Follow button */}
           {!isOwnProfile && (
-            <button className="mt-6 px-10 py-3 bg-white text-black font-medium rounded-full hover:bg-gray-200 transition">
+            <button
+              type="button"
+              className="mt-6 inline-flex items-center justify-center border border-white/40 rounded-md px-4 py-2 text-sm hover:bg-white/5"
+            >
               Follow
             </button>
           )}
-        </div>
 
-        {/* STATS */}
-        <div className="flex flex-wrap justify-center gap-6 mb-12">
-          <Stat title="Items" value={profile.items_count || 0} />
-          <Stat title="Collections" value={collections.length} />
-          <Stat title="Rarity" value={90.8} />
-        </div>
+          {/* thin divider */}
+          <div className="mt-8 h-px w-64 mx-auto bg-white/30" />
+        </section>
 
-        {/* COLLECTION PILLS */}
-        <h2 className="text-2xl font-bold mb-4 text-center">Collections</h2>
-
-        <div className="flex flex-wrap justify-center gap-3 mb-16">
-          {collections.length > 0 ? (
-            collections.map((col) => (
-              <div
-                key={col.id}
-                className="px-6 py-3 bg-zinc-950 border border-zinc-800 rounded-full text-sm font-medium hover:bg-zinc-900 transition"
+        {/* ——— Pills row ——— */}
+        <section className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {(pillTitles.length ? pillTitles : ["Sports Cards", "TCG Cards", "Comic Books", "Sneakers"]).map(
+            (t, i) => (
+              <span
+                key={`${t}-${i}`}
+                className="inline-flex items-center border border-white/40 rounded-md px-4 py-2 text-sm"
               >
-                {col.title}
+                {t}
+              </span>
+            )
+          )}
+        </section>
+
+        {/* ——— Collections Gallery ——— */}
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold text-center mb-5">Collections Gallery</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Niche Families list card */}
+            <div className="border border-white/30 rounded-lg p-5">
+              <h3 className="font-medium mb-3">Niche Families</h3>
+              <ul className="text-sm text-zinc-300 space-y-1">
+                <li>1,500 – Sports Cards</li>
+                <li>1,321 – TCG Cards</li>
+                <li>1,525 – Comics</li>
+                <li>1,778 – Sneakers</li>
+                <li>1,323 – Beanie Babies</li>
+              </ul>
+            </div>
+
+            {/* CC tile */}
+            <div className="border border-white/30 rounded-lg p-5 flex items-center justify-center">
+              <div className="text-6xl tracking-tight">CC</div>
+            </div>
+
+            {/* News card */}
+            <div className="border border-white/30 rounded-lg p-5">
+              <h3 className="font-medium mb-2">News + Upcoming Events</h3>
+              <p className="text-sm text-zinc-300">
+                New feature launch coming soon… <br />
+                Community meetup – London – April 2026
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ——— Live Feed ——— */}
+        <section className="mt-12">
+          <div className="border border-white/30 rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Live Feed</h2>
+
+            <div className="flex items-start gap-4">
+              {/* small initials circle */}
+              <div className="h-12 w-12 rounded-full border border-white/30 flex items-center justify-center text-sm">
+                RC
               </div>
-            ))
-          ) : (
-            <p className="text-zinc-500">No collections yet</p>
-          )}
 
-          {isOwnProfile && (
-            <Link
-              href="/create-collection"
-              className="px-6 py-3 bg-white/10 border border-white/20 rounded-full text-sm font-medium hover:bg-white/15 transition flex items-center gap-2"
-            >
-              + Create Collection
-            </Link>
-          )}
-        </div>
+              <div className="flex-1">
+                <p className="font-medium">Richard House</p>
+                <p className="text-xs text-zinc-500">New upload</p>
 
-        {/* COLLECTIONS GALLERY */}
-        <h2 className="text-2xl font-bold mb-6 text-center">Collections Gallery</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <GalleryCard />
-          <GalleryLogo />
-          <GalleryNews />
-        </div>
-
-        {/* LIVE FEED */}
-        <h2 className="text-2xl font-bold mt-16 mb-6 text-center">Live Feed</h2>
-
-        <LiveFeed />
+                <div className="mt-3 inline-block border border-white/40 rounded-md px-3 py-2 text-sm bg-black">
+                  (RH) – New Rare Card <br />
+                  Shohei Ohtani Rookie
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
+      {/* Your site footer component */}
       <Footer />
     </div>
   );
 }
 
 /* ───────────────────────────────────────────────
-   HEADER — NO LOGO, NO AVATAR, FULL-WIDTH
-   ─────────────────────────────────────────────── */
-function Header({ userId }: { userId: string }) {
+   Header Bar — desktop-first, page‑local only
+   (brand text + centered search + right socials)
+─────────────────────────────────────────────── */
+function HeaderBar() {
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
-        <div className="w-full px-8">
-          <div className="flex h-16 items-center justify-between gap-8">
-
-            {/* LEFT SIDE */}
-            <div className="flex items-center gap-8">
-              <div className="leading-tight">
-                <div className="text-sm font-semibold tracking-wide text-white">
-                  COLLECTORCONNECTOR
-                </div>
-                <div className="text-[11px] text-zinc-500">
-                  A home for collectors
-                </div>
-              </div>
-
-              {/* Pills */}
-              <nav className="flex items-center gap-3">
-                <HeaderPill href="/dashboard" label="Dashboard" />
-                <HeaderPill href={`/profile/${userId}`} label="Profile" active />
-              </nav>
-            </div>
-
-            {/* CENTER SOCIALS */}
-            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              <HeaderPill href="https://www.ebay.co.uk" label="eBay" subtle />
-              <HeaderPill href="https://www.psacard.com" label="PSA" subtle />
-              <HeaderPill href="https://www.goldin.co" label="Goldin" subtle />
-              <HeaderPill href="https://www.whatnot.com" label="Whatnot" subtle />
-              <HeaderPill href="https://x.com" label="X" subtle />
-            </div>
-
-            {/* RIGHT — EMPTY (no logo, no avatar) */}
-            <div className="w-8" />
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/15">
+        <div className="w-full h-12 flex items-center justify-between px-4">
+          {/* left: brand text */}
+          <div className="leading-tight">
+            <div className="text-[13px] font-semibold tracking-wide">Collector Connector</div>
+            <div className="text-[10px] text-zinc-500 -mt-0.5">where collectors meet</div>
           </div>
+
+          {/* center: search bar */}
+          <div className="flex-1 max-w-md mx-4">
+            <div className="w-full h-8 rounded-md border border-white/20 px-3 text-[13px] flex items-center text-zinc-400">
+              search bar
+            </div>
+          </div>
+
+          {/* right: socials row */}
+          <nav className="flex items-center gap-4 text-[13px]">
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:opacity-80">insta</a>
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:opacity-80">Discord</a>
+            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:opacity-80">X</a>
+            <a href="https://www.whatnot.com" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:opacity-80">whatnot</a>
+          </nav>
         </div>
       </header>
-
-      <div className="h-16" />
+      {/* spacer */}
+      <div className="h-12" />
     </>
-  );
-}
-
-/* Pill button */
-function HeaderPill({
-  href,
-  label,
-  active = false,
-  subtle = false,
-}: {
-  href: string;
-  label: string;
-  active?: boolean;
-  subtle?: boolean;
-}) {
-  const base =
-    "px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors";
-  const activeStyle =
-    "bg-white/10 text-zinc-100 border border-white/20 hover:bg-white/15";
-  const normalStyle =
-    "bg-white/5 text-zinc-200 border border-white/10 hover:bg-white/10 hover:border-white/20";
-  const subtleStyle =
-    "bg-transparent text-zinc-300 border border-white/10 hover:bg-white/5";
-
-  const classes = subtle
-    ? `${base} ${subtleStyle}`
-    : active
-    ? `${base} ${activeStyle}`
-    : `${base} ${normalStyle}`;
-
-  const external = href.startsWith("http");
-
-  return (
-    <a
-      href={href}
-      className={classes}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-    >
-      {label}
-    </a>
-  );
-}
-
-/* Stat circle */
-function Stat({ title, value }: { title: string; value: number }) {
-  return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-full px-8 py-4 text-center min-w-[140px]">
-      <div className="text-3xl font-bold">{value}</div>
-      <div className="text-zinc-500 text-sm">{title}</div>
-    </div>
-  );
-}
-
-/* Gallery cards */
-function GalleryCard() {
-  return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-      <h3 className="text-lg font-semibold mb-4">Niche Families</h3>
-      <ul className="space-y-2 text-sm text-zinc-300">
-        <li>1,500 - Sports Cards</li>
-        <li>1,321 - TCG Cards</li>
-        <li>1,525 - Comics</li>
-        <li>1,778 - Sneakers</li>
-        <li>1,776 - Beanie Babies</li>
-        <li>1,323 - Coca-Cola</li>
-      </ul>
-    </div>
-  );
-}
-
-function GalleryLogo() {
-  return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 flex items-center justify-center">
-      <div className="text-7xl font-black text-zinc-700">CC</div>
-    </div>
-  );
-}
-
-function GalleryNews() {
-  return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6">
-      <h3 className="text-lg font-semibold mb-4">News + Upcoming Events</h3>
-      <p className="text-zinc-400 text-sm">
-        New feature launch coming soon…<br />
-        Community meetup – London – April 2026
-      </p>
-    </div>
-  );
-}
-
-/* Live feed */
-function LiveFeed() {
-  return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 max-w-3xl mx-auto">
-      <div className="flex items-start gap-4">
-
-        {/* Placeholder profile circle */}
-        <div className="w-14 h-14 rounded-full bg-zinc-800 flex items-center justify-center text-2xl text-zinc-500">
-          RC
-        </div>
-
-        <div>
-          <p className="font-medium text-lg">Richard House</p>
-          <p className="text-zinc-500 text-sm">New upload</p>
-
-          <div className="mt-3 p-4 bg-black rounded-lg border border-zinc-800">
-            (RH) - New Rare Card: Shohei Ohtani Rookie
-          </div>
-        </div>
-
-      </div>
-    </div>
   );
 }

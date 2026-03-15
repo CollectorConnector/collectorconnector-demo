@@ -190,7 +190,7 @@ function ProfileHeader() {
           <img
             src="/CC-main-logo.png"
             alt="CollectorConnector"
-            className="h-6 w-auto object-contain"
+            className="h-5 w-auto object-contain"
           />
 
           {/* Search bar */}

@@ -201,32 +201,3 @@ function ProfileHeader() {
     </>
   );
 }
-function ProfileHeader() {
-  return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
-        <div className="w-full px-4 sm:px-8 h-14 grid grid-cols-[auto,1fr] items-center gap-4">
-
-          {/* Small, normal-sized logo */}
-          <div className="flex items-center">
-            <img
-              src="/CC-main-logo.png"
-              alt="Collector Connector"
-              className="w-10 h-10 object-contain"
-            />
-          </div>
-
-          {/* Icons */}
-          <div className="flex items-center justify-center gap-4 text-white">
-            {/* your icons here */}
-          </div>
-
-        </div>
-      </header>
-
-      {/* Spacer to push content below header */}
-      <div className="h-14" />
-    </>
-  );
-}
-

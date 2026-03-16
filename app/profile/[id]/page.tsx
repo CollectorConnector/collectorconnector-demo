@@ -85,16 +85,10 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      <main
-  style={{
-    maxWidth: 1080,
-    margin: "0 auto",
-    padding: "24px 16px 80px",
-  }}
->
+      {/* THIS IS THE ONLY CHANGE: main content is now centered */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
 
-        {/* PROFILE CONTENT RESTORED */}
-
+        {/* All your original content – unchanged */}
         <div className="text-center mb-7">
           <img
             src={profile.avatar_url || "/default-avatar.png"}
@@ -179,6 +173,7 @@ export default function ProfilePage() {
     </div>
   );
 }
+
 function ProfileHeader() {
   return (
     <>
@@ -191,7 +186,7 @@ function ProfileHeader() {
           zIndex: 50,
           background: "#000",
           borderBottom: "1px solid #1f1f1f",
-          height: 56, // same as h-14
+          height: 56,
           display: "flex",
           alignItems: "center",
           padding: "0 16px",
@@ -259,5 +254,3 @@ function ProfileHeader() {
     </>
   );
 }
-
-

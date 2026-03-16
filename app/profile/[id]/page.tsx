@@ -183,7 +183,7 @@ function ProfileHeader() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
         <div
           className="
-            w-full px-4 sm:px-8 h-14
+            w-full px-4 sm:px-8 h-24
             grid
             grid-cols-[auto,1fr]
             items-center
@@ -202,13 +202,14 @@ function ProfileHeader() {
 
           {/* CENTRE: ICONS */}
           <div className="flex items-center justify-center gap-4">
-            {/* icons unchanged */}
+            {/* your icons unchanged */}
           </div>
 
         </div>
       </header>
 
-      <div className="h-14" />
+      {/* Spacer to push content below header */}
+      <div className="h-24" />
     </>
   );
 }

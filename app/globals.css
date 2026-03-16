@@ -26,4 +26,10 @@ a:hover {
   color: #e5e5e5;
 }
 
-
+/* Force all SVG icons to behave consistently */
+svg {
+  width: 28px !important;
+  height: 28px !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+}

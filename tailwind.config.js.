@@ -5,6 +5,21 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  theme: { extend: {} },
+  safelist: [
+    'max-w-5xl',
+    'mx-auto',
+    'px-4',
+    'sm:px-6',
+    'lg:px-8',
+    'pt-8',
+    'pb-20',
+    // optional: add more if you use other classes that disappear
+    // 'text-center',
+    // 'flex',
+    // 'justify-center',
+  ],
+  theme: {
+    extend: {},
+  },
   plugins: [],
-};
+}

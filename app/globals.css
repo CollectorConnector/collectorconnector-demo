@@ -43,7 +43,7 @@ main {
 
 /* ⭐ The actual centered column ⭐ */
 .profile-container {
-  text-align: centre;
+  text-align: center;
   width: 100%;
   max-width: 720px;         /* adjust this to tighten or widen the column */
 }

@@ -195,8 +195,8 @@ function ProfileHeader() {
         <img
           src="/CC-main-logo.png"
           alt="Collector Connector"
-          width={40}
-          height={40}
+          width={80}
+          height={80}
           style={{ objectFit: "contain" }}
         />
 

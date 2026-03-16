@@ -85,10 +85,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      {/* FULL-WIDTH MAIN */}
       <main className="px-5 sm:px-8 pt-6 pb-20">
-
-        {/* CONTENT CONTAINER */}
         <div className="max-w-3xl mx-auto">
 
           <div className="text-center mb-7">
@@ -181,35 +178,26 @@ function ProfileHeader() {
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
-        <div
-          className="
-            w-full px-4 sm:px-8 h-24
-            grid
-            grid-cols-[auto,1fr]
-            items-center
-            gap-2
-          "
-        >
+        <div className="w-full px-4 sm:px-8 h-20 grid grid-cols-[auto,1fr] items-center gap-4">
 
-          {/* LEFT: LOGO (2× bigger) */}
+          {/* Normal-sized logo */}
           <div className="flex items-center">
             <img
               src="/CC-main-logo.png"
               alt="Collector Connector"
-              style={{ width: "80px", height: "80px", objectFit: "contain" }}
+              className="w-12 h-12 object-contain"
             />
           </div>
 
-          {/* CENTRE: ICONS */}
-          <div className="flex items-center justify-center gap-4">
-            {/* your icons unchanged */}
+          {/* Icons */}
+          <div className="flex items-center justify-center gap-6 text-white">
+            {/* your icons here */}
           </div>
 
         </div>
       </header>
 
-      {/* Spacer to push content below header */}
-      <div className="h-24" />
+      <div className="h-20" />
     </>
   );
 }

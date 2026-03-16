@@ -85,7 +85,13 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      <main className="px-5 sm:px-8 pt-6 pb-20 max-w-3xl mx-auto">
+      <main
+  style={{
+    maxWidth: 1080,
+    margin: "0 auto",
+    padding: "24px 16px 80px",
+  }}
+>
 
         {/* PROFILE CONTENT RESTORED */}
 

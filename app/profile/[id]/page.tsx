@@ -141,12 +141,9 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      {/* OUTER CONTAINER */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
-        {/* INNER COLUMN */}
         <div className="max-w-2xl mx-auto">
 
-          {/* AVATAR + NAME + BIO */}
           <div className="text-center mb-7">
             <div className="w-28 h-28 rounded-full overflow-hidden border border-white/20 mx-auto mb-4">
               <img
@@ -167,7 +164,6 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          {/* STATS */}
           <div className="flex justify-between bg-zinc-950 border border-zinc-800 rounded-xl p-5 mb-10">
             <div className="text-center">
               <p className="text-2xl font-bold">{itemsCount}</p>
@@ -185,7 +181,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* COLLECTION TAGS */}
           <h2 className="text-2xl font-bold mb-4">Collections</h2>
 
           <div className="flex flex-wrap gap-3 mb-10">
@@ -203,7 +198,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* ACTIVITY GRID */}
           <h2 className="text-2xl font-bold mb-4">Activity</h2>
 
           {items.length > 0 ? (
@@ -222,12 +216,9 @@ export default function ProfilePage() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm mb-10">
-              No recent items yet.
-            </p>
+            <p className="text-gray-500 text-sm mb-10">No recent items yet.</p>
           )}
 
-          {/* LATEST ACTIVITY TEXT */}
           <div className="mb-20">
             {latestItem ? (
               <>
@@ -295,10 +286,9 @@ function ProfileHeader() {
           display: "flex",
           alignItems: "center",
           padding: "0 16px",
-          gap: 16,
+          gap: 12,
         }}
       >
-        {/* LOGO (home button) */}
         <a href="/">
           <img
             src="/CC-main-logo.png"
@@ -309,8 +299,14 @@ function ProfileHeader() {
           />
         </a>
 
-        {/* SEARCH BAR */}
-        <div style={{ position: "relative", flex: 1, maxWidth: 300 }}>
+        <div
+          style={{
+            position: "relative",
+            flex: 1,
+            maxWidth: 280,
+            marginLeft: 8,
+          }}
+        >
           <input
             type="text"
             placeholder="Search users..."
@@ -330,7 +326,6 @@ function ProfileHeader() {
             }}
           />
 
-          {/* RESULTS DROPDOWN */}
           {showResults && results.length > 0 && (
             <div
               style={{
@@ -380,7 +375,6 @@ function ProfileHeader() {
           )}
         </div>
 
-        {/* SOCIAL ICONS */}
         <div
           style={{
             display: "flex",

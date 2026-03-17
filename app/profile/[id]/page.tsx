@@ -260,12 +260,12 @@ function ProfileHeader() {
     }
 
     const delay = setTimeout(async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("id, username, display_name, avatar_url")
         .ilike("username", `%${query}%`);
 
-      if (!error) setResults(data || []);
+      setResults(data || []);
     }, 250);
 
     return () => clearTimeout(delay);
@@ -286,15 +286,15 @@ function ProfileHeader() {
           display: "flex",
           alignItems: "center",
           padding: "0 16px",
-          gap: 12,
+          gap: 8, // tighter spacing
         }}
       >
         <a href="/">
           <img
             src="/CC-main-logo.png"
             alt="Collector Connector"
-            width={140}
-            height={140}
+            width={130} // slightly smaller to balance layout
+            height={130}
             style={{ objectFit: "contain", cursor: "pointer" }}
           />
         </a>
@@ -303,8 +303,8 @@ function ProfileHeader() {
           style={{
             position: "relative",
             flex: 1,
-            maxWidth: 280,
-            marginLeft: 8,
+            maxWidth: 320,
+            marginLeft: 0, // pulled fully left
           }}
         >
           <input

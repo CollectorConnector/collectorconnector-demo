@@ -18,9 +18,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <div className="page-body">
           <main>{children}</main>
         </div>
-
-        {/* Footer stays global */}
-        <Footer />
       </body>
     </html>
   );

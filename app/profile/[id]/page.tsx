@@ -198,7 +198,7 @@ function ProfileHeader() {
           style={{ objectFit: "contain" }}
         />
 
-        {/* RIGHT: ICONS – now including eBay SVG */}
+        {/* RIGHT: SOCIAL ICONS – eBay added */}
         <div
           style={{
             display: "flex",
@@ -221,10 +221,11 @@ function ProfileHeader() {
             </svg>
           </a>
 
-          {/* eBay SVG icon */}
+          {/* eBay SVG – recognizable eBay shape */}
           <a href="https://ebay.com" target="_blank" rel="noopener noreferrer">
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M21 7h-3V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-5 10H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V7h8v2z"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21.5 7h-19v10h19V7zM3 9h18v6H3V9z"/>
+              <path d="M5 11h2v2H5v-2zM9 11h10v2H9v-2z"/>
             </svg>
           </a>
 

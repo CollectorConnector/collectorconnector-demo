@@ -1,15 +1,20 @@
 import "./globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "Collector Connector",
   description: "Where collectors meet",
 };
 
-export default function RootLayout({ children }) {
+type RootLayoutProps = {
+  children: React.ReactNode;
+};
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body>
-        {/* Header stays full width */}
         <Header />
 
         {/* ⭐ Centered body wrapper ⭐ */}
@@ -17,7 +22,6 @@ export default function RootLayout({ children }) {
           <main>{children}</main>
         </div>
 
-        {/* Footer stays full width */}
         <Footer />
       </body>
     </html>

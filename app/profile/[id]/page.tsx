@@ -185,47 +185,20 @@ function ProfileHeader() {
           height: 56,
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between", // ← key: horizontal spread
+          justifyContent: "space-between",
           padding: "0 16px",
         }}
       >
         {/* LEFT: LOGO */}
-        <div style={{ minWidth: 160 }}>
-          <img
-            src="/CC-main-logo.png"
-            alt="Collector Connector"
-            width={130} // smaller to balance
-            height={130}
-            style={{ objectFit: "contain" }}
-          />
-        </div>
+        <img
+          src="/CC-main-logo.png"
+          alt="Collector Connector"
+          width={130}
+          height={130}
+          style={{ objectFit: "contain" }}
+        />
 
-        {/* CENTER: SEARCH BAR – moved left a bit */}
-        <div
-          style={{
-            flex: 1,
-            maxWidth: 360,
-            marginLeft: 24, // ← this pulls search bar left (increase/decrease to adjust)
-            display: "flex",
-            justifyContent: "flex-start", // aligns search left within its space
-          }}
-        >
-          <input
-            type="text"
-            placeholder="Search users..."
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              borderRadius: 8,
-              background: "#111",
-              border: "1px solid #333",
-              color: "white",
-              fontSize: 14,
-            }}
-          />
-        </div>
-
-        {/* RIGHT: ICONS */}
+        {/* RIGHT: ICONS – now including eBay SVG */}
         <div
           style={{
             display: "flex",
@@ -248,18 +221,17 @@ function ProfileHeader() {
             </svg>
           </a>
 
-          {/* eBay */}
+          {/* eBay SVG icon */}
           <a href="https://ebay.com" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M10.6 13.4a1 1 0 001.4 1.4l5-5a1 1 0 00-1.4-1.4l-5 5z"/>
-              <path d="M8 12a4 4 0 016.8-2.8 1 1 0 101.4-1.4A6 6 0 006 12a6 6 0 0010.2 4.2 1 1 0 10-1.4-1.4A4 4 0 018 12z"/>
+              <path d="M21 7h-3V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-5 10H8v-2h8v2zm0-4H8v-2h8v2zm0-4H8V7h8v2z"/>
             </svg>
           </a>
 
           {/* Discord */}
           <a href="https://discord.com" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20 4a19.8 19.8 0 00-4.9-1.5l-.2.4A14.6 14.6 0 0116.7 5a18.3 18.3 0 00-9.4 0 14.6 14.6 0 011.8-2.1l-.2-.4A19.8 19.8 0 004 4c-1.3 2-2 4.3-2 6.7 0 6.7 4.3 12.3 10 13.3 5.7-1 10-6.6 10-13.3 0-2.4-.7-4.7-2-6.7zM8.5 14.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm7 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/>
+              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
             </svg>
           </a>
 

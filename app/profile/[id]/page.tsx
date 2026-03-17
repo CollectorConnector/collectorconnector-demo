@@ -141,13 +141,14 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      {/* OUTER CONTAINER (centers the whole page) */}
+      {/* OUTER CONTAINER */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
-        {/* INNER CONTAINER (centers the content column) */}
+        {/* INNER COLUMN */}
         <div className="max-w-2xl mx-auto">
+
           {/* AVATAR + NAME + BIO */}
           <div className="text-center mb-7">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border border-white/20 mx-auto mb-4">
+            <div className="w-28 h-28 rounded-full overflow-hidden border border-white/20 mx-auto mb-4">
               <img
                 src={profile.avatar_url || "/default-avatar.png"}
                 alt="Avatar"
@@ -162,11 +163,11 @@ export default function ProfilePage() {
             </p>
 
             <p className="text-gray-500 text-sm mt-1">
-              {profile.location || "Swindon, UK"}
+              {profile.location || "Unknown Location"}
             </p>
           </div>
 
-          {/* STATS BAR */}
+          {/* STATS */}
           <div className="flex justify-between bg-zinc-950 border border-zinc-800 rounded-xl p-5 mb-10">
             <div className="text-center">
               <p className="text-2xl font-bold">{itemsCount}</p>
@@ -175,7 +176,7 @@ export default function ProfilePage() {
 
             <div className="text-center">
               <p className="text-2xl font-bold">{collectionsCount}</p>
-              <p className="text-gray-500 text-sm">Categories</p>
+              <p className="text-gray-500 text-sm">Collections</p>
             </div>
 
             <div className="text-center">
@@ -184,7 +185,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* COLLECTIONS TAGS */}
+          {/* COLLECTION TAGS */}
           <h2 className="text-2xl font-bold mb-4">Collections</h2>
 
           <div className="flex flex-wrap gap-3 mb-10">
@@ -195,9 +196,6 @@ export default function ProfilePage() {
                   className="px-5 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-sm font-medium"
                 >
                   {c.title}
-                  {c.niche ? (
-                    <span className="text-gray-500 text-xs ml-2">· {c.niche}</span>
-                  ) : null}
                 </div>
               ))
             ) : (
@@ -224,9 +222,9 @@ export default function ProfilePage() {
               ))}
             </div>
           ) : (
-            <div className="mb-10 text-gray-500 text-sm">
-              No recent items yet. Start adding to your collection.
-            </div>
+            <p className="text-gray-500 text-sm mb-10">
+              No recent items yet.
+            </p>
           )}
 
           {/* LATEST ACTIVITY TEXT */}
@@ -238,7 +236,7 @@ export default function ProfilePage() {
                 </p>
                 <p className="text-base">
                   {latestItem.description ||
-                    `Just added "${latestItem.title}" to the collection.`}
+                    `Added "${latestItem.title}" to the collection.`}
                 </p>
               </>
             ) : (
@@ -250,6 +248,7 @@ export default function ProfilePage() {
               </>
             )}
           </div>
+
         </div>
       </main>
 
@@ -259,6 +258,28 @@ export default function ProfilePage() {
 }
 
 function ProfileHeader() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const delay = setTimeout(async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .ilike("username", `%${query}%`);
+
+      if (!error) setResults(data || []);
+    }, 250);
+
+    return () => clearTimeout(delay);
+  }, [query]);
+
   return (
     <>
       <header
@@ -274,19 +295,94 @@ function ProfileHeader() {
           display: "flex",
           alignItems: "center",
           padding: "0 16px",
+          gap: 16,
         }}
       >
-        <img
-          src="/CC-main-logo.png"
-          alt="Collector Connector"
-          width={160}
-          height={160}
-          style={{ objectFit: "contain" }}
-        />
+        {/* LOGO (home button) */}
+        <a href="/">
+          <img
+            src="/CC-main-logo.png"
+            alt="Collector Connector"
+            width={140}
+            height={140}
+            style={{ objectFit: "contain", cursor: "pointer" }}
+          />
+        </a>
 
+        {/* SEARCH BAR */}
+        <div style={{ position: "relative", flex: 1, maxWidth: 300 }}>
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setShowResults(true);
+            }}
+            style={{
+              width: "100%",
+              padding: "6px 10px",
+              borderRadius: 8,
+              background: "#111",
+              border: "1px solid #333",
+              color: "white",
+              fontSize: 14,
+            }}
+          />
+
+          {/* RESULTS DROPDOWN */}
+          {showResults && results.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                top: 40,
+                left: 0,
+                right: 0,
+                background: "#0d0d0d",
+                border: "1px solid #333",
+                borderRadius: 8,
+                padding: 8,
+                zIndex: 100,
+              }}
+            >
+              {results.map((user) => (
+                <a
+                  key={user.id}
+                  href={`/profile/${user.id}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "6px 8px",
+                    borderRadius: 6,
+                    textDecoration: "none",
+                    color: "white",
+                  }}
+                  onClick={() => setShowResults(false)}
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  <img
+                    src={user.avatar_url || "/default-avatar.png"}
+                    alt=""
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <span style={{ fontSize: 14 }}>
+                    {user.display_name || user.username}
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* SOCIAL ICONS */}
         <div
           style={{
-            marginLeft: "auto",
             display: "flex",
             alignItems: "center",
             gap: 16,
@@ -295,32 +391,32 @@ function ProfileHeader() {
         >
           <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M7 2C4.243 2 2 4.243 2 7v10c0 2.757 2.243 5 5 5h10c2.757 0 5-2.243 5-5V7c0-2.757-2.243-5-5-5H7zm10 2c1.654 0 3 1.346 3 3v10c0 1.654-1.346 3-3 3H7c-1.654 0-3-1.346-3-3V7c0-1.654 1.346-3 3-3h10zm-5 3a5 5 0 100 10 5 5 0 000-10zm6.5-.75a1.25 1.25 0 11-2.5 0 1.25 1.25 0 012.5 0z" />
+              <path d="M7 2C4.243 2 2 4.243 2 7v10c0 2.757 2.243 5 5 5h10c2.757 0 5-2.243 5-5V7c0-2.757-2.243-5-5-5H7zm10 2c1.654 0 3 1.346 3 3v10c0 1.654-1.346 3-3 3H7c-1.654 0-3-1.346-3-3V7c0-1.654 1.346-3 3-3h10zm-5 3a5 5 0 100 10 5 5 0 000-10zm6.5-.75a1.25 1.25 0 11-2.5 0 1.25 1.25 0 012.5 0z"/>
             </svg>
           </a>
 
           <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M22 12a10 10 0 10-11.5 9.9v-7h-2v-3h2v-2.3c0-2 1.2-3.1 3-3.1.9 0 1.8.1 1.8.1v2h-1c-1 0-1.3.6-1.3 1.2V12h2.3l-.4 3h-1.9v7A10 10 0 0022 12z" />
+              <path d="M22 12a10 10 0 10-11.5 9.9v-7h-2v-3h2v-2.3c0-2 1.2-3.1 3-3.1.9 0 1.8.1 1.8.1v2h-1c-1 0-1.3.6-1.3 1.2V12h2.3l-.4 3h-1.9v7A10 10 0 0022 12z"/>
             </svg>
           </a>
 
           <a href="https://ebay.com" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M10.6 13.4a1 1 0 001.4 1.4l5-5a1 1 0 00-1.4-1.4l-5 5z" />
-              <path d="M8 12a4 4 0 016.8-2.8 1 1 0 101.4-1.4A6 6 0 006 12a6 6 0 0010.2 4.2 1 1 0 10-1.4-1.4A4 4 0 018 12z" />
+              <path d="M10.6 13.4a1 1 0 001.4 1.4l5-5a1 1 0 00-1.4-1.4l-5 5z"/>
+              <path d="M8 12a4 4 0 016.8-2.8 1 1 0 101.4-1.4A6 6 0 006 12a6 6 0 0010.2 4.2 1 1 0 10-1.4-1.4A4 4 0 018 12z"/>
             </svg>
           </a>
 
           <a href="https://discord.com" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20 4a19.8 19.8 0 00-4.9-1.5l-.2.4A14.6 14.6 0 0116.7 5a18.3 18.3 0 00-9.4 0 14.6 14.6 0 011.8-2.1l-.2-.4A19.8 19.8 0 004 4c-1.3 2-2 4.3-2 6.7 0 6.7 4.3 12.3 10 13.3 5.7-1 10-6.6 10-13.3 0-2.4-.7-4.7-2-6.7zM8.5 14.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm7 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z" />
+              <path d="M20 4a19.8 19.8 0 00-4.9-1.5l-.2.4A14.6 14.6 0 0116.7 5a18.3 18.3 0 00-9.4 0 14.6 14.6 0 011.8-2.1l-.2-.4A19.8 19.8 0 004 4c-1.3 2-2 4.3-2 6.7 0 6.7 4.3 12.3 10 13.3 5.7-1 10-6.6 10-13.3 0-2.4-.7-4.7-2-6.7zM8.5 14.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm7 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/>
             </svg>
           </a>
 
           <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18 2l-5.4 6.3L6 2H2l7.3 8.1L2 22h4l5.7-7.1L18 22h4l-7.6-8.6L22 2h-4z" />
+              <path d="M18 2l-5.4 6.3L6 2H2l7.3 8.1L2 22h4l5.7-7.1L18 22h4l-7.6-8.6L22 2h-4z"/>
             </svg>
           </a>
         </div>

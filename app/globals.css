@@ -34,16 +34,16 @@ svg {
   display: inline-block !important;
 }
 
-/* ⭐ CENTER THE ENTIRE PROFILE PAGE BODY ⭐ */
-main {
-  display: flex;            /* turn main into a flex container */
-  justify-content: center;  /* center everything inside it */
-  width: 100%;              /* full width so centering works */
+/* ⭐ Center the entire page body between header and footer ⭐ */
+.page-body {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 /* ⭐ The actual centered column ⭐ */
-.profile-container {
-  text-align: center;
+.page-body > main {
   width: 100%;
-  max-width: 720px;         /* adjust this to tighten or widen the column */
+  max-width: 720px;
+  text-align: center; /* fixes portrait alignment */
 }

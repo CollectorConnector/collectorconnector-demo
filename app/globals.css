@@ -1,51 +1,16 @@
-@tailwind base;
-@tailwind components;
+
+@tailwind base; 
+@tailwind components; 
 @tailwind utilities;
 
-/* Black background everywhere */
-html, body {
-  background: #000;
-  color: #fff;
-  margin: 0;
-  padding: 0;
-}
+/* Black background everywhere */ html, body { background: #000; color: #fff; margin: 0; padding: 0; }
 
-/* Apple-style system font */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* Apple-style system font */ body { font-family: -apple-system, BlinkMacSystemFont, “SF Pro Text”, “SF Pro Display”, system-ui, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
-/* Remove blue link styling */
-a {
-  color: inherit;
-  text-decoration: none;
-}
-a:hover {
-  color: #e5e5e5;
-}
+/* Remove blue link styling */ a { color: inherit; text-decoration: none; } a:hover { color: #e5e5e5; }
 
-/* Force all SVG icons to behave consistently */
-svg {
-  width: 28px !important;
-  height: 28px !important;
-  flex-shrink: 0 !important;
-  display: inline-block !important;
-}
+/* Force all SVG icons to behave consistently */ svg { width: 28px !important; height: 28px !important; flex-shrink: 0 !important; display: inline-block !important; }
 
-/* ⭐ Center the entire page body between header and footer ⭐ */
-.page-body {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
+/* ⭐ Center the entire page body between header and footer ⭐ */ .page-body { display: flex; justify-content: center; width: 100%; }
 
-/* ⭐ The actual centered column ⭐ */
-/* FIXED: removed text-align:center (this was breaking your boxes) */
-.page-body > main {
-  width: 100%;
-  max-width: 720px;
-  margin: 0 auto;     /* keeps the page centred */
-  text-align: left;   /* restores normal block layout */
-}
+/* ⭐ The actual centered column ⭐ / .page-body > main { width: 100%; max-width: 720px; text-align: center; / fixes portrait alignment */ }

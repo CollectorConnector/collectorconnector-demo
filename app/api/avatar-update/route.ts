@@ -2,103 +2,113 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-type Body = {
-  userId?: string;
-  avatarUrl?: string;
-  filePath?: string; // "<bucket>/<path/to/object>"
-};
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SIGNED_URL_EXPIRES = 60; // seconds
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  // Minimal server-side warning
-  // eslint-disable-next-line no-console
-  console.error("Missing SUPABASE env vars for avatar-update route.");
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Missing required Supabase environment variables");
 }
 
-export async function POST(req: Request) {
+// Admin client (service role) used for DB updates and signed URLs
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false },
+});
+
+// Lightweight client (anon) used only to verify the incoming access token
+const supabaseAnon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false },
+});
+
+export async function POST(request: Request) {
   try {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    // 1) Parse body
+    const body = await request.json().catch(() => ({}));
+    const { userId, filePath } = body ?? {};
+
+    if (!userId || !filePath) {
+      return NextResponse.json({ error: "Missing userId or filePath" }, { status: 400 });
     }
 
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      auth: { persistSession: false },
-    });
-
-    const body = (await req.json().catch(() => ({} as Body))) as Body;
-    const { userId, avatarUrl, filePath } = body;
-
-    if (!userId || (!avatarUrl && !filePath)) {
-      return NextResponse.json({ error: "Missing userId and/or filePath/avatarUrl" }, { status: 400 });
+    // 2) Extract bearer token from Authorization header
+    const authHeader = request.headers.get("authorization") || "";
+    const tokenMatch = authHeader.match(/^Bearer (.+)$/);
+    const accessToken = tokenMatch ? tokenMatch[1] : null;
+    if (!accessToken) {
+      return NextResponse.json({ error: "Missing Authorization bearer token" }, { status: 401 });
     }
 
-    // Extract Bearer token from Authorization header
-    const authHeader = req.headers.get("authorization") || "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
-    if (!token) return NextResponse.json({ error: "Missing access token" }, { status: 401 });
+    // 3) Verify token and get user
+    const {
+      data: { user },
+      error: userErr,
+    } = await supabaseAnon.auth.getUser(accessToken);
 
-    // Verify token with Supabase admin client
-    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
-    if (userErr || !userData?.user) {
-      return NextResponse.json({ error: "Invalid access token" }, { status: 401 });
-    }
-    if (userData.user.id !== userId) {
-      return NextResponse.json({ error: "Token does not match userId" }, { status: 403 });
+    if (userErr || !user) {
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
     }
 
-    // Ensure profile row exists (insert if missing)
-    const { data: existing, error: selectErr } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("id", userId)
-      .maybeSingle();
+    // 4) Ensure the token owner matches the requested userId
+    if (user.id !== userId) {
+      return NextResponse.json({ error: "Token user does not match userId" }, { status: 403 });
+    }
 
-    if (selectErr) throw selectErr;
+    // 5) Parse bucket and path from filePath
+    // Expect filePath like "bucket/path/to/file.jpg" or "bucket/userid/filename.jpg"
+    const parts = filePath.split("/");
+    if (parts.length < 2) {
+      return NextResponse.json({ error: "Invalid filePath format" }, { status: 400 });
+    }
+    const bucket = parts[0];
+    const objectPath = parts.slice(1).join("/");
 
-    if (!existing) {
-      const { error: insertErr } = await supabaseAdmin
+    // 6) If bucket is public, you may want to use getPublicUrl; otherwise create signed URL
+    // Try to create a signed URL (works for both public and private; public URL still accessible)
+    const expiresInSeconds = 60; // short-lived preview URL
+    const { data: signedData, error: signedErr } = await supabaseAdmin.storage
+      .from(bucket)
+      .createSignedUrl(objectPath, expiresInSeconds);
+
+    if (signedErr) {
+      // If signed URL creation fails, still attempt to get public URL as fallback
+      const { data: pubData } = supabaseAdmin.storage.from(bucket).getPublicUrl(objectPath);
+      const avatarUrl = pubData?.publicUrl ?? null;
+
+      // Update profiles.avatar_url with the public URL (or the raw path if you prefer)
+      const { error: updateErr } = await supabaseAdmin
         .from("profiles")
-        .insert({ id: userId, created_at: new Date().toISOString() });
-      if (insertErr) throw insertErr;
+        .update({ avatar_url: avatarUrl })
+        .eq("id", userId);
+
+      if (updateErr) {
+        return NextResponse.json({ error: "Failed to update profile: " + updateErr.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ signedUrl: null, avatarUrl }, { status: 200 });
     }
 
-    // Update avatar_url in DB (store canonical value or path)
-    const dbAvatarValue = avatarUrl ?? filePath;
-    const { error: updateErr } = await supabaseAdmin
+    const signedUrl = signedData?.signedUrl ?? null;
+
+    // 7) Persist the avatar_url in profiles table (store the signed URL or a canonical public URL/path)
+    // It's common to store the storage path (e.g., "avatars/userid/filename.jpg") or a public URL.
+    // Here we store the public URL if available; otherwise store the storage path.
+    const { data: pubData } = supabaseAdmin.storage.from(bucket).getPublicUrl(objectPath);
+    const publicUrl = pubData?.publicUrl ?? null;
+    const avatarValueToStore = publicUrl ?? filePath;
+
+    const { error: updateError } = await supabaseAdmin
       .from("profiles")
-      .update({ avatar_url: dbAvatarValue })
+      .update({ avatar_url: avatarValueToStore })
       .eq("id", userId);
 
-    if (updateErr) throw updateErr;
-
-    // If filePath provided, generate a short-lived signed URL for client display
-    let signedUrl: string | null = null;
-    if (filePath) {
-      const [bucket, ...rest] = filePath.split("/");
-      const objectPath = rest.join("/");
-      if (!bucket || !objectPath) {
-        return NextResponse.json({ error: "filePath must be '<bucket>/<path>'" }, { status: 400 });
-      }
-
-      const { data: signed, error: signedErr } = await supabaseAdmin.storage
-        .from(bucket)
-        .createSignedUrl(objectPath, SIGNED_URL_EXPIRES);
-
-      if (signedErr) {
-        // eslint-disable-next-line no-console
-        console.error("createSignedUrl error:", signedErr);
-        throw signedErr;
-      }
-      signedUrl = signed.signedUrl;
+    if (updateError) {
+      return NextResponse.json({ error: "Failed to update profile: " + updateError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, avatarUrl: dbAvatarValue, signedUrl }, { status: 200 });
+    // 8) Return signed URL for immediate preview and the stored avatarUrl
+    return NextResponse.json({ signedUrl, avatarUrl: avatarValueToStore }, { status: 200 });
   } catch (err: any) {
-    // eslint-disable-next-line no-console
     console.error("avatar-update error:", err);
-    return NextResponse.json({ error: err?.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: err?.message ?? "Unknown error" }, { status: 500 });
   }
 }

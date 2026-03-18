@@ -133,6 +133,8 @@ export default function ProfilePage() {
     );
   }
 
+  const isOwnProfile = currentUserId === userId;
+
   return (
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
@@ -142,32 +144,37 @@ export default function ProfilePage() {
         {/* 1. PROFILE BOX */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-            <div className="relative mb-6">
+            <div className="flex items-center justify-center gap-6 mb-6">
               <img
                 src={profile.avatar_url || "/default-avatar.png"}
                 alt="Avatar"
                 className="w-24 h-24 rounded-full object-cover border-4 border-zinc-700 shadow-xl"
               />
+
+              {!isOwnProfile && (
+                <button
+                  onClick={toggleFollow}
+                  disabled={followLoading}
+                  className={`px-6 py-2.5 rounded-full text-sm font-medium transition min-w-[110px] ${
+                    isFollowing
+                      ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
+                      : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500"
+                  }`}
+                >
+                  {followLoading
+                    ? "…"
+                    : isFollowing
+                    ? "Following"
+                    : "Follow"}
+                </button>
+              )}
             </div>
 
             <h1 className="text-3xl font-bold mb-2">{displayName}</h1>
 
-            {currentUserId && currentUserId !== userId && (
-              <button
-                onClick={toggleFollow}
-                disabled={followLoading}
-                className={`mb-6 px-6 py-2 rounded-full text-sm font-medium transition ${
-                  isFollowing
-                    ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
-                    : "bg-indigo-600 hover:bg-indigo-500 text-white"
-                }`}
-              >
-                {followLoading ? "…" : isFollowing ? "Following" : "Follow"}
-              </button>
-            )}
-
             <p className="text-gray-300 text-lg mb-3 max-w-md">
-              {profile.bio || "Collector of rare finds • Watches, cards, coins & more • Always chasing the next grail"}
+              {profile.bio ||
+                "Collector of rare finds • Watches, cards, coins & more • Always chasing the next grail"}
             </p>
 
             <p className="text-gray-500 text-sm">

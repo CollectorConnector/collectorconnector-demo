@@ -43,7 +43,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
+      setCurrentUserId((data as any)?.user?.id || null);
     });
   }, []);
 
@@ -151,17 +151,10 @@ export default function ProfilePage() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL (handle different response shapes safely)
-      const { data: publicData, error: publicError } = await supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      if (publicError) throw publicError;
-
+      // getPublicUrl is synchronous in the client; handle response shape safely
+      const publicData = supabase.storage.from("avatars").getPublicUrl(filePath).data;
       const publicUrl =
-        (publicData as any)?.publicUrl ||
-        (publicData as any)?.public_url ||
-        "";
+        (publicData as any)?.publicUrl || (publicData as any)?.public_url || "";
 
       if (!publicUrl) throw new Error("No public URL returned from storage");
 

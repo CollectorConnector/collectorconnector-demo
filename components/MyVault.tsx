@@ -52,10 +52,10 @@ export default function MyVault({
         const json = await res.json();
         if (!mounted) return;
         setStats({
-          itemsCount: json.itemsCount ?? 0,
-          categoriesCount: json.categoriesCount ?? 0,
-          rarityScore: json.rarityScore ?? 0,
-          topCategories: json.topCategories ?? DEFAULT_CATEGORIES,
+          itemsCount: Number(json.itemsCount ?? 0),
+          categoriesCount: Number(json.categoriesCount ?? 0),
+          rarityScore: Number(json.rarityScore ?? 0),
+          topCategories: Array.isArray(json.topCategories) ? json.topCategories : DEFAULT_CATEGORIES,
         });
       } catch (err: any) {
         if (!mounted) return;

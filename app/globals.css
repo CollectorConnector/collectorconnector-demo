@@ -42,8 +42,10 @@ svg {
 }
 
 /* ⭐ The actual centered column ⭐ */
+/* FIXED: removed text-align:center (this was breaking your boxes) */
 .page-body > main {
   width: 100%;
   max-width: 720px;
-  text-align: center; /* fixes portrait alignment */
+  margin: 0 auto;     /* keeps the page centred */
+  text-align: left;   /* restores normal block layout */
 }

@@ -144,7 +144,7 @@ export default function ProfilePage() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
 
         {/* PROFILE BOX */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 mb-10 text-center">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-8 mb-10 shadow-lg">
 
           {/* Follow pill + Avatar */}
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -169,37 +169,39 @@ export default function ProfilePage() {
             />
           </div>
 
-          <h1 className="text-3xl font-bold">{displayName}</h1>
+          <h1 className="text-3xl font-bold text-center">{displayName}</h1>
 
-          <p className="text-gray-400 text-base mt-2">
+          <p className="text-gray-400 text-base mt-2 text-center">
             {profile.bio || "Collector of watches, Pokémon cards, coins & pub history"}
           </p>
 
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-1 text-center">
             {profile.location || "Swindon, UK"}
           </p>
         </div>
 
         {/* STATS BOX */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10 flex justify-between">
-          <div className="text-center">
-            <p className="text-2xl font-bold">{profile.items_count || "2.1k"}</p>
-            <p className="text-gray-500 text-sm">Items</p>
-          </div>
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 shadow-lg">
+          <div className="flex justify-between text-center">
+            <div>
+              <p className="text-2xl font-bold">{profile.items_count || "2.1k"}</p>
+              <p className="text-gray-500 text-sm">Items</p>
+            </div>
 
-          <div className="text-center">
-            <p className="text-2xl font-bold">{profile.collections_count || "4"}</p>
-            <p className="text-gray-500 text-sm">Categories</p>
-          </div>
+            <div>
+              <p className="text-2xl font-bold">{profile.collections_count || "4"}</p>
+              <p className="text-gray-500 text-sm">Categories</p>
+            </div>
 
-          <div className="text-center">
-            <p className="text-2xl font-bold">90.8</p>
-            <p className="text-gray-500 text-sm">Rarity</p>
+            <div>
+              <p className="text-2xl font-bold">90.8</p>
+              <p className="text-gray-500 text-sm">Rarity</p>
+            </div>
           </div>
         </div>
 
         {/* COLLECTIONS BOX */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 shadow-lg">
           <h2 className="text-2xl font-bold mb-4">Collections</h2>
 
           <div className="flex flex-wrap gap-3">
@@ -215,7 +217,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ACTIVITY BOX */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 shadow-lg">
           <h2 className="text-2xl font-bold mb-4">Activity</h2>
 
           <div className="grid grid-cols-3 gap-3 mb-6">
@@ -244,6 +246,7 @@ export default function ProfilePage() {
             Just added this one to the collection. What do you think?
           </p>
         </div>
+
       </main>
 
       <Footer />
@@ -251,7 +254,7 @@ export default function ProfilePage() {
   );
 }
 
-/* YOUR EXACT HEADER — UNCHANGED */
+/* HEADER — UNCHANGED */
 function ProfileHeader() {
   return (
     <>

@@ -4,16 +4,16 @@ import { createClient } from "@supabase/supabase-js";
 
 type Body = {
   userId?: string;
-  avatarUrl?: string;
-  filePath?: string;
+  avatarUrl?: string; // stored URL or path depending on your flow
+  filePath?: string;  // required for signed URL generation: "<bucket>/<path>"
 };
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SIGNED_URL_EXPIRES = 60; // seconds
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   // Minimal server-side warning
-  // Ensure these env vars are set in Vercel / .env.local
   // eslint-disable-next-line no-console
   console.error("Missing SUPABASE env vars for avatar-update route.");
 }
@@ -29,10 +29,10 @@ export async function POST(req: Request) {
     });
 
     const body = (await req.json().catch(() => ({} as Body))) as Body;
-    const { userId, avatarUrl } = body;
+    const { userId, avatarUrl, filePath } = body;
 
-    if (!userId || !avatarUrl) {
-      return NextResponse.json({ error: "Missing userId or avatarUrl" }, { status: 400 });
+    if (!userId || (!avatarUrl && !filePath)) {
+      return NextResponse.json({ error: "Missing userId and/or filePath/avatarUrl" }, { status: 400 });
     }
 
     // Extract Bearer token from Authorization header
@@ -65,15 +65,39 @@ export async function POST(req: Request) {
       if (insertErr) throw insertErr;
     }
 
-    // Update avatar_url
+    // Update avatar_url in DB (store the canonical URL or path you prefer)
+    const dbAvatarValue = avatarUrl ?? filePath; // prefer explicit avatarUrl, fallback to filePath
     const { error: updateErr } = await supabaseAdmin
       .from("profiles")
-      .update({ avatar_url: avatarUrl })
+      .update({ avatar_url: dbAvatarValue })
       .eq("id", userId);
 
     if (updateErr) throw updateErr;
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    // If filePath provided, generate a short-lived signed URL for client display
+    let signedUrl: string | null = null;
+    if (filePath) {
+      // Expect filePath to be "<bucket>/<path/to/object>"
+      const [bucket, ...rest] = filePath.split("/");
+      const objectPath = rest.join("/");
+      if (!bucket || !objectPath) {
+        return NextResponse.json({ error: "filePath must be in format '<bucket>/<path>'" }, { status: 400 });
+      }
+
+      const { data: signed, error: signedErr } = await supabaseAdmin.storage
+        .from(bucket)
+        .createSignedUrl(objectPath, SIGNED_URL_EXPIRES);
+
+      if (signedErr) {
+        // Log and return error
+        // eslint-disable-next-line no-console
+        console.error("createSignedUrl error:", signedErr);
+        throw signedErr;
+      }
+      signedUrl = signed.signedUrl;
+    }
+
+    return NextResponse.json({ ok: true, avatarUrl: dbAvatarValue, signedUrl }, { status: 200 });
   } catch (err: any) {
     // eslint-disable-next-line no-console
     console.error("avatar-update error:", err);

@@ -130,11 +130,12 @@ export default function ProfilePage() {
     }
   }
 
-  // TARGET SIZE: smaller avatar
-  const TARGET_SIZE = 128;
+  // TARGET SIZE: 256px for better quality/size balance
+  const TARGET_SIZE = 256;
+  const QUALITY = 0.90; // high quality
 
-  // Helper: resize + center-crop to square and return a Blob (JPEG)
-  async function resizeImageToSquare(file: File, size = TARGET_SIZE, quality = 0.85): Promise<Blob> {
+  // Helper: resize + center-crop to square and return a Blob (WebP preferred)
+  async function resizeImageToSquare(file: File, size = TARGET_SIZE, quality = QUALITY): Promise<Blob> {
     const imgBitmap = await createImageBitmap(file);
     const srcW = imgBitmap.width;
     const srcH = imgBitmap.height;
@@ -150,11 +151,17 @@ export default function ProfilePage() {
 
     ctx.drawImage(imgBitmap, sx, sy, side, side, 0, 0, size, size);
 
+    // Prefer WebP for better quality/size; fallback to JPEG if not supported
     const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/webp", quality)
+    );
+    if (blob) return blob;
+
+    const jpegBlob: Blob | null = await new Promise((resolve) =>
       canvas.toBlob((b) => resolve(b), "image/jpeg", quality)
     );
-    if (!blob) throw new Error("Image resize failed");
-    return blob;
+    if (!jpegBlob) throw new Error("Image resize failed");
+    return jpegBlob;
   }
 
   // Robust avatar handler: preview, resize, upload, public URL or signed URL fallback, cache-bust, update profile
@@ -166,14 +173,15 @@ export default function ProfilePage() {
 
     setUploadingAvatar(true);
 
-    // create a quick preview from original while we process
+    // quick preview from original while processing
     const originalPreview = URL.createObjectURL(file);
     setAvatarPreview(originalPreview);
 
     try {
       // resize + compress
-      const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, 0.85);
-      const resizedFile = new File([resizedBlob], `${currentUserId}.jpg`, { type: "image/jpeg" });
+      const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
+      const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
+      const resizedFile = new File([resizedBlob], `${currentUserId}.${ext}`, { type: resizedBlob.type });
 
       // preview the resized image
       const resizedPreview = URL.createObjectURL(resizedBlob);
@@ -212,6 +220,9 @@ export default function ProfilePage() {
       }
 
       const finalUrlWithTs = `${finalUrl}?t=${Date.now()}`;
+
+      // DEBUG: log IDs to help diagnose RLS issues
+      console.log("Updating avatar_url for profile. currentUserId:", currentUserId, "userId:", userId);
 
       // Update profile row and capture full response to surface any DB error
       const updateResult = await supabase
@@ -593,3 +604,20 @@ function ProfileHeader() {
     </>
   );
 }
+
+/*
+  RLS policy to allow authenticated users to update their own profile row.
+  Run this in Supabase SQL editor if you see "row-level security" errors:
+
+  -- Allow authenticated users to update only their own profile row
+  CREATE POLICY "profiles_update_own"
+  ON public.profiles
+  FOR UPDATE
+  USING ( auth.uid() = id )
+  WITH CHECK ( auth.uid() = id );
+
+  Notes:
+  - Run the SELECT/UPDATE checks first to confirm the user id exists:
+    SELECT id FROM public.profiles WHERE id = '<your-user-id>';
+    UPDATE public.profiles SET avatar_url = 'https://example.com/test.jpg' WHERE id = '<your-user-id>';
+*/

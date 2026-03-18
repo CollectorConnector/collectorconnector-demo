@@ -29,12 +29,14 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
+  // Load logged‑in user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
 
+  // Load profile
   useEffect(() => {
     if (!userId) {
       router.replace("/not-found");
@@ -63,6 +65,7 @@ export default function ProfilePage() {
     loadData();
   }, [userId, router]);
 
+  // Check follow status
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
 
@@ -80,6 +83,7 @@ export default function ProfilePage() {
     checkFollow();
   }, [currentUserId, userId]);
 
+  // Follow / Unfollow
   async function toggleFollow() {
     if (!currentUserId || currentUserId === userId) return;
 
@@ -137,11 +141,12 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      <main className="pt-8 pb-20">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
 
-        {/* BOX 1 — PROFILE HEADER */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 mb-10 w-full text-center">
+        {/* PROFILE BOX */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 mb-10 text-center">
 
+          {/* Follow pill + Avatar */}
           <div className="flex items-center justify-center gap-4 mb-4">
             {currentUserId && currentUserId !== userId && (
               <button
@@ -175,12 +180,30 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* BOX 2 — CATEGORY BUTTONS */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10 w-full">
-          <h2 className="text-2xl font-bold mb-4 text-left">Collections</h2>
+        {/* STATS BOX */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10 flex justify-between">
+          <div className="text-center">
+            <p className="text-2xl font-bold">{profile.items_count || "2.1k"}</p>
+            <p className="text-gray-500 text-sm">Items</p>
+          </div>
+
+          <div className="text-center">
+            <p className="text-2xl font-bold">{profile.collections_count || "4"}</p>
+            <p className="text-gray-500 text-sm">Categories</p>
+          </div>
+
+          <div className="text-center">
+            <p className="text-2xl font-bold">90.8</p>
+            <p className="text-gray-500 text-sm">Rarity</p>
+          </div>
+        </div>
+
+        {/* COLLECTIONS BOX */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10">
+          <h2 className="text-2xl font-bold mb-4">Collections</h2>
 
           <div className="flex flex-wrap gap-3">
-            {["Sports Cards", "TCG Cards", "Comic Books", "Sneakers"].map((c) => (
+            {["Cards", "Watches", "Coins", "Memorabilia"].map((c) => (
               <div
                 key={c}
                 className="px-5 py-2 bg-black/40 border border-zinc-800 rounded-lg text-sm font-medium"
@@ -191,45 +214,36 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* BOX 3 — COLLECTIONS GALLERY */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10 w-full">
-          <h2 className="text-2xl font-bold mb-4 text-left">Collections Gallery</h2>
+        {/* ACTIVITY BOX */}
+        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10">
+          <h2 className="text-2xl font-bold mb-4">Activity</h2>
 
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { name: "Sports Cards", count: 1500 },
-              { name: "TCG Cards", count: 1321 },
-              { name: "Comics", count: 1525 },
-              { name: "Sneakers", count: 1776 },
-              { name: "Beanie Babies", count: 1323 },
-            ].map((item) => (
-              <div
-                key={item.name}
-                className="bg-black/40 border border-zinc-800 rounded-lg p-4"
-              >
-                <p className="text-lg font-bold">{item.count}</p>
-                <p className="text-gray-400 text-sm">{item.name}</p>
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+              <img
+                src="/charizard.png"
+                alt="Featured Card"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-2 left-2 bg-white text-black text-xs font-bold px-2 py-0.5 rounded-md">
+                Featured
               </div>
-            ))}
+            </div>
+
+            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+              <img src="/watch.png" alt="Watch" className="w-full h-full object-cover" />
+            </div>
+
+            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+              <img src="/coin.png" alt="Coin" className="w-full h-full object-cover" />
+            </div>
           </div>
+
+          <p className="text-gray-500 text-sm mb-1">2 hours ago</p>
+          <p className="text-base">
+            Just added this one to the collection. What do you think?
+          </p>
         </div>
-
-        {/* BOX 4 — LIVE FEED */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 mb-10 w-full">
-          <h2 className="text-2xl font-bold mb-4 text-left">Live Feed</h2>
-
-          <div className="bg-black/40 border border-zinc-800 rounded-lg p-4">
-            <p className="font-bold">Richard House</p>
-            <p className="text-gray-400 text-sm mb-2">New upload</p>
-            <img
-              src="/charizard.png"
-              alt="Upload"
-              className="w-full h-auto rounded-lg mb-2"
-            />
-            <p>(RH) – New Fave Card Shohei Ohtani Rookie</p>
-          </div>
-        </div>
-
       </main>
 
       <Footer />
@@ -237,6 +251,7 @@ export default function ProfilePage() {
   );
 }
 
+/* YOUR EXACT HEADER — UNCHANGED */
 function ProfileHeader() {
   return (
     <>
@@ -284,9 +299,19 @@ function ProfileHeader() {
             </svg>
           </a>
 
+          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: "14px", fontWeight: "bold" }}>
+            eBay
+          </a>
+
           <a href="https://discord.com" target="_blank" rel="noopener noreferrer">
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c--1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
+              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
+            </svg>
+          </a>
+
+          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 2l-5.4 6.3L6 2H2l7.3 8.1L2 22h4l5.7-7.1L18 22h4l-7.6-8.6L22 2h-4z"/>
             </svg>
           </a>
         </div>

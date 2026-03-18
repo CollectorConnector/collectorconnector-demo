@@ -137,110 +137,116 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      <main className="pt-8 pb-20">
+      <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
 
-        {/* PROFILE BOX */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-8 mb-10 inline-block w-full">
+        {/* 1. PROFILE BOX */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-lg shadow-black/30">
+          <div className="flex flex-col items-center text-center">
+            <div className="relative mb-6">
+              <img
+                src={profile.avatar_url || "/default-avatar.png"}
+                alt="Avatar"
+                className="w-24 h-24 rounded-full object-cover border-4 border-zinc-700 shadow-xl"
+              />
+            </div>
 
-          <div className="flex items-center justify-center gap-4 mb-4">
+            <h1 className="text-3xl font-bold mb-2">{displayName}</h1>
+
             {currentUserId && currentUserId !== userId && (
               <button
                 onClick={toggleFollow}
                 disabled={followLoading}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition ${
+                className={`mb-6 px-6 py-2 rounded-full text-sm font-medium transition ${
                   isFollowing
-                    ? "bg-zinc-900 text-white hover:bg-zinc-800"
-                    : "bg-zinc-800 text-white hover:bg-zinc-700"
+                    ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
+                    : "bg-indigo-600 hover:bg-indigo-500 text-white"
                 }`}
               >
                 {followLoading ? "…" : isFollowing ? "Following" : "Follow"}
               </button>
             )}
 
-            <img
-              src={profile.avatar_url || "/default-avatar.png"}
-              alt="Avatar"
-              className="w-16 h-16 rounded-full object-cover border border-white/20"
-            />
+            <p className="text-gray-300 text-lg mb-3 max-w-md">
+              {profile.bio || "Collector of rare finds • Watches, cards, coins & more • Always chasing the next grail"}
+            </p>
+
+            <p className="text-gray-500 text-sm">
+              {profile.location || "Swindon, UK"}
+            </p>
           </div>
+        </section>
 
-          <h1 className="text-3xl font-bold">{displayName}</h1>
-
-          <p className="text-gray-400 text-base mt-2">
-            {profile.bio || "Collector of watches, Pokémon cards, coins & pub history"}
-          </p>
-
-          <p className="text-gray-500 text-sm mt-1">
-            {profile.location || "Swindon, UK"}
-          </p>
-        </div>
-
-        {/* STATS BOX */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 inline-block w-full">
-          <div className="flex justify-between text-center">
+        {/* 2. STATS */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
+          <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold">{profile.items_count || "2.1k"}</p>
-              <p className="text-gray-500 text-sm">Items</p>
+              <p className="text-3xl font-bold">{profile.items_count || "2.1k"}</p>
+              <p className="text-gray-500 text-sm mt-1">Items</p>
             </div>
-
             <div>
-              <p className="text-2xl font-bold">{profile.collections_count || "4"}</p>
-              <p className="text-gray-500 text-sm">Categories</p>
+              <p className="text-3xl font-bold">{profile.collections_count || "4"}</p>
+              <p className="text-gray-500 text-sm mt-1">Categories</p>
             </div>
-
             <div>
-              <p className="text-2xl font-bold">90.8</p>
-              <p className="text-gray-500 text-sm">Rarity</p>
+              <p className="text-3xl font-bold">90.8</p>
+              <p className="text-gray-500 text-sm mt-1">Rarity Score</p>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* COLLECTIONS BOX */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 inline-block w-full">
-          <h2 className="text-2xl font-bold mb-4">Collections</h2>
-
+        {/* 3. COLLECTIONS / CATEGORY TAGS */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
+          <h2 className="text-2xl font-bold mb-5 text-center">My Vault</h2>
           <div className="flex flex-wrap gap-3 justify-center">
-            {["Cards", "Watches", "Coins", "Memorabilia"].map((c) => (
-              <div
-                key={c}
-                className="px-5 py-2 bg-black/40 border border-zinc-800 rounded-lg text-sm font-medium"
+            {["Cards", "Watches", "Coins", "Memorabilia"].map((cat) => (
+              <button
+                key={cat}
+                className="px-6 py-2.5 bg-zinc-900/70 border border-zinc-700 rounded-full text-sm font-medium hover:border-zinc-500 hover:bg-zinc-800 transition"
               >
-                {c}
-              </div>
+                {cat}
+              </button>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* ACTIVITY BOX */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 inline-block w-full">
-          <h2 className="text-2xl font-bold mb-4">Activity</h2>
+        {/* 4. RECENT DROPS / GALLERY */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
+          <h2 className="text-2xl font-bold mb-5 text-center">Recent Drops</h2>
 
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
               <img
                 src="/charizard.png"
                 alt="Featured Card"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute top-2 left-2 bg-white text-black text-xs font-bold px-2 py-0.5 rounded-md">
+              <div className="absolute top-3 left-3 bg-indigo-600/90 text-white text-xs font-bold px-2.5 py-1 rounded-md">
                 Featured
               </div>
             </div>
 
-            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
-              <img src="/watch.png" alt="Watch" className="w-full h-full object-cover" />
+            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+              <img
+                src="/watch.png"
+                alt="Watch"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
             </div>
 
-            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
-              <img src="/coin.png" alt="Coin" className="w-full h-full object-cover" />
+            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+              <img
+                src="/coin.png"
+                alt="Coin"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
             </div>
           </div>
 
-          <p className="text-gray-500 text-sm mb-1">2 hours ago</p>
-          <p className="text-base">
-            Just added this one to the collection. What do you think?
-          </p>
-        </div>
+          <div className="text-center text-sm text-gray-400">
+            <p className="mb-1">2 hours ago</p>
+            <p>Just added this beauty to the vault. Thoughts?</p>
+          </div>
+        </section>
 
       </main>
 

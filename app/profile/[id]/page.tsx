@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
@@ -28,6 +28,8 @@ export default function ProfilePage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -105,6 +107,49 @@ export default function ProfilePage() {
     setFollowLoading(false);
   }
 
+  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !currentUserId || currentUserId !== userId) return;
+
+    setUploadingAvatar(true);
+
+    try {
+      const fileExt = file.name.split(".").pop() || "png";
+      const fileName = `${currentUserId}.${fileExt}`;
+      const filePath = `${currentUserId}/${fileName}`;
+
+      // Upload (with upsert to overwrite old file)
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", currentUserId);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setProfile((prev) => (prev ? { ...prev, avatar_url: publicUrl } : null));
+
+      alert("Profile picture updated!");
+    } catch (err: any) {
+      console.error("Avatar upload failed:", err);
+      alert("Failed to update avatar: " + (err.message || "Unknown error"));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
   const displayName = useMemo(
     () => profile?.display_name || profile?.username || "Unnamed Collector",
     [profile]
@@ -141,16 +186,43 @@ export default function ProfilePage() {
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
 
-        {/* 1. PROFILE BOX */}
+        {/* PROFILE BOX */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-            <div className="flex items-center justify-center gap-6 mb-6">
-              <img
-                src={profile.avatar_url || "/default-avatar.png"}
-                alt="Avatar"
-                className="w-24 h-24 rounded-full object-cover border-4 border-zinc-700 shadow-xl"
-              />
+            <div className="relative flex items-center justify-center gap-6 mb-6 group">
+              <div className="relative">
+                <img
+                  src={profile.avatar_url || "/default-avatar.png"}
+                  alt="Avatar"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-zinc-700 shadow-xl transition-opacity group-hover:opacity-80"
+                />
 
+                {/* Edit overlay – only on own profile */}
+                {isOwnProfile && (
+                  <label
+                    htmlFor="avatar-upload"
+                    className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <span className="text-white text-sm font-medium">
+                      {uploadingAvatar ? "Uploading..." : "Change"}
+                    </span>
+                  </label>
+                )}
+
+                {/* Hidden file input */}
+                {isOwnProfile && (
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={uploadingAvatar}
+                    className="hidden"
+                  />
+                )}
+              </div>
+
+              {/* Follow button – only for other profiles */}
               {!isOwnProfile && (
                 <button
                   onClick={toggleFollow}
@@ -161,11 +233,7 @@ export default function ProfilePage() {
                       : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500"
                   }`}
                 >
-                  {followLoading
-                    ? "…"
-                    : isFollowing
-                    ? "Following"
-                    : "Follow"}
+                  {followLoading ? "…" : isFollowing ? "Following" : "Follow"}
                 </button>
               )}
             </div>
@@ -183,7 +251,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* 2. STATS */}
+        {/* STATS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
@@ -201,7 +269,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* 3. COLLECTIONS / CATEGORY TAGS */}
+        {/* COLLECTIONS / CATEGORY TAGS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <h2 className="text-2xl font-bold mb-5 text-center">My Vault</h2>
           <div className="flex flex-wrap gap-3 justify-center">
@@ -216,7 +284,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* 4. RECENT DROPS / GALLERY */}
+        {/* RECENT DROPS / GALLERY */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <h2 className="text-2xl font-bold mb-5 text-center">Recent Drops</h2>
 

@@ -29,14 +29,12 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  // Load logged‑in user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
 
-  // Load profile
   useEffect(() => {
     if (!userId) {
       router.replace("/not-found");
@@ -65,7 +63,6 @@ export default function ProfilePage() {
     loadData();
   }, [userId, router]);
 
-  // Check follow status
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
 
@@ -83,7 +80,6 @@ export default function ProfilePage() {
     checkFollow();
   }, [currentUserId, userId]);
 
-  // Follow / Unfollow
   async function toggleFollow() {
     if (!currentUserId || currentUserId === userId) return;
 
@@ -141,12 +137,11 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
+      <main className="pt-8 pb-20">
 
         {/* PROFILE BOX */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-8 mb-10 shadow-lg">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-8 mb-10 inline-block w-full">
 
-          {/* Follow pill + Avatar */}
           <div className="flex items-center justify-center gap-4 mb-4">
             {currentUserId && currentUserId !== userId && (
               <button
@@ -169,19 +164,19 @@ export default function ProfilePage() {
             />
           </div>
 
-          <h1 className="text-3xl font-bold text-center">{displayName}</h1>
+          <h1 className="text-3xl font-bold">{displayName}</h1>
 
-          <p className="text-gray-400 text-base mt-2 text-center">
+          <p className="text-gray-400 text-base mt-2">
             {profile.bio || "Collector of watches, Pokémon cards, coins & pub history"}
           </p>
 
-          <p className="text-gray-500 text-sm mt-1 text-center">
+          <p className="text-gray-500 text-sm mt-1">
             {profile.location || "Swindon, UK"}
           </p>
         </div>
 
         {/* STATS BOX */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 shadow-lg">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 inline-block w-full">
           <div className="flex justify-between text-center">
             <div>
               <p className="text-2xl font-bold">{profile.items_count || "2.1k"}</p>
@@ -201,10 +196,10 @@ export default function ProfilePage() {
         </div>
 
         {/* COLLECTIONS BOX */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 shadow-lg">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 inline-block w-full">
           <h2 className="text-2xl font-bold mb-4">Collections</h2>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 justify-center">
             {["Cards", "Watches", "Coins", "Memorabilia"].map((c) => (
               <div
                 key={c}
@@ -217,7 +212,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ACTIVITY BOX */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 shadow-lg">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6 mb-10 inline-block w-full">
           <h2 className="text-2xl font-bold mb-4">Activity</h2>
 
           <div className="grid grid-cols-3 gap-3 mb-6">

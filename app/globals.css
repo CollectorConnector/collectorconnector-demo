@@ -26,25 +26,25 @@ a:hover {
   color: #e5e5e5;
 }
 
-/* Keep header icons consistent */
-header svg {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  display: inline-block;
+/* Force all SVG icons to behave consistently */
+svg {
+  width: 28px !important;
+  height: 28px !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
 }
 
-/* Center the entire page body between header and footer */
+/* ⭐ Center the entire page body between header and footer ⭐ */
 .page-body {
   display: flex;
   justify-content: center;
   width: 100%;
 }
 
-/* Center the main column WITHOUT breaking boxes */
+/* ⭐ The actual centered column ⭐ */
+/* fixes portrait alignment */
 .page-body > main {
   width: 100%;
   max-width: 720px;
-  margin: 0 auto;      /* keeps the page centered */
-  text-align: left;    /* allows boxes to render normally */
+  text-align: center;
 }

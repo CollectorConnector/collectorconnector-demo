@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 
 type Body = {
   userId?: string;
-  avatarUrl?: string; // stored URL or path depending on your flow
-  filePath?: string;  // required for signed URL generation: "<bucket>/<path>"
+  avatarUrl?: string;
+  filePath?: string; // "<bucket>/<path/to/object>"
 };
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -65,8 +65,8 @@ export async function POST(req: Request) {
       if (insertErr) throw insertErr;
     }
 
-    // Update avatar_url in DB (store the canonical URL or path you prefer)
-    const dbAvatarValue = avatarUrl ?? filePath; // prefer explicit avatarUrl, fallback to filePath
+    // Update avatar_url in DB (store canonical value or path)
+    const dbAvatarValue = avatarUrl ?? filePath;
     const { error: updateErr } = await supabaseAdmin
       .from("profiles")
       .update({ avatar_url: dbAvatarValue })
@@ -77,11 +77,10 @@ export async function POST(req: Request) {
     // If filePath provided, generate a short-lived signed URL for client display
     let signedUrl: string | null = null;
     if (filePath) {
-      // Expect filePath to be "<bucket>/<path/to/object>"
       const [bucket, ...rest] = filePath.split("/");
       const objectPath = rest.join("/");
       if (!bucket || !objectPath) {
-        return NextResponse.json({ error: "filePath must be in format '<bucket>/<path>'" }, { status: 400 });
+        return NextResponse.json({ error: "filePath must be '<bucket>/<path>'" }, { status: 400 });
       }
 
       const { data: signed, error: signedErr } = await supabaseAdmin.storage
@@ -89,7 +88,6 @@ export async function POST(req: Request) {
         .createSignedUrl(objectPath, SIGNED_URL_EXPIRES);
 
       if (signedErr) {
-        // Log and return error
         // eslint-disable-next-line no-console
         console.error("createSignedUrl error:", signedErr);
         throw signedErr;

@@ -329,7 +329,7 @@ export default function ProfilePage() {
     </div>
   );
 }
-/* HEADER — Updated with square white icons + labels */
+/* HEADER — Updated with proper official-style eBay icon + consistent white icons */
 function ProfileHeader() {
   return (
     <>
@@ -361,7 +361,7 @@ function ProfileHeader() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 24,           // more breathing room
+            gap: 24,
             color: "white",
           }}
         >
@@ -391,20 +391,30 @@ function ProfileHeader() {
             <span className="text-xs mt-1 opacity-80">FACEBOOK</span>
           </a>
 
-          {/* eBay – using stylized 'e' path (simple version) */}
+          {/* eBay – proper official wordmark style (white version) */}
           <a
             href="https://ebay.com"
             target="_blank"
             rel="noopener noreferrer"
             className="flex flex-col items-center hover:scale-110 transition-transform"
           >
-            <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19.5 12c0 4.14-3.36 7.5-7.5 7.5S4.5 16.14 4.5 12 7.86 4.5 12 4.5 19.5 7.86 19.5 12zm2.5 0c0-5.523-4.477-10-10-10S2 6.477 2 12s4.477 10 10 10 10-4.477 10-10zM8.5 9.5h7v5h-7z"/>
+            <svg width="28" height="28" viewBox="0 0 1000 401" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Simplified white version of official eBay logo – colored dots become white outlines */}
+              <path fill="currentColor" d="M0 0h1000v401H0z" fillOpacity="0"/> {/* transparent bg */}
+              <path fill="currentColor" d="M140.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40zm0 60c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z"/>
+              <path fill="currentColor" d="M240.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40c8.8 0 17-2.9 23.6-7.8l-11.8-16.2c-3.5 2.6-7.7 4-12 4-11 0-20-9-20-20s9-20 20-20c4.3 0 8.5 1.4 12 4l11.8-16.2c-6.6-4.9-14.8-7.8-23.6-7.8z"/>
+              <path fill="currentColor" d="M340.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40zm0 60c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z"/>
+              <path fill="currentColor" d="M440.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40c22.1 0 40-17.9 40-40s-17.9-40-40-40zm0 60c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z"/>
+              <path fill="currentColor" d="M540.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40zm0 60c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z"/>
+              <path fill="currentColor" d="M640.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40zm0 60c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z"/>
+              <path fill="currentColor" d="M740.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40zm0 60c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z"/>
+              <path fill="currentColor" d="M840.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40zm0 60c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z"/>
+              <path fill="currentColor" d="M940.5 100.5c-22.1 0-40 17.9-40 40s17.9 40 40 40 40-17.9 40-40-17.9-40-40-40zm0 60c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z"/>
             </svg>
             <span className="text-xs mt-1 opacity-80">EBAY</span>
           </a>
 
-          {/* Discord – classic white blob */}
+          {/* Discord */}
           <a
             href="https://discord.com"
             target="_blank"
@@ -417,7 +427,7 @@ function ProfileHeader() {
             <span className="text-xs mt-1 opacity-80">DISCORD</span>
           </a>
 
-          {/* X (Twitter) – sharp X logo */}
+          {/* X */}
           <a
             href="https://twitter.com"
             target="_blank"

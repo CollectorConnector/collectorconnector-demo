@@ -6,20 +6,32 @@ import React, { useEffect, useState } from "react";
 export type VaultStats = {
   itemsCount: number;
   categoriesCount: number;
-  rarityScore: number; // e.g., 90.8
-  topCategories?: string[]; // optional override
+  rarityScore: number; // 0..100
+  topCategories?: string[];
 };
 
 type Props = {
-  userId?: string; // optional: if provided, component can fetch live data
+  userId?: string;
   initial?: VaultStats | null;
   onCategorySelect?: (category: string) => void;
   className?: string;
+  // chart options
+  chartSize?: number; // px
+  chartStroke?: number; // px
+  animate?: boolean;
 };
 
 const DEFAULT_CATEGORIES = ["Cards", "Watches", "Coins", "Memorabilia"];
 
-export default function MyVault({ userId, initial = null, onCategorySelect, className = "" }: Props) {
+export default function MyVault({
+  userId,
+  initial = null,
+  onCategorySelect,
+  className = "",
+  chartSize = 96,
+  chartStroke = 12,
+  animate = true,
+}: Props) {
   const [stats, setStats] = useState<VaultStats | null>(initial);
   const [loading, setLoading] = useState<boolean>(!initial && !!userId);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +39,6 @@ export default function MyVault({ userId, initial = null, onCategorySelect, clas
 
   useEffect(() => {
     if (!userId || initial) return;
-
     let mounted = true;
     setLoading(true);
     setError(null);
@@ -65,7 +76,7 @@ export default function MyVault({ userId, initial = null, onCategorySelect, clas
 
   return (
     <section aria-labelledby="my-vault-heading" className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
-      <div className="flex items-start justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
         <div>
           <h2 id="my-vault-heading" className="text-lg font-semibold text-gray-900">
             My Vault
@@ -79,10 +90,25 @@ export default function MyVault({ userId, initial = null, onCategorySelect, clas
           ) : error ? (
             <div className="text-sm text-red-500">Error: {error}</div>
           ) : stats ? (
-            <div className="flex gap-4">
-              <Stat label="Items" value={stats.itemsCount.toLocaleString()} />
-              <Stat label="Categories" value={stats.categoriesCount.toString()} />
-              <Stat label="Rarity Score" value={stats.rarityScore.toFixed(1)} />
+            <div className="flex items-center gap-4">
+              <div className="flex gap-4 items-center">
+                <Stat label="Items" value={stats.itemsCount.toLocaleString()} />
+                <Stat label="Categories" value={stats.categoriesCount.toString()} />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Donut
+                  value={clamp(stats.rarityScore, 0, 100)}
+                  size={chartSize}
+                  stroke={chartStroke}
+                  animate={animate}
+                  label={`Rarity ${stats.rarityScore.toFixed(1)}`}
+                />
+                <div className="text-sm text-gray-600">
+                  <div className="font-medium text-gray-900">{stats.rarityScore.toFixed(1)}</div>
+                  <div className="text-xs">Rarity Score</div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-sm text-gray-500">No data</div>
@@ -122,4 +148,69 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <div className="text-xs text-gray-500">{label}</div>
     </div>
   );
+}
+
+/* Donut chart component: lightweight SVG using stroke-dasharray */
+function Donut({ value, size, stroke, animate, label }: { value: number; size: number; stroke: number; animate: boolean; label?: string }) {
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const pct = Math.max(0, Math.min(100, value));
+  const offset = circumference * (1 - pct / 100);
+
+  // colors: green gradient for high rarity, amber for mid, gray for low
+  const color = pct >= 75 ? "#16a34a" : pct >= 40 ? "#f59e0b" : "#6b7280";
+  const bgColor = "#e6e6e6";
+
+  // animation style
+  const transition = animate ? { transition: "stroke-dashoffset 900ms ease-out, stroke 300ms" } : {};
+
+  return (
+    <svg
+      role="img"
+      aria-label={label ?? `Value ${value}`}
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="inline-block"
+    >
+      <title>{label ?? `Value ${value}`}</title>
+      <g transform={`translate(${size / 2}, ${size / 2})`}>
+        {/* background circle */}
+        <circle
+          r={radius}
+          fill="transparent"
+          stroke={bgColor}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+        />
+        {/* foreground arc */}
+        <circle
+          r={radius}
+          fill="transparent"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={offset}
+          style={transition as React.CSSProperties}
+          transform="rotate(-90)"
+        />
+        {/* center label (optional small dot or percent) */}
+        <text
+          x="0"
+          y="4"
+          textAnchor="middle"
+          fontSize={Math.max(10, size * 0.16)}
+          fill="#111827"
+          className="font-medium"
+        >
+          {Math.round(pct)}%
+        </text>
+      </g>
+    </svg>
+  );
+}
+
+function clamp(n: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, n));
 }

@@ -13,9 +13,8 @@ type RootLayoutProps = {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body>
-        {/* ⭐ Centered body wrapper ⭐ */}
-        <div className="page-body">
+      <body className="bg-black text-white">
+        <div className="page-body max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <main>{children}</main>
         </div>
       </body>

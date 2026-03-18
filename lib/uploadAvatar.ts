@@ -3,45 +3,51 @@ import { supabase } from "./supabase";
 
 type UploadResult = {
   displayUrl: string | null;
-  rawResponse: any;
+  avatarUrl?: string | null;
+  raw?: any;
 };
 
 export async function uploadAvatarAndUpdateProfile(
   file: File,
   userId: string,
-  options?: { bucket?: string }
+  options?: { bucket?: string; folder?: string; expiresInSeconds?: number }
 ): Promise<UploadResult> {
   const bucket = options?.bucket ?? "avatars";
-  const filename = `${userId}/${Date.now()}-${file.name}`;
-  const filePath = `${bucket}/${filename}`;
+  const folder = options?.folder ?? userId;
+  const expiresInSeconds = options?.expiresInSeconds ?? 60;
+
+  // sanitize filename and build storage path
+  const safeName = file.name.replace(/\s+/g, "-");
+  const filename = `${Date.now()}-${safeName}`;
+  const objectPath = `${folder}/${filename}`; // path inside bucket
 
   // 1) Upload to Supabase Storage
-  const { data: uploadData, error: uploadErr } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from(bucket)
-    .upload(filename, file, { cacheControl: "3600", upsert: false });
+    .upload(objectPath, file, { cacheControl: "3600", upsert: false });
 
-  if (uploadErr) {
-    throw new Error(`Storage upload failed: ${uploadErr.message}`);
+  if (uploadError) {
+    throw new Error(`Storage upload failed: ${uploadError.message}`);
   }
 
-  // 2) Get current access token
+  // 2) Get current access token for server verification
   const sessionResp = await supabase.auth.getSession();
   const token = sessionResp?.data?.session?.access_token;
   if (!token) {
     throw new Error("No access token; user not signed in");
   }
 
-  // 3) Call server endpoint to update profile and request signed URL
+  // 3) Notify server to update DB and request a signed URL
+  //    server expects { userId, filePath } where filePath = "<bucket>/<objectPath>"
+  const filePath = `${bucket}/${objectPath}`;
+
   const resp = await fetch("/api/avatar-update", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({
-      userId,
-      filePath, // server expects "<bucket>/<path>"
-    }),
+    body: JSON.stringify({ userId, filePath, expiresInSeconds }),
   });
 
   const json = await resp.json().catch(() => ({}));
@@ -50,7 +56,7 @@ export async function uploadAvatarAndUpdateProfile(
     throw new Error(msg);
   }
 
-  // 4) Prefer signedUrl (short-lived) for immediate display, fallback to avatarUrl
+  // 4) Prefer signedUrl for immediate preview, fallback to avatarUrl or public URL
   const displayUrl = json.signedUrl ?? json.avatarUrl ?? null;
-  return { displayUrl, rawResponse: json };
+  return { displayUrl, avatarUrl: json.avatarUrl ?? null, raw: json };
 }

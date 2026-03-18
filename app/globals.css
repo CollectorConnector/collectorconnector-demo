@@ -42,9 +42,9 @@ svg {
 }
 
 /* ⭐ The actual centered column ⭐ */
-/* IMPORTANT: removed text-align:center so boxes can render */
+/* fixes portrait alignment */
 .page-body > main {
   width: 100%;
   max-width: 720px;
-  margin: 0 auto;
+  text-align: center;
 }

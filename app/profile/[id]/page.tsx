@@ -130,28 +130,68 @@ export default function ProfilePage() {
     }
   }
 
-  // Robust avatar handler: preview, upload, public URL or signed URL fallback, cache-bust, update profile
+  // Helper: resize + center-crop to square and return a Blob (JPEG)
+  async function resizeImageToSquare(file: File, size = 512, quality = 0.85): Promise<Blob> {
+    // createImageBitmap is efficient and works in modern browsers
+    const imgBitmap = await createImageBitmap(file);
+    const srcW = imgBitmap.width;
+    const srcH = imgBitmap.height;
+
+    // determine square crop (center)
+    const side = Math.min(srcW, srcH);
+    const sx = Math.floor((srcW - side) / 2);
+    const sy = Math.floor((srcH - side) / 2);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not get canvas context");
+
+    // draw the cropped area scaled to target size
+    ctx.drawImage(imgBitmap, sx, sy, side, side, 0, 0, size, size);
+
+    // convert to blob (JPEG)
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/jpeg", quality)
+    );
+    if (!blob) throw new Error("Image resize failed");
+    return blob;
+  }
+
+  // Robust avatar handler: preview, resize, upload, public URL or signed URL fallback, cache-bust, update profile
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !currentUserId || currentUserId !== userId) return;
 
-    // preview
-    const previewUrl = URL.createObjectURL(file);
-    setAvatarPreview(previewUrl);
     setUploadingAvatar(true);
 
-    try {
-      const fileExt = file.name.split(".").pop() || "png";
-      const fileName = `${currentUserId}.${fileExt}`;
-      const filePath = `${currentUserId}/${fileName}`;
+    // target size in px (change to 256 or 1024 if you prefer)
+    const TARGET_SIZE = 512;
 
+    // create preview from original immediately (optional)
+    const originalPreview = URL.createObjectURL(file);
+    setAvatarPreview(originalPreview);
+
+    try {
+      // resize + compress
+      const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, 0.85);
+      const resizedFile = new File([resizedBlob], `${currentUserId}.jpg`, { type: "image/jpeg" });
+
+      // preview the resized image (replace original preview)
+      const resizedPreview = URL.createObjectURL(resizedBlob);
+      setAvatarPreview(resizedPreview);
+
+      const filePath = `${currentUserId}/${resizedFile.name}`;
+
+      // upload resized file (upsert)
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, resizedFile, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Try public URL first (SDK returns data synchronously)
+      // Try public URL first
       const publicResp = supabase.storage.from("avatars").getPublicUrl(filePath) as any;
       const publicUrl = publicResp?.data?.publicUrl || publicResp?.data?.public_url || "";
 
@@ -160,10 +200,10 @@ export default function ProfilePage() {
       if (publicUrl) {
         finalUrl = publicUrl;
       } else {
-        // Fallback to signed URL for private buckets
+        // fallback to signed URL for private buckets
         const { data: signedData, error: signedError } = await supabase.storage
           .from("avatars")
-          .createSignedUrl(filePath, 60); // 60s signed URL for immediate preview
+          .createSignedUrl(filePath, 60); // short-lived signed URL for immediate use
         if (signedError) throw signedError;
         finalUrl = (signedData as any)?.signedUrl || "";
         if (!finalUrl) throw new Error("No signed URL returned from storage");
@@ -171,6 +211,7 @@ export default function ProfilePage() {
 
       const finalUrlWithTs = `${finalUrl}?t=${Date.now()}`;
 
+      // update profile row
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: finalUrlWithTs })
@@ -178,11 +219,15 @@ export default function ProfilePage() {
 
       if (updateError) throw updateError;
 
+      // persist final URL in local state
       setProfile((prev) => (prev ? { ...prev, avatar_url: finalUrlWithTs } : prev));
+      // keep preview in sync with final URL (cache-busted)
+      setAvatarPreview(finalUrlWithTs);
     } catch (err: any) {
       console.error("Avatar upload failed:", err);
       alert("Failed to update avatar: " + (err.message || "Unknown error"));
-      // revert preview by reloading profile from server (best effort)
+
+      // try to reload avatar_url from server to revert preview
       try {
         const { data } = await supabase.from("profiles").select("avatar_url").eq("id", userId).single();
         setProfile((p) => (p ? { ...p, avatar_url: (data as any)?.avatar_url || p.avatar_url } : p));
@@ -194,9 +239,9 @@ export default function ProfilePage() {
       // clear file input
       const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
       if (input) input.value = "";
-      // revoke preview object URL
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      setAvatarPreview(null);
+      // revoke any temporary object URLs we created (except final public URL)
+      if (originalPreview) URL.revokeObjectURL(originalPreview);
+      // note: if avatarPreview is a public URL we don't revoke it
     }
   }
 

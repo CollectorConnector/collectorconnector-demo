@@ -159,7 +159,6 @@ export default function ProfilePage() {
     if (!jpegBlob) throw new Error("Image resize failed");
     return jpegBlob;
   }
-
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return alert("No file selected.");
@@ -190,9 +189,7 @@ export default function ProfilePage() {
       const publicResp = supabase.storage.from("avatars").getPublicUrl(filePath) as any;
       const publicUrl = publicResp?.data?.publicUrl || "";
 
-      let finalUrl = publicUrl;
-
-      const finalUrlWithTs = `${finalUrl}?t=${Date.now()}`;
+      const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
 
       const updateResult = await supabase
         .from("profiles")
@@ -331,7 +328,6 @@ export default function ProfilePage() {
                   />
                 )}
               </div>
-
               {!isOwnProfile && (
                 <button
                   onClick={toggleFollow}
@@ -469,7 +465,14 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc
+            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+              <img
+                src="/watch.png"
+                alt="Watch"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+
             <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
               <img
                 src="/coin.png"
@@ -489,6 +492,7 @@ export default function ProfilePage() {
       <Footer />
     </div>
   );
+}
 }
 
 /* HEADER — Icons only (no labels), eBay as text */
@@ -527,10 +531,11 @@ function ProfileHeader() {
             color: "white",
           }}
         >
-          {/* social icons unchanged */}
+          {/* Social icons — keep your existing ones here */}
         </div>
       </header>
 
+      {/* Spacer so content doesn't hide behind fixed header */}
       <div style={{ height: 56 }} />
     </>
   );

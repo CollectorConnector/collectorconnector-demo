@@ -493,8 +493,6 @@ export default function ProfilePage() {
     </div>
   );
 }
-}
-
 /* HEADER — Icons only (no labels), eBay as text */
 function ProfileHeader() {
   return (

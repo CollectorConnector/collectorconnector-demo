@@ -470,3 +470,68 @@ export default function ProfilePage() {
             </div>
 
             <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc
+            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+              <img
+                src="/coin.png"
+                alt="Coin"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+          </div>
+
+          <div className="text-center text-sm text-gray-400">
+            <p className="mb-1">2 hours ago</p>
+            <p>Just added this beauty to the vault. Thoughts?</p>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
+
+/* HEADER — Icons only (no labels), eBay as text */
+function ProfileHeader() {
+  return (
+    <>
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          background: "#000",
+          borderBottom: "1px solid #1f1f1f",
+          height: 56,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
+        }}
+      >
+        <img
+          src="/CC-main-logo.png"
+          alt="Collector Connector"
+          width={130}
+          height={130}
+          style={{ objectFit: "contain" }}
+        />
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            color: "white",
+          }}
+        >
+          {/* social icons unchanged */}
+        </div>
+      </header>
+
+      <div style={{ height: 56 }} />
+    </>
+  );
+}

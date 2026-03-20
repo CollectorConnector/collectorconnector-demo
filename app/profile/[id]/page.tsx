@@ -44,7 +44,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data?.user?.id || null);
+      setCurrentUserId((data as any)?.user?.id || null);
     });
   }, []);
 
@@ -159,85 +159,90 @@ export default function ProfilePage() {
     if (!jpegBlob) throw new Error("Image resize failed");
     return jpegBlob;
   }
+async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return alert("No file selected.");
 
-  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return alert("No file selected.");
+  console.log("profile.id:", profile?.id);
+  console.log("currentUserId:", currentUserId);
+  console.log("userId (URL):", userId);
 
-    if (!profile || profile.id !== currentUserId) {
-      alert("Your profile is still loading… try again.");
-      return;
-    }
-    if (!currentUserId) return alert("You must be logged in.");
-    if (currentUserId !== userId) return alert("You can only update your own avatar.");
-
-    setUploadingAvatar(true);
-
-    const originalPreview = URL.createObjectURL(file);
-    setAvatarPreview(originalPreview);
-
-    try {
-      const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
-      const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
-
-      const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(2, 8);
-      const fileName = `${currentUserId}-${timestamp}-${randomStr}.${ext}`;
-      const filePath = `${currentUserId}/${fileName}`;
-
-      console.log("Uploading new unique path:", filePath);
-
-      const resizedFile = new File([resizedBlob], fileName, { type: resizedBlob.type });
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, resizedFile, {
-          upsert: true,
-          cacheControl: "no-cache, max-age=0, must-revalidate",
-          contentType: resizedBlob.type,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-      const publicUrl = urlData.publicUrl;
-
-      if (!publicUrl) throw new Error("Failed to get public URL");
-
-      const finalUrlWithTs = `${publicUrl}?t=${timestamp}`;
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ avatar_url: finalUrlWithTs })
-        .eq("id", currentUserId);
-
-      if (updateError) throw updateError;
-
-      // Wait for CDN propagation
-      await new Promise((r) => setTimeout(r, 5000));
-
-      const { data: freshProfile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", currentUserId)
-        .single();
-
-      if (freshProfile) setProfile(freshProfile as Profile);
-
-      alert("Avatar updated! Pull down refresh or reopen tab if needed.");
-    } catch (err: any) {
-      console.error("Avatar upload failed:", err);
-      alert("Failed to update avatar: " + (err?.message || "Unknown error"));
-    } finally {
-      setUploadingAvatar(false);
-      setAvatarPreview(null);
-
-      const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
-      if (input) input.value = "";
-
-      if (originalPreview) URL.revokeObjectURL(originalPreview);
-    }
+  // Ensure profile + user ID are loaded
+  if (!profile || profile.id !== currentUserId) {
+    alert("Your profile is still loading… try again.");
+    return;
   }
+
+  if (!currentUserId) return alert("You must be logged in.");
+  if (currentUserId !== userId) return alert("You can only update your own avatar.");
+
+  setUploadingAvatar(true);
+
+  const originalPreview = URL.createObjectURL(file);
+  setAvatarPreview(originalPreview);
+
+  try {
+    // Resize image
+    const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
+    const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
+
+    // Always name the file after the user ID
+    const resizedFile = new File([resizedBlob], `${currentUserId}.${ext}`, {
+      type: resizedBlob.type,
+    });
+
+    const resizedPreview = URL.createObjectURL(resizedFile);
+    setAvatarPreview(resizedPreview);
+
+    // Upload path MUST match your RLS policy:
+    // avatars/<userId>/<userId>.webp
+    const filePath = `${currentUserId}/${currentUserId}.${ext}`;
+    console.log("Uploading to:", filePath);
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, resizedFile, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData.publicUrl;
+    console.log("Public URL:", publicUrl);
+
+    // Add timestamp to break Safari cache
+    const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
+
+    // Update profile row
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: finalUrlWithTs })
+      .eq("id", currentUserId);
+
+    if (updateError) throw updateError;
+
+    // Update local state
+    setProfile((prev) =>
+      prev ? { ...prev, avatar_url: finalUrlWithTs } : prev
+    );
+
+    alert("Avatar updated successfully.");
+  } catch (err: any) {
+    console.error("Avatar handler caught error:", err);
+    alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
+  } finally {
+    setUploadingAvatar(false);
+    setAvatarPreview(null);
+
+    const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
+    if (input) input.value = "";
+
+    if (originalPreview) URL.revokeObjectURL(originalPreview);
+  }
+}
 
   function onFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
@@ -317,16 +322,15 @@ export default function ProfilePage() {
             <div className="relative flex items-center justify-center gap-6 mb-6 group">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-zinc-700 shadow-xl bg-zinc-900">
-                  <img
-                    key={profile.avatar_url || "default-avatar"}
-                    src={
-                      uploadingAvatar
-                        ? avatarPreview || "/default-avatar.png"
-                        : profile.avatar_url || "/default-avatar.png"
-                    }
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                  />
+                 <img
+  src={
+    uploadingAvatar
+      ? avatarPreview || `${profile.avatar_url}?cache=${Date.now()}` || "/default-avatar.png"
+      : `${profile.avatar_url}?cache=${Date.now()}` || "/default-avatar.png"
+  }
+  alt="Avatar"
+  className="w-full h-full object-cover"
+/>
 
                   {uploadingAvatar && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60">
@@ -356,7 +360,6 @@ export default function ProfilePage() {
                   />
                 )}
               </div>
-
               {!isOwnProfile && (
                 <button
                   onClick={toggleFollow}
@@ -522,7 +525,7 @@ export default function ProfilePage() {
     </div>
   );
 }
-
+/* HEADER — Icons only (no labels), eBay as text */
 function ProfileHeader() {
   return (
     <>
@@ -558,10 +561,11 @@ function ProfileHeader() {
             color: "white",
           }}
         >
-          {/* Social icons */}
+          {/* Social icons — keep your existing ones here */}
         </div>
       </header>
 
+      {/* Spacer so content doesn't hide behind fixed header */}
       <div style={{ height: 56 }} />
     </>
   );

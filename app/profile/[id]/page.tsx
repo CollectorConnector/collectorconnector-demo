@@ -529,11 +529,20 @@ function ProfileHeader() {
             color: "white",
           }}
         >
-          {/* Social icons — keep your existing ones here */}
+          {/* Example social icons — customize links & sources */}
+          <a href="https://twitter.com/yourhandle" target="_blank" rel="noopener noreferrer">
+            <img src="/icons/twitter.svg" alt="Twitter/X" width={24} height={24} />
+          </a>
+          <a href="https://instagram.com/yourhandle" target="_blank" rel="noopener noreferrer">
+            <img src="/icons/instagram.svg" alt="Instagram" width={24} height={24} />
+          </a>
+          <a href="https://facebook.com/yourpage" target="_blank" rel="noopener noreferrer">
+            <img src="/icons/facebook.svg" alt="Facebook" width={24} height={24} />
+          </a>
+          {/* Add more as needed, e.g. Discord, TikTok, etc. */}
         </div>
       </header>
 
-      {/* Spacer so content doesn't hide behind fixed header */}
       <div style={{ height: 56 }} />
     </>
   );

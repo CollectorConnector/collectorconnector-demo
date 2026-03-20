@@ -299,15 +299,15 @@ console.log("userId (URL):", userId);
             <div className="relative flex items-center justify-center gap-6 mb-6 group">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-zinc-700 shadow-xl bg-zinc-900">
-                  <img
-                    src={
-                      uploadingAvatar
-                        ? avatarPreview || profile.avatar_url || "/default-avatar.png"
-                        : profile.avatar_url || "/default-avatar.png"
-                    }
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                  />
+                 <img
+  src={
+    uploadingAvatar
+      ? avatarPreview || `${profile.avatar_url}?cache=${Date.now()}` || "/default-avatar.png"
+      : `${profile.avatar_url}?cache=${Date.now()}` || "/default-avatar.png"
+  }
+  alt="Avatar"
+  className="w-full h-full object-cover"
+/>
 
                   {uploadingAvatar && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60">

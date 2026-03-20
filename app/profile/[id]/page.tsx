@@ -187,18 +187,25 @@ console.log("userId (URL):", userId);
       const resizedPreview = URL.createObjectURL(resizedBlob);
       setAvatarPreview(resizedPreview);
 
-      const filePath = `${currentUserId}/${resizedFile.name}`;
+      // Always upload into a folder named after the user ID
+const filePath = `${currentUserId}/${currentUserId}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, resizedFile, { upsert: true });
+const { error: uploadError } = await supabase.storage
+  .from("avatars")
+  .upload(filePath, resizedFile, { upsert: true });
 
-      if (uploadError) throw uploadError;
+if (uploadError) throw uploadError;
 
-      const publicResp = supabase.storage.from("avatars").getPublicUrl(filePath) as any;
-      const publicUrl = publicResp?.data?.publicUrl || "";
+// Get the correct public URL for the new file
+const { data: urlData } = supabase.storage
+  .from("avatars")
+  .getPublicUrl(filePath);
 
-      const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
+const publicUrl = urlData.publicUrl;
+
+// Add timestamp to break Safari cache
+const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
+
 
       const updateResult = await supabase
         .from("profiles")

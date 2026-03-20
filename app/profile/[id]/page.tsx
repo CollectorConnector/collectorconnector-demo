@@ -159,109 +159,105 @@ export default function ProfilePage() {
     if (!jpegBlob) throw new Error("Image resize failed");
     return jpegBlob;
   }
+async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return alert("No file selected.");
 
-  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
-    // Clean old file (ignore errors if doesn't exist)
-await supabase.storage
-  .from("avatars")
-  .remove([`${currentUserId}/${currentUserId}.${ext}`]);  // or match your old naming
-    const file = e.target.files?.[0];
-    if (!file) return alert("No file selected.");
+  console.log("profile.id:", profile?.id);
+  console.log("currentUserId:", currentUserId);
+  console.log("userId (URL):", userId);
 
-    console.log("profile.id:", profile?.id);
-    console.log("currentUserId:", currentUserId);
-    console.log("userId (URL):", userId);
-
-    if (!profile || profile.id !== currentUserId) {
-      alert("Your profile is still loading… try again.");
-      return;
-    }
-    if (!currentUserId) return alert("You must be logged in.");
-    if (currentUserId !== userId) return alert("You can only update your own avatar.");
-
-    setUploadingAvatar(true);
-
-    const originalPreview = URL.createObjectURL(file);
-    setAvatarPreview(originalPreview);
-
-    try {
-      const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
-      const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
-
-      // Unique filename: userId + random UUID + timestamp fallback
-      const randomPart = crypto?.randomUUID?.() || Date.now().toString();
-      const uniqueSuffix = `${randomPart}-${Date.now()}`;
-      const fileName = `${currentUserId}-${uniqueSuffix}.${ext}`;
-      const resizedFile = new File([resizedBlob], fileName, { type: resizedBlob.type });
-
-      const resizedPreview = URL.createObjectURL(resizedBlob);
-      setAvatarPreview(resizedPreview);
-
-      const filePath = `${currentUserId}/${fileName}`;
-      console.log("Uploading to path:", filePath);
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, resizedFile, {
-          upsert: true,
-          cacheControl: "no-cache, max-age=0, must-revalidate",
-          contentType: resizedBlob.type,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-      const publicUrl = urlData.publicUrl;
-
-      if (!publicUrl) throw new Error("No public URL returned");
-
-      const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
-      console.log("New avatar_url:", finalUrlWithTs);
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ avatar_url: finalUrlWithTs })
-        .eq("id", currentUserId);
-
-      if (updateError) throw updateError;
-
-      // Wait longer for CDN propagation + retry fetch
-      await new Promise((r) => setTimeout(r, 3000)); // 3 seconds
-
-      let freshProfile = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentUserId)
-          .single();
-        freshProfile = data;
-        if (freshProfile?.avatar_url?.includes(uniqueSuffix)) break; // Success if new path reflected
-        await new Promise((r) => setTimeout(r, 2000)); // Retry delay
-      }
-
-      if (freshProfile) {
-        setProfile(freshProfile as Profile);
-        console.log("Fresh profile loaded with avatar:", freshProfile.avatar_url);
-      } else {
-        console.warn("Fresh profile fetch failed to reflect new avatar");
-      }
-
-      alert("Avatar updated successfully! If it doesn't show immediately, hard-refresh (Ctrl+Shift+R).");
-    } catch (err: any) {
-      console.error("Avatar upload error:", err);
-      alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
-    } finally {
-      setUploadingAvatar(false);
-      setAvatarPreview(null);
-
-      const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
-      if (input) input.value = "";
-
-      if (originalPreview) URL.revokeObjectURL(originalPreview);
-    }
+  if (!profile || profile.id !== currentUserId) {
+    alert("Your profile is still loading… try again.");
+    return;
   }
+  if (!currentUserId) return alert("You must be logged in.");
+  if (currentUserId !== userId) return alert("You can only update your own avatar.");
 
+  setUploadingAvatar(true);
+
+  const originalPreview = URL.createObjectURL(file);
+  setAvatarPreview(originalPreview);
+
+  try {
+    const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
+    const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
+
+    // Fixed filename — we will delete the old one first
+    const fileName = `avatar.${ext}`;
+    const filePath = `${currentUserId}/${fileName}`;
+
+    // Step 1: Delete any existing old avatar file (ignore errors if it doesn't exist)
+    await supabase.storage
+      .from("avatars")
+      .remove([filePath])
+      .then(({ error }) => {
+        if (error && error.message !== "Object not found") {
+          console.warn("Delete old avatar failed:", error);
+        }
+      });
+
+    const resizedFile = new File([resizedBlob], fileName, { type: resizedBlob.type });
+
+    const resizedPreview = URL.createObjectURL(resizedBlob);
+    setAvatarPreview(resizedPreview);
+
+    console.log("Uploading to:", filePath);
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, resizedFile, {
+        upsert: true,
+        cacheControl: "no-cache, max-age=0, must-revalidate",
+        contentType: resizedBlob.type,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    const publicUrl = urlData.publicUrl;
+
+    if (!publicUrl) throw new Error("No public URL returned");
+
+    const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
+    console.log("New avatar_url:", finalUrlWithTs);
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: finalUrlWithTs })
+      .eq("id", currentUserId);
+
+    if (updateError) throw updateError;
+
+    // Give CDN time to catch up + retry fetch
+    await new Promise((r) => setTimeout(r, 3000));
+
+    const { data: freshProfile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", currentUserId)
+      .single();
+
+    if (freshProfile) {
+      setProfile(freshProfile as Profile);
+      console.log("Fresh profile avatar:", freshProfile.avatar_url);
+    }
+
+    alert("Avatar updated successfully!");
+  } catch (err: any) {
+    console.error("Avatar upload error:", err);
+    alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
+  } finally {
+    setUploadingAvatar(false);
+    setAvatarPreview(null);
+
+    const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
+    if (input) input.value = "";
+
+    if (originalPreview) URL.revokeObjectURL(originalPreview);
+  }
+}
+  
   function onFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));

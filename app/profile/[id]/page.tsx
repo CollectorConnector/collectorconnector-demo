@@ -161,6 +161,10 @@ export default function ProfilePage() {
   }
 
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    // Clean old file (ignore errors if doesn't exist)
+await supabase.storage
+  .from("avatars")
+  .remove([`${currentUserId}/${currentUserId}.${ext}`]);  // or match your old naming
     const file = e.target.files?.[0];
     if (!file) return alert("No file selected.");
 

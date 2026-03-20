@@ -180,13 +180,13 @@ export default function ProfilePage() {
       const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
       const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
 
-      // UNIQUE FILENAME — this fixes the disappearing avatar on iPhone/Safari
+      // Unique filename to bypass CDN cache reliably
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
       const fileName = `${currentUserId}-${timestamp}-${randomStr}.${ext}`;
       const filePath = `${currentUserId}/${fileName}`;
 
-      console.log("Uploading to new path:", filePath);
+      console.log("Uploading to:", filePath);
 
       const resizedFile = new File([resizedBlob], fileName, { type: resizedBlob.type });
 
@@ -214,20 +214,23 @@ export default function ProfilePage() {
 
       if (updateError) throw updateError;
 
-      // Re-fetch profile (gives CDN time to serve new file)
-      await new Promise((r) => setTimeout(r, 2500));
+      // Delay for CDN propagation + force fresh fetch
+      await new Promise((r) => setTimeout(r, 4000)); // 4 seconds
+
       const { data: freshProfile } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", currentUserId)
         .single();
 
-      if (freshProfile) setProfile(freshProfile as Profile);
+      if (freshProfile) {
+        setProfile(freshProfile as Profile);
+      }
 
-      alert("Avatar updated successfully! Pull down to refresh.");
+      alert("Avatar updated! Pull down to refresh if it doesn't show right away.");
     } catch (err: any) {
       console.error("Avatar error:", err);
-      alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
+      alert("Failed to update avatar: " + (err?.message || "Unknown error"));
     } finally {
       setUploadingAvatar(false);
       setAvatarPreview(null);
@@ -318,12 +321,12 @@ export default function ProfilePage() {
               <div className="relative">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-zinc-700 shadow-xl bg-zinc-900">
                   <img
-                    key={profile.avatar_url || "default"} // Forces re-render when URL changes
+                    key={profile.avatar_url || Date.now()} // Force re-render on change
                     src={
                       uploadingAvatar
                         ? avatarPreview || "/default-avatar.png"
                         : profile.avatar_url
-                        ? `${profile.avatar_url}?t=${Date.now()}`
+                        ? `${profile.avatar_url}`
                         : "/default-avatar.png"
                     }
                     alt="Avatar"
@@ -465,7 +468,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* COLLECTIONS */}
+        {/* COLLECTIONS / VAULT */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <h2 className="text-2xl font-bold mb-5 text-center">My Vault</h2>
           <div className="flex flex-wrap gap-3 justify-center">
@@ -525,7 +528,6 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER */
 function ProfileHeader() {
   return (
     <>
@@ -561,7 +563,7 @@ function ProfileHeader() {
             color: "white",
           }}
         >
-          {/* Social icons here */}
+          {/* Add your social icons here if needed */}
         </div>
       </header>
 

@@ -159,74 +159,90 @@ export default function ProfilePage() {
     if (!jpegBlob) throw new Error("Image resize failed");
     return jpegBlob;
   }
-  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return alert("No file selected.");
-   
-console.log("profile.id:", profile?.id);
-console.log("currentUserId:", currentUserId);
-console.log("userId (URL):", userId);
+async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return alert("No file selected.");
 
-    if (!profile || profile.id !== currentUserId) {
-  alert("Your profile is still loading… try again in a moment.");
-  return;
-}
-    if (!currentUserId) return alert("You must be signed in to change your avatar.");
-    if (currentUserId !== userId) return alert("You can only change your own avatar.");
+  console.log("profile.id:", profile?.id);
+  console.log("currentUserId:", currentUserId);
+  console.log("userId (URL):", userId);
+
+  // Ensure profile + user ID are loaded
+  if (!profile || profile.id !== currentUserId) {
+    alert("Your profile is still loading… try again.");
+    return;
+  }
+
+  if (!currentUserId) return alert("You must be logged in.");
+  if (currentUserId !== userId) return alert("You can only update your own avatar.");
 
   setUploadingAvatar(true);
 
-    const originalPreview = URL.createObjectURL(file);
-    setAvatarPreview(originalPreview);
+  const originalPreview = URL.createObjectURL(file);
+  setAvatarPreview(originalPreview);
 
-    try {
-      const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
-      const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
-      const resizedFile = new File([resizedBlob], `${currentUserId}.${ext}`, { type: resizedBlob.type });
+  try {
+    // Resize image
+    const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
+    const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
 
-      const resizedPreview = URL.createObjectURL(resizedBlob);
-      setAvatarPreview(resizedPreview);
+    // Always name the file after the user ID
+    const resizedFile = new File([resizedBlob], `${currentUserId}.${ext}`, {
+      type: resizedBlob.type,
+    });
 
-      // Always upload into a folder named after the user ID
-const filePath = `${currentUserId}/${currentUserId}.${ext}`;
+    const resizedPreview = URL.createObjectURL(resizedFile);
+    setAvatarPreview(resizedPreview);
 
-const { error: uploadError } = await supabase.storage
-  .from("avatars")
-  .upload(filePath, resizedFile, { upsert: true });
+    // Upload path MUST match your RLS policy:
+    // avatars/<userId>/<userId>.webp
+    const filePath = `${currentUserId}/${currentUserId}.${ext}`;
+    console.log("Uploading to:", filePath);
 
-if (uploadError) throw uploadError;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, resizedFile, { upsert: true });
 
-// Get the correct public URL for the new file
-const { data: urlData } = supabase.storage
-  .from("avatars")
-  .getPublicUrl(filePath);
+    if (uploadError) throw uploadError;
 
-const publicUrl = urlData.publicUrl;
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
 
-// Add timestamp to break Safari cache
-const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
+    const publicUrl = urlData.publicUrl;
+    console.log("Public URL:", publicUrl);
 
+    // Add timestamp to break Safari cache
+    const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
 
-      const updateResult = await supabase
-        .from("profiles")
-        .update({ avatar_url: finalUrlWithTs })
-        .eq("id", currentUserId);
+    // Update profile row
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ avatar_url: finalUrlWithTs })
+      .eq("id", currentUserId);
 
-      if ((updateResult as any).error) throw (updateResult as any).error;
+    if (updateError) throw updateError;
 
-      setProfile((prev) => (prev ? { ...prev, avatar_url: finalUrlWithTs } : prev));
-      alert("Avatar updated successfully.");
-    } catch (err: any) {
-      console.error("Avatar handler caught error:", err);
-      alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
-    } finally {
-      setUploadingAvatar(false);
-      setAvatarPreview(null);
-      const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
-      if (input) input.value = "";
-      if (originalPreview) URL.revokeObjectURL(originalPreview);
-    }
+    // Update local state
+    setProfile((prev) =>
+      prev ? { ...prev, avatar_url: finalUrlWithTs } : prev
+    );
+
+    alert("Avatar updated successfully.");
+  } catch (err: any) {
+    console.error("Avatar handler caught error:", err);
+    alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
+  } finally {
+    setUploadingAvatar(false);
+    setAvatarPreview(null);
+
+    const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
+    if (input) input.value = "";
+
+    if (originalPreview) URL.revokeObjectURL(originalPreview);
   }
+}
 
   function onFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;

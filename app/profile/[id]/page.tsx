@@ -162,7 +162,12 @@ export default function ProfilePage() {
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return alert("No file selected.");
-     if (!profile || profile.id !== currentUserId) {
+   
+console.log("profile.id:", profile?.id);
+console.log("currentUserId:", currentUserId);
+console.log("userId (URL):", userId);
+
+    if (!profile || profile.id !== currentUserId) {
   alert("Your profile is still loading… try again in a moment.");
   return;
 }

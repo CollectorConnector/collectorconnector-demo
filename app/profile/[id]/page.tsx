@@ -159,105 +159,86 @@ export default function ProfilePage() {
     if (!jpegBlob) throw new Error("Image resize failed");
     return jpegBlob;
   }
-async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
-  const file = e.target.files?.[0];
-  if (!file) return alert("No file selected.");
 
-  console.log("profile.id:", profile?.id);
-  console.log("currentUserId:", currentUserId);
-  console.log("userId (URL):", userId);
+  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return alert("No file selected.");
 
-  if (!profile || profile.id !== currentUserId) {
-    alert("Your profile is still loading… try again.");
-    return;
-  }
-  if (!currentUserId) return alert("You must be logged in.");
-  if (currentUserId !== userId) return alert("You can only update your own avatar.");
-
-  setUploadingAvatar(true);
-
-  const originalPreview = URL.createObjectURL(file);
-  setAvatarPreview(originalPreview);
-
-  try {
-    const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
-    const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
-
-    // Fixed filename — we will delete the old one first
-    const fileName = `avatar.${ext}`;
-    const filePath = `${currentUserId}/${fileName}`;
-
-    // Step 1: Delete any existing old avatar file (ignore errors if it doesn't exist)
-    await supabase.storage
-      .from("avatars")
-      .remove([filePath])
-      .then(({ error }) => {
-        if (error && error.message !== "Object not found") {
-          console.warn("Delete old avatar failed:", error);
-        }
-      });
-
-    const resizedFile = new File([resizedBlob], fileName, { type: resizedBlob.type });
-
-    const resizedPreview = URL.createObjectURL(resizedBlob);
-    setAvatarPreview(resizedPreview);
-
-    console.log("Uploading to:", filePath);
-
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, resizedFile, {
-        upsert: true,
-        cacheControl: "no-cache, max-age=0, must-revalidate",
-        contentType: resizedBlob.type,
-      });
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    const publicUrl = urlData.publicUrl;
-
-    if (!publicUrl) throw new Error("No public URL returned");
-
-    const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
-    console.log("New avatar_url:", finalUrlWithTs);
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ avatar_url: finalUrlWithTs })
-      .eq("id", currentUserId);
-
-    if (updateError) throw updateError;
-
-    // Give CDN time to catch up + retry fetch
-    await new Promise((r) => setTimeout(r, 3000));
-
-    const { data: freshProfile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUserId)
-      .single();
-
-    if (freshProfile) {
-      setProfile(freshProfile as Profile);
-      console.log("Fresh profile avatar:", freshProfile.avatar_url);
+    if (!profile || profile.id !== currentUserId) {
+      alert("Your profile is still loading… try again.");
+      return;
     }
+    if (!currentUserId) return alert("You must be logged in.");
+    if (currentUserId !== userId) return alert("You can only update your own avatar.");
 
-    alert("Avatar updated successfully!");
-  } catch (err: any) {
-    console.error("Avatar upload error:", err);
-    alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
-  } finally {
-    setUploadingAvatar(false);
-    setAvatarPreview(null);
+    setUploadingAvatar(true);
 
-    const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
-    if (input) input.value = "";
+    const originalPreview = URL.createObjectURL(file);
+    setAvatarPreview(originalPreview);
 
-    if (originalPreview) URL.revokeObjectURL(originalPreview);
+    try {
+      const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
+      const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
+
+      // UNIQUE FILENAME — this fixes the disappearing avatar on iPhone/Safari
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      const fileName = `${currentUserId}-${timestamp}-${randomStr}.${ext}`;
+      const filePath = `${currentUserId}/${fileName}`;
+
+      console.log("Uploading to new path:", filePath);
+
+      const resizedFile = new File([resizedBlob], fileName, { type: resizedBlob.type });
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, resizedFile, {
+          upsert: true,
+          cacheControl: "no-cache, max-age=0, must-revalidate",
+          contentType: resizedBlob.type,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const publicUrl = urlData.publicUrl;
+
+      if (!publicUrl) throw new Error("Failed to get public URL");
+
+      const finalUrlWithTs = `${publicUrl}?t=${timestamp}`;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: finalUrlWithTs })
+        .eq("id", currentUserId);
+
+      if (updateError) throw updateError;
+
+      // Re-fetch profile (gives CDN time to serve new file)
+      await new Promise((r) => setTimeout(r, 2500));
+      const { data: freshProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUserId)
+        .single();
+
+      if (freshProfile) setProfile(freshProfile as Profile);
+
+      alert("Avatar updated successfully! Pull down to refresh.");
+    } catch (err: any) {
+      console.error("Avatar error:", err);
+      alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
+    } finally {
+      setUploadingAvatar(false);
+      setAvatarPreview(null);
+
+      const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
+      if (input) input.value = "";
+
+      if (originalPreview) URL.revokeObjectURL(originalPreview);
+    }
   }
-}
-  
+
   function onFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));
@@ -337,7 +318,7 @@ async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
               <div className="relative">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-zinc-700 shadow-xl bg-zinc-900">
                   <img
-                    key={profile.avatar_url || "default"} // Force re-render on URL change
+                    key={profile.avatar_url || "default"} // Forces re-render when URL changes
                     src={
                       uploadingAvatar
                         ? avatarPreview || "/default-avatar.png"
@@ -466,9 +447,77 @@ async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
           </div>
         </section>
 
-        {/* STATS, COLLECTIONS, RECENT DROPS sections unchanged – omitted for brevity */}
-        {/* ... paste your existing stats, vault, recent drops sections here ... */}
+        {/* STATS */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-3xl font-bold">{profile.items_count || "2.1k"}</p>
+              <p className="text-gray-500 text-sm mt-1">Items</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold">{profile.collections_count || "4"}</p>
+              <p className="text-gray-500 text-sm mt-1">Categories</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold">{profile.rarity_score ?? "90.8"}</p>
+              <p className="text-gray-500 text-sm mt-1">Rarity Score</p>
+            </div>
+          </div>
+        </section>
 
+        {/* COLLECTIONS */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
+          <h2 className="text-2xl font-bold mb-5 text-center">My Vault</h2>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {["Cards", "Watches", "Coins", "Memorabilia"].map((cat) => (
+              <button
+                key={cat}
+                className="px-6 py-2.5 bg-zinc-900/70 border border-zinc-700 rounded-full text-sm font-medium hover:border-zinc-500 hover:bg-zinc-800 transition"
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* RECENT DROPS */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
+          <h2 className="text-2xl font-bold mb-5 text-center">Recent Drops</h2>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+              <img
+                src="/charizard.png"
+                alt="Featured Card"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute top-3 left-3 bg-indigo-600/90 text-white text-xs font-bold px-2.5 py-1 rounded-md">
+                Featured
+              </div>
+            </div>
+
+            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+              <img
+                src="/watch.png"
+                alt="Watch"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+
+            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+              <img
+                src="/coin.png"
+                alt="Coin"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+          </div>
+
+          <div className="text-center text-sm text-gray-400">
+            <p className="mb-1">2 hours ago</p>
+            <p>Just added this beauty to the vault. Thoughts?</p>
+          </div>
+        </section>
       </main>
 
       <Footer />
@@ -476,7 +525,7 @@ async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
   );
 }
 
-/* ProfileHeader unchanged */
+/* HEADER */
 function ProfileHeader() {
   return (
     <>
@@ -512,7 +561,7 @@ function ProfileHeader() {
             color: "white",
           }}
         >
-          {/* Social icons */}
+          {/* Social icons here */}
         </div>
       </header>
 

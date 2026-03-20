@@ -159,90 +159,58 @@ export default function ProfilePage() {
     if (!jpegBlob) throw new Error("Image resize failed");
     return jpegBlob;
   }
-async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
-  const file = e.target.files?.[0];
-  if (!file) return alert("No file selected.");
+  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return alert("No file selected.");
+    if (!currentUserId) return alert("You must be signed in to change your avatar.");
+    if (currentUserId !== userId) return alert("You can only change your own avatar.");
 
-  console.log("profile.id:", profile?.id);
-  console.log("currentUserId:", currentUserId);
-  console.log("userId (URL):", userId);
+    setUploadingAvatar(true);
 
-  // Ensure profile + user ID are loaded
-  if (!profile || profile.id !== currentUserId) {
-    alert("Your profile is still loading… try again.");
-    return;
+    const originalPreview = URL.createObjectURL(file);
+    setAvatarPreview(originalPreview);
+
+    try {
+      const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
+      const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
+      const resizedFile = new File([resizedBlob], `${currentUserId}.${ext}`, { type: resizedBlob.type });
+
+      const resizedPreview = URL.createObjectURL(resizedBlob);
+      setAvatarPreview(resizedPreview);
+
+      const filePath = `${currentUserId}/${resizedFile.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, resizedFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const publicResp = supabase.storage.from("avatars").getPublicUrl(filePath) as any;
+      const publicUrl = publicResp?.data?.publicUrl || "";
+
+      const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
+
+      const updateResult = await supabase
+        .from("profiles")
+        .update({ avatar_url: finalUrlWithTs })
+        .eq("id", currentUserId);
+
+      if ((updateResult as any).error) throw (updateResult as any).error;
+
+      setProfile((prev) => (prev ? { ...prev, avatar_url: finalUrlWithTs } : prev));
+      alert("Avatar updated successfully.");
+    } catch (err: any) {
+      console.error("Avatar handler caught error:", err);
+      alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
+    } finally {
+      setUploadingAvatar(false);
+      setAvatarPreview(null);
+      const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
+      if (input) input.value = "";
+      if (originalPreview) URL.revokeObjectURL(originalPreview);
+    }
   }
-
-  if (!currentUserId) return alert("You must be logged in.");
-  if (currentUserId !== userId) return alert("You can only update your own avatar.");
-
-  setUploadingAvatar(true);
-
-  const originalPreview = URL.createObjectURL(file);
-  setAvatarPreview(originalPreview);
-
-  try {
-    // Resize image
-    const resizedBlob = await resizeImageToSquare(file, TARGET_SIZE, QUALITY);
-    const ext = resizedBlob.type === "image/webp" ? "webp" : "jpg";
-
-    // Always name the file after the user ID
-    const resizedFile = new File([resizedBlob], `${currentUserId}.${ext}`, {
-      type: resizedBlob.type,
-    });
-
-    const resizedPreview = URL.createObjectURL(resizedFile);
-    setAvatarPreview(resizedPreview);
-
-    // Upload path MUST match your RLS policy:
-    // avatars/<userId>/<userId>.webp
-    const filePath = `${currentUserId}/${currentUserId}.${ext}`;
-    console.log("Uploading to:", filePath);
-
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, resizedFile, { upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
-
-    const publicUrl = urlData.publicUrl;
-    console.log("Public URL:", publicUrl);
-
-    // Add timestamp to break Safari cache
-    const finalUrlWithTs = `${publicUrl}?t=${Date.now()}`;
-
-    // Update profile row
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ avatar_url: finalUrlWithTs })
-      .eq("id", currentUserId);
-
-    if (updateError) throw updateError;
-
-    // Update local state
-    setProfile((prev) =>
-      prev ? { ...prev, avatar_url: finalUrlWithTs } : prev
-    );
-
-    alert("Avatar updated successfully.");
-  } catch (err: any) {
-    console.error("Avatar handler caught error:", err);
-    alert("Failed to update avatar: " + (err?.message || JSON.stringify(err)));
-  } finally {
-    setUploadingAvatar(false);
-    setAvatarPreview(null);
-
-    const input = document.getElementById("avatar-upload") as HTMLInputElement | null;
-    if (input) input.value = "";
-
-    if (originalPreview) URL.revokeObjectURL(originalPreview);
-  }
-}
 
   function onFormChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
@@ -322,15 +290,15 @@ async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
             <div className="relative flex items-center justify-center gap-6 mb-6 group">
               <div className="relative">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-zinc-700 shadow-xl bg-zinc-900">
-                 <img
-  src={
-    uploadingAvatar
-      ? avatarPreview || `${profile.avatar_url}?cache=${Date.now()}` || "/default-avatar.png"
-      : `${profile.avatar_url}?cache=${Date.now()}` || "/default-avatar.png"
-  }
-  alt="Avatar"
-  className="w-full h-full object-cover"
-/>
+                  <img
+                    src={
+                      uploadingAvatar
+                        ? avatarPreview || profile.avatar_url || "/default-avatar.png"
+                        : profile.avatar_url || "/default-avatar.png"
+                    }
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
 
                   {uploadingAvatar && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60">

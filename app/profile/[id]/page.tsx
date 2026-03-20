@@ -162,10 +162,14 @@ export default function ProfilePage() {
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return alert("No file selected.");
+     if (!profile || profile.id !== currentUserId) {
+  alert("Your profile is still loading… try again in a moment.");
+  return;
+}
     if (!currentUserId) return alert("You must be signed in to change your avatar.");
     if (currentUserId !== userId) return alert("You can only change your own avatar.");
 
-    setUploadingAvatar(true);
+  setUploadingAvatar(true);
 
     const originalPreview = URL.createObjectURL(file);
     setAvatarPreview(originalPreview);

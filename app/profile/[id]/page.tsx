@@ -8,10 +8,11 @@ import Footer from "@/components/Footer";
 type Profile = {
   id: string;
   avatar_url?: string | null;
-  display_name?: string | null;
+  display_url?: string | null;     // ← using this as the display name field
   username?: string | null;
   location?: string | null;
   bio?: string | null;
+  tier?: string | null;
   items_count?: number | null;
   collections_count?: number | null;
 };
@@ -31,11 +32,12 @@ export default function ProfilePage() {
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  // Inline edit states (for own profile)
+  // Inline edit states
   const [editMode, setEditMode] = useState(false);
-  const [editedDisplayName, setEditedDisplayName] = useState("");
+  const [editedDisplayUrl, setEditedDisplayUrl] = useState(""); // ← matches column name
   const [editedBio, setEditedBio] = useState("");
   const [editedLocation, setEditedLocation] = useState("");
+  const [editedTier, setEditedTier] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -63,11 +65,11 @@ export default function ProfilePage() {
         if (error) throw error;
         setProfile(data);
 
-        // Pre-fill edit fields if own profile
         if (data && currentUserId === userId) {
-          setEditedDisplayName(data.display_name || "");
+          setEditedDisplayUrl(data.display_url || "");
           setEditedBio(data.bio || "");
           setEditedLocation(data.location || "");
+          setEditedTier(data.tier || "Standard");
         }
       } catch (err: any) {
         setError(err.message || "Failed to load profile");
@@ -103,21 +105,14 @@ export default function ProfilePage() {
 
     try {
       if (isFollowing) {
-        await supabase
-          .from("follows")
-          .delete()
-          .eq("follower_id", currentUserId)
-          .eq("following_id", userId);
+        await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
         setIsFollowing(false);
       } else {
-        await supabase.from("follows").insert({
-          follower_id: currentUserId,
-          following_id: userId,
-        });
+        await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
         setIsFollowing(true);
       }
     } catch (err) {
-      console.error("Follow toggle failed:", err);
+      console.error("Follow error:", err);
     } finally {
       setFollowLoading(false);
     }
@@ -130,23 +125,23 @@ export default function ProfilePage() {
     setUploadingAvatar(true);
 
     try {
-      const fileExt = file.name.split(".").pop() || "png";
-      const fileName = `avatar.${fileExt}`; // simpler name, no timestamp needed
+      const timestamp = Date.now();
+      const fileExt = file.name.split(".").pop() || "jpg";
+      const fileName = `avatar-${timestamp}.${fileExt}`;
       const filePath = `${currentUserId}/${fileName}`;
 
-      // Upload with upsert
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file, { upsert: true, cacheControl: "3600" }); // cache for 1 hour
+        .upload(filePath, file, { upsert: true, cacheControl: "31536000" });
 
       if (uploadError) throw uploadError;
 
-      // Get permanent public URL (assuming bucket is public)
       const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      if (!data.publicUrl) throw new Error("No public URL returned");
+      console.log("Generated public URL:", data.publicUrl); // ← debug: check this in console
 
-      // Update profile
+      if (!data.publicUrl) throw new Error("No public URL returned – bucket must be public");
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: data.publicUrl })
@@ -154,13 +149,12 @@ export default function ProfilePage() {
 
       if (updateError) throw updateError;
 
-      // Refresh local state
-      setProfile((prev) => prev ? { ...prev, avatar_url: data.publicUrl } : null);
+      setProfile((prev) => (prev ? { ...prev, avatar_url: data.publicUrl } : null));
 
-      alert("Profile picture updated! Refresh to confirm persistence.");
+      alert("Avatar updated – refresh to see if it persists");
     } catch (err: any) {
-      console.error("Avatar upload failed:", err);
-      alert("Failed to update avatar: " + (err.message || "Unknown error"));
+      console.error("Avatar upload/save failed:", err);
+      alert("Avatar failed: " + (err.message || "Check console for details"));
     } finally {
       setUploadingAvatar(false);
     }
@@ -173,9 +167,10 @@ export default function ProfilePage() {
 
     try {
       const updates = {
-        display_name: editedDisplayName.trim() || null,
+        display_url: editedDisplayUrl.trim() || null,   // ← correct field
         bio: editedBio.trim() || null,
         location: editedLocation.trim() || null,
+        tier: editedTier || null,
       };
 
       const { error } = await supabase
@@ -185,23 +180,19 @@ export default function ProfilePage() {
 
       if (error) throw error;
 
-      // Update local state
-      setProfile((prev) =>
-        prev ? { ...prev, ...updates } : null
-      );
-
+      setProfile((prev) => (prev ? { ...prev, ...updates } : null));
       setEditMode(false);
-      alert("Profile updated successfully!");
+      alert("Profile saved successfully!");
     } catch (err: any) {
       console.error("Save failed:", err);
-      alert("Failed to save changes: " + (err.message || "Unknown error"));
+      alert("Save failed: " + (err.message || "Check console"));
     } finally {
       setSaving(false);
     }
   }
 
   const displayName = useMemo(
-    () => profile?.display_name || profile?.username || "Unnamed Collector",
+    () => profile?.display_url || profile?.username || "Unnamed Collector",
     [profile]
   );
 
@@ -211,9 +202,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-black text-white">
         <ProfileHeader />
-        <div className="flex items-center justify-center h-[80vh] text-xl">
-          Loading...
-        </div>
+        <div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div>
       </div>
     );
   }
@@ -245,29 +234,28 @@ export default function ProfilePage() {
                 <img
                   src={profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
-                  className="w-64 h-64 sm:w-80 sm:h-80 rounded-full object-cover border-4 border-zinc-700 shadow-2xl transition-opacity group-hover:opacity-80"
+                  className="w-80 h-80 sm:w-96 sm:h-96 rounded-full object-cover border-4 border-zinc-700 shadow-2xl transition-opacity group-hover:opacity-80"
                 />
 
                 {isOwnProfile && (
-                  <label
-                    htmlFor="avatar-upload"
-                    className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <span className="text-white text-base font-medium">
-                      {uploadingAvatar ? "Uploading..." : "Change Photo"}
-                    </span>
-                  </label>
-                )}
-
-                {isOwnProfile && (
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    disabled={uploadingAvatar}
-                    className="hidden"
-                  />
+                  <>
+                    <label
+                      htmlFor="avatar-upload"
+                      className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <span className="text-white text-lg font-medium">
+                        {uploadingAvatar ? "Uploading..." : "Change Photo"}
+                      </span>
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      disabled={uploadingAvatar}
+                      className="hidden"
+                    />
+                  </>
                 )}
               </div>
 
@@ -287,15 +275,13 @@ export default function ProfilePage() {
             </div>
 
             {isOwnProfile && editMode ? (
-              <>
-                <input
-                  type="text"
-                  value={editedDisplayName}
-                  onChange={(e) => setEditedDisplayName(e.target.value)}
-                  placeholder="Display Name"
-                  className="text-3xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-center w-full max-w-md"
-                />
-              </>
+              <input
+                type="text"
+                value={editedDisplayUrl}
+                onChange={(e) => setEditedDisplayUrl(e.target.value)}
+                placeholder="Display Name"
+                className="text-3xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-center w-full max-w-md"
+              />
             ) : (
               <h1 className="text-3xl font-bold mb-2">{displayName}</h1>
             )}
@@ -327,6 +313,29 @@ export default function ProfilePage() {
               </p>
             )}
 
+            {isOwnProfile && editMode ? (
+              <div className="w-full max-w-md mb-4">
+                <label className="block text-gray-400 text-sm mb-1">Collector Tier</label>
+                <select
+                  value={editedTier}
+                  onChange={(e) => setEditedTier(e.target.value)}
+                  className="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 w-full text-white text-sm"
+                >
+                  <option value="Standard">Standard</option>
+                  <option value="Silver">Silver</option>
+                  <option value="Gold">Gold</option>
+                  <option value="Platinum">Platinum</option>
+                  <option value="Diamond">Diamond</option>
+                </select>
+              </div>
+            ) : (
+              profile.tier && (
+                <p className="text-indigo-400 text-sm mb-4 font-medium">
+                  Tier: {profile.tier}
+                </p>
+              )
+            )}
+
             {isOwnProfile && (
               <div className="mt-6 flex gap-4">
                 {editMode ? (
@@ -334,9 +343,9 @@ export default function ProfilePage() {
                     <button
                       onClick={saveProfileChanges}
                       disabled={saving}
-                      className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-full text-base font-medium transition shadow-md disabled:opacity-50"
+                      className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-full text-base font-medium transition disabled:opacity-50"
                     >
-                      {saving ? "Saving..." : "Save Changes"}
+                      {saving ? "Saving..." : "Save"}
                     </button>
                     <button
                       onClick={() => setEditMode(false)}
@@ -346,21 +355,19 @@ export default function ProfilePage() {
                     </button>
                   </>
                 ) : (
-                  <>
-                    <button
-                      onClick={() => setEditMode(true)}
-                      className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-base font-medium transition shadow-md"
-                    >
-                      Edit Profile
-                    </button>
-                  </>
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-base font-medium transition"
+                  >
+                    Edit Profile
+                  </button>
                 )}
               </div>
             )}
           </div>
         </section>
 
-        {/* STATS (unchanged) */}
+        {/* STATS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
@@ -378,7 +385,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* COLLECTIONS (unchanged) */}
+        {/* COLLECTIONS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <h2 className="text-2xl font-bold mb-5 text-center">My Vault</h2>
           <div className="flex flex-wrap gap-3 justify-center">
@@ -393,7 +400,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* RECENT DROPS (unchanged) */}
+        {/* RECENT DROPS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <h2 className="text-2xl font-bold mb-5 text-center">Recent Drops</h2>
 
@@ -410,11 +417,19 @@ export default function ProfilePage() {
             </div>
 
             <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
-              <img src="/watch.png" alt="Watch" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <img
+                src="/watch.png"
+                alt="Watch"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
             </div>
 
             <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
-              <img src="/coin.png" alt="Coin" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <img
+                src="/coin.png"
+                alt="Coin"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
             </div>
           </div>
 
@@ -430,7 +445,7 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER — Icons only, eBay as text, Whatnot added back with simple SVG */
+/* HEADER — Icons only, eBay as text, Whatnot included */
 function ProfileHeader() {
   return (
     <>
@@ -459,40 +474,35 @@ function ProfileHeader() {
         />
 
         <div style={{ display: "flex", alignItems: "center", gap: 20, color: "white" }}>
-          {/* Instagram */}
           <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
             </svg>
           </a>
 
-          {/* Facebook */}
           <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.992 22 12z"/>
             </svg>
           </a>
 
-          {/* eBay text */}
           <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="text-base font-bold tracking-wide hover:scale-110 transition-transform">
             eBay
           </a>
 
-          {/* Discord */}
           <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
             </svg>
           </a>
 
-          {/* Whatnot – simple white icon (box + arrow style from public sources) */}
+          {/* Whatnot */}
           <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-            <svg width="26" height="26" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <svg width="26" height="26" viewBox="0 0 256 256" fill="currentColor">
               <path d="M28 64c0-8.8 7.2-16 16-16h168c8.8 0 16 7.2 16 16v80c0 8.8-7.2 16-16 16h-60l-24 32-24-32H44c-8.8 0-16-7.2-16-16V64z M128 96l40 40h-80l40-40z"/>
             </svg>
           </a>
 
-          {/* X */}
           <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>

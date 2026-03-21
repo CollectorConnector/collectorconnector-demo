@@ -45,6 +45,27 @@ export default function ProfilePage() {
   const [editedLocation, setEditedLocation] = useState("");
   const [editedTier, setEditedTier] = useState("");
   const [saving, setSaving] = useState(false);
+  const [collections, setCollections] = useState<
+  { id: string; title: string; nichem: string; cover_url: string | null; item_count: number | null }[]
+>([]);
+
+  useEffect(() => {
+  if (!userId) return;
+
+  async function loadCollections() {
+    const { data, error } = await supabase
+      .from("collections")
+      .select("id, title, nichem, cover_url, item_count")
+      .eq("user_id", userId);
+
+    if (!error && data) {
+      setCollections(data);
+    }
+  }
+
+  loadCollections();
+}, [userId]);
+
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {

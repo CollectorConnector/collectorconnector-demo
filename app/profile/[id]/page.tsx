@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 type Profile = {
   id: string;
   avatar_url?: string | null;
-  display_url?: string | null;     // ← using this as the display name field
+  display_url?: string | null;
   username?: string | null;
   location?: string | null;
   bio?: string | null;
@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
   // Inline edit states
   const [editMode, setEditMode] = useState(false);
-  const [editedDisplayUrl, setEditedDisplayUrl] = useState(""); // ← matches column name
+  const [editedDisplayUrl, setEditedDisplayUrl] = useState("");
   const [editedBio, setEditedBio] = useState("");
   const [editedLocation, setEditedLocation] = useState("");
   const [editedTier, setEditedTier] = useState("");
@@ -138,9 +138,9 @@ export default function ProfilePage() {
 
       const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      console.log("Generated public URL:", data.publicUrl); // ← debug: check this in console
+      console.log("Avatar public URL:", data.publicUrl);
 
-      if (!data.publicUrl) throw new Error("No public URL returned – bucket must be public");
+      if (!data.publicUrl) throw new Error("No public URL – check bucket is PUBLIC");
 
       const { error: updateError } = await supabase
         .from("profiles")
@@ -151,10 +151,10 @@ export default function ProfilePage() {
 
       setProfile((prev) => (prev ? { ...prev, avatar_url: data.publicUrl } : null));
 
-      alert("Avatar updated – refresh to see if it persists");
+      alert("Avatar updated! Refresh to confirm.");
     } catch (err: any) {
-      console.error("Avatar upload/save failed:", err);
-      alert("Avatar failed: " + (err.message || "Check console for details"));
+      console.error("Avatar failed:", err);
+      alert("Avatar update failed: " + (err.message || "Check console"));
     } finally {
       setUploadingAvatar(false);
     }
@@ -167,7 +167,7 @@ export default function ProfilePage() {
 
     try {
       const updates = {
-        display_url: editedDisplayUrl.trim() || null,   // ← correct field
+        display_url: editedDisplayUrl.trim() || null,
         bio: editedBio.trim() || null,
         location: editedLocation.trim() || null,
         tier: editedTier || null,
@@ -182,7 +182,7 @@ export default function ProfilePage() {
 
       setProfile((prev) => (prev ? { ...prev, ...updates } : null));
       setEditMode(false);
-      alert("Profile saved successfully!");
+      alert("Profile saved!");
     } catch (err: any) {
       console.error("Save failed:", err);
       alert("Save failed: " + (err.message || "Check console"));
@@ -195,6 +195,21 @@ export default function ProfilePage() {
     () => profile?.display_url || profile?.username || "Unnamed Collector",
     [profile]
   );
+
+  const getTierIcon = (tier?: string) => {
+    if (!tier) return null;
+    const lower = tier.toLowerCase();
+
+    if (lower.includes("bronze"))   return "/tier-badges/bronze.png";
+    if (lower.includes("silver"))   return "/tier-badges/silver.png";
+    if (lower.includes("gold"))     return "/tier-badges/gold.png";
+    if (lower.includes("diamond"))  return "/tier-badges/diamond.png";
+    if (lower.includes("founder"))  return "/tier-badges/founder.png";
+
+    return null; // no icon if no match
+  };
+
+  const tierIconSrc = getTierIcon(profile?.tier);
 
   const isOwnProfile = currentUserId === userId;
 
@@ -226,15 +241,15 @@ export default function ProfilePage() {
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
 
         {/* PROFILE BOX */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-lg shadow-black/30">
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-12 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            <div className="relative flex items-center justify-center gap-8 mb-8 group">
+            <div className="relative flex items-center justify-center gap-12 mb-12 group">
               <div className="relative">
                 <img
                   src={profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
-                  className="w-80 h-80 sm:w-96 sm:h-96 rounded-full object-cover border-4 border-zinc-700 shadow-2xl transition-opacity group-hover:opacity-80"
+                  className="w-[28rem] h-[28rem] sm:w-[32rem] sm:h-[32rem] rounded-full object-cover border-8 border-zinc-700 shadow-2xl transition-opacity group-hover:opacity-80"
                 />
 
                 {isOwnProfile && (
@@ -243,7 +258,7 @@ export default function ProfilePage() {
                       htmlFor="avatar-upload"
                       className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <span className="text-white text-lg font-medium">
+                      <span className="text-white text-2xl font-medium">
                         {uploadingAvatar ? "Uploading..." : "Change Photo"}
                       </span>
                     </label>
@@ -263,7 +278,7 @@ export default function ProfilePage() {
                 <button
                   onClick={toggleFollow}
                   disabled={followLoading}
-                  className={`px-6 py-2.5 rounded-full text-sm font-medium transition min-w-[110px] ${
+                  className={`px-10 py-4 rounded-full text-lg font-medium transition min-w-[160px] ${
                     isFollowing
                       ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
                       : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500"
@@ -279,11 +294,15 @@ export default function ProfilePage() {
                 type="text"
                 value={editedDisplayUrl}
                 onChange={(e) => setEditedDisplayUrl(e.target.value)}
-                placeholder="Display Name"
-                className="text-3xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-center w-full max-w-md"
+                placeholder="Display Name (display_url)"
+                className="text-5xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 text-center w-full max-w-xl"
               />
             ) : (
-              <h1 className="text-3xl font-bold mb-2">{displayName}</h1>
+              <h1 className="text-5xl font-bold mb-4">{displayName}</h1>
+            )}
+
+            {profile.username && (
+              <p className="text-gray-400 text-2xl mb-6">@{profile.username}</p>
             )}
 
             {isOwnProfile && editMode ? (
@@ -291,10 +310,10 @@ export default function ProfilePage() {
                 value={editedBio}
                 onChange={(e) => setEditedBio(e.target.value)}
                 placeholder="Bio"
-                className="text-gray-300 text-lg mb-3 bg-zinc-900 border border-zinc-700 rounded px-4 py-2 w-full max-w-md h-24 resize-none"
+                className="text-gray-300 text-xl mb-6 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-xl h-40 resize-none"
               />
             ) : (
-              <p className="text-gray-300 text-lg mb-3 max-w-md">
+              <p className="text-gray-300 text-xl mb-6 max-w-xl leading-relaxed">
                 {profile.bio || "Collector of rare finds • Watches, cards, coins & more • Always chasing the next grail"}
               </p>
             )}
@@ -305,51 +324,63 @@ export default function ProfilePage() {
                 value={editedLocation}
                 onChange={(e) => setEditedLocation(e.target.value)}
                 placeholder="Location"
-                className="text-gray-500 text-sm bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-center w-full max-w-md"
+                className="text-gray-400 text-xl bg-zinc-900 border border-zinc-700 rounded px-6 py-4 text-center w-full max-w-xl mb-6"
               />
             ) : (
-              <p className="text-gray-500 text-sm">
-                {profile.location || "Swindon, UK"}
-              </p>
+              <p className="text-gray-400 text-xl mb-6">{profile.location || "Swindon, UK"}</p>
             )}
 
-            {isOwnProfile && editMode ? (
-              <div className="w-full max-w-md mb-4">
-                <label className="block text-gray-400 text-sm mb-1">Collector Tier</label>
-                <select
-                  value={editedTier}
-                  onChange={(e) => setEditedTier(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 w-full text-white text-sm"
-                >
-                  <option value="Standard">Standard</option>
-                  <option value="Silver">Silver</option>
-                  <option value="Gold">Gold</option>
-                  <option value="Platinum">Platinum</option>
-                  <option value="Diamond">Diamond</option>
-                </select>
-              </div>
-            ) : (
-              profile.tier && (
-                <p className="text-indigo-400 text-sm mb-4 font-medium">
-                  Tier: {profile.tier}
-                </p>
-              )
-            )}
+            <div className="flex items-center gap-4 mb-8">
+              {isOwnProfile && editMode ? (
+                <div className="w-full max-w-xl">
+                  <label className="block text-gray-400 text-xl mb-3">Collector Tier</label>
+                  <select
+                    value={editedTier}
+                    onChange={(e) => setEditedTier(e.target.value)}
+                    className="bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full text-white text-xl"
+                  >
+                    <option value="Standard">Standard</option>
+                    <option value="Bronze">Bronze</option>
+                    <option value="Silver">Silver</option>
+                    <option value="Gold">Gold</option>
+                    <option value="Diamond">Diamond</option>
+                    <option value="Founder">Founder</option>
+                  </select>
+                </div>
+              ) : (
+                profile.tier && (
+                  <div className="flex items-center gap-4">
+                    {tierIconSrc ? (
+                      <img
+                        src={tierIconSrc}
+                        alt={`${profile.tier} tier badge`}
+                        className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                      />
+                    ) : (
+                      <span className="text-3xl">🏆</span>
+                    )}
+                    <p className="text-indigo-400 text-2xl font-medium">
+                      Tier: {profile.tier}
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
 
             {isOwnProfile && (
-              <div className="mt-6 flex gap-4">
+              <div className="mt-10 flex gap-6 flex-wrap justify-center">
                 {editMode ? (
                   <>
                     <button
                       onClick={saveProfileChanges}
                       disabled={saving}
-                      className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-full text-base font-medium transition disabled:opacity-50"
+                      className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-2xl font-medium transition disabled:opacity-50 min-w-[200px]"
                     >
-                      {saving ? "Saving..." : "Save"}
+                      {saving ? "Saving..." : "Save Changes"}
                     </button>
                     <button
                       onClick={() => setEditMode(false)}
-                      className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-base font-medium transition"
+                      className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-2xl font-medium transition min-w-[200px]"
                     >
                       Cancel
                     </button>
@@ -357,7 +388,7 @@ export default function ProfilePage() {
                 ) : (
                   <button
                     onClick={() => setEditMode(true)}
-                    className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-base font-medium transition"
+                    className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-2xl font-medium transition shadow-xl"
                   >
                     Edit Profile
                   </button>
@@ -368,31 +399,31 @@ export default function ProfilePage() {
         </section>
 
         {/* STATS */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
-          <div className="grid grid-cols-3 gap-4 text-center">
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+          <div className="grid grid-cols-3 gap-8 text-center">
             <div>
-              <p className="text-3xl font-bold">{profile.items_count || "2.1k"}</p>
-              <p className="text-gray-500 text-sm mt-1">Items</p>
+              <p className="text-5xl font-bold">{profile.items_count || "2.1k"}</p>
+              <p className="text-gray-500 text-xl mt-3">Items</p>
             </div>
             <div>
-              <p className="text-3xl font-bold">{profile.collections_count || "4"}</p>
-              <p className="text-gray-500 text-sm mt-1">Categories</p>
+              <p className="text-5xl font-bold">{profile.collections_count || "4"}</p>
+              <p className="text-gray-500 text-xl mt-3">Categories</p>
             </div>
             <div>
-              <p className="text-3xl font-bold">90.8</p>
-              <p className="text-gray-500 text-sm mt-1">Rarity Score</p>
+              <p className="text-5xl font-bold">90.8</p>
+              <p className="text-gray-500 text-xl mt-3">Rarity Score</p>
             </div>
           </div>
         </section>
 
         {/* COLLECTIONS */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
-          <h2 className="text-2xl font-bold mb-5 text-center">My Vault</h2>
-          <div className="flex flex-wrap gap-3 justify-center">
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+          <h2 className="text-4xl font-bold mb-8 text-center">My Vault</h2>
+          <div className="flex flex-wrap gap-5 justify-center">
             {["Cards", "Watches", "Coins", "Memorabilia"].map((cat) => (
               <button
                 key={cat}
-                className="px-6 py-2.5 bg-zinc-900/70 border border-zinc-700 rounded-full text-sm font-medium hover:border-zinc-500 hover:bg-zinc-800 transition"
+                className="px-10 py-4 bg-zinc-900/70 border border-zinc-700 rounded-full text-xl font-medium hover:border-zinc-500 hover:bg-zinc-800 transition"
               >
                 {cat}
               </button>
@@ -401,22 +432,22 @@ export default function ProfilePage() {
         </section>
 
         {/* RECENT DROPS */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
-          <h2 className="text-2xl font-bold mb-5 text-center">Recent Drops</h2>
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+          <h2 className="text-4xl font-bold mb-8 text-center">Recent Drops</h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-            <div className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 mb-10">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
               <img
                 src="/charizard.png"
                 alt="Featured Card"
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute top-3 left-3 bg-indigo-600/90 text-white text-xs font-bold px-2.5 py-1 rounded-md">
+              <div className="absolute top-5 left-5 bg-indigo-600/90 text-white text-base font-bold px-4 py-2 rounded-md">
                 Featured
               </div>
             </div>
 
-            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
               <img
                 src="/watch.png"
                 alt="Watch"
@@ -424,7 +455,7 @@ export default function ProfilePage() {
               />
             </div>
 
-            <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
               <img
                 src="/coin.png"
                 alt="Coin"
@@ -433,8 +464,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="text-center text-sm text-gray-400">
-            <p className="mb-1">2 hours ago</p>
+          <div className="text-center text-lg text-gray-400">
+            <p className="mb-2">2 hours ago</p>
             <p>Just added this beauty to the vault. Thoughts?</p>
           </div>
         </section>
@@ -445,7 +476,7 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER — Icons only, eBay as text, Whatnot included */
+/* HEADER – Icons only, eBay as text, Whatnot included */
 function ProfileHeader() {
   return (
     <>
@@ -503,6 +534,7 @@ function ProfileHeader() {
             </svg>
           </a>
 
+          {/* X */}
           <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>

@@ -118,19 +118,16 @@ export default function ProfilePage() {
       const fileName = `${currentUserId}.${fileExt}`;
       const filePath = `${currentUserId}/${fileName}`;
 
-      // Upload (with upsert to overwrite old file)
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      // Update profile
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl })
@@ -138,7 +135,6 @@ export default function ProfilePage() {
 
       if (updateError) throw updateError;
 
-      // Update local state
       setProfile((prev) => (prev ? { ...prev, avatar_url: publicUrl } : null));
 
       alert("Profile picture updated!");
@@ -185,7 +181,6 @@ export default function ProfilePage() {
       <ProfileHeader />
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
-
         {/* PROFILE BOX */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
@@ -194,10 +189,9 @@ export default function ProfilePage() {
                 <img
                   src={profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-zinc-700 shadow-xl transition-opacity group-hover:opacity-80"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-zinc-700 shadow-xl transition-opacity group-hover:opacity-80"
                 />
 
-                {/* Edit overlay – only on own profile */}
                 {isOwnProfile && (
                   <label
                     htmlFor="avatar-upload"
@@ -209,7 +203,6 @@ export default function ProfilePage() {
                   </label>
                 )}
 
-                {/* Hidden file input */}
                 {isOwnProfile && (
                   <input
                     id="avatar-upload"
@@ -222,7 +215,6 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Follow button – only for other profiles */}
               {!isOwnProfile && (
                 <button
                   onClick={toggleFollow}
@@ -255,11 +247,15 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-3xl font-bold">{profile.items_count || "2.1k"}</p>
+              <p className="text-3xl font-bold">
+                {profile.items_count || "2.1k"}
+              </p>
               <p className="text-gray-500 text-sm mt-1">Items</p>
             </div>
             <div>
-              <p className="text-3xl font-bold">{profile.collections_count || "4"}</p>
+              <p className="text-3xl font-bold">
+                {profile.collections_count || "4"}
+              </p>
               <p className="text-gray-500 text-sm mt-1">Categories</p>
             </div>
             <div>
@@ -322,14 +318,14 @@ export default function ProfilePage() {
             <p>Just added this beauty to the vault. Thoughts?</p>
           </div>
         </section>
-
       </main>
 
       <Footer />
     </div>
   );
 }
-/* HEADER — Icons only (no labels), eBay as text */
+
+/* HEADER — Icons only (no labels), eBay as text, Whatnot white logo */
 function ProfileHeader() {
   return (
     <>
@@ -361,7 +357,7 @@ function ProfileHeader() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 20,           // slightly tighter than before
+            gap: 20,
             color: "white",
           }}
         >
@@ -373,7 +369,7 @@ function ProfileHeader() {
             className="hover:scale-110 transition-transform"
           >
             <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
             </svg>
           </a>
 
@@ -385,11 +381,11 @@ function ProfileHeader() {
             className="hover:scale-110 transition-transform"
           >
             <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.992 22 12z"/>
+              <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.992 22 12z" />
             </svg>
           </a>
 
-          {/* eBay – plain text since no good monochrome SVG matches the brand look perfectly */}
+          {/* eBay */}
           <a
             href="https://ebay.com"
             target="_blank"
@@ -408,7 +404,25 @@ function ProfileHeader() {
             className="hover:scale-110 transition-transform"
           >
             <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
+              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
+            </svg>
+          </a>
+
+          {/* Whatnot (white logo) */}
+          <a
+            href="https://whatnot.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:scale-110 transition-transform"
+          >
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 64 64"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M10 16c0-2.209 1.791-4 4-4h36c2.209 0 4 1.791 4 4v20c0 2.209-1.791 4-4 4H36l-6 8-6-8H14c-2.209 0-4-1.791-4-4V16z" />
             </svg>
           </a>
 
@@ -420,7 +434,7 @@ function ProfileHeader() {
             className="hover:scale-110 transition-transform"
           >
             <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
           </a>
         </div>

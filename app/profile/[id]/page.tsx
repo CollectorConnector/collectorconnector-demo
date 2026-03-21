@@ -399,23 +399,55 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* STATS */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <div className="grid grid-cols-3 gap-8 text-center">
-            <div>
-              <p className="text-5xl font-bold">{profile.items_count || "2.1k"}</p>
-              <p className="text-gray-500 text-xl mt-3">Items</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.collections_count || "4"}</p>
-              <p className="text-gray-500 text-xl mt-3">Categories</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">90.8</p>
-              <p className="text-gray-500 text-xl mt-3">Rarity Score</p>
-            </div>
-          </div>
-        </section>
+       {/* STATS */}
+<section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-8 text-center">
+
+    {/* Items */}
+    <div>
+      <p className="text-5xl font-bold">{profile.items_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Items</p>
+    </div>
+
+    {/* Categories */}
+    <div>
+      <p className="text-5xl font-bold">{profile.collections_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Categories</p>
+    </div>
+
+    {/* Rarity */}
+    <div>
+      <p className="text-5xl font-bold">90.8</p>
+      <p className="text-gray-500 text-xl mt-3">Rarity</p>
+    </div>
+
+    {/* Followers */}
+    <div>
+      <p className="text-5xl font-bold">{profile.followers_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Followers</p>
+    </div>
+
+    {/* Following */}
+    <div>
+      <p className="text-5xl font-bold">{profile.following_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Following</p>
+    </div>
+
+    {/* Vault Value */}
+    <div>
+      <p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Vault Value</p>
+    </div>
+
+    {/* Likes */}
+    <div>
+      <p className="text-5xl font-bold">{profile.likes_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Likes</p>
+    </div>
+
+  </div>
+</section>
+
 
         {/* COLLECTIONS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">

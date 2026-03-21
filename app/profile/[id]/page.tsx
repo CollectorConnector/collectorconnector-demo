@@ -15,6 +15,12 @@ type Profile = {
   tier?: string | null;
   items_count?: number | null;
   collections_count?: number | null;
+
+  followers_count?: number | null;
+following_count?: number | null;
+vault_value?: number | null;
+likes_count?: number | null;
+
 };
 
 export default function ProfilePage() {

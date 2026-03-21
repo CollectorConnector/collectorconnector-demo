@@ -181,7 +181,6 @@ export default function ProfilePage() {
       <ProfileHeader />
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
-        {/* PROFILE BOX (continued) */}
         </section>
 
         {/* STATS */}

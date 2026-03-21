@@ -8,13 +8,15 @@ html, body {
   color: #fff;
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
-/* Apple-style system font */
+/* Apple-style system font + better text rendering */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
 /* Remove blue link styling */
@@ -22,8 +24,10 @@ a {
   color: inherit;
   text-decoration: none;
 }
-a:hover {
+a:hover,
+a:focus {
   color: #e5e5e5;
+  outline: none;
 }
 
 /* Force all SVG icons to behave consistently */
@@ -34,17 +38,81 @@ svg {
   display: inline-block !important;
 }
 
-/* ⭐ Center the entire page body between header and footer ⭐ */
+/* Better centering – full height support */
 .page-body {
   display: flex;
   justify-content: center;
+  align-items: flex-start; /* start from top on tall content */
+  min-height: 100vh;
   width: 100%;
+  padding-top: 64px; /* header height + some breathing room */
+  box-sizing: border-box;
 }
 
-/* ⭐ The actual centered column ⭐ */
-/* fixes portrait alignment */
+/* The actual centered column */
 .page-body > main {
   width: 100%;
   max-width: 720px;
   text-align: center;
+  padding: 0 16px 80px; /* bottom space for footer */
+}
+
+/* Softer dark cards with subtle blur (modern look) */
+.card {
+  background: rgba(15, 15, 20, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+/* Apply to all sections */
+section.bg-zinc-950 {
+  @apply card;
+}
+
+/* Large avatar improvements */
+.avatar-large {
+  @apply rounded-full object-cover border-8 border-zinc-700/80 shadow-2xl;
+  transition: all 0.3s ease;
+}
+.avatar-large:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.3); /* indigo glow */
+}
+
+/* Button hover/focus states */
+button {
+  transition: all 0.2s ease;
+}
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+button:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* Tier badge styling */
+.tier-badge {
+  @apply w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-full shadow-md;
+  transition: transform 0.2s;
+}
+.tier-badge:hover {
+  transform: scale(1.15);
+}
+
+/* Hide scrollbar but keep functionality */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Prevent text selection on icons/buttons if desired */
+.no-select {
+  user-select: none;
 }

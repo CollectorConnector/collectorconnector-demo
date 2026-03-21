@@ -31,6 +31,13 @@ export default function ProfilePage() {
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  // Inline edit states (for own profile)
+  const [editMode, setEditMode] = useState(false);
+  const [editedDisplayName, setEditedDisplayName] = useState("");
+  const [editedBio, setEditedBio] = useState("");
+  const [editedLocation, setEditedLocation] = useState("");
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
@@ -55,6 +62,13 @@ export default function ProfilePage() {
 
         if (error) throw error;
         setProfile(data);
+
+        // Pre-fill edit fields if own profile
+        if (data && currentUserId === userId) {
+          setEditedDisplayName(data.display_name || "");
+          setEditedBio(data.bio || "");
+          setEditedLocation(data.location || "");
+        }
       } catch (err: any) {
         setError(err.message || "Failed to load profile");
       } finally {
@@ -63,7 +77,7 @@ export default function ProfilePage() {
     }
 
     loadData();
-  }, [userId, router]);
+  }, [userId, router, currentUserId]);
 
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
@@ -87,24 +101,26 @@ export default function ProfilePage() {
 
     setFollowLoading(true);
 
-    if (isFollowing) {
-      await supabase
-        .from("follows")
-        .delete()
-        .eq("follower_id", currentUserId)
-        .eq("following_id", userId);
-
-      setIsFollowing(false);
-    } else {
-      await supabase.from("follows").insert({
-        follower_id: currentUserId,
-        following_id: userId,
-      });
-
-      setIsFollowing(true);
+    try {
+      if (isFollowing) {
+        await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", currentUserId)
+          .eq("following_id", userId);
+        setIsFollowing(false);
+      } else {
+        await supabase.from("follows").insert({
+          follower_id: currentUserId,
+          following_id: userId,
+        });
+        setIsFollowing(true);
+      }
+    } catch (err) {
+      console.error("Follow toggle failed:", err);
+    } finally {
+      setFollowLoading(false);
     }
-
-    setFollowLoading(false);
   }
 
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
@@ -115,29 +131,33 @@ export default function ProfilePage() {
 
     try {
       const fileExt = file.name.split(".").pop() || "png";
-      const fileName = `${currentUserId}.${fileExt}`;
+      const fileName = `avatar.${fileExt}`; // simpler name, no timestamp needed
       const filePath = `${currentUserId}/${fileName}`;
 
+      // Upload with upsert
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { upsert: true, cacheControl: "3600" }); // cache for 1 hour
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      // Get permanent public URL (assuming bucket is public)
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
+      if (!data.publicUrl) throw new Error("No public URL returned");
+
+      // Update profile
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: data.publicUrl })
         .eq("id", currentUserId);
 
       if (updateError) throw updateError;
 
-      setProfile((prev) => (prev ? { ...prev, avatar_url: publicUrl } : null));
+      // Refresh local state
+      setProfile((prev) => prev ? { ...prev, avatar_url: data.publicUrl } : null);
 
-      alert("Profile picture updated!");
+      alert("Profile picture updated! Refresh to confirm persistence.");
     } catch (err: any) {
       console.error("Avatar upload failed:", err);
       alert("Failed to update avatar: " + (err.message || "Unknown error"));
@@ -146,10 +166,46 @@ export default function ProfilePage() {
     }
   }
 
+  async function saveProfileChanges() {
+    if (!currentUserId || currentUserId !== userId) return;
+
+    setSaving(true);
+
+    try {
+      const updates = {
+        display_name: editedDisplayName.trim() || null,
+        bio: editedBio.trim() || null,
+        location: editedLocation.trim() || null,
+      };
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", currentUserId);
+
+      if (error) throw error;
+
+      // Update local state
+      setProfile((prev) =>
+        prev ? { ...prev, ...updates } : null
+      );
+
+      setEditMode(false);
+      alert("Profile updated successfully!");
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      alert("Failed to save changes: " + (err.message || "Unknown error"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const displayName = useMemo(
     () => profile?.display_name || profile?.username || "Unnamed Collector",
     [profile]
   );
+
+  const isOwnProfile = currentUserId === userId;
 
   if (loading) {
     return (
@@ -174,8 +230,6 @@ export default function ProfilePage() {
     );
   }
 
-  const isOwnProfile = currentUserId === userId;
-
   return (
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
@@ -186,12 +240,12 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            <div className="relative flex items-center justify-center gap-6 mb-6 group">
+            <div className="relative flex items-center justify-center gap-8 mb-8 group">
               <div className="relative">
                 <img
                   src={profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
-                  className="w-40 h-40 rounded-full object-cover border-4 border-zinc-700 shadow-xl transition-opacity group-hover:opacity-80"
+                  className="w-64 h-64 sm:w-80 sm:h-80 rounded-full object-cover border-4 border-zinc-700 shadow-2xl transition-opacity group-hover:opacity-80"
                 />
 
                 {isOwnProfile && (
@@ -199,8 +253,8 @@ export default function ProfilePage() {
                     htmlFor="avatar-upload"
                     className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <span className="text-white text-sm font-medium">
-                      {uploadingAvatar ? "Uploading..." : "Change"}
+                    <span className="text-white text-base font-medium">
+                      {uploadingAvatar ? "Uploading..." : "Change Photo"}
                     </span>
                   </label>
                 )}
@@ -232,42 +286,89 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <h1 className="text-3xl font-bold mb-2">{displayName}</h1>
+            {isOwnProfile && editMode ? (
+              <>
+                <input
+                  type="text"
+                  value={editedDisplayName}
+                  onChange={(e) => setEditedDisplayName(e.target.value)}
+                  placeholder="Display Name"
+                  className="text-3xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-center w-full max-w-md"
+                />
+              </>
+            ) : (
+              <h1 className="text-3xl font-bold mb-2">{displayName}</h1>
+            )}
 
-            <p className="text-gray-300 text-lg mb-3 max-w-md">
-              {profile.bio ||
-                "Collector of rare finds • Watches, cards, coins & more • Always chasing the next grail"}
-            </p>
+            {isOwnProfile && editMode ? (
+              <textarea
+                value={editedBio}
+                onChange={(e) => setEditedBio(e.target.value)}
+                placeholder="Bio"
+                className="text-gray-300 text-lg mb-3 bg-zinc-900 border border-zinc-700 rounded px-4 py-2 w-full max-w-md h-24 resize-none"
+              />
+            ) : (
+              <p className="text-gray-300 text-lg mb-3 max-w-md">
+                {profile.bio || "Collector of rare finds • Watches, cards, coins & more • Always chasing the next grail"}
+              </p>
+            )}
 
-            <p className="text-gray-500 text-sm">
-              {profile.location || "Swindon, UK"}
-            </p>
+            {isOwnProfile && editMode ? (
+              <input
+                type="text"
+                value={editedLocation}
+                onChange={(e) => setEditedLocation(e.target.value)}
+                placeholder="Location"
+                className="text-gray-500 text-sm bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-center w-full max-w-md"
+              />
+            ) : (
+              <p className="text-gray-500 text-sm">
+                {profile.location || "Swindon, UK"}
+              </p>
+            )}
 
-            {/* Edit Profile button – restored, only visible on own profile */}
             {isOwnProfile && (
-              <button
-                onClick={() => router.push("/edit-profile")}
-                className="mt-6 px-8 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-base font-medium transition shadow-md"
-              >
-                Edit Profile
-              </button>
+              <div className="mt-6 flex gap-4">
+                {editMode ? (
+                  <>
+                    <button
+                      onClick={saveProfileChanges}
+                      disabled={saving}
+                      className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-full text-base font-medium transition shadow-md disabled:opacity-50"
+                    >
+                      {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={() => setEditMode(false)}
+                      className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-base font-medium transition"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setEditMode(true)}
+                      className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-base font-medium transition shadow-md"
+                    >
+                      Edit Profile
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </section>
 
-        {/* STATS */}
+        {/* STATS (unchanged) */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-3xl font-bold">
-                {profile.items_count || "2.1k"}
-              </p>
+              <p className="text-3xl font-bold">{profile.items_count || "2.1k"}</p>
               <p className="text-gray-500 text-sm mt-1">Items</p>
             </div>
             <div>
-              <p className="text-3xl font-bold">
-                {profile.collections_count || "4"}
-              </p>
+              <p className="text-3xl font-bold">{profile.collections_count || "4"}</p>
               <p className="text-gray-500 text-sm mt-1">Categories</p>
             </div>
             <div>
@@ -277,7 +378,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* COLLECTIONS */}
+        {/* COLLECTIONS (unchanged) */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <h2 className="text-2xl font-bold mb-5 text-center">My Vault</h2>
           <div className="flex flex-wrap gap-3 justify-center">
@@ -292,7 +393,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* RECENT DROPS */}
+        {/* RECENT DROPS (unchanged) */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30">
           <h2 className="text-2xl font-bold mb-5 text-center">Recent Drops</h2>
 
@@ -309,19 +410,11 @@ export default function ProfilePage() {
             </div>
 
             <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
-              <img
-                src="/watch.png"
-                alt="Watch"
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+              <img src="/watch.png" alt="Watch" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
             </div>
 
             <div className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
-              <img
-                src="/coin.png"
-                alt="Coin"
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+              <img src="/coin.png" alt="Coin" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
             </div>
           </div>
 
@@ -337,7 +430,7 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER — Icons only, eBay as text */
+/* HEADER — Icons only, eBay as text, Whatnot added back with simple SVG */
 function ProfileHeader() {
   return (
     <>
@@ -365,14 +458,7 @@ function ProfileHeader() {
           style={{ objectFit: "contain" }}
         />
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 20,
-            color: "white",
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 20, color: "white" }}>
           {/* Instagram */}
           <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
@@ -387,14 +473,8 @@ function ProfileHeader() {
             </svg>
           </a>
 
-          {/* eBay – text */}
-          <a
-            href="https://ebay.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-base font-bold tracking-wide hover:scale-110 transition-transform"
-            style={{ letterSpacing: "0.5px" }}
-          >
+          {/* eBay text */}
+          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="text-base font-bold tracking-wide hover:scale-110 transition-transform">
             eBay
           </a>
 
@@ -402,6 +482,13 @@ function ProfileHeader() {
           <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
+            </svg>
+          </a>
+
+          {/* Whatnot – simple white icon (box + arrow style from public sources) */}
+          <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+            <svg width="26" height="26" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M28 64c0-8.8 7.2-16 16-16h168c8.8 0 16 7.2 16 16v80c0 8.8-7.2 16-16 16h-60l-24 32-24-32H44c-8.8 0-16-7.2-16-16V64z M128 96l40 40h-80l40-40z"/>
             </svg>
           </a>
 

@@ -48,6 +48,13 @@ export default function EditItemPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
+      // ⭐ FIX: TypeScript requires this check
+      if (!user) {
+        alert("You must be logged in");
+        setSaving(false);
+        return;
+      }
+
       const ext = imageFile.name.split(".").pop();
       const fileName = `${crypto.randomUUID()}.${ext}`;
       const filePath = `users/${user.id}/items/${fileName}`;

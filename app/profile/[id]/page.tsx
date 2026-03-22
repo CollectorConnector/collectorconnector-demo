@@ -497,11 +497,6 @@ export default function ProfilePage() {
   </div>
 </section>
 
-
-</section>
-
-       
-
         {/* RECENT DROPS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">Recent Drops</h2>

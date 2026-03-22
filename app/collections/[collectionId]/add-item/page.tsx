@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useParams } from "next/navigation";
+
+const { collectionId } = useParams();
 
 export default function AddTenPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);

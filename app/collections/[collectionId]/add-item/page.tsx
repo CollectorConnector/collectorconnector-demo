@@ -1,75 +1,141 @@
 "use client";
 
 import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { useParams } from "next/navigation";
 
-const { collectionId } = useParams();
+export default function AddItemPage() {
+  const { collectionId } = useParams();
+  const router = useRouter();
 
-export default function AddTenPage() {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // ⭐ REPLACE your old uploadImage with this one
-  const uploadImage = async () => {
-    if (!imageFile) return null;
-
-    // 1. Get the current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error("User not found:", userError);
-      return null;
+  const handleSave = async () => {
+    if (!imageFile) {
+      alert("Please select an image");
+      return;
     }
 
-    // 2. Build a clean file path
-    const fileExt = imageFile.name.split(".").pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    if (!title.trim()) {
+      alert("Please enter a title");
+      return;
+    }
+
+    setSaving(true);
+
+    // 1. Get user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert("You must be logged in");
+      setSaving(false);
+      return;
+    }
+
+    // 2. Upload image
+    const ext = imageFile.name.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${ext}`;
     const filePath = `users/${user.id}/items/${fileName}`;
 
-    // 3. Upload to the correct bucket
     const { error: uploadError } = await supabase.storage
-      .from("items") // <-- make sure this matches your bucket name
+      .from("items")
       .upload(filePath, imageFile);
 
     if (uploadError) {
-      console.error("Upload error:", uploadError);
-      return null;
+      console.error(uploadError);
+      alert("Image upload failed");
+      setSaving(false);
+      return;
     }
 
-    // 4. Get the public URL
     const { data: publicUrlData } = supabase.storage
       .from("items")
       .getPublicUrl(filePath);
 
     const imageUrl = publicUrlData.publicUrl;
 
-    // 5. Insert into the database
+    // 3. Insert item
     const { error: insertError } = await supabase.from("items").insert({
       user_id: user.id,
-      title: "Untitled Item", // replace later with real inputs
-      description: "",
+      collection_id: collectionId,
+      title: title.trim(),
+      description: description.trim(),
       image_url: imageUrl,
     });
 
     if (insertError) {
-      console.error("Insert error:", insertError);
-      return null;
+      console.error(insertError);
+      alert("Failed to save item");
+      setSaving(false);
+      return;
     }
 
-    return imageUrl;
+    // 4. Redirect back to the collection
+    router.push(`/collections/${collectionId}`);
   };
 
   return (
-    <div>
-      <h1>Add Ten</h1>
-      <input
-        type="file"
-        onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-      />
-      <button onClick={uploadImage}>Upload</button>
+    <div className="min-h-screen bg-black text-white p-10">
+      <h1 className="text-4xl font-bold mb-8 text-center">Add Item</h1>
+
+      <div className="max-w-xl mx-auto space-y-6">
+
+        {/* Image Upload */}
+        <div>
+          <label className="block mb-2 text-lg">Item Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+            className="w-full"
+          />
+
+          {imageFile && (
+            <img
+              src={URL.createObjectURL(imageFile)}
+              alt="Preview"
+              className="mt-4 w-full h-64 object-cover rounded-xl border border-zinc-700"
+            />
+          )}
+        </div>
+
+        {/* Title */}
+        <div>
+          <label className="block mb-2 text-lg">Title</label>
+          <input
+            type="text"
+            className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Charizard Holo"
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block mb-2 text-lg">Description</label>
+          <textarea
+            className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 h-32"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Optional description..."
+          />
+        </div>
+
+        {/* Save Button */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl text-xl font-medium transition disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Add Item"}
+        </button>
+      </div>
     </div>
   );
 }

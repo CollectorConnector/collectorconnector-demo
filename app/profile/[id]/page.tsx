@@ -39,8 +39,6 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-
   // Inline edit states
   const [editMode, setEditMode] = useState(false);
   const [editedDisplayUrl, setEditedDisplayUrl] = useState("");

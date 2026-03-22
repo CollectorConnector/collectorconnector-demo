@@ -129,20 +129,66 @@ export default function ProfilePage() {
   async function toggleFollow() {
     if (!currentUserId || currentUserId === userId) return;
 
-    setFollowLoading(true);
+   setFollowLoading(true);
 
     try {
       if (isFollowing) {
-        await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
+        await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", currentUserId)
+          .eq("following_id", userId);
+
         setIsFollowing(false);
       } else {
-        await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
+        await supabase
+          .from("follows")
+          .insert({ follower_id: currentUserId, following_id: userId });
+
         setIsFollowing(true);
       }
-    } catch (err) {
-      console.error("Follow error:", err);
     } finally {
       setFollowLoading(false);
+    }
+  }
+  // -----------------------------
+  // SAVE PROFILE CHANGES (NEW)
+  // -----------------------------
+  async function saveProfileChanges() {
+    if (!currentUserId || !profile) return;
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          display_url: editedDisplayUrl,
+          bio: editedBio,
+          location: editedLocation,
+          tier: editedTier,
+        })
+        .eq("id", currentUserId);
+
+      if (error) throw error;
+
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              display_url: editedDisplayUrl,
+              bio: editedBio,
+              location: editedLocation,
+              tier: editedTier,
+            }
+          : null
+      );
+
+      setEditMode(false);
+    } catch (err: any) {
+      console.error("Save profile error:", err);
+      alert("Failed to save changes: " + (err.message || "Unknown error"));
+    } finally {
+      setSaving(false);
     }
   }
 

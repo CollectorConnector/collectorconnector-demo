@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
+import { useRouter } from "next/navigation";
+const router = useRouter();
+
 
 type Profile = {
   id: string;

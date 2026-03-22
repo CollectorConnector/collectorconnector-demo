@@ -475,21 +475,31 @@ export default function ProfilePage() {
   </div>
 </section>
 
+{/* COLLECTIONS */}
+<section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+  <h2 className="text-4xl font-bold mb-8 text-center">Collections</h2>
 
-        {/* COLLECTIONS */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <h2 className="text-4xl font-bold mb-8 text-center">My Vault</h2>
-          <div className="flex flex-wrap gap-5 justify-center">
-            {["Cards", "Watches", "Coins", "Memorabilia"].map((cat) => (
-              <button
-                key={cat}
-                className="px-10 py-4 bg-zinc-900/70 border border-zinc-700 rounded-full text-xl font-medium hover:border-zinc-500 hover:bg-zinc-800 transition"
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </section>
+  <div className="flex flex-wrap gap-5 justify-center">
+    {(collections.length > 0
+      ? collections
+      : [
+          { id: "1", title: "Pokémon" },
+          { id: "2", title: "Watches" },
+          { id: "3", title: "Coins" },
+          { id: "4", title: "Memorabilia" },
+        ]
+    ).map((col) => (
+      <button
+        key={col.id}
+        className="px-10 py-4 bg-zinc-900/70 border border-zinc-700 rounded-full text-xl font-medium hover:border-zinc-500 hover:bg-zinc-800 transition"
+      >
+        {col.title}
+      </button>
+    ))}
+  </div>
+</section>
+
+       
 
         {/* RECENT DROPS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">

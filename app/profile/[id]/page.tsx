@@ -151,46 +151,6 @@ export default function ProfilePage() {
       setFollowLoading(false);
     }
   }
-  // -----------------------------
-  // SAVE PROFILE CHANGES (NEW)
-  // -----------------------------
-  async function saveProfileChanges() {
-    if (!currentUserId || !profile) return;
-    setSaving(true);
-
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          display_url: editedDisplayUrl,
-          bio: editedBio,
-          location: editedLocation,
-          tier: editedTier,
-        })
-        .eq("id", currentUserId);
-
-      if (error) throw error;
-
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              display_url: editedDisplayUrl,
-              bio: editedBio,
-              location: editedLocation,
-              tier: editedTier,
-            }
-          : null
-      );
-
-      setEditMode(false);
-    } catch (err: any) {
-      console.error("Save profile error:", err);
-      alert("Failed to save changes: " + (err.message || "Unknown error"));
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

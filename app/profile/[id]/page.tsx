@@ -480,6 +480,17 @@ export default function ProfilePage() {
 <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
   <h2 className="text-4xl font-bold mb-8 text-center">Collections</h2>
 
+  {/* Add Collection Button */}
+  <div className="flex justify-center mb-6">
+    <button
+      onClick={() => router.push("/collections/create")}
+      className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+    >
+      + Add Collection
+    </button>
+  </div>
+
+  {/* Swipeable list */}
   <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
     {collections.length === 0 && (
       <p className="text-gray-500 text-xl">No collections yet</p>
@@ -496,6 +507,7 @@ export default function ProfilePage() {
     ))}
   </div>
 </section>
+
 
         {/* RECENT DROPS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">

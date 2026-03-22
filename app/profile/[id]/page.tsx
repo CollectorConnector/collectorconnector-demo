@@ -273,49 +273,65 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center text-center">
 
             <div className="relative flex items-center justify-center gap-10 mb-10 group">
-              <div className="relative">
-                <img
-                  src={profile.avatar_url || "/default-avatar.png"}
-                  alt="Avatar"
-                  className="w-96 h-96 sm:w-[28rem] sm:h-[28rem] rounded-full object-cover border-8 border-zinc-700 shadow-2xl transition-opacity group-hover:opacity-80"
-                />
+  <div className="relative w-40 h-40">
+    <img
+      src={previewImage || profile.avatar_url || "/default-avatar.png"}
+      alt="Avatar"
+      className="w-full h-full object-cover rounded-[30%] border-4 border-zinc-700 shadow-xl transition-opacity group-hover:opacity-80"
+    />
 
-                {isOwnProfile && (
-                  <>
-                    <label
-                      htmlFor="avatar-upload"
-                      className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <span className="text-white text-xl font-medium">
-                        {uploadingAvatar ? "Uploading..." : "Change Photo"}
-                      </span>
-                    </label>
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                      disabled={uploadingAvatar}
-                      className="hidden"
-                    />
-                  </>
-                )}
-              </div>
+    {isOwnProfile && (
+      <>
+        <label
+          htmlFor="avatar-upload"
+          className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[30%] cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          {/* Camera Icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="white"
+            viewBox="0 0 24 24"
+            width="40"
+            height="40"
+          >
+            <path d="M12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm9-1h-3.17l-1.84-2H7.01L5.17 4H2v2h19V4z"/>
+          </svg>
+        </label>
 
-              {!isOwnProfile && (
-                <button
-                  onClick={toggleFollow}
-                  disabled={followLoading}
-                  className={`px-8 py-3 rounded-full text-lg font-medium transition min-w-[140px] ${
-                    isFollowing
-                      ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
-                      : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500"
-                  }`}
-                >
-                  {followLoading ? "…" : isFollowing ? "Following" : "Follow"}
-                </button>
-              )}
-            </div>
+        <input
+          id="avatar-upload"
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              setUploadingAvatar(true);
+              setPreviewImage(URL.createObjectURL(file));
+              handleAvatarChange(e);
+            }
+          }}
+          disabled={uploadingAvatar}
+          className="hidden"
+        />
+      </>
+    )}
+  </div>
+
+  {!isOwnProfile && (
+    <button
+      onClick={toggleFollow}
+      disabled={followLoading}
+      className={`px-8 py-3 rounded-full text-lg font-medium transition min-w-[140px] ${
+        isFollowing
+          ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
+          : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500"
+      }`}
+    >
+      {followLoading ? "…" : isFollowing ? "Following" : "Follow"}
+    </button>
+  )}
+</div>
+
 
             {isOwnProfile && editMode ? (
               <input

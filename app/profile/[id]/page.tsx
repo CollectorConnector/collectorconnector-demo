@@ -480,24 +480,23 @@ export default function ProfilePage() {
 <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
   <h2 className="text-4xl font-bold mb-8 text-center">Collections</h2>
 
-<div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-  {(collections.length > 0
-    ? collections
-    : [
-        { id: "1", title: "Pokémon" },
-        { id: "2", title: "Watches" },
-        { id: "3", title: "Coins" },
-        { id: "4", title: "Memorabilia" },
-      ]
-  ).map((col) => (
-    <button
-      key={col.id}
-      className="min-w-[180px] h-[120px] bg-zinc-900/70 border border-zinc-700 rounded-xl flex items-center justify-center text-xl font-medium hover:bg-zinc-800 hover:border-zinc-500 transition"
-    >
-      {col.title}
-    </button>
-  ))}
-</div>
+  <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+    {collections.length === 0 && (
+      <p className="text-gray-500 text-xl">No collections yet</p>
+    )}
+
+    {collections.map((col) => (
+      <button
+        key={col.id}
+        onClick={() => router.push(`/collections/${col.id}/add-item`)}
+        className="min-w-[180px] h-[120px] bg-zinc-900/70 border border-zinc-700 rounded-xl flex items-center justify-center text-xl font-medium hover:bg-zinc-800 hover:border-zinc-500 transition"
+      >
+        {col.title}
+      </button>
+    ))}
+  </div>
+</section>
+
 
 </section>
 

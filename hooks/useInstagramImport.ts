@@ -11,7 +11,7 @@ export function useInstagramImport() {
 
 const [posts, setPosts] = useState<InstagramPost[]>([]);
 
-  const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });

@@ -2,7 +2,15 @@ import { useState } from "react";
 
 export function useInstagramImport() {
   const [username, setUsername] = useState("");
-  const [posts, setPosts] = useState([]);
+  type InstagramPost = {
+  id: string;
+  imageUrl: string;
+  caption: string;
+  timestamp?: string | null;
+};
+
+const [posts, setPosts] = useState<InstagramPost[]>([]);
+
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);

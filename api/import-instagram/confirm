@@ -1,1 +1,51 @@
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+
+export async function POST(req: Request) {
+  const { posts, userId } = await req.json();
+
+  if (!posts || posts.length === 0) {
+    return NextResponse.json({ error: "No posts selected" }, { status: 400 });
+  }
+
+  const results = [];
+
+  for (const post of posts) {
+    try {
+      // Download image
+      const imgRes = await fetch(post.imageUrl);
+      const buffer = Buffer.from(await imgRes.arrayBuffer());
+
+      // Upload to Supabase
+      const fileName = `${userId}/${post.id}.jpg`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("items")
+        .upload(fileName, buffer, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const publicUrl = supabase.storage
+        .from("items")
+        .getPublicUrl(fileName).data.publicUrl;
+
+      // Create item in DB
+      await supabase.from("items").insert({
+        user_id: userId,
+        image_url: publicUrl,
+        caption: post.caption,
+        source: "instagram",
+      });
+
+      results.push({ id: post.id, status: "success" });
+    } catch (err) {
+      results.push({ id: post.id, status: "failed" });
+    }
+  }
+
+  return NextResponse.json({ results });
+}
 

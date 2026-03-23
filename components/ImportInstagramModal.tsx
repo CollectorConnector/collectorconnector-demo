@@ -1,8 +1,13 @@
 "use client";
 
 import { useInstagramImport } from "@/hooks/useInstagramImport";
+  
+  type ImportInstagramModalProps = {
+  onClose: () => void;
+};
 
-export default function ImportInstagramModal({ onClose }) {
+export default function ImportInstagramModal({ onClose }: ImportInstagramModalProps) {
+
   const {
     username,
     setUsername,

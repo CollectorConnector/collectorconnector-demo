@@ -46,7 +46,9 @@ export default function ProfilePage() {
   const [editedLocation, setEditedLocation] = useState("");
   const [editedTier, setEditedTier] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [collections, setCollections] = useState<
+  
   { id: string; title: string; nichem: string; cover_url: string | null; item_count: number | null }[]
 >([]);
 

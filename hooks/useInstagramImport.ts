@@ -27,7 +27,7 @@ const [posts, setPosts] = useState<InstagramPost[]>([]);
     setLoading(false);
   };
 
-  const toggleSelect = (id) => {
+  const toggleSelect = (id: string) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );

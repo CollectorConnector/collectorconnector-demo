@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import ImportInstagramModal from "@/components/ImportInstagramModal";
 import Footer from "@/components/Footer";
 
 

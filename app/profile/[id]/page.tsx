@@ -449,6 +449,18 @@ export default function ProfilePage() {
           </div>
         </section>
 
+        <button
+  onClick={() => setShowImportModal(true)}
+  className="px-6 py-3 bg-pink-600 rounded-full text-white"
+>
+  Import from Instagram
+</button>
+
+{showImportModal && (
+  <ImportInstagramModal onClose={() => setShowImportModal(false)} />
+)}
+
+
        {/* STATS */}
 <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-8 text-center">

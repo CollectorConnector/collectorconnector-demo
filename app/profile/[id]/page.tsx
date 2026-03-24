@@ -263,13 +263,46 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-black text-white">
         <ProfileHeader />
-        <div className="flex flex-col items-center justify-center h-[80vh]">
-          <h1 className="text-3xl mb-4">Error</h1>
-          <p className="text-white/70">{error || "Profile not found"}</p>
-        </div>
-      </div>
-    );
-  }
+        <div className="flex flex-col items-center mt-8 mb-6">
+  <div className="relative">
+    <Image
+      src={profileImageUrl || "/default-avatar.png"}
+      alt="Profile picture"
+      width={140}
+      height={140}
+      className="rounded-full object-cover shadow-lg"
+    />
+
+    {/* Tier badge */}
+    <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium text-white">
+      {tier}
+    </div>
+  </div>
+
+  {/* Name + location */}
+  <h1 className="mt-4 text-2xl font-semibold">{name}</h1>
+  <p className="text-zinc-400">{location}</p>
+
+  {/* Buttons */}
+  <div className="flex gap-3 mt-5">
+    <button
+      onClick={() => setShowEditProfile(true)}
+      className="px-5 py-2 rounded-full border border-zinc-700 text-white hover:bg-zinc-800 transition"
+    >
+      Edit Profile
+    </button>
+
+    <button
+      onClick={() => setShowImportModal(true)}
+      className="px-5 py-2 rounded-full bg-pink-600 text-white hover:bg-pink-700 transition"
+    >
+      Import from Instagram
+    </button>
+  </div>
+</div>
+
+<hr className="border-zinc-800 my-6" />
+
 
   return (
     <div className="min-h-screen bg-black text-white">

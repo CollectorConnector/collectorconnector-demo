@@ -45,7 +45,6 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  // Inline edit states
   const [editMode, setEditMode] = useState(false);
   const [editedDisplayUrl, setEditedDisplayUrl] = useState("");
   const [editedBio, setEditedBio] = useState("");
@@ -60,22 +59,20 @@ export default function ProfilePage() {
 
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
 
-  // Load collections for this profile
+  // Load collections
   useEffect(() => {
     if (!userId) return;
-
     async function loadCollections() {
       const { data, error } = await supabase
         .from("collections")
         .select("id, title, nichem, cover_url, item_count")
         .eq("user_id", userId);
-
       if (!error && data) setCollections(data);
     }
     loadCollections();
   }, [userId]);
 
-  // Load recent communal drops (live feed from ANY user)
+  // Load recent communal drops
   useEffect(() => {
     async function loadRecentDrops() {
       const { data, error } = await supabase
@@ -94,8 +91,6 @@ export default function ProfilePage() {
         console.error("Failed to load recent drops:", error);
         return;
       }
-
-      // Safe cast - Supabase join returns the expected shape
       setRecentDrops((data as unknown as RecentDrop[]) || []);
     }
     loadRecentDrops();
@@ -142,7 +137,7 @@ export default function ProfilePage() {
     loadData();
   }, [userId, router, currentUserId]);
 
-  // Check follow status (for other users)
+  // Check follow status
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
 
@@ -199,7 +194,7 @@ export default function ProfilePage() {
 
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      if (!urlData.publicUrl) throw new Error("No public URL – ensure avatars bucket is PUBLIC");
+      if (!urlData.publicUrl) throw new Error("No public URL");
 
       const { error: updateError } = await supabase
         .from("profiles")
@@ -210,10 +205,10 @@ export default function ProfilePage() {
 
       setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : null));
       setPreviewImage(null);
-      alert("Avatar updated successfully! Refresh to confirm if needed.");
+      alert("Avatar updated successfully!");
     } catch (err: any) {
-      console.error("Avatar upload failed:", err);
-      alert("Avatar update failed: " + (err.message || "Check console (F12)"));
+      console.error("Avatar failed:", err);
+      alert("Avatar update failed: " + (err.message || "Check console"));
     } finally {
       setUploadingAvatar(false);
     }
@@ -296,58 +291,59 @@ export default function ProfilePage() {
         {/* PROFILE BOX */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-            {/* CLEAN SQUIRCLE AVATAR - Properly sized */}
-<div className="relative flex items-center justify-center gap-10 mb-10 group">
-  <div className="relative w-40 h-40 flex-shrink-0">   {/* ← Smaller & fixed size (160px) */}
-    <img
-      src={previewImage || profile.avatar_url || "/default-avatar.png"}
-      alt="Avatar"
-      className="w-full h-full object-cover rounded-[30%] border-4 border-zinc-700 shadow-2xl"  {/* squircle + cover */}
-    />
+            {/* FIXED SQUIRCLE AVATAR - 160px */}
+            <div className="relative flex items-center justify-center gap-10 mb-10 group">
+              <div className="relative w-40 h-40 flex-shrink-0">
+                <img
+                  src={previewImage || profile.avatar_url || "/default-avatar.png"}
+                  alt="Avatar"
+                  className="w-full h-full object-cover rounded-[30%] border-4 border-zinc-700 shadow-2xl"
+                />
 
-    {isOwnProfile && (
-      <label
-        htmlFor="avatar-upload"
-        className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 rounded-[30%] cursor-pointer transition-all"
-      >
-        <div className="absolute bottom-2 right-2 bg-zinc-900 hover:bg-zinc-800 p-2 rounded-2xl shadow-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="24" height="24">
-            <path d="M12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm9-1h-3.17l-1.84-2H7.01L5.17 4H2v2h19V4z" />
-          </svg>
-        </div>
-      </label>
-    )}
+                {isOwnProfile && (
+                  <label
+                    htmlFor="avatar-upload"
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 rounded-[30%] cursor-pointer transition-all"
+                  >
+                    <div className="absolute bottom-2 right-2 bg-zinc-900 hover:bg-zinc-800 p-2 rounded-2xl shadow-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm9-1h-3.17l-1.84-2H7.01L5.17 4H2v2h19V4z" />
+                      </svg>
+                    </div>
+                  </label>
+                )}
 
-    <input
-      id="avatar-upload"
-      type="file"
-      accept="image/*"
-      onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          setPreviewImage(URL.createObjectURL(file));
-          handleAvatarChange(e);
-        }
-      }}
-      className="hidden"
-      disabled={uploadingAvatar}
-    />
-  </div>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setPreviewImage(URL.createObjectURL(file));
+                      handleAvatarChange(e);
+                    }
+                  }}
+                  className="hidden"
+                  disabled={uploadingAvatar}
+                />
+              </div>
 
-  {!isOwnProfile && (
-    <button
-      onClick={toggleFollow}
-      disabled={followLoading}
-      className={`px-8 py-3 rounded-full text-lg font-medium transition min-w-[140px] ${
-        isFollowing
-          ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
-          : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500"
-      }`}
-    >
-      {followLoading ? "…" : isFollowing ? "Following" : "Follow"}
-    </button>
-  )}
-</div>
+              {!isOwnProfile && (
+                <button
+                  onClick={toggleFollow}
+                  disabled={followLoading}
+                  className={`px-8 py-3 rounded-full text-lg font-medium transition min-w-[140px] ${
+                    isFollowing
+                      ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
+                      : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500"
+                  }`}
+                >
+                  {followLoading ? "…" : isFollowing ? "Following" : "Follow"}
+                </button>
+              )}
+            </div>
+
             {isOwnProfile && editMode ? (
               <input
                 type="text"
@@ -454,7 +450,7 @@ export default function ProfilePage() {
 
         {showImportModal && <ImportInstagramModal onClose={() => setShowImportModal(false)} />}
 
-        {/* STATS GRID (Rarity removed) */}
+        {/* STATS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
             <div>
@@ -509,7 +505,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* COMMUNAL LIVE FEED - Recent Drops */}
+        {/* RECENT DROPS - Communal Feed */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">Recent Drops</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 mb-10">
@@ -544,7 +540,8 @@ export default function ProfilePage() {
     </div>
   );
 }
-/* HEADER – with all social icons restored */
+
+/* HEADER WITH SOCIAL ICONS */
 function ProfileHeader() {
   return (
     <>

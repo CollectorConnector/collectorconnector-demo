@@ -269,9 +269,12 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            {/* COMPACT AVATAR - strictly 64px, same size as tier icon */}
+            {/* STRICT SMALL AVATAR - 64px, same size as tier icon */}
             <div className="relative mb-8">
-              <div className="w-16 h-16 mx-auto overflow-hidden rounded-[30%] border-4 border-zinc-700 shadow-xl">
+              <div 
+                className="w-16 h-16 mx-auto overflow-hidden rounded-[30%] border-4 border-zinc-700 shadow-xl"
+                style={{ maxWidth: "64px", maxHeight: "64px" }}
+              >
                 <img
                   src={previewImage || profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
@@ -467,7 +470,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* RECENT DROPS - Communal Feed */}
+        {/* RECENT DROPS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">Recent Drops</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 mb-10">
@@ -503,7 +506,7 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER with social icons */
+/* HEADER */
 function ProfileHeader() {
   return (
     <>

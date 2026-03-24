@@ -264,26 +264,27 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
+      <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-
         {/* PROFILE BOX */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-            {/* ISOLATED AVATAR WRAPPER - Clean & Contained */}
-            <div className="relative mb-10">
-              <div className="relative w-40 h-40 mx-auto"> {/* ← Fixed 160px squircle container */}
+
+            {/* ISOLATED SMALL AVATAR WRAPPER - similar size to tier icon */}
+            <div className="relative mb-8">
+              <div className="w-16 h-16 mx-auto">   {/* ← 64px - nice and compact, like tier badge */}
                 <img
                   src={previewImage || profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
-                  className="w-full h-full object-cover rounded-[30%] border-4 border-zinc-700 shadow-2xl"
+                  className="w-full h-full object-cover rounded-[30%] border-4 border-zinc-700 shadow-xl"
                 />
 
                 {isOwnProfile && (
                   <label
                     htmlFor="avatar-upload"
-                    className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 rounded-[30%] cursor-pointer transition-all"
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 hover:bg-black/70 rounded-[30%] cursor-pointer transition-all"
                   >
-                    <div className="absolute bottom-2 right-2 bg-zinc-900 hover:bg-zinc-800 p-2 rounded-2xl shadow-lg">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="24" height="24">
+                    <div className="absolute -bottom-1 -right-1 bg-zinc-900 p-1.5 rounded-xl shadow-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="18" height="18">
                         <path d="M12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm9-1h-3.17l-1.84-2H7.01L5.17 4H2v2h19V4z" />
                       </svg>
                     </div>
@@ -307,20 +308,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {!isOwnProfile && (
-              <button
-                onClick={toggleFollow}
-                disabled={followLoading}
-                className={`mb-10 px-8 py-3 rounded-full text-lg font-medium transition min-w-[140px] ${
-                  isFollowing
-                    ? "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-600"
-                    : "bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500"
-                }`}
-              >
-                {followLoading ? "…" : isFollowing ? "Following" : "Follow"}
-              </button>
-            )}
-
+            {/* Name, bio, location, tier */}
             {isOwnProfile && editMode ? (
               <input
                 type="text"
@@ -392,39 +380,25 @@ export default function ProfilePage() {
               <div className="mt-10 flex gap-6 flex-wrap justify-center">
                 {editMode ? (
                   <>
-                    <button
-                      onClick={saveProfileChanges}
-                      disabled={saving}
-                      className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]"
-                    >
+                    <button onClick={saveProfileChanges} disabled={saving} className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]">
                       {saving ? "Saving..." : "Save Changes"}
                     </button>
-                    <button
-                      onClick={() => setEditMode(false)}
-                      className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]"
-                    >
+                    <button onClick={() => setEditMode(false)} className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]">
                       Cancel
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => setEditMode(true)}
-                    className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl"
-                  >
+                  <button onClick={() => setEditMode(true)} className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl">
                     Edit Profile
                   </button>
                 )}
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="px-6 py-3 bg-pink-600 rounded-full text-white"
-                >
+                <button onClick={() => setShowImportModal(true)} className="px-6 py-3 bg-pink-600 rounded-full text-white">
                   Import from Instagram
                 </button>
               </div>
             )}
           </div>
         </section>
-
         {showImportModal && <ImportInstagramModal onClose={() => setShowImportModal(false)} />}
 
         {/* STATS */}

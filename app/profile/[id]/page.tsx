@@ -60,7 +60,7 @@ export default function ProfilePage() {
 
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
 
-  // Load collections
+  // Load collections for this profile
   useEffect(() => {
     if (!userId) return;
 
@@ -75,7 +75,7 @@ export default function ProfilePage() {
     loadCollections();
   }, [userId]);
 
-  // Load recent communal drops (live feed from any user)
+  // Load recent communal drops (live feed from ANY user)
   useEffect(() => {
     async function loadRecentDrops() {
       const { data, error } = await supabase
@@ -85,14 +85,18 @@ export default function ProfilePage() {
           name,
           image_url,
           created_at,
-          profiles!inner(user_id) (username)
+          profiles!user_id_fkey (username)
         `)
         .order("created_at", { ascending: false })
         .limit(3);
 
-      if (!error && data) {
-        setRecentDrops(data as RecentDrop[]);
+      if (error) {
+        console.error("Failed to load recent drops:", error);
+        return;
       }
+
+      // Safe cast - Supabase join returns the expected shape
+      setRecentDrops((data as unknown as RecentDrop[]) || []);
     }
     loadRecentDrops();
   }, []);
@@ -124,9 +128,9 @@ export default function ProfilePage() {
         setProfile(data);
 
         if (data && currentUserId === userId) {
-          setEditedDisplayUrl(data.display_url || "");
+          setEditedDisplayUrl(data.display_url || "Stacy Pearce");
           setEditedBio(data.bio || "");
-          setEditedLocation(data.location || "");
+          setEditedLocation(data.location || "Swindon, UK");
           setEditedTier(data.tier || "Diamond");
         }
       } catch (err: any) {
@@ -138,7 +142,7 @@ export default function ProfilePage() {
     loadData();
   }, [userId, router, currentUserId]);
 
-  // Check follow status
+  // Check follow status (for other users)
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
 
@@ -195,7 +199,7 @@ export default function ProfilePage() {
 
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      if (!urlData.publicUrl) throw new Error("No public URL – make sure avatars bucket is PUBLIC");
+      if (!urlData.publicUrl) throw new Error("No public URL – ensure avatars bucket is PUBLIC");
 
       const { error: updateError } = await supabase
         .from("profiles")
@@ -205,11 +209,11 @@ export default function ProfilePage() {
       if (updateError) throw updateError;
 
       setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : null));
-      setPreviewImage(null); // Clear preview after successful save
-      alert("Avatar updated successfully!");
+      setPreviewImage(null);
+      alert("Avatar updated successfully! Refresh to confirm if needed.");
     } catch (err: any) {
       console.error("Avatar upload failed:", err);
-      alert("Avatar update failed: " + (err.message || "Check console"));
+      alert("Avatar update failed: " + (err.message || "Check console (F12)"));
     } finally {
       setUploadingAvatar(false);
     }
@@ -264,11 +268,24 @@ export default function ProfilePage() {
   const isOwnProfile = currentUserId === userId;
 
   if (loading) {
-    return <div className="min-h-screen bg-black text-white"><ProfileHeader /><div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div></div>;
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <ProfileHeader />
+        <div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div>
+      </div>
+    );
   }
 
   if (error || !profile) {
-    return <div className="min-h-screen bg-black text-white"><ProfileHeader /><div className="flex flex-col items-center justify-center h-[80vh]"><h1 className="text-3xl mb-4">Error</h1><p className="text-white/70">{error || "Profile not found"}</p></div></div>;
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <ProfileHeader />
+        <div className="flex flex-col items-center justify-center h-[80vh]">
+          <h1 className="text-3xl mb-4">Error</h1>
+          <p className="text-white/70">{error || "Profile not found"}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -279,7 +296,7 @@ export default function ProfilePage() {
         {/* PROFILE BOX */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-            {/* CLEAN SQUIRCLE AVATAR */}
+            {/* Clean large squircle avatar - click to upload */}
             <div className="relative flex items-center justify-center gap-10 mb-10 group">
               <div className="relative w-48 h-48">
                 <img
@@ -343,7 +360,7 @@ export default function ProfilePage() {
               <h1 className="text-4xl font-bold mb-3">{displayName}</h1>
             )}
 
-            {profile.username && <p className="text-indigo-400 text-2xl mb-6">@CollectorConnector CEO</p>}
+            <p className="text-indigo-400 text-2xl mb-6">@CollectorConnector CEO</p>
 
             {isOwnProfile && editMode ? (
               <textarea
@@ -403,19 +420,32 @@ export default function ProfilePage() {
               <div className="mt-10 flex gap-6 flex-wrap justify-center">
                 {editMode ? (
                   <>
-                    <button onClick={saveProfileChanges} disabled={saving} className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]">
+                    <button
+                      onClick={saveProfileChanges}
+                      disabled={saving}
+                      className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]"
+                    >
                       {saving ? "Saving..." : "Save Changes"}
                     </button>
-                    <button onClick={() => setEditMode(false)} className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]">
+                    <button
+                      onClick={() => setEditMode(false)}
+                      className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]"
+                    >
                       Cancel
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => setEditMode(true)} className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl">
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl"
+                  >
                     Edit Profile
                   </button>
                 )}
-                <button onClick={() => setShowImportModal(true)} className="px-6 py-3 bg-pink-600 rounded-full text-white">
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="px-6 py-3 bg-pink-600 rounded-full text-white"
+                >
                   Import from Instagram
                 </button>
               </div>
@@ -425,7 +455,7 @@ export default function ProfilePage() {
 
         {showImportModal && <ImportInstagramModal onClose={() => setShowImportModal(false)} />}
 
-        {/* STATS - Rarity removed */}
+        {/* STATS GRID (Rarity removed) */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
             <div>
@@ -459,7 +489,10 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">Collections</h2>
           <div className="flex justify-center mb-6">
-            <button onClick={() => router.push("/collections/create")} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition">
+            <button
+              onClick={() => router.push("/collections/create")}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+            >
               + Add Collection
             </button>
           </div>
@@ -482,7 +515,7 @@ export default function ProfilePage() {
           <h2 className="text-4xl font-bold mb-8 text-center">Recent Drops</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 mb-10">
             {recentDrops.length === 0 ? (
-              <p className="text-gray-500 col-span-3 text-center">No drops yet — be the first to share!</p>
+              <p className="text-gray-500 col-span-3 text-center">No drops yet — be the first to share something awesome!</p>
             ) : (
               recentDrops.map((drop) => (
                 <div key={drop.id} className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
@@ -492,13 +525,15 @@ export default function ProfilePage() {
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                    <p className="text-white text-sm">@{drop.profiles?.username || "collector"} just added this</p>
+                    <p className="text-white text-sm">
+                      @{drop.profiles?.username || "collector"} just added this
+                    </p>
                   </div>
                 </div>
               ))
             )}
           </div>
-          {recentDrops[0] && (
+          {recentDrops.length > 0 && (
             <div className="text-center text-lg text-gray-400">
               Live from the Collector Connector community
             </div>
@@ -511,15 +546,30 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER – unchanged from your original */
+/* HEADER */
 function ProfileHeader() {
   return (
     <>
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "#000", borderBottom: "1px solid #1f1f1f", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          background: "#000",
+          borderBottom: "1px solid #1f1f1f",
+          height: 56,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
+        }}
+      >
         <img src="/CC-main-logo.png" alt="Collector Connector" width={130} height={130} style={{ objectFit: "contain" }} />
+
         <div style={{ display: "flex", alignItems: "center", gap: 20, color: "white" }}>
-          {/* Your existing social icons here – Instagram, Facebook, eBay, Discord, Whatnot, X */}
-          {/* (copy from your original code) */}
+          {/* Paste your original social icons here (Instagram, Facebook, eBay, Discord, Whatnot, X) */}
         </div>
       </header>
       <div style={{ height: 56 }} />

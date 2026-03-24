@@ -281,19 +281,50 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            <div className="relative flex items-center justify-center gap-10 mb-10 group">
-  <div className="relative w-40 h-40">
+     {/* AVATAR SECTION – CLEAN & SQUIRCLE */}
+<div className="relative flex items-center justify-center gap-10 mb-10 group">
+  <div className="relative w-48 h-48">  {/* ← bigger */}
     <img
       src={previewImage || profile.avatar_url || "/default-avatar.png"}
-      alt="Avatar"
-      className="w-full h-full object-cover rounded-[30%] border-4 border-zinc-700 shadow-xl transition-opacity group-hover:opacity-80"
+      alt="Profile Picture"
+      className="w-full h-full object-cover rounded-[30%] border-4 border-zinc-700 shadow-2xl"  {/* squircle */}
     />
 
     {isOwnProfile && (
       <>
+        {/* Clickable overlay – Instagram style */}
         <label
           htmlFor="avatar-upload"
-          className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[30%] cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/60 rounded-[30%] cursor-pointer transition-all"
+        >
+          {/* Camera icon always visible on own profile */}
+          <div className="absolute bottom-3 right-3 bg-zinc-900 hover:bg-zinc-800 p-2 rounded-2xl shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="28" height="28">
+              <path d="M12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm9-1h-3.17l-1.84-2H7.01L5.17 4H2v2h19V4z"/>
+            </svg>
+          </div>
+        </label>
+
+        <input
+          id="avatar-upload"
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              setPreviewImage(URL.createObjectURL(file));
+              handleAvatarChange(e);
+            }
+          }}
+          className="hidden"
+        />
+      </>
+    )}
+  </div>
+
+  {/* Follow button stays only for other users */}
+  {!isOwnProfile && ( /* ... your existing follow button ... */ )}
+</div>
         >
           {/* Camera Icon */}
           <svg

@@ -264,14 +264,14 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
-      <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-
+      <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
         {/* PROFILE BOX */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            {/* ISOLATED SMALL AVATAR WRAPPER - similar size to tier icon */}
+            {/* SMALL ISOLATED AVATAR - similar size to tier icon */}
             <div className="relative mb-8">
-              <div className="w-16 h-16 mx-auto">   {/* ← 64px - nice and compact, like tier badge */}
+              <div className="w-16 h-16 mx-auto">
                 <img
                   src={previewImage || profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
@@ -308,7 +308,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Name, bio, location, tier */}
             {isOwnProfile && editMode ? (
               <input
                 type="text"
@@ -380,25 +379,39 @@ export default function ProfilePage() {
               <div className="mt-10 flex gap-6 flex-wrap justify-center">
                 {editMode ? (
                   <>
-                    <button onClick={saveProfileChanges} disabled={saving} className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]">
+                    <button
+                      onClick={saveProfileChanges}
+                      disabled={saving}
+                      className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]"
+                    >
                       {saving ? "Saving..." : "Save Changes"}
                     </button>
-                    <button onClick={() => setEditMode(false)} className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]">
+                    <button
+                      onClick={() => setEditMode(false)}
+                      className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]"
+                    >
                       Cancel
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => setEditMode(true)} className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl">
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl"
+                  >
                     Edit Profile
                   </button>
                 )}
-                <button onClick={() => setShowImportModal(true)} className="px-6 py-3 bg-pink-600 rounded-full text-white">
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="px-6 py-3 bg-pink-600 rounded-full text-white"
+                >
                   Import from Instagram
                 </button>
               </div>
             )}
           </div>
         </section>
+
         {showImportModal && <ImportInstagramModal onClose={() => setShowImportModal(false)} />}
 
         {/* STATS */}
@@ -492,7 +505,7 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER WITH SOCIAL ICONS */
+/* HEADER */
 function ProfileHeader() {
   return (
     <>
@@ -515,8 +528,7 @@ function ProfileHeader() {
         <img src="/CC-main-logo.png" alt="Collector Connector" width={130} height={130} style={{ objectFit: "contain" }} />
 
         <div style={{ display: "flex", alignItems: "center", gap: 20, color: "white" }}>
-          {/* Instagram, Facebook, eBay, Discord, Whatnot, X icons - same as before */}
-          {/* (paste your original social icons here if they are missing) */}
+          {/* Add your social icons here if they are missing from the previous version */}
         </div>
       </header>
       <div style={{ height: 56 }} />

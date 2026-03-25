@@ -269,7 +269,7 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            {/* SMALL LOCKED AVATAR - 64px with aspect-square */}
+            {/* STRICT SMALL AVATAR - 64px with aspect-square */}
             <div className="relative mb-8">
               <div 
                 className="mx-auto w-16 h-16 aspect-square overflow-hidden rounded-[30%] border-4 border-zinc-700 shadow-xl"
@@ -506,7 +506,7 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER WITH SOCIAL ICONS RESTORED */
+/* HEADER with social icons */
 function ProfileHeader() {
   return (
     <>

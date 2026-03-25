@@ -191,38 +191,43 @@ async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
 
       canvas.width = width;
       canvas.height = height;
-      ctx.drawImage(img, 0, 0, width, height);
 
-      // Convert canvas to blob
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          const timestamp = Date.now();
-          const fileExt = file.name.split(".").pop() || "jpg";
-          const fileName = `avatar-${timestamp}.${fileExt}`;
-          const filePath = `${currentUserId}/${fileName}`;
+      if (ctx) { // Check if ctx is not null
+        ctx.drawImage(img, 0, 0, width, height);
 
-          const { error: uploadError } = await supabase.storage
-            .from("avatars")
-            .upload(filePath, blob, { upsert: true, cacheControl: "31536000" });
+        // Convert canvas to blob
+        canvas.toBlob(async (blob) => {
+          if (blob) {
+            const timestamp = Date.now();
+            const fileExt = file.name.split(".").pop() || "jpg";
+            const fileName = `avatar-${timestamp}.${fileExt}`;
+            const filePath = `${currentUserId}/${fileName}`;
 
-          if (uploadError) throw uploadError;
+            const { error: uploadError } = await supabase.storage
+              .from("avatars")
+              .upload(filePath, blob, { upsert: true, cacheControl: "31536000" });
 
-          const { urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+            if (uploadError) throw uploadError;
 
-          if (!urlData.publicUrl) throw new Error("No public URL");
+            const { urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-          const { error: updateError } = await supabase
-            .from("profiles")
-            .update({ avatar_url: urlData.publicUrl })
-            .eq("id", currentUserId);
+            if (!urlData.publicUrl) throw new Error("No public URL");
 
-          if (updateError) throw updateError;
+            const { error: updateError } = await supabase
+              .from("profiles")
+              .update({ avatar_url: urlData.publicUrl })
+              .eq("id", currentUserId);
 
-          setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : null));
-          setPreviewImage(null);
-          alert("Avatar updated successfully!");
-        }
-      }, "image/jpeg"); // Set the desired format
+            if (updateError) throw updateError;
+
+            setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : null));
+            setPreviewImage(null);
+            alert("Avatar updated successfully!");
+          }
+        }, "image/jpeg"); // Set the desired format
+      } else {
+        throw new Error("Failed to get canvas context");
+      }
     };
   } catch (err: any) {
     console.error("Avatar failed:", err);
@@ -231,7 +236,6 @@ async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     setUploadingAvatar(false);
   }
 }
-
   async function saveProfileChanges() {
     if (!currentUserId || currentUserId !== userId) return;
     setSaving(true);

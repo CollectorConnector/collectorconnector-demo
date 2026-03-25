@@ -269,16 +269,16 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            {/* SMALL AVATAR - locked at 64px, above the photo */}
-            <div className="relative mb-8">
-              <div className="mx-auto w-16 h-16 overflow-hidden rounded-[30%] border-4 border-zinc-700 shadow-xl">
-                <img
-                  src={previewImage || profile.avatar_url || "/default-avatar.png"}
-                  alt="Avatar"
-                  className="w-full h-full object-cover block"
-                />
-              </div>
-            </div>
+            {/* SMALL AVATAR - set to a normal size, centered */}
+<div className="relative mb-8">
+  <div className="mx-auto w-24 h-24 overflow-hidden rounded-full border-4 border-zinc-700 shadow-xl flex items-center justify-center">
+    <img
+      src={previewImage || profile.avatar_url || "/default-avatar.png"}
+      alt="Avatar"
+      className="w-full h-full object-cover block"
+    />
+  </div>
+</div>
 
             {isOwnProfile && editMode ? (
               <input

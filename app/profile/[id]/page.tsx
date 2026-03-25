@@ -39,6 +39,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const { urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);

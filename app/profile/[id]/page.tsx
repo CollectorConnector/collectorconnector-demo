@@ -159,45 +159,78 @@ export default function ProfilePage() {
       setFollowLoading(false);
     }
   }
+async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file || !currentUserId || currentUserId !== userId) return;
 
-  async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !currentUserId || currentUserId !== userId) return;
+  setUploadingAvatar(true);
+  try {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    
+    img.onload = async () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const MAX_WIDTH = 256; // Set max width
+      const MAX_HEIGHT = 256; // Set max height
+      let width = img.width;
+      let height = img.height;
 
-    setUploadingAvatar(true);
-    try {
-      const timestamp = Date.now();
-      const fileExt = file.name.split(".").pop() || "jpg";
-      const fileName = `avatar-${timestamp}.${fileExt}`;
-      const filePath = `${currentUserId}/${fileName}`;
+      // Calculate the new dimensions
+      if (width > height) {
+        if (width > MAX_WIDTH) {
+          height *= MAX_WIDTH / width;
+          width = MAX_WIDTH;
+        }
+      } else {
+        if (height > MAX_HEIGHT) {
+          width *= MAX_HEIGHT / height;
+          height = MAX_HEIGHT;
+        }
+      }
 
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true, cacheControl: "31536000" });
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
 
-      if (uploadError) throw uploadError;
+      // Convert canvas to blob
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const timestamp = Date.now();
+          const fileExt = file.name.split(".").pop() || "jpg";
+          const fileName = `avatar-${timestamp}.${fileExt}`;
+          const filePath = `${currentUserId}/${fileName}`;
 
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+          const { error: uploadError } = await supabase.storage
+            .from("avatars")
+            .upload(filePath, blob, { upsert: true, cacheControl: "31536000" });
 
-      if (!urlData.publicUrl) throw new Error("No public URL");
+          if (uploadError) throw uploadError;
 
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ avatar_url: urlData.publicUrl })
-        .eq("id", currentUserId);
+          const { urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      if (updateError) throw updateError;
+          if (!urlData.publicUrl) throw new Error("No public URL");
 
-      setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : null));
-      setPreviewImage(null);
-      alert("Avatar updated successfully!");
-    } catch (err: any) {
-      console.error("Avatar failed:", err);
-      alert("Avatar update failed: " + (err.message || "Check console"));
-    } finally {
-      setUploadingAvatar(false);
-    }
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({ avatar_url: urlData.publicUrl })
+            .eq("id", currentUserId);
+
+          if (updateError) throw updateError;
+
+          setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : null));
+          setPreviewImage(null);
+          alert("Avatar updated successfully!");
+        }
+      }, "image/jpeg"); // Set the desired format
+    };
+  } catch (err: any) {
+    console.error("Avatar failed:", err);
+    alert("Avatar update failed: " + (err.message || "Check console"));
+  } finally {
+    setUploadingAvatar(false);
   }
+}
 
   async function saveProfileChanges() {
     if (!currentUserId || currentUserId !== userId) return;

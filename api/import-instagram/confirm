@@ -1,42 +1,57 @@
 import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+import sharp from "sharp";
 
 export async function POST(req: Request) {
-  const { username } = await req.json();
+  const { posts, userId } = await req.json();
 
-  if (!username) {
-    return NextResponse.json({ error: "Username required" }, { status: 400 });
+  if (!posts || posts.length === 0) {
+    return NextResponse.json({ error: "No posts selected" }, { status: 400 });
   }
 
-  try {
-    // Replace with your real Apify task ID and token
-    const scraperRes = await fetch(
-      "https://api.apify.com/v2/actor-tasks/YOUR_TASK_ID/run-sync-get-dataset-items?token=YOUR_TOKEN",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          directUrls: [`https://www.instagram.com/${username}/`],
-          resultsLimit: 12, // Adjust as needed
-        }),
-      }
-    );
+  const results = [];
 
-    if (!scraperRes.ok) {
-      throw new Error(`Apify error: ${scraperRes.status}`);
+  for (const post of posts) {
+    try {
+      const imgRes = await fetch(post.imageUrl);
+      if (!imgRes.ok) throw new Error("Failed to fetch image");
+
+      const buffer = Buffer.from(await imgRes.arrayBuffer());
+
+      // Resize image before upload (prevents "cover upload failed")
+      const resizedBuffer = await sharp(buffer)
+        .resize({ width: 800, withoutEnlargement: true })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+
+      const fileName = `${userId}/instagram-${Date.now()}-${post.id}.jpg`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("items")
+        .upload(fileName, resizedBuffer, {
+          contentType: "image/jpeg",
+          upsert: true,
+          cacheControl: "31536000",
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("items").getPublicUrl(fileName);
+
+      await supabase.from("items").insert({
+        user_id: userId,
+        image_url: urlData.publicUrl,
+        name: post.caption ? post.caption.substring(0, 80) : "Instagram Post",
+        caption: post.caption || "",
+        source: "instagram",
+      });
+
+      results.push({ id: post.id, status: "success" });
+    } catch (err: any) {
+      console.error(`Failed post ${post.id}:`, err);
+      results.push({ id: post.id, status: "failed" });
     }
-
-    const posts = await scraperRes.json();
-
-    const formatted = posts.map((p: any) => ({
-      id: p.id || Date.now().toString(),
-      imageUrl: p.displayUrl || p.imageUrl,
-      caption: p.caption || p.text || "",
-      timestamp: p.timestamp || null,
-    }));
-
-    return NextResponse.json({ posts: formatted });
-  } catch (error: any) {
-    console.error("Instagram import fetch error:", error);
-    return NextResponse.json({ error: "Failed to fetch Instagram posts" }, { status: 500 });
   }
+
+  return NextResponse.json({ results });
 }

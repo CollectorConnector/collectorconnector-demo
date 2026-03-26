@@ -160,7 +160,6 @@ export default function ProfilePage() {
     }
   }
 
-  // Resize + upload
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !currentUserId || currentUserId !== userId) return;
@@ -211,9 +210,15 @@ export default function ProfilePage() {
         let { width, height } = img;
 
         if (width > height) {
-          if (width > maxSize) { height = Math.round((height * maxSize) / width); width = maxSize; }
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          }
         } else {
-          if (height > maxSize) { width = Math.round((width * maxSize) / height); height = maxSize; }
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
         }
 
         canvas.width = width;
@@ -222,8 +227,11 @@ export default function ProfilePage() {
         ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob((blob) => {
-          if (blob) resolve(new File([blob], file.name, { type: file.type }));
-          else resolve(file);
+          if (blob) {
+            resolve(new File([blob], file.name, { type: file.type }));
+          } else {
+            resolve(file);
+          }
         }, file.type, 0.85);
       };
     });
@@ -270,11 +278,24 @@ export default function ProfilePage() {
   const isOwnProfile = currentUserId === userId;
 
   if (loading) {
-    return <div className="min-h-screen bg-black text-white"><ProfileHeader /><div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div></div>;
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <ProfileHeader />
+        <div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div>
+      </div>
+    );
   }
 
   if (error || !profile) {
-    return <div className="min-h-screen bg-black text-white"><ProfileHeader /><div className="flex flex-col items-center justify-center h-[80vh]"><h1 className="text-3xl mb-4">Error</h1><p className="text-white/70">{error || "Profile not found"}</p></div></div>;
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <ProfileHeader />
+        <div className="flex flex-col items-center justify-center h-[80vh]">
+          <h1 className="text-3xl mb-4">Error</h1>
+          <p className="text-white/70">{error || "Profile not found"}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -321,8 +342,12 @@ export default function ProfilePage() {
             />
 
             {isOwnProfile && editMode ? (
-              <input type="text" value={editedDisplayUrl} onChange={(e) => setEditedDisplayUrl(e.target.value)}
-                className="text-4xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg" />
+              <input
+                type="text"
+                value={editedDisplayUrl}
+                onChange={(e) => setEditedDisplayUrl(e.target.value)}
+                className="text-4xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg"
+              />
             ) : (
               <h1 className="text-4xl font-bold mb-3">{displayName}</h1>
             )}
@@ -330,17 +355,24 @@ export default function ProfilePage() {
             <p className="text-indigo-400 text-2xl mb-6">@CollectorConnector CEO</p>
 
             {isOwnProfile && editMode ? (
-              <textarea value={editedBio} onChange={(e) => setEditedBio(e.target.value)}
-                className="text-gray-300 text-xl mb-6 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-lg h-36 resize-none" />
+              <textarea
+                value={editedBio}
+                onChange={(e) => setEditedBio(e.target.value)}
+                className="text-gray-300 text-xl mb-6 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-lg h-36 resize-none"
+              />
             ) : (
               <p className="text-gray-300 text-xl mb-6 max-w-lg leading-relaxed">
-                {profile.bio || "Building the ultimate home for collectors worldwide..."}
+                {profile.bio || "Building the ultimate home for collectors worldwide. I collect watches, cards, coins, sneakers, art & more — and I love connecting with fellow enthusiasts."}
               </p>
             )}
 
             {isOwnProfile && editMode ? (
-              <input type="text" value={editedLocation} onChange={(e) => setEditedLocation(e.target.value)}
-                className="text-gray-400 text-xl bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg mb-6" />
+              <input
+                type="text"
+                value={editedLocation}
+                onChange={(e) => setEditedLocation(e.target.value)}
+                className="text-gray-400 text-xl bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg mb-6"
+              />
             ) : (
               <p className="text-gray-400 text-xl mb-6">{profile.location || "Swindon, UK"}</p>
             )}
@@ -348,7 +380,11 @@ export default function ProfilePage() {
             <div className="flex items-center gap-4 mb-8">
               {profile.tier && (
                 <div className="flex items-center gap-4">
-                  {tierIconSrc ? <img src={tierIconSrc} alt={`${profile.tier} tier`} className="w-14 h-14 object-contain" /> : <span className="text-4xl">🏆</span>}
+                  {tierIconSrc ? (
+                    <img src={tierIconSrc} alt={`${profile.tier} tier`} className="w-14 h-14 object-contain" />
+                  ) : (
+                    <span className="text-4xl">🏆</span>
+                  )}
                   <p className="text-indigo-400 text-2xl font-medium">Tier: {profile.tier}</p>
                 </div>
               )}
@@ -358,22 +394,32 @@ export default function ProfilePage() {
               <div className="mt-10 flex gap-6 flex-wrap justify-center">
                 {editMode ? (
                   <>
-                    <button onClick={saveProfileChanges} disabled={saving}
-                      className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]">
+                    <button
+                      onClick={saveProfileChanges}
+                      disabled={saving}
+                      className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]"
+                    >
                       {saving ? "Saving..." : "Save Changes"}
                     </button>
-                    <button onClick={() => setEditMode(false)}
-                      className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]">
+                    <button
+                      onClick={() => setEditMode(false)}
+                      className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]"
+                    >
                       Cancel
                     </button>
                   </>
                 ) : (
-                  <button onClick={() => setEditMode(true)}
-                    className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl">
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl"
+                  >
                     Edit Profile
                   </button>
                 )}
-                <button onClick={() => setShowImportModal(true)} className="px-6 py-3 bg-pink-600 rounded-full text-white">
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="px-6 py-3 bg-pink-600 rounded-full text-white"
+                >
                   Import from Instagram
                 </button>
               </div>
@@ -383,36 +429,62 @@ export default function ProfilePage() {
 
         {showImportModal && <ImportInstagramModal onClose={() => setShowImportModal(false)} />}
 
-        {/* Stats, Collections, Recent Drops — unchanged */}
+        {/* STATS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
-            <div><p className="text-5xl font-bold">{profile.items_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Items</p></div>
-            <div><p className="text-5xl font-bold">{profile.collections_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Collections</p></div>
-            <div><p className="text-5xl font-bold">{profile.followers_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Followers</p></div>
-            <div><p className="text-5xl font-bold">{profile.following_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Following</p></div>
-            <div><p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p><p className="text-gray-500 text-xl mt-3">Vault Value</p></div>
-            <div><p className="text-5xl font-bold">{profile.likes_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Likes</p></div>
+            <div>
+              <p className="text-5xl font-bold">{profile.items_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Items</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">{profile.collections_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Collections</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">{profile.followers_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Followers</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">{profile.following_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Following</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Vault Value</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">{profile.likes_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Likes</p>
+            </div>
           </div>
         </section>
 
+        {/* COLLECTIONS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">Collections</h2>
           <div className="flex justify-center mb-6">
-            <button onClick={() => router.push("/collections/create")} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition">
+            <button
+              onClick={() => router.push("/collections/create")}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+            >
               + Add Collection
             </button>
           </div>
           <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
             {collections.length === 0 && <p className="text-gray-500 text-xl">No collections yet</p>}
             {collections.map((col) => (
-              <button key={col.id} onClick={() => router.push(`/collections/${col.id}/add-item`)}
-                className="min-w-[180px] h-[120px] bg-zinc-900/70 border border-zinc-700 rounded-xl flex items-center justify-center text-xl font-medium hover:bg-zinc-800 hover:border-zinc-500 transition">
+              <button
+                key={col.id}
+                onClick={() => router.push(`/collections/${col.id}/add-item`)}
+                className="min-w-[180px] h-[120px] bg-zinc-900/70 border border-zinc-700 rounded-xl flex items-center justify-center text-xl font-medium hover:bg-zinc-800 hover:border-zinc-500 transition"
+              >
                 {col.title}
               </button>
             ))}
           </div>
         </section>
 
+        {/* RECENT DROPS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">Recent Drops</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 mb-10">
@@ -421,15 +493,25 @@ export default function ProfilePage() {
             ) : (
               recentDrops.map((drop) => (
                 <div key={drop.id} className="relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 group">
-                  <img src={drop.image_url || "/default-item.png"} alt={drop.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <img
+                    src={drop.image_url || "/default-item.png"}
+                    alt={drop.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                    <p className="text-white text-sm">@{drop.profiles?.username || "collector"} just added this</p>
+                    <p className="text-white text-sm">
+                      @{drop.profiles?.username || "collector"} just added this
+                    </p>
                   </div>
                 </div>
               ))
             )}
           </div>
-          {recentDrops.length > 0 && <div className="text-center text-lg text-gray-400">Live from the Collector Connector community</div>}
+          {recentDrops.length > 0 && (
+            <div className="text-center text-lg text-gray-400">
+              Live from the Collector Connector community
+            </div>
+          )}
         </section>
       </main>
 
@@ -438,11 +520,26 @@ export default function ProfilePage() {
   );
 }
 
-/* HEADER - social icons fully restored */
+/* HEADER with correct social icons */
 function ProfileHeader() {
   return (
     <>
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "#000", borderBottom: "1px solid #1f1f1f", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          background: "#000",
+          borderBottom: "1px solid #1f1f1f",
+          height: 56,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
+        }}
+      >
         <img src="/CC-main-logo.png" alt="Collector Connector" width={130} height={130} style={{ objectFit: "contain" }} />
 
         <div style={{ display: "flex", alignItems: "center", gap: 20, color: "white" }}>
@@ -461,17 +558,29 @@ function ProfileHeader() {
           </a>
 
           {/* eBay */}
-          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="text-base font-bold tracking-wide hover:scale-110 transition-transform">eBay</a>
+          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="text-base font-bold tracking-wide hover:scale-110 transition-transform">
+            eBay
+          </a>
 
-          {/* Discord, Whatnot, X — same as before */}
+          {/* Discord */}
           <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-            <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24"> {/* Discord path from your code */} <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152..."/> </svg>
+            <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/>
+            </svg>
           </a>
+
+          {/* Whatnot */}
           <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-            <svg width="26" height="26" viewBox="0 0 256 256" fill="currentColor"><path d="M28 64c0-8.8 7.2-16 16-16h168c8.8 0 16 7.2 16 16v80c0 8.8-7.2 16-16 16h-60l-24 32-24-32H44c-8.8 0-16-7.2-16-16V64z M128 96l40 40h-80l40-40z"/></svg>
+            <svg width="26" height="26" viewBox="0 0 256 256" fill="currentColor">
+              <path d="M28 64c0-8.8 7.2-16 16-16h168c8.8 0 16 7.2 16 16v80c0 8.8-7.2 16-16 16h-60l-24 32-24-32H44c-8.8 0-16-7.2-16-16V64z M128 96l40 40h-80l40-40z"/>
+            </svg>
           </a>
+
+          {/* X */}
           <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-            <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
           </a>
         </div>
       </header>

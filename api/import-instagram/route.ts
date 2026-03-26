@@ -1,66 +1,39 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import sharp from "sharp"; // Add this import
 
 export async function POST(req: Request) {
-  const { posts, userId } = await req.json();
+  const { username } = await req.json();
 
-  if (!posts || posts.length === 0) {
-    return NextResponse.json({ error: "No posts selected" }, { status: 400 });
+  if (!username) {
+    return NextResponse.json({ error: "Username required" }, { status: 400 });
   }
 
-  const results = [];
+  try {
+    // TODO: Replace with your real Apify task ID and API token
+    const scraperRes = await fetch(
+      `https://api.apify.com/v2/actor-tasks/YOUR_TASK_ID/run-sync-get-dataset-items?token=YOUR_TOKEN`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          directUrls: [`https://www.instagram.com/${username}/`],
+          resultsLimit: 12,
+        }),
+      }
+    );
 
-  for (const post of posts) {
-    try {
-      // Download image
-      const imgRes = await fetch(post.imageUrl);
-      if (!imgRes.ok) throw new Error("Failed to fetch image");
+    if (!scraperRes.ok) throw new Error("Apify request failed");
 
-      const buffer = Buffer.from(await imgRes.arrayBuffer());
+    const posts = await scraperRes.json();
 
-      // Resize with Sharp (max 800px width, good quality for items)
-      const resizedBuffer = await sharp(buffer)
-        .resize({ width: 800, withoutEnlargement: true }) // Keeps aspect ratio
-        .jpeg({ quality: 85 })
-        .toBuffer();
+    const formatted = posts.map((p: any) => ({
+      id: p.id || Date.now().toString(),
+      imageUrl: p.displayUrl || p.imageUrl,
+      caption: p.caption || p.text || "",
+    }));
 
-      // Upload to Supabase "items" bucket
-      const fileName = `${userId}/instagram-${post.id}.jpg`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("items")
-        .upload(fileName, resizedBuffer, {
-          contentType: "image/jpeg",
-          upsert: true,
-          cacheControl: "31536000",
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("items")
-        .getPublicUrl(fileName);
-
-      if (!urlData.publicUrl) throw new Error("No public URL");
-
-      // Insert into items table
-      const { error: insertError } = await supabase.from("items").insert({
-        user_id: userId,
-        image_url: urlData.publicUrl,
-        caption: post.caption || "",
-        source: "instagram",
-        name: post.caption ? post.caption.substring(0, 100) : "Instagram Import",
-      });
-
-      if (insertError) throw insertError;
-
-      results.push({ id: post.id, status: "success", url: urlData.publicUrl });
-    } catch (err: any) {
-      console.error(`Failed to import post ${post.id}:`, err);
-      results.push({ id: post.id, status: "failed" });
-    }
+    return NextResponse.json({ posts: formatted });
+  } catch (error: any) {
+    console.error("Instagram fetch error:", error);
+    return NextResponse.json({ error: "Failed to fetch from Instagram" }, { status: 500 });
   }
-
-  return NextResponse.json({ results });
 }

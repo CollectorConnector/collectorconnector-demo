@@ -8,9 +8,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    // TODO: Replace with your real Apify task ID and API token
+    const taskId = process.env.APIFY_INSTAGRAM_TASK_ID!;
+    const token = process.env.APIFY_API_TOKEN!;
+
     const scraperRes = await fetch(
-      `https://api.apify.com/v2/actor-tasks/YOUR_TASK_ID/run-sync-get-dataset-items?token=YOUR_TOKEN`,
+      `https://api.apify.com/v2/actor-tasks/${taskId}/run-sync-get-dataset-items?token=${token}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

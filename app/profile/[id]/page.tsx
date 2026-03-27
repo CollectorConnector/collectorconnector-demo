@@ -113,9 +113,9 @@ export default function ProfilePage() {
           .eq("id", userId)
           .single();
 
-        // Fallback: create profile if it doesn't exist (prevents redirect loop)
+        // Fallback: create profile if missing (this stops the redirect loop)
         if (error || !data) {
-          console.log("No profile found — creating fallback");
+          console.log("Profile missing — creating fallback");
           const fallback = {
             id: userId,
             display_url: "Stacy Pearce",
@@ -131,7 +131,7 @@ export default function ProfilePage() {
 
           if (insertError) throw insertError;
 
-          // Re-fetch after insert
+          // Re-fetch after creation
           ({ data, error } = await supabase
             .from("profiles")
             .select("*")
@@ -191,7 +191,6 @@ export default function ProfilePage() {
     }
   }
 
-  // Resize helper (used for avatar)
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -464,12 +463,30 @@ export default function ProfilePage() {
         {/* STATS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
-            <div><p className="text-5xl font-bold">{profile.items_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Items</p></div>
-            <div><p className="text-5xl font-bold">{profile.collections_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Collections</p></div>
-            <div><p className="text-5xl font-bold">{profile.followers_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Followers</p></div>
-            <div><p className="text-5xl font-bold">{profile.following_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Following</p></div>
-            <div><p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p><p className="text-gray-500 text-xl mt-3">Vault Value</p></div>
-            <div><p className="text-5xl font-bold">{profile.likes_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Likes</p></div>
+            <div>
+              <p className="text-5xl font-bold">{profile.items_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Items</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">{profile.collections_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Collections</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">{profile.followers_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Followers</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">{profile.following_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Following</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Vault Value</p>
+            </div>
+            <div>
+              <p className="text-5xl font-bold">{profile.likes_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Likes</p>
+            </div>
           </div>
         </section>
 

@@ -10,39 +10,45 @@ export default function AuthCallback() {
 
   useEffect(() => {
     async function handleAuth() {
-      // 1. Wait for Supabase to restore the session
+      // 1. Get the session
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
-      // No session → send back to login
       if (!session) {
         router.push("/auth/login");
         return;
       }
 
-      // 2. Check if the user already has a profile
+      const userId = session.user.id;
+
+      // 2. Check if profile exists
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", session.user.id)
+        .eq("id", userId)
         .maybeSingle();
 
-      // If profile lookup fails → treat as new user
+      // If lookup fails, treat as no profile
       if (error) {
         console.error("Profile lookup failed:", error);
+      }
+
+      // 3. If no profile exists → create one and send to onboarding
+      if (!profile) {
+        await supabase.from("profiles").insert({
+          id: userId,
+          username: null,
+          avatar_url: null,
+          bio: null,
+        });
+
         router.push("/edit-profile");
         return;
       }
 
-      // 3. Redirect based on profile status
-      if (!profile) {
-        router.push("/edit-profile"); // first-time user
-      } else {
-        router.push(`/profile/${session.user.id}`); // returning user
-      }
-
-      setLoading(false);
+      // 4. If profile exists → send to their profile page
+      router.push(`/profile/${userId}`);
     }
 
     handleAuth();

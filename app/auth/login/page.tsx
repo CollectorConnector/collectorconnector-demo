@@ -7,12 +7,25 @@ import { supabase } from "@/lib/supabase";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleEmailLogin() {
-    await supabase.auth.signInWithPassword({
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    setLoading(false);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    // Redirect on success
+    window.location.href = "/";
   }
 
   return (
@@ -47,6 +60,8 @@ export default function LoginPage() {
           Log in with Google
         </button>
 
+        {/* Temporarily hidden Facebook login */}
+        {/* 
         <button
           onClick={() =>
             supabase.auth.signInWithOAuth({
@@ -66,6 +81,7 @@ export default function LoginPage() {
         >
           Log in with Facebook
         </button>
+        */}
       </div>
 
       {/* DIVIDER */}
@@ -113,18 +129,19 @@ export default function LoginPage() {
 
         <button
           onClick={handleEmailLogin}
+          disabled={loading}
           style={{
             width: "100%",
             padding: "14px",
             borderRadius: 10,
-            background: "#fff",
+            background: loading ? "#ccc" : "#fff",
             color: "#000",
             fontWeight: 700,
             fontSize: 16,
             marginTop: 4,
           }}
         >
-          Log In
+          {loading ? "Logging in..." : "Log In"}
         </button>
       </div>
 

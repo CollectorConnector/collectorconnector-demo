@@ -106,13 +106,42 @@ export default function ProfilePage() {
     async function loadData() {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+
+        let { data, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .single();
 
+        // Fallback: create profile if it doesn't exist (prevents redirect loop)
+        if (error || !data) {
+          console.log("No profile found — creating fallback");
+          const fallback = {
+            id: userId,
+            display_url: "Stacy Pearce",
+            username: "CollectorConnector",
+            tier: "Diamond",
+            location: "Swindon, UK",
+            bio: "Building the ultimate home for collectors worldwide. I collect watches, cards, coins, sneakers, art & more — and I love connecting with fellow enthusiasts.",
+          };
+
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert(fallback);
+
+          if (insertError) throw insertError;
+
+          // Re-fetch after insert
+          ({ data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", userId)
+            .single());
+        }
+
         if (error) throw error;
+        if (!data) throw new Error("Failed to load profile");
+
         setProfile(data);
 
         if (data && currentUserId === userId) {
@@ -122,11 +151,13 @@ export default function ProfilePage() {
           setEditedTier(data.tier || "Diamond");
         }
       } catch (err: any) {
+        console.error("Profile load error:", err);
         setError(err.message || "Failed to load profile");
       } finally {
         setLoading(false);
       }
     }
+
     loadData();
   }, [userId, router, currentUserId]);
 
@@ -158,6 +189,43 @@ export default function ProfilePage() {
     } finally {
       setFollowLoading(false);
     }
+  }
+
+  // Resize helper (used for avatar)
+  async function resizeImage(file: File, maxSize: number): Promise<File> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, { type: file.type }));
+          } else {
+            resolve(file);
+          }
+        }, file.type, 0.85);
+      };
+    });
   }
 
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
@@ -199,42 +267,6 @@ export default function ProfilePage() {
     } finally {
       setUploadingAvatar(false);
     }
-  }
-
-  async function resizeImage(file: File, maxSize: number): Promise<File> {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let { width, height } = img;
-
-        if (width > height) {
-          if (width > maxSize) {
-            height = Math.round((height * maxSize) / width);
-            width = maxSize;
-          }
-        } else {
-          if (height > maxSize) {
-            width = Math.round((width * maxSize) / height);
-            height = maxSize;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(new File([blob], file.name, { type: file.type }));
-          } else {
-            resolve(file);
-          }
-        }, file.type, 0.85);
-      };
-    });
   }
 
   async function saveProfileChanges() {
@@ -306,7 +338,7 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            {/* SQUIRCLE AVATAR - soft square with rounded corners */}
+            {/* SQUIRCLE AVATAR */}
             {isOwnProfile ? (
               <label htmlFor="avatar-upload" className="relative mb-8 cursor-pointer group">
                 <div className="mx-auto w-20 h-20 overflow-hidden rounded-[30%] border-4 border-zinc-700 shadow-2xl">
@@ -432,30 +464,12 @@ export default function ProfilePage() {
         {/* STATS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
-            <div>
-              <p className="text-5xl font-bold">{profile.items_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Items</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.collections_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Collections</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.followers_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Followers</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.following_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Following</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Vault Value</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.likes_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Likes</p>
-            </div>
+            <div><p className="text-5xl font-bold">{profile.items_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Items</p></div>
+            <div><p className="text-5xl font-bold">{profile.collections_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Collections</p></div>
+            <div><p className="text-5xl font-bold">{profile.followers_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Followers</p></div>
+            <div><p className="text-5xl font-bold">{profile.following_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Following</p></div>
+            <div><p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p><p className="text-gray-500 text-xl mt-3">Vault Value</p></div>
+            <div><p className="text-5xl font-bold">{profile.likes_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Likes</p></div>
           </div>
         </section>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -11,130 +11,193 @@ export default function AddItemPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Client-side resize (same as avatar)
+  const resizeImage = (file: File, maxSize: number = 800): Promise<File> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, { type: file.type }));
+          } else {
+            resolve(file);
+          }
+        }, file.type, 0.85);
+      };
+    });
+  };
+
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setErrorMsg(null);
+  };
 
   const handleSave = async () => {
     if (!imageFile) {
-      alert("Please select an image");
+      setErrorMsg("Please select an image");
       return;
     }
-
     if (!title.trim()) {
-      alert("Please enter a title");
+      setErrorMsg("Please enter a title");
       return;
     }
 
     setSaving(true);
+    setErrorMsg(null);
 
-    // 1. Get user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      // 1. Get current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      alert("You must be logged in");
+      if (!user) {
+        setErrorMsg("You must be logged in");
+        return;
+      }
+
+      // 2. Resize image before upload
+      const resizedFile = await resizeImage(imageFile, 800);
+
+      // 3. Upload to Supabase Storage
+      const fileExt = imageFile.name.split(".").pop() || "jpg";
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `items/${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("items")
+        .upload(filePath, resizedFile, {
+          contentType: "image/jpeg",
+          upsert: true,
+          cacheControl: "31536000",
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("items")
+        .getPublicUrl(filePath);
+
+      if (!urlData.publicUrl) throw new Error("Failed to get public URL");
+
+      // 4. Save item to database
+      const { error: insertError } = await supabase.from("items").insert({
+        user_id: user.id,
+        collection_id: collectionId,
+        title: title.trim(),
+        description: description.trim() || null,
+        image_url: urlData.publicUrl,
+        source: "manual",
+      });
+
+      if (insertError) throw insertError;
+
+      // Success — go back to collection
+      alert("Item added successfully!");
+      router.push(`/collections/${collectionId}`);
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      setErrorMsg(err.message || "Failed to save item. Please try again.");
+    } finally {
       setSaving(false);
-      return;
     }
-
-    // 2. Upload image
-    const ext = imageFile.name.split(".").pop();
-    const fileName = `${crypto.randomUUID()}.${ext}`;
-    const filePath = `users/${user.id}/items/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("items")
-      .upload(filePath, imageFile);
-
-    if (uploadError) {
-      console.error(uploadError);
-      alert("Image upload failed");
-      setSaving(false);
-      return;
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("items")
-      .getPublicUrl(filePath);
-
-    const imageUrl = publicUrlData.publicUrl;
-
-    // 3. Insert item
-    const { error: insertError } = await supabase.from("items").insert({
-      user_id: user.id,
-      collection_id: collectionId,
-      title: title.trim(),
-      description: description.trim(),
-      image_url: imageUrl,
-    });
-
-    if (insertError) {
-      console.error(insertError);
-      alert("Failed to save item");
-      setSaving(false);
-      return;
-    }
-
-    // 4. Redirect back to the collection
-    router.push(`/collections/${collectionId}`);
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-10">
-      <h1 className="text-4xl font-bold mb-8 text-center">Add Item</h1>
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-center">Add New Item</h1>
 
-      <div className="max-w-xl mx-auto space-y-6">
+        <div className="space-y-8 bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
 
-        {/* Image Upload */}
-        <div>
-          <label className="block mb-2 text-lg">Item Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-            className="w-full"
-          />
-
-          {imageFile && (
-            <img
-              src={URL.createObjectURL(imageFile)}
-              alt="Preview"
-              className="mt-4 w-full h-64 object-cover rounded-xl border border-zinc-700"
+          {/* Image Upload */}
+          <div>
+            <label className="block text-lg mb-3">Item Photo</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full text-sm"
             />
+
+            {previewUrl && (
+              <div className="mt-4">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-64 object-cover rounded-2xl border border-zinc-700"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="block text-lg mb-3">Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. 1st Edition Charizard"
+              className="w-full p-4 bg-zinc-900 border border-zinc-700 rounded-2xl text-lg"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-lg mb-3">Description (optional)</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Any extra details..."
+              className="w-full p-4 bg-zinc-900 border border-zinc-700 rounded-2xl h-32 resize-y"
+            />
+          </div>
+
+          {errorMsg && (
+            <div className="p-4 bg-red-900/30 border border-red-700 rounded-2xl text-red-400">
+              {errorMsg}
+            </div>
           )}
-        </div>
 
-        {/* Title */}
-        <div>
-          <label className="block mb-2 text-lg">Title</label>
-          <input
-            type="text"
-            className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Charizard Holo"
-          />
+          {/* Save Button */}
+          <button
+            onClick={handleSave}
+            disabled={saving || !imageFile || !title.trim()}
+            className="w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 rounded-2xl text-xl font-medium transition"
+          >
+            {saving ? "Adding Item..." : "Add Item to Collection"}
+          </button>
         </div>
-
-        {/* Description */}
-        <div>
-          <label className="block mb-2 text-lg">Description</label>
-          <textarea
-            className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 h-32"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional description..."
-          />
-        </div>
-
-        {/* Save Button */}
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl text-xl font-medium transition disabled:opacity-50"
-        >
-          {saving ? "Saving..." : "Add Item"}
-        </button>
       </div>
     </div>
   );

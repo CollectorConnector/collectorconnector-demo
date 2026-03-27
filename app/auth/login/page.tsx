@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,12 +26,29 @@ export default function LoginPage() {
       return;
     }
 
-    // Redirect on success
-    window.location.href = "/";
+    // Better redirect — let the callback handle the rest
+    router.push("/auth/callback");
+  }
+
+  async function handleOAuth(provider: "google" | "facebook") {
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+    }
+    // No need to do anything else — Supabase will redirect to /auth/callback
   }
 
   return (
-    <div style={{ textAlign: "center", color: "#fff" }}>
+    <div style={{ textAlign: "center", color: "#fff", maxWidth: 400, margin: "0 auto", padding: "40px 20px" }}>
       <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
         Welcome back
       </h1>
@@ -39,44 +58,38 @@ export default function LoginPage() {
       </p>
 
       {/* SOCIAL BUTTONS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
         <button
-          onClick={() =>
-            supabase.auth.signInWithOAuth({
-              provider: "google",
-              options: { redirectTo: `${window.location.origin}/auth/callback` },
-            })
-          }
+          onClick={() => handleOAuth("google")}
+          disabled={loading}
           style={{
             width: "100%",
-            padding: "12px",
+            padding: "14px",
             borderRadius: 10,
             background: "#111",
             border: "1px solid #fff",
             color: "#fff",
             fontWeight: 600,
+            fontSize: 16,
           }}
         >
-          Log in with Google
+          {loading ? "Connecting..." : "Log in with Google"}
         </button>
 
-        {/* Temporarily hidden Facebook login */}
+        {/* Uncomment when you're ready for Facebook */}
         {/* 
         <button
-          onClick={() =>
-            supabase.auth.signInWithOAuth({
-              provider: "facebook",
-              options: { redirectTo: `${window.location.origin}/auth/callback` },
-            })
-          }
+          onClick={() => handleOAuth("facebook")}
+          disabled={loading}
           style={{
             width: "100%",
-            padding: "12px",
+            padding: "14px",
             borderRadius: 10,
             background: "#111",
             border: "1px solid #fff",
             color: "#fff",
             fontWeight: 600,
+            fontSize: 16,
           }}
         >
           Log in with Facebook

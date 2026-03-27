@@ -7,48 +7,70 @@ import { useRouter } from "next/navigation";
 export default function AuthCallback() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("Processing login…");
 
   useEffect(() => {
     async function handleAuth() {
-      // 1. Get the session
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      try {
+        // 1. Get the session
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      if (!session) {
+        if (!session) {
+          router.push("/auth/login");
+          return;
+        }
+
+        const userId = session.user.id;
+
+        // 2. Check if profile exists
+        let { data: profile, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle();
+
+        // 3. If no profile → create one (fallback)
+        if (error || !profile) {
+          setMessage("Setting up your profile...");
+          console.log("No profile found — creating now");
+
+          const { error: insertError } = await supabase.from("profiles").insert({
+            id: userId,
+            display_url: session.user.user_metadata?.full_name || "Stacy Pearce",
+            username: session.user.user_metadata?.user_name || "CollectorConnector",
+            tier: "Diamond",
+            location: "Swindon, UK",
+            bio: "Building the ultimate home for collectors worldwide...",
+          });
+
+          if (insertError) {
+            console.error("Insert failed:", insertError);
+          }
+
+          // Re-fetch to be sure
+          ({ data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", userId)
+            .single());
+        }
+
+        // 4. Now we have a profile — go to it
+        if (profile) {
+          setMessage("Taking you to your profile...");
+          router.push(`/profile/${userId}`);
+        } else {
+          // Last resort fallback
+          router.push(`/profile/${userId}`);
+        }
+      } catch (err) {
+        console.error("Auth callback error:", err);
         router.push("/auth/login");
-        return;
+      } finally {
+        setLoading(false);
       }
-
-      const userId = session.user.id;
-
-      // 2. Check if profile exists
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-
-      // If lookup fails, treat as no profile
-      if (error) {
-        console.error("Profile lookup failed:", error);
-      }
-
-      // 3. If no profile exists → create one and send to onboarding
-      if (!profile) {
-        await supabase.from("profiles").insert({
-          id: userId,
-          username: null,
-          avatar_url: null,
-          bio: null,
-        });
-
-        router.push("/edit-profile");
-        return;
-      }
-
-      // 4. If profile exists → send to their profile page
-      router.push(`/profile/${userId}`);
     }
 
     handleAuth();
@@ -66,7 +88,7 @@ export default function AuthCallback() {
         justifyContent: "center",
       }}
     >
-      <h1 style={{ fontSize: 24, marginBottom: 12 }}>Processing login…</h1>
+      <h1 style={{ fontSize: 24, marginBottom: 12 }}>{message}</h1>
       <p style={{ opacity: 0.7 }}>This will only take a moment.</p>
     </div>
   );

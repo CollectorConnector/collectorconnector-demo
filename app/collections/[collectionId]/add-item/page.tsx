@@ -15,7 +15,7 @@ export default function AddItemPage() {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Client-side resize (same as avatar)
+  // Client-side resize - same reliable function that fixed the avatar
   const resizeImage = (file: File, maxSize: number = 800): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -43,16 +43,16 @@ export default function AddItemPage() {
 
         canvas.toBlob((blob) => {
           if (blob) {
-            resolve(new File([blob], file.name, { type: file.type }));
+            resolve(new File([blob], file.name, { type: "image/jpeg" }));
           } else {
             resolve(file);
           }
-        }, file.type, 0.85);
+        }, "image/jpeg", 0.85);
       };
     });
   };
 
-  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -75,7 +75,6 @@ export default function AddItemPage() {
     setErrorMsg(null);
 
     try {
-      // 1. Get current user
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -85,12 +84,11 @@ export default function AddItemPage() {
         return;
       }
 
-      // 2. Resize image before upload
+      // Resize first (this is the key fix)
       const resizedFile = await resizeImage(imageFile, 800);
 
-      // 3. Upload to Supabase Storage
-      const fileExt = imageFile.name.split(".").pop() || "jpg";
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      // Upload
+      const fileName = `${crypto.randomUUID()}.jpg`;
       const filePath = `items/${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -101,32 +99,30 @@ export default function AddItemPage() {
           cacheControl: "31536000",
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
 
       const { data: urlData } = supabase.storage
         .from("items")
         .getPublicUrl(filePath);
 
-      if (!urlData.publicUrl) throw new Error("Failed to get public URL");
+      if (!urlData?.publicUrl) throw new Error("Failed to get public URL");
 
-      // 4. Save item to database
+      // Save to database
       const { error: insertError } = await supabase.from("items").insert({
         user_id: user.id,
         collection_id: collectionId,
         title: title.trim(),
         description: description.trim() || null,
         image_url: urlData.publicUrl,
-        source: "manual",
       });
 
-      if (insertError) throw insertError;
+      if (insertError) throw new Error(`Database error: ${insertError.message}`);
 
-      // Success — go back to collection
       alert("Item added successfully!");
       router.push(`/collections/${collectionId}`);
     } catch (err: any) {
       console.error("Save failed:", err);
-      setErrorMsg(err.message || "Failed to save item. Please try again.");
+      setErrorMsg(err.message || "Failed to save item. Try a smaller image.");
     } finally {
       setSaving(false);
     }
@@ -137,24 +133,24 @@ export default function AddItemPage() {
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 text-center">Add New Item</h1>
 
-        <div className="space-y-8 bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
+        <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 space-y-8">
 
           {/* Image Upload */}
           <div>
-            <label className="block text-lg mb-3">Item Photo</label>
+            <label className="block text-lg mb-3">Item Photo (required)</label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full text-sm"
+              className="w-full"
             />
 
             {previewUrl && (
-              <div className="mt-4">
+              <div className="mt-4 rounded-2xl overflow-hidden border border-zinc-700">
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="w-full h-64 object-cover rounded-2xl border border-zinc-700"
+                  className="w-full h-64 object-cover"
                 />
               </div>
             )}
@@ -162,7 +158,7 @@ export default function AddItemPage() {
 
           {/* Title */}
           <div>
-            <label className="block text-lg mb-3">Title</label>
+            <label className="block text-lg mb-3">Title (required)</label>
             <input
               type="text"
               value={title}
@@ -184,12 +180,11 @@ export default function AddItemPage() {
           </div>
 
           {errorMsg && (
-            <div className="p-4 bg-red-900/30 border border-red-700 rounded-2xl text-red-400">
+            <div className="p-4 bg-red-900/30 border border-red-700 rounded-2xl text-red-400 text-sm">
               {errorMsg}
             </div>
           )}
 
-          {/* Save Button */}
           <button
             onClick={handleSave}
             disabled={saving || !imageFile || !title.trim()}

@@ -1,4 +1,6 @@
-export default function AuthLayout({ children }) {
+import { ReactNode } from "react";
+
+export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
@@ -20,7 +22,8 @@ export default function AuthLayout({ children }) {
           width: "420px",
           height: "420px",
           transform: "translate(-50%, -50%)",
-          background: "radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%)",
+          background:
+            "radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%)",
           filter: "blur(60px)",
           zIndex: 0,
         }}

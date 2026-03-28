@@ -8,7 +8,7 @@ export default function CreateCollectionPage() {
   const router = useRouter();
 
   const [title, setTitle] = useState("");
-  const [nichem, setNichem] = useState("");
+  const [niche, setNiche] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -112,7 +112,7 @@ export default function CreateCollectionPage() {
         .insert({
           user_id: user.id,
           title: title.trim(),
-          nichem: nichem.trim() || null,
+          niche: niche.trim() || null,
           cover_url: coverUrl,
           item_count: 0,
         })
@@ -177,8 +177,8 @@ export default function CreateCollectionPage() {
         <label className="block text-lg mb-2">Niche (optional)</label>
         <input
           type="text"
-          value={nichem}
-          onChange={(e) => setNichem(e.target.value)}
+          value={niche}
+          onChange={(e) => setNiche(e.target.value)}
           className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
         />
       </div>

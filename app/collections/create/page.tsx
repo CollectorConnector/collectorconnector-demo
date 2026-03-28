@@ -13,7 +13,7 @@ export default function CreateCollectionPage() {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Client-side resize (same as avatar and add-item)
+  // Resize helper
   const resizeImage = (file: File, maxSize: number = 1200): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -53,7 +53,6 @@ export default function CreateCollectionPage() {
   const handleCoverChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setCoverFile(file);
     setPreviewUrl(URL.createObjectURL(file));
     setErrorMsg(null);
@@ -80,15 +79,14 @@ export default function CreateCollectionPage() {
 
       let coverUrl = null;
 
-      // Resize and upload cover if provided
       if (coverFile) {
         const resizedFile = await resizeImage(coverFile, 1200);
 
         const fileName = `${crypto.randomUUID()}.jpg`;
-        const filePath = `collections/${user.id}/${fileName}`;
+        const filePath = `item-photos/${user.id}/${fileName}`;   // ← using your existing public bucket
 
         const { error: uploadError } = await supabase.storage
-          .from("collections")
+          .from("item-photos")   // ← changed to your public bucket
           .upload(filePath, resizedFile, {
             contentType: "image/jpeg",
             upsert: true,
@@ -98,13 +96,12 @@ export default function CreateCollectionPage() {
         if (uploadError) throw new Error(`Cover upload failed: ${uploadError.message}`);
 
         const { data: urlData } = supabase.storage
-          .from("collections")
+          .from("item-photos")
           .getPublicUrl(filePath);
 
         coverUrl = urlData.publicUrl;
       }
 
-      // Create collection
       const { error: insertError } = await supabase.from("collections").insert({
         user_id: user.id,
         title: title.trim(),
@@ -131,7 +128,6 @@ export default function CreateCollectionPage() {
 
         <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 space-y-8">
 
-          {/* Title */}
           <div>
             <label className="block text-lg mb-3">Collection Name</label>
             <input
@@ -143,7 +139,6 @@ export default function CreateCollectionPage() {
             />
           </div>
 
-          {/* Cover Image */}
           <div>
             <label className="block text-lg mb-3">Cover Image (optional)</label>
             <input

@@ -112,7 +112,7 @@ export default function CreateCollectionPage() {
         .insert({
           user_id: user.id,
           title: title.trim(),
-          niche: niche.trim() || null,
+          niche: niche.trim() || null,   // ✔ corrected
           cover_url: coverUrl,
           item_count: 0,
         })

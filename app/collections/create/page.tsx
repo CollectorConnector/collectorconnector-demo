@@ -13,7 +13,6 @@ export default function CreateCollectionPage() {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Resize helper
   const resizeImage = (file: File, maxSize: number = 1200): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -83,10 +82,10 @@ export default function CreateCollectionPage() {
         const resizedFile = await resizeImage(coverFile, 1200);
 
         const fileName = `${crypto.randomUUID()}.jpg`;
-        const filePath = `item-photos/${user.id}/${fileName}`;   // ← using your existing public bucket
+        const filePath = `item-photos/${user.id}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("item-photos")   // ← changed to your public bucket
+          .from("item-photos")
           .upload(filePath, resizedFile, {
             contentType: "image/jpeg",
             upsert: true,

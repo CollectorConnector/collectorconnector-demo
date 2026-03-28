@@ -1,25 +1,45 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import { useEffect, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function AddItemPage() {
-  const { collectionId } = useParams();
   const router = useRouter();
+  const params = useParams<{ collectionId: string }>();
+  const collectionId = Array.isArray(params?.collectionId)
+    ? params.collectionId[0]
+    : params?.collectionId || "";
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [collection, setCollection] = useState<any>(null);
 
-  // Client-side resize - same reliable function that fixed the avatar
-  const resizeImage = (file: File, maxSize: number = 800): Promise<File> => {
+  // ⭐ Load collection info
+  useEffect(() => {
+    if (!collectionId) return;
+
+    async function loadCollection() {
+      const { data, error } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("id", collectionId)
+        .single();
+
+      if (!error && data) setCollection(data);
+    }
+
+    loadCollection();
+  }, [collectionId]);
+
+  // ⭐ Resize image (same as avatar, but 512px)
+  async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
+
       img.onload = () => {
         const canvas = document.createElement("canvas");
         let { width, height } = img;
@@ -38,162 +58,161 @@ export default function AddItemPage() {
 
         canvas.width = width;
         canvas.height = height;
+
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(new File([blob], file.name, { type: "image/jpeg" }));
-          } else {
-            resolve(file);
-          }
-        }, "image/jpeg", 0.85);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: file.type }));
+            } else {
+              resolve(file);
+            }
+          },
+          file.type,
+          0.85
+        );
       };
     });
-  };
+  }
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  // ⭐ Handle image selection
+  function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    setErrorMsg(null);
-  };
+    setPreviewImage(URL.createObjectURL(file));
+  }
 
-  const handleSave = async () => {
-    if (!imageFile) {
-      setErrorMsg("Please select an image");
+  // ⭐ Add item
+  async function addItem() {
+    if (!name.trim()) {
+      alert("Please enter an item name.");
       return;
     }
-    if (!title.trim()) {
-      setErrorMsg("Please enter a title");
+
+    if (!imageFile) {
+      alert("Please choose an image.");
       return;
     }
 
     setSaving(true);
-    setErrorMsg(null);
 
     try {
+      // Get user
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        setErrorMsg("You must be logged in");
-        return;
-      }
+      if (!user) throw new Error("Not logged in");
 
-      // Resize first (this is the key fix)
-      const resizedFile = await resizeImage(imageFile, 800);
+      // ⭐ Resize image
+      const resized = await resizeImage(imageFile, 512);
 
-      // Upload
-      const fileName = `${crypto.randomUUID()}.jpg`;
-      const filePath = `items/${user.id}/${fileName}`;
+      // ⭐ Upload to storage
+      const timestamp = Date.now();
+      const ext = imageFile.name.split(".").pop() || "jpg";
+      const fileName = `item-${timestamp}.${ext}`;
+      const filePath = `${user.id}/collections/${collectionId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("items")
-        .upload(filePath, resizedFile, {
-          contentType: "image/jpeg",
-          upsert: true,
-          cacheControl: "31536000",
-        });
+        .from("item-images")
+        .upload(filePath, resized, { upsert: true });
 
-      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+      if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from("items")
+        .from("item-images")
         .getPublicUrl(filePath);
 
-      if (!urlData?.publicUrl) throw new Error("Failed to get public URL");
+      const imageUrl = urlData.publicUrl;
 
-      // Save to database
+      // ⭐ Insert item row
       const { error: insertError } = await supabase.from("items").insert({
         user_id: user.id,
         collection_id: collectionId,
-        title: title.trim(),
-        description: description.trim() || null,
-        image_url: urlData.publicUrl,
+        name: name.trim(),
+        image_url: imageUrl,
       });
 
-      if (insertError) throw new Error(`Database error: ${insertError.message}`);
+      if (insertError) throw insertError;
 
-      alert("Item added successfully!");
-      router.push(`/collections/${collectionId}`);
+      // ⭐ Update collection item count
+      await supabase.rpc("increment_item_count", {
+        collection_id_input: collectionId,
+      });
+
+      // Redirect back to profile
+      router.push(`/profile/${user.id}`);
     } catch (err: any) {
-      console.error("Save failed:", err);
-      setErrorMsg(err.message || "Failed to save item. Try a smaller image.");
+      console.error("Add item failed:", err);
+      alert("Failed to add item: " + (err.message || "Check console"));
     } finally {
       setSaving(false);
     }
-  };
+  }
+
+  if (!collection) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">Add New Item</h1>
+    <div className="min-h-screen bg-black text-white px-6 py-10 max-w-xl mx-auto space-y-10">
 
-        <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 space-y-8">
+      <h1 className="text-4xl font-bold text-center mb-6">
+        Add Item to {collection.title}
+      </h1>
 
-          {/* Image Upload */}
-          <div>
-            <label className="block text-lg mb-3">Item Photo (required)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full"
-            />
-
-            {previewUrl && (
-              <div className="mt-4 rounded-2xl overflow-hidden border border-zinc-700">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-64 object-cover"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Title */}
-          <div>
-            <label className="block text-lg mb-3">Title (required)</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. 1st Edition Charizard"
-              className="w-full p-4 bg-zinc-900 border border-zinc-700 rounded-2xl text-lg"
+      {/* IMAGE PREVIEW */}
+      <div className="flex flex-col items-center">
+        <label htmlFor="item-upload" className="cursor-pointer group">
+          <div className="w-40 h-40 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900">
+            <img
+              src={previewImage || "/default-item.png"}
+              alt="Item Preview"
+              className="w-full h-full object-cover"
             />
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-lg mb-3">Description (optional)</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Any extra details..."
-              className="w-full p-4 bg-zinc-900 border border-zinc-700 rounded-2xl h-32 resize-y"
-            />
+          <div className="text-center mt-3 text-blue-400 group-hover:underline">
+            Choose Item Image
           </div>
+        </label>
 
-          {errorMsg && (
-            <div className="p-4 bg-red-900/30 border border-red-700 rounded-2xl text-red-400 text-sm">
-              {errorMsg}
-            </div>
-          )}
-
-          <button
-            onClick={handleSave}
-            disabled={saving || !imageFile || !title.trim()}
-            className="w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 rounded-2xl text-xl font-medium transition"
-          >
-            {saving ? "Adding Item..." : "Add Item to Collection"}
-          </button>
-        </div>
+        <input
+          id="item-upload"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageChange}
+        />
       </div>
+
+      {/* ITEM NAME */}
+      <div>
+        <label className="block text-lg mb-2">Item Name</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
+        />
+      </div>
+
+      {/* ADD BUTTON */}
+      <button
+        onClick={addItem}
+        disabled={saving}
+        className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-full text-xl font-medium transition disabled:opacity-50"
+      >
+        {saving ? "Adding..." : "Add Item"}
+      </button>
     </div>
   );
 }

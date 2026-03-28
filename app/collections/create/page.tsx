@@ -13,7 +13,8 @@ export default function CreateCollectionPage() {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const resizeImage = (file: File, maxSize: number = 1200): Promise<File> => {
+  // Strong client-side resize - exactly like Facebook/Instagram
+  const resizeImage = (file: File, maxWidth: number = 800): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
@@ -21,16 +22,10 @@ export default function CreateCollectionPage() {
         const canvas = document.createElement("canvas");
         let { width, height } = img;
 
-        if (width > height) {
-          if (width > maxSize) {
-            height = Math.round((height * maxSize) / width);
-            width = maxSize;
-          }
-        } else {
-          if (height > maxSize) {
-            width = Math.round((width * maxSize) / height);
-            height = maxSize;
-          }
+        // Maintain aspect ratio
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
         }
 
         canvas.width = width;
@@ -52,6 +47,7 @@ export default function CreateCollectionPage() {
   const handleCoverChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setCoverFile(file);
     setPreviewUrl(URL.createObjectURL(file));
     setErrorMsg(null);
@@ -79,7 +75,8 @@ export default function CreateCollectionPage() {
       let coverUrl = null;
 
       if (coverFile) {
-        const resizedFile = await resizeImage(coverFile, 1200);
+        // Resize before upload
+        const resizedFile = await resizeImage(coverFile, 800);
 
         const fileName = `${crypto.randomUUID()}.jpg`;
         const filePath = `item-photos/${user.id}/${fileName}`;

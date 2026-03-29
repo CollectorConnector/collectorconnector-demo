@@ -125,73 +125,78 @@ export default function CreateCollectionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-10 max-w-xl mx-auto space-y-10">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center px-6 py-10">
 
-      <h1 className="text-4xl font-bold text-center mb-6">Create Collection</h1>
+      <div className="w-full max-w-md flex flex-col items-center space-y-10">
 
-      {/* COVER PREVIEW + CC LOGO UPLOAD BUTTON */}
-      <div className="flex flex-col items-center">
-        <label htmlFor="cover-upload" className="cursor-pointer group">
-          <div className="w-24 h-24 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900 flex items-center justify-center">
-            {previewImage ? (
-              <img
-                src={previewImage}
-                alt="Cover Preview"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img
-                src="/CC-main-logo.png"
-                alt="Upload Cover"
-                className="w-6 opacity-60 group-hover:opacity-100 transition"
-              />
-            )}
-          </div>
+        <h1 className="text-4xl font-bold text-center">Create Collection</h1>
 
-          <div className="text-center mt-3 text-blue-400 group-hover:underline">
-            Choose Cover Image
-          </div>
-        </label>
+        {/* COVER PREVIEW + CC LOGO UPLOAD BUTTON */}
+        <div className="flex flex-col items-center">
+          <label htmlFor="cover-upload" className="cursor-pointer group">
+            <div className="w-24 h-24 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900 flex items-center justify-center">
+              {previewImage ? (
+                <img
+                  src={previewImage}
+                  alt="Cover Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src="/CC-main-logo.png"
+                  alt="Upload Cover"
+                  className="w-6 opacity-60 group-hover:opacity-100 transition"
+                />
+              )}
+            </div>
 
-        <input
-          id="cover-upload"
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleCoverChange}
-        />
+            <div className="text-center mt-3 text-blue-400 group-hover:underline">
+              Choose Cover Image
+            </div>
+          </label>
+
+          <input
+            id="cover-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleCoverChange}
+          />
+        </div>
+
+        {/* TITLE */}
+        <div className="w-full">
+          <label className="block text-lg mb-2">Collection Title</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
+          />
+        </div>
+
+        {/* NICHE */}
+        <div className="w-full">
+          <label className="block text-lg mb-2">Niche (optional)</label>
+          <input
+            type="text"
+            value={niche}
+            onChange={(e) => setNiche(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
+          />
+        </div>
+
+        {/* CREATE BUTTON */}
+        <button
+          onClick={createCollection}
+          disabled={saving}
+          className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-full text-xl font-medium transition disabled:opacity-50"
+        >
+          {saving ? "Creating..." : "Create Collection"}
+        </button>
+
       </div>
-
-      {/* TITLE */}
-      <div>
-        <label className="block text-lg mb-2">Collection Title</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
-        />
-      </div>
-
-      {/* NICHE */}
-      <div>
-        <label className="block text-lg mb-2">Niche (optional)</label>
-        <input
-          type="text"
-          value={niche}
-          onChange={(e) => setNiche(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
-        />
-      </div>
-
-      {/* CREATE BUTTON */}
-      <button
-        onClick={createCollection}
-        disabled={saving}
-        className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-full text-xl font-medium transition disabled:opacity-50"
-      >
-        {saving ? "Creating..." : "Create Collection"}
-      </button>
     </div>
   );
 }
+

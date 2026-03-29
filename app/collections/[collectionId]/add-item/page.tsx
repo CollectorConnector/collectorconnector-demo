@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -8,11 +8,8 @@ export default function AddItemPage() {
   const router = useRouter();
   const params = useParams();
 
-  // ⭐ Correct param extraction
-  const rawCollectionId = params.collectionId;
-  const collectionId = Array.isArray(rawCollectionId)
-    ? rawCollectionId[0]
-    : rawCollectionId;
+  // ⭐ Read the param EXACTLY as Next.js gives it
+  const collectionId = params.collectionId as string;
 
   const [title, setTitle] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -20,8 +17,9 @@ export default function AddItemPage() {
   const [saving, setSaving] = useState(false);
   const [collection, setCollection] = useState<any>(null);
 
-  // Debug log (you can remove later)
-  console.log("collectionId from params:", collectionId);
+  // ⭐ Debug — shows us the REAL param Next.js is giving you
+  console.log("PARAMS:", params);
+  console.log("collectionId:", collectionId);
 
   // Load collection info
   useEffect(() => {
@@ -83,7 +81,6 @@ export default function AddItemPage() {
     });
   }
 
-  // Handle image selection
   function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -92,7 +89,6 @@ export default function AddItemPage() {
     setPreviewImage(URL.createObjectURL(file));
   }
 
-  // Add item
   async function addItem() {
     if (!title.trim()) {
       alert("Please enter an item name.");
@@ -105,7 +101,7 @@ export default function AddItemPage() {
     }
 
     if (!collectionId) {
-      alert("Invalid collection ID — route is wrong.");
+      alert("Invalid collection ID — route param missing.");
       return;
     }
 
@@ -139,9 +135,8 @@ export default function AddItemPage() {
 
       const imageUrl = urlData.publicUrl;
 
-      // Insert item row
+      // ⭐ Insert item (let DB generate id)
       const { error: insertError } = await supabase.from("items").insert({
-        id: crypto.randomUUID(), // ⭐ Safe now that schema is fixed
         user_id: user.id,
         collection_id: collectionId,
         title: title.trim(),

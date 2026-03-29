@@ -9,12 +9,13 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true); // still used for UI only
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
 
   async function handleEmailLogin() {
     setLoading(true);
 
+    // 1. Sign in
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -27,7 +28,23 @@ export default function LoginPage() {
       return;
     }
 
-    router.push(`/profile/${data.user.id}`);
+    const userId = data.user.id;
+
+    // 2. Check if profile exists
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    // 3. If no profile → onboarding
+    if (!profile) {
+      router.replace("/onboarding");
+      return;
+    }
+
+    // 4. Otherwise → their profile
+    router.replace(`/profile/${userId}`);
   }
 
   async function handleOAuth(provider: "google" | "facebook") {
@@ -45,19 +62,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
-  const { data: profile } = await supabase
-  .from("profiles")
-  .select("id")
-  .eq("id", data.user.id)
-  .maybeSingle();
-
-if (!profile) {
-  router.replace("/onboarding");
-  return;
-}
-
-router.replace(`/profile/${data.user.id}`);
-
 
   return (
     <div className="auth-container">

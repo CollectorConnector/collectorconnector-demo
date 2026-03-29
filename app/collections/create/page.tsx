@@ -125,32 +125,92 @@ export default function CreateCollectionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center px-6 py-10">
-
-      <div className="w-full max-w-md flex flex-col items-center space-y-10">
-
-        <h1 className="text-4xl font-bold text-center">Create Collection</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#000",
+        color: "#fff",
+        display: "flex",
+        justifyContent: "center",
+        padding: "40px 16px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 32,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            textAlign: "center",
+          }}
+        >
+          Create Collection
+        </h1>
 
         {/* COVER PREVIEW + CC LOGO UPLOAD BUTTON */}
-        <div className="flex flex-col items-center">
-          <label htmlFor="cover-upload" className="cursor-pointer group">
-            <div className="w-24 h-24 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900 flex items-center justify-center">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <label
+            htmlFor="cover-upload"
+            style={{ cursor: "pointer", textAlign: "center" }}
+          >
+            <div
+              style={{
+                width: 96, // smaller box
+                height: 96,
+                borderRadius: 16,
+                overflow: "hidden",
+                border: "1px solid #3f3f46",
+                boxShadow: "0 10px 25px rgba(0,0,0,0.6)",
+                backgroundColor: "#18181b",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
               {previewImage ? (
                 <img
                   src={previewImage}
                   alt="Cover Preview"
-                  className="w-full h-full object-cover"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
                 />
               ) : (
                 <img
                   src="/CC-main-logo.png"
                   alt="Upload Cover"
-                  className="w-6 opacity-60 group-hover:opacity-100 transition"
+                  style={{
+                    width: 24, // much smaller logo
+                    opacity: 0.6,
+                  }}
                 />
               )}
             </div>
 
-            <div className="text-center mt-3 text-blue-400 group-hover:underline">
+            <div
+              style={{
+                marginTop: 8,
+                color: "#60a5fa",
+                fontSize: 14,
+              }}
+            >
               Choose Cover Image
             </div>
           </label>
@@ -159,30 +219,62 @@ export default function CreateCollectionPage() {
             id="cover-upload"
             type="file"
             accept="image/*"
-            className="hidden"
+            style={{ display: "none" }}
             onChange={handleCoverChange}
           />
         </div>
 
         {/* TITLE */}
-        <div className="w-full">
-          <label className="block text-lg mb-2">Collection Title</label>
+        <div style={{ width: "100%" }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 16,
+              marginBottom: 8,
+            }}
+          >
+            Collection Title
+          </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              borderRadius: 12,
+              backgroundColor: "#18181b",
+              border: "1px solid #3f3f46",
+              color: "#fff",
+              fontSize: 15,
+            }}
           />
         </div>
 
         {/* NICHE */}
-        <div className="w-full">
-          <label className="block text-lg mb-2">Niche (optional)</label>
+        <div style={{ width: "100%" }}>
+          <label
+            style={{
+              display: "block",
+              fontSize: 16,
+              marginBottom: 8,
+            }}
+          >
+            Niche (optional)
+          </label>
           <input
             type="text"
             value={niche}
             onChange={(e) => setNiche(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              borderRadius: 12,
+              backgroundColor: "#18181b",
+              border: "1px solid #3f3f46",
+              color: "#fff",
+              fontSize: 15,
+            }}
           />
         </div>
 
@@ -190,13 +282,21 @@ export default function CreateCollectionPage() {
         <button
           onClick={createCollection}
           disabled={saving}
-          className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-full text-xl font-medium transition disabled:opacity-50"
+          style={{
+            width: "100%",
+            padding: "14px 0",
+            borderRadius: 999,
+            backgroundColor: saving ? "#2563eb" : "#2563eb",
+            opacity: saving ? 0.6 : 1,
+            color: "#fff",
+            fontSize: 18,
+            fontWeight: 600,
+            border: "none",
+          }}
         >
           {saving ? "Creating..." : "Create Collection"}
         </button>
-
       </div>
     </div>
   );
 }
-

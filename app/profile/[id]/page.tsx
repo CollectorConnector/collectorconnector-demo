@@ -619,3 +619,20 @@ function ProfileHeader() {
     </>
   );
 }
+<button
+  onClick={async () => {
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+  }}
+  style={{
+    marginTop: 20,
+    padding: "12px 20px",
+    borderRadius: 10,
+    background: "#111",
+    border: "1px solid #fff",
+    color: "#fff",
+    fontWeight: 600,
+  }}
+>
+  Log Out
+</button>

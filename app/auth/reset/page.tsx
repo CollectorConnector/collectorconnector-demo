@@ -8,11 +8,16 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleReset() {
+    setLoading(true);
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/update-password`,
     });
+
+    setLoading(false);
 
     if (error) {
       alert(error.message);
@@ -40,8 +45,13 @@ export default function ResetPasswordPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <button onClick={handleReset} className="auth-submit">
-            Send reset link
+          <button
+            onClick={handleReset}
+            disabled={loading}
+            className="auth-submit"
+          >
+            {loading && <span className="spinner" />}
+            {loading ? "Sending..." : "Send reset link"}
           </button>
         </>
       ) : (
@@ -50,7 +60,10 @@ export default function ResetPasswordPage() {
         </p>
       )}
 
-      <button onClick={() => router.push("/auth/login")} className="auth-forgot">
+      <button
+        onClick={() => router.push("/auth/login")}
+        className="auth-forgot"
+      >
         Back to login
       </button>
     </div>

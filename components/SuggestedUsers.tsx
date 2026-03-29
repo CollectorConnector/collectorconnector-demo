@@ -26,28 +26,28 @@ export default function SuggestedUsers() {
         return;
       }
 
-      // Get users the current user is already following
+      // Get who the current user is already following
       const { data: followsData } = await supabase
         .from("follows")
         .select("following_id")
         .eq("follower_id", user.id);
 
-      const alreadyFollowing = new Set(followsData?.map(f => f.following_id) || []);
+      const alreadyFollowing = new Set(followsData?.map((f: any) => f.following_id) || []);
       setFollowingIds(alreadyFollowing);
 
-      // Get suggested users (random-ish, exclude self and already following)
+      // Get other users (exclude self)
       const { data, error } = await supabase
         .from("profiles")
         .select("id, display_url, username, avatar_url, tier")
         .neq("id", user.id)
-        .limit(6);
+        .limit(8);   // Increased a bit for small user base
 
       if (error) {
         console.error("Suggested users error:", error);
-      } else {
-        // Shuffle and take up to 4
-        const shuffled = [...(data || [])].sort(() => 0.5 - Math.random());
-        setSuggested(shuffled.slice(0, 4));
+      } else if (data) {
+        // Shuffle lightly and take up to 5
+        const shuffled = [...data].sort(() => 0.5 - Math.random());
+        setSuggested(shuffled.slice(0, 5));
       }
       setLoading(false);
     }
@@ -64,72 +64,79 @@ export default function SuggestedUsers() {
       .insert({ follower_id: user.id, following_id: targetId });
 
     if (!error) {
-      setFollowingIds(prev => new Set(prev).add(targetId));
-      // Optional: refresh suggested list
-      setSuggested(prev => prev.filter(u => u.id !== targetId));
+      setFollowingIds((prev) => new Set([...prev, targetId]));
+      setSuggested((prev) => prev.filter((u) => u.id !== targetId));
     }
   };
 
-  if (loading) {
-    return <div className="text-zinc-400">Finding cool collectors...</div>;
-  }
+  if (loading) return <div className="text-zinc-400 py-8">Finding cool collectors...</div>;
 
   if (suggested.length === 0) {
-    return null;
+    return (
+      <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 text-center">
+        <p className="text-zinc-400">No other collectors yet.</p>
+        <p className="text-sm mt-2">Invite friends to join CollectorConnector!</p>
+      </div>
+    );
   }
 
   return (
     <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Suggested Collectors</h2>
         <button 
           onClick={() => window.location.reload()} 
-          className="text-sm text-indigo-400 hover:text-indigo-300"
+          className="text-indigo-400 hover:text-white text-sm"
         >
           Refresh
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {suggested.map((user) => {
           const isFollowing = followingIds.has(user.id);
 
           return (
-            <div key={user.id} className="flex items-center gap-4">
+            <div key={user.id} className="flex items-center gap-4 group">
               <div 
                 onClick={() => router.push(`/profile/${user.id}`)}
-                className="w-14 h-14 rounded-[30%] overflow-hidden border-2 border-zinc-700 cursor-pointer flex-shrink-0"
+                className="w-14 h-14 rounded-[30%] overflow-hidden border-2 border-zinc-700 cursor-pointer flex-shrink-0 hover:border-indigo-500 transition"
               >
                 <img
                   src={user.avatar_url || "/default-avatar.png"}
-                  alt={user.display_url || ""}
+                  alt=""
                   className="w-full h-full object-cover"
                 />
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{user.display_url || user.username}</p>
+                <p className="font-semibold truncate group-hover:text-indigo-400 transition">
+                  {user.display_url || user.username}
+                </p>
                 <p className="text-zinc-400 text-sm">@{user.username || "collector"}</p>
               </div>
 
               <button
                 onClick={() => handleFollow(user.id)}
                 disabled={isFollowing}
-                className={`px-6 py-2 rounded-xl text-sm font-medium transition ${
+                className={`px-7 py-2.5 rounded-2xl text-sm font-medium transition-all ${
                   isFollowing 
                     ? "bg-zinc-800 text-zinc-400 cursor-not-allowed" 
-                    : "bg-white text-black hover:bg-zinc-200"
+                    : "bg-white text-black hover:bg-zinc-100 active:scale-95"
                 }`}
               >
-                {isFollowing ? "Following" : "Follow"}
+                {isFollowing ? "Following ✓" : "Follow"}
               </button>
             </div>
           );
         })}
       </div>
 
-      <div className="mt-6 text-center">
-        <a href="/search" className="text-indigo-400 hover:text-indigo-300 text-sm">
+      <div className="mt-8 text-center">
+        <a 
+          href="/search" 
+          className="inline-block text-indigo-400 hover:text-indigo-300 font-medium"
+        >
           Discover more collectors →
         </a>
       </div>

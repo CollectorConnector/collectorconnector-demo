@@ -13,7 +13,6 @@ export default function CreateCollectionPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // ⭐ Resize image exactly like avatar, but max 512px
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -56,7 +55,6 @@ export default function CreateCollectionPage() {
     });
   }
 
-  // ⭐ Handle cover image selection
   function handleCoverChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -65,7 +63,6 @@ export default function CreateCollectionPage() {
     setPreviewImage(URL.createObjectURL(file));
   }
 
-  // ⭐ Create collection
   async function createCollection() {
     if (!title.trim()) {
       alert("Please enter a collection title.");
@@ -75,7 +72,6 @@ export default function CreateCollectionPage() {
     setSaving(true);
 
     try {
-      // Get user
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -84,7 +80,6 @@ export default function CreateCollectionPage() {
 
       let coverUrl: string | null = null;
 
-      // ⭐ Upload cover if provided
       if (coverFile) {
         const resized = await resizeImage(coverFile, 512);
 
@@ -106,13 +101,12 @@ export default function CreateCollectionPage() {
         coverUrl = urlData.publicUrl;
       }
 
-      // ⭐ Insert collection row
       const { data, error: insertError } = await supabase
         .from("collections")
         .insert({
           user_id: user.id,
           title: title.trim(),
-          niche: niche.trim() || null,   // ✔ corrected
+          niche: niche.trim() || null,
           cover_url: coverUrl,
           item_count: 0,
         })
@@ -121,7 +115,6 @@ export default function CreateCollectionPage() {
 
       if (insertError) throw insertError;
 
-      // Redirect to add-item page
       router.push(`/collections/${data.id}/add-item`);
     } catch (err: any) {
       console.error("Create collection failed:", err);
@@ -136,15 +129,23 @@ export default function CreateCollectionPage() {
 
       <h1 className="text-4xl font-bold text-center mb-6">Create Collection</h1>
 
-      {/* COVER PREVIEW */}
+      {/* COVER PREVIEW + CC LOGO UPLOAD BUTTON */}
       <div className="flex flex-col items-center">
         <label htmlFor="cover-upload" className="cursor-pointer group">
-          <div className="w-40 h-40 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900">
-            <img
-              src={previewImage || "/default-cover.png"}
-              alt="Cover Preview"
-              className="w-full h-full object-cover"
-            />
+          <div className="w-40 h-40 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900 flex items-center justify-center">
+            {previewImage ? (
+              <img
+                src={previewImage}
+                alt="Cover Preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src="/CC-main-logo.png"
+                alt="Upload Cover"
+                className="w-20 opacity-60 group-hover:opacity-100 transition"
+              />
+            )}
           </div>
 
           <div className="text-center mt-3 text-blue-400 group-hover:underline">

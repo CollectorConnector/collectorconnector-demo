@@ -11,7 +11,7 @@ export default function AddItemPage() {
     ? params.collectionId[0]
     : params?.collectionId || "";
 
-  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -88,7 +88,7 @@ export default function AddItemPage() {
 
   // Add item
   async function addItem() {
-    if (!name.trim()) {
+    if (!title.trim()) {
       alert("Please enter an item name.");
       return;
     }
@@ -128,11 +128,11 @@ export default function AddItemPage() {
 
       const imageUrl = urlData.publicUrl;
 
-      // Insert item row
+      // Insert item row (FIXED: uses title instead of name)
       const { error: insertError } = await supabase.from("items").insert({
         user_id: user.id,
         collection_id: collectionId,
-        name: name.trim(),
+        title: title.trim(), // ⭐ FIXED
         image_url: imageUrl,
       });
 
@@ -199,8 +199,8 @@ export default function AddItemPage() {
         <label className="block text-lg mb-2">Item Name</label>
         <input
           type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
         />
       </div>

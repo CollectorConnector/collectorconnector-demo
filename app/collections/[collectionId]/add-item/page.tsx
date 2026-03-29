@@ -17,7 +17,7 @@ export default function AddItemPage() {
   const [saving, setSaving] = useState(false);
   const [collection, setCollection] = useState<any>(null);
 
-  // ⭐ Load collection info
+  // Load collection info
   useEffect(() => {
     if (!collectionId) return;
 
@@ -34,7 +34,7 @@ export default function AddItemPage() {
     loadCollection();
   }, [collectionId]);
 
-  // ⭐ Resize image (same as avatar, but 512px)
+  // Resize image (same as Create Collection)
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -77,7 +77,7 @@ export default function AddItemPage() {
     });
   }
 
-  // ⭐ Handle image selection
+  // Handle image selection
   function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -86,7 +86,7 @@ export default function AddItemPage() {
     setPreviewImage(URL.createObjectURL(file));
   }
 
-  // ⭐ Add item
+  // Add item
   async function addItem() {
     if (!name.trim()) {
       alert("Please enter an item name.");
@@ -101,17 +101,16 @@ export default function AddItemPage() {
     setSaving(true);
 
     try {
-      // Get user
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) throw new Error("Not logged in");
 
-      // ⭐ Resize image
+      // Resize image
       const resized = await resizeImage(imageFile, 512);
 
-      // ⭐ Upload to storage
+      // Upload to storage
       const timestamp = Date.now();
       const ext = imageFile.name.split(".").pop() || "jpg";
       const fileName = `item-${timestamp}.${ext}`;
@@ -129,7 +128,7 @@ export default function AddItemPage() {
 
       const imageUrl = urlData.publicUrl;
 
-      // ⭐ Insert item row
+      // Insert item row
       const { error: insertError } = await supabase.from("items").insert({
         user_id: user.id,
         collection_id: collectionId,
@@ -139,12 +138,11 @@ export default function AddItemPage() {
 
       if (insertError) throw insertError;
 
-      // ⭐ Update collection item count
+      // Update collection item count
       await supabase.rpc("increment_item_count", {
         collection_id_input: collectionId,
       });
 
-      // Redirect back to profile
       router.push(`/profile/${user.id}`);
     } catch (err: any) {
       console.error("Add item failed:", err);
@@ -163,36 +161,38 @@ export default function AddItemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-10 max-w-xl mx-auto space-y-10">
+    <div className="min-h-screen bg-black text-white px-6 py-10 max-w-md mx-auto space-y-10">
 
-      <h1 className="text-4xl font-bold text-center mb-6">
+      <h1 className="text-4xl font-bold text-center">
         Add Item to {collection.title}
       </h1>
 
-      {/* IMAGE PREVIEW */}
-      <div className="flex flex-col items-center">
-        <label htmlFor="item-upload" className="cursor-pointer group">
-          <div className="w-40 h-40 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900">
-            <img
-              src={previewImage || "/default-item.png"}
-              alt="Item Preview"
-              className="w-full h-full object-cover"
-            />
-          </div>
+      {/* FULL-WIDTH CC LOGO BANNER */}
+      <label htmlFor="item-upload" className="cursor-pointer w-full flex flex-col items-center">
+        <div className="w-full flex justify-center">
+          <img
+            src={previewImage || "/CC-main-logo.png"}
+            alt="Upload Item"
+            className="object-contain opacity-90 hover:opacity-100 transition"
+            style={{
+              width: "360px",
+              height: "auto",
+            }}
+          />
+        </div>
 
-          <div className="text-center mt-3 text-blue-400 group-hover:underline">
-            Choose Item Image
-          </div>
-        </label>
+        <div className="text-center mt-3 text-blue-400 hover:underline">
+          Choose Item Image
+        </div>
+      </label>
 
-        <input
-          id="item-upload"
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleImageChange}
-        />
-      </div>
+      <input
+        id="item-upload"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageChange}
+      />
 
       {/* ITEM NAME */}
       <div>

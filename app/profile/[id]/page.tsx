@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ImportInstagramModal from "@/components/ImportInstagramModal";

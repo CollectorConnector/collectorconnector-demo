@@ -130,40 +130,32 @@ export default function CreateCollectionPage() {
 
         <h1 className="text-4xl font-bold text-center">Create Collection</h1>
 
-        {/* COVER PREVIEW + CC LOGO UPLOAD BUTTON */}
-        <div className="flex flex-col items-center">
-          <label htmlFor="cover-upload" className="cursor-pointer group">
-            <div className="w-30 h-30 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900 flex items-center justify-center"
-                 style={{ width: 120, height: 120 }}>
-              {previewImage ? (
-                <img
-                  src={previewImage}
-                  alt="Cover Preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <img
-                  src="/CC-main-logo.png"
-                  alt="Upload Cover"
-                  className="opacity-60 group-hover:opacity-100 transition"
-                  style={{ width: 64 }}
-                />
-              )}
-            </div>
+        {/* FULL-WIDTH CC LOGO BANNER */}
+        <label htmlFor="cover-upload" className="cursor-pointer w-full flex flex-col items-center">
+          <div className="w-full flex justify-center">
+            <img
+              src={previewImage || "/CC-main-logo.png"}
+              alt="Upload Cover"
+              className="object-contain opacity-90 hover:opacity-100 transition"
+              style={{
+                width: "360px",   // Slightly inset from 420px column
+                height: "auto",   // Natural aspect ratio
+              }}
+            />
+          </div>
 
-            <div className="text-center mt-3 text-blue-400 group-hover:underline">
-              Choose Cover Image
-            </div>
-          </label>
+          <div className="text-center mt-3 text-blue-400 hover:underline">
+            Choose Cover Image
+          </div>
+        </label>
 
-          <input
-            id="cover-upload"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleCoverChange}
-          />
-        </div>
+        <input
+          id="cover-upload"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleCoverChange}
+        />
 
         {/* TITLE */}
         <div className="w-full">

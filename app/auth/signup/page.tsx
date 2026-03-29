@@ -47,25 +47,30 @@ export default function SignUpPage() {
           Sign up with Google
         </button>
 
-        <button
-          onClick={() =>
-            supabase.auth.signInWithOAuth({
-              provider: "facebook",
-              options: { redirectTo: `${window.location.origin}/auth/callback` },
-            })
-          }
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: 10,
-            background: "#111",
-            border: "1px solid #fff",
-            color: "#fff",
-            fontWeight: 600,
-          }}
-        >
-          Sign up with Facebook
-        </button>
+        {/* FACEBOOK BUTTON HIDDEN BUT PRESERVED */}
+        {false && (
+          <button
+            onClick={() =>
+              supabase.auth.signInWithOAuth({
+                provider: "facebook",
+                options: {
+                  redirectTo: `${window.location.origin}/auth/callback`,
+                },
+              })
+            }
+            style={{
+              width: "100%",
+              padding: "12px",
+              borderRadius: 10,
+              background: "#111",
+              border: "1px solid #fff",
+              color: "#fff",
+              fontWeight: 600,
+            }}
+          >
+            Sign up with Facebook
+          </button>
+        )}
       </div>
 
       {/* DIVIDER */}

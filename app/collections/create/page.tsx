@@ -125,92 +125,33 @@ export default function CreateCollectionPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#000",
-        color: "#fff",
-        display: "flex",
-        justifyContent: "center",
-        padding: "40px 16px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 32,
-        }}
-      >
-        <h1
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            textAlign: "center",
-          }}
-        >
-          Create Collection
-        </h1>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center px-6 py-10">
+      <div className="w-full max-w-md flex flex-col items-center space-y-10">
+
+        <h1 className="text-4xl font-bold text-center">Create Collection</h1>
 
         {/* COVER PREVIEW + CC LOGO UPLOAD BUTTON */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <label
-            htmlFor="cover-upload"
-            style={{ cursor: "pointer", textAlign: "center" }}
-          >
-            <div
-              style={{
-                width: 96, // smaller box
-                height: 96,
-                borderRadius: 16,
-                overflow: "hidden",
-                border: "1px solid #3f3f46",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.6)",
-                backgroundColor: "#18181b",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+        <div className="flex flex-col items-center">
+          <label htmlFor="cover-upload" className="cursor-pointer group">
+            <div className="w-30 h-30 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900 flex items-center justify-center"
+                 style={{ width: 120, height: 120 }}>
               {previewImage ? (
                 <img
                   src={previewImage}
                   alt="Cover Preview"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <img
                   src="/CC-main-logo.png"
                   alt="Upload Cover"
-                  style={{
-                    width: 24, // much smaller logo
-                    opacity: 0.6,
-                  }}
+                  className="opacity-60 group-hover:opacity-100 transition"
+                  style={{ width: 64 }}
                 />
               )}
             </div>
 
-            <div
-              style={{
-                marginTop: 8,
-                color: "#60a5fa",
-                fontSize: 14,
-              }}
-            >
+            <div className="text-center mt-3 text-blue-400 group-hover:underline">
               Choose Cover Image
             </div>
           </label>
@@ -219,62 +160,30 @@ export default function CreateCollectionPage() {
             id="cover-upload"
             type="file"
             accept="image/*"
-            style={{ display: "none" }}
+            className="hidden"
             onChange={handleCoverChange}
           />
         </div>
 
         {/* TITLE */}
-        <div style={{ width: "100%" }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: 16,
-              marginBottom: 8,
-            }}
-          >
-            Collection Title
-          </label>
+        <div className="w-full">
+          <label className="block text-lg mb-2">Collection Title</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              borderRadius: 12,
-              backgroundColor: "#18181b",
-              border: "1px solid #3f3f46",
-              color: "#fff",
-              fontSize: 15,
-            }}
+            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
           />
         </div>
 
         {/* NICHE */}
-        <div style={{ width: "100%" }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: 16,
-              marginBottom: 8,
-            }}
-          >
-            Niche (optional)
-          </label>
+        <div className="w-full">
+          <label className="block text-lg mb-2">Niche (optional)</label>
           <input
             type="text"
             value={niche}
             onChange={(e) => setNiche(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              borderRadius: 12,
-              backgroundColor: "#18181b",
-              border: "1px solid #3f3f46",
-              color: "#fff",
-              fontSize: 15,
-            }}
+            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
           />
         </div>
 
@@ -282,20 +191,11 @@ export default function CreateCollectionPage() {
         <button
           onClick={createCollection}
           disabled={saving}
-          style={{
-            width: "100%",
-            padding: "14px 0",
-            borderRadius: 999,
-            backgroundColor: saving ? "#2563eb" : "#2563eb",
-            opacity: saving ? 0.6 : 1,
-            color: "#fff",
-            fontSize: 18,
-            fontWeight: 600,
-            border: "none",
-          }}
+          className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-full text-xl font-medium transition disabled:opacity-50"
         >
           {saving ? "Creating..." : "Create Collection"}
         </button>
+
       </div>
     </div>
   );

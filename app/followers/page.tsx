@@ -30,7 +30,6 @@ export default function FollowersPage() {
       const { data, error } = await supabase
         .from("follows")
         .select(`
-          follower_id,
           profiles!follows_follower_id_fkey (
             id, display_url, username, avatar_url, tier
           )
@@ -40,7 +39,9 @@ export default function FollowersPage() {
       if (error) {
         console.error("Followers load error:", error);
       } else {
-        setFollowers(data?.map(f => f.profiles) || []);
+        // Flatten the profiles from the join
+        const flatFollowers = data?.map(item => item.profiles).filter(Boolean) || [];
+        setFollowers(flatFollowers);
       }
       setLoading(false);
     }
@@ -62,7 +63,13 @@ export default function FollowersPage() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading followers...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center text-xl">
+        Loading followers...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -75,12 +82,16 @@ export default function FollowersPage() {
           <div className="space-y-4">
             {followers.map((user) => (
               <div key={user.id} className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 rounded-2xl p-5">
-                <div className="w-16 h-16 rounded-[30%] overflow-hidden border-2 border-zinc-700">
-                  <img src={user.avatar_url || "/default-avatar.png"} alt="" className="w-full h-full object-cover" />
+                <div className="w-16 h-16 rounded-[30%] overflow-hidden border-2 border-zinc-700 flex-shrink-0">
+                  <img
+                    src={user.avatar_url || "/default-avatar.png"}
+                    alt={user.display_url || ""}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-xl">{user.display_url || user.username}</p>
-                  <p className="text-zinc-400">@{user.username}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-xl truncate">{user.display_url || user.username}</p>
+                  <p className="text-zinc-400">@{user.username || "collector"}</p>
                 </div>
                 <button
                   onClick={() => handleUnfollow(user.id)}

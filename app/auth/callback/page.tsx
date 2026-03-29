@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 
 export default function AuthCallback() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("Processing login…");
 
   useEffect(() => {
@@ -25,51 +24,51 @@ export default function AuthCallback() {
         const userId = session.user.id;
 
         // 2. Check if profile exists
-        let { data: profile, error } = await supabase
+        let { data: profile } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .maybeSingle();
 
-        // 3. If no profile → create one (fallback)
-        if (error || !profile) {
-          setMessage("Setting up your profile...");
-          console.log("No profile found — creating now");
+        // 3. If no profile → create a clean one
+        if (!profile) {
+          setMessage("Setting up your profile…");
 
-          const { error: insertError } = await supabase.from("profiles").insert({
+          await supabase.from("profiles").insert({
             id: userId,
-            display_url: session.user.user_metadata?.full_name || "Stacy Pearce",
-            username: session.user.user_metadata?.user_name || "CollectorConnector",
-            tier: "Diamond",
-            location: "Swindon, UK",
-            bio: "Building the ultimate home for collectors worldwide...",
+            username: null,
+            display_url: null,
+            avatar_url: null,
+            tier: null,
+            location: null,
+            bio: null,
+            instagram: null,
+            youtube: null,
+            ebay: null,
+            whatnot: null,
+            discord: null,
+            website: null,
+            items_count: 0,
+            collections_count: 0,
+            rarity_score: 0,
           });
 
-          if (insertError) {
-            console.error("Insert failed:", insertError);
-          }
-
-          // Re-fetch to be sure
-          ({ data: profile } = await supabase
+          // Re-fetch
+          const { data: newProfile } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", userId)
-            .single());
+            .single();
+
+          profile = newProfile;
         }
 
-        // 4. Now we have a profile — go to it
-        if (profile) {
-          setMessage("Taking you to your profile...");
-          router.push(`/profile/${userId}`);
-        } else {
-          // Last resort fallback
-          router.push(`/profile/${userId}`);
-        }
+        // 4. Redirect to THEIR profile
+        setMessage("Taking you to your profile…");
+        router.push(`/profile/${userId}`);
       } catch (err) {
         console.error("Auth callback error:", err);
         router.push("/auth/login");
-      } finally {
-        setLoading(false);
       }
     }
 

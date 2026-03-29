@@ -8,18 +8,21 @@ export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    async function finish() {
-      const { data } = await supabase.auth.getUser();
+    async function finishLogin() {
+      // Get the user AFTER OAuth redirect
+      const { data, error } = await supabase.auth.getUser();
 
-      if (!data.user) {
+      // If something went wrong, send them back to login
+      if (error || !data.user) {
         router.replace("/auth/login");
         return;
       }
 
+      // Redirect to the correct profile
       router.replace(`/profile/${data.user.id}`);
     }
 
-    finish();
+    finishLogin();
   }, [router]);
 
   return (

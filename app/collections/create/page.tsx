@@ -143,7 +143,7 @@ export default function CreateCollectionPage() {
               <img
                 src="/CC-main-logo.png"
                 alt="Upload Cover"
-                className="w-20 opacity-60 group-hover:opacity-100 transition"
+                className="w-10 opacity-60 group-hover:opacity-100 transition"
               />
             )}
           </div>

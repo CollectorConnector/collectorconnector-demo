@@ -9,7 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(true); // still used for UI only
   const [loading, setLoading] = useState(false);
 
   async function handleEmailLogin() {
@@ -18,10 +18,6 @@ export default function LoginPage() {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
-      options: {
-        // 30 days vs 1 hour
-        expiresIn: remember ? 60 * 60 * 24 * 30 : 60 * 60,
-      },
     });
 
     setLoading(false);

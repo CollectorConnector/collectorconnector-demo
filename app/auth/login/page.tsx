@@ -26,8 +26,9 @@ export default function LoginPage() {
       return;
     }
 
-    // Better redirect — let the callback handle the rest
-    router.push("/auth/callback");
+    // ⭐ Redirect using the fresh, correct user returned by Supabase
+    const user = data.user;
+    router.push(`/profile/${user.id}`);
   }
 
   async function handleOAuth(provider: "google" | "facebook") {
@@ -44,11 +45,19 @@ export default function LoginPage() {
       alert(error.message);
       setLoading(false);
     }
-    // No need to do anything else — Supabase will redirect to /auth/callback
+    // OAuth will redirect automatically
   }
 
   return (
-    <div style={{ textAlign: "center", color: "#fff", maxWidth: 400, margin: "0 auto", padding: "40px 20px" }}>
+    <div
+      style={{
+        textAlign: "center",
+        color: "#fff",
+        maxWidth: 400,
+        margin: "0 auto",
+        padding: "40px 20px",
+      }}
+    >
       <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
         Welcome back
       </h1>
@@ -58,7 +67,14 @@ export default function LoginPage() {
       </p>
 
       {/* SOCIAL BUTTONS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          marginBottom: 32,
+        }}
+      >
         <button
           onClick={() => handleOAuth("google")}
           disabled={loading}
@@ -75,26 +91,6 @@ export default function LoginPage() {
         >
           {loading ? "Connecting..." : "Log in with Google"}
         </button>
-
-        {/* Uncomment when you're ready for Facebook */}
-        {/* 
-        <button
-          onClick={() => handleOAuth("facebook")}
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: 10,
-            background: "#111",
-            border: "1px solid #fff",
-            color: "#fff",
-            fontWeight: 600,
-            fontSize: 16,
-          }}
-        >
-          Log in with Facebook
-        </button>
-        */}
       </div>
 
       {/* DIVIDER */}

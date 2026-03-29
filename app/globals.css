@@ -326,3 +326,177 @@ button:focus {
   color: #fff;
   font-size: 15px;
 }
+/* ================================
+   ONBOARDING WIZARD LAYOUT
+   ================================ */
+
+.onboarding-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+  color: #fff;
+}
+
+/* Progress bar container */
+.onboarding-progress {
+  height: 6px;
+  background: #333;
+  border-radius: 4px;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+/* Progress bar fill */
+.onboarding-progress-fill {
+  height: 100%;
+  background: #4ade80; /* green */
+  width: 0%;
+  transition: width 0.35s ease;
+}
+
+/* Step title + subtitle */
+.onboarding-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.onboarding-subtitle {
+  color: #a1a1a1;
+  margin-bottom: 32px;
+}
+
+/* ================================
+   AVATAR UPLOAD
+   ================================ */
+
+.avatar-preview {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 24px auto;
+  border: 4px solid #333;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  transition: transform 0.25s ease;
+}
+
+.avatar-preview:hover {
+  transform: scale(1.03);
+}
+
+.avatar-placeholder {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: #222;
+  border: 4px dashed #444;
+  margin: 0 auto 24px auto;
+}
+
+/* File input */
+.onboarding-file {
+  margin-bottom: 24px;
+  color: #ccc;
+}
+
+/* ================================
+   TEXTAREA + INPUT ENHANCEMENTS
+   ================================ */
+
+textarea.auth-input {
+  resize: none;
+  min-height: 100px;
+  line-height: 1.4;
+}
+
+/* Subtle focus glow */
+.auth-input:focus,
+textarea.auth-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
+}
+
+/* ================================
+   BUTTON ENHANCEMENTS
+   ================================ */
+
+.auth-submit {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255,255,255,0.15);
+}
+
+.auth-submit:active:not(:disabled) {
+  transform: translateY(0px);
+  box-shadow: none;
+}
+
+/* Skip button */
+.auth-skip {
+  margin-top: 12px;
+  background: none;
+  border: none;
+  color: #a1a1a1;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ================================
+   STEP TRANSITIONS
+   ================================ */
+
+.onboarding-step {
+  animation: fadeInUp 0.45s ease forwards;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+/* ================================
+   PASSWORD STRENGTH BAR
+   ================================ */
+
+.password-strength {
+  height: 6px;
+  border-radius: 4px;
+  background: #333;
+  margin-top: -8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.password-strength-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+/* ================================
+   USERNAME AVAILABILITY
+   ================================ */
+
+.username-available {
+  color: #4ade80;
+  font-size: 14px;
+}
+
+.username-taken {
+  color: #f87171;
+  font-size: 14px;
+}

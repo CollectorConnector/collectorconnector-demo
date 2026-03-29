@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ImportInstagramModal from "@/components/ImportInstagramModal";
 import Footer from "@/components/Footer";
+import SuggestedUsers from "@/components/SuggestedUsers";
+
 
 type Profile = {
   id: string;
@@ -512,6 +514,7 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+          <SuggestedUsers />
         </section>
 
         {showImportModal && (

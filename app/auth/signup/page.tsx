@@ -3,16 +3,52 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleEmailSignup() {
-    await supabase.auth.signUp({
-      email,
-      password,
-    });
+    if (!email.trim() || !password.trim()) {
+      alert("Please enter an email and password.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      console.log("SIGNUP RESULT:", { data, error });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      // If email confirmation is ON, Supabase does NOT log the user in yet.
+      // So we show a message and stop.
+      if (data.user && !data.session) {
+        alert("Check your email to confirm your account.");
+        return;
+      }
+
+      // If email confirmation is OFF, user is logged in immediately.
+      if (data.session) {
+        router.push("/profile/" + data.user.id);
+      }
+    } catch (err: any) {
+      alert(err.message || "Signup failed.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -46,31 +82,6 @@ export default function SignUpPage() {
         >
           Sign up with Google
         </button>
-
-        {/* FACEBOOK BUTTON HIDDEN BUT PRESERVED */}
-        {false && (
-          <button
-            onClick={() =>
-              supabase.auth.signInWithOAuth({
-                provider: "facebook",
-                options: {
-                  redirectTo: `${window.location.origin}/auth/callback`,
-                },
-              })
-            }
-            style={{
-              width: "100%",
-              padding: "12px",
-              borderRadius: 10,
-              background: "#111",
-              border: "1px solid #fff",
-              color: "#fff",
-              fontWeight: 600,
-            }}
-          >
-            Sign up with Facebook
-          </button>
-        )}
       </div>
 
       {/* DIVIDER */}
@@ -118,6 +129,7 @@ export default function SignUpPage() {
 
         <button
           onClick={handleEmailSignup}
+          disabled={loading}
           style={{
             width: "100%",
             padding: "14px",
@@ -127,9 +139,10 @@ export default function SignUpPage() {
             fontWeight: 700,
             fontSize: 16,
             marginTop: 4,
+            opacity: loading ? 0.6 : 1,
           }}
         >
-          Sign Up
+          {loading ? "Signing up..." : "Sign Up"}
         </button>
       </div>
 

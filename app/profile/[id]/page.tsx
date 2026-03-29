@@ -344,6 +344,9 @@ export default function ProfilePage() {
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
+            </div>
+</section>
+
             {/* COLLECTIONS */}
           </div>
         </section>

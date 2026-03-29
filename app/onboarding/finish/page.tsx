@@ -36,6 +36,8 @@ export default function Finish() {
         .select("*", { count: "exact", head: true })
         .not("id", "in", `('${STACY_ID}', '${RICHARD_ID}', '${MUM_ID}')`);
 
+      const safeCount = count ?? 0; // Prevent TypeScript null error
+
       // 2. Determine tier
       let assignedTier = "Standard";
 
@@ -43,11 +45,11 @@ export default function Finish() {
         assignedTier = "Diamond";
       } else if (userId === RICHARD_ID || userId === MUM_ID) {
         assignedTier = "Founder";
-      } else if (count < 25) {
+      } else if (safeCount < 25) {
         assignedTier = "Gold";
-      } else if (count < 50) {
+      } else if (safeCount < 50) {
         assignedTier = "Silver";
-      } else if (count < 75) {
+      } else if (safeCount < 75) {
         assignedTier = "Bronze";
       } else {
         assignedTier = "Standard";

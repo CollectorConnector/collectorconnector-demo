@@ -31,7 +31,11 @@ export default function FollowersPage() {
         .from("follows")
         .select(`
           profiles!follows_follower_id_fkey (
-            id, display_url, username, avatar_url, tier
+            id, 
+            display_url, 
+            username, 
+            avatar_url, 
+            tier
           )
         `)
         .eq("following_id", user.id);
@@ -39,8 +43,11 @@ export default function FollowersPage() {
       if (error) {
         console.error("Followers load error:", error);
       } else {
-        // Flatten the profiles from the join
-        const flatFollowers = data?.map(item => item.profiles).filter(Boolean) || [];
+        // Correctly flatten the nested profiles
+        const flatFollowers: Follower[] = data
+          ?.map((item: any) => item.profiles)
+          .filter((profile: any) => profile !== null) || [];
+        
         setFollowers(flatFollowers);
       }
       setLoading(false);

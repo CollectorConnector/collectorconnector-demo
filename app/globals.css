@@ -262,3 +262,67 @@ button:focus {
 .no-select {
   user-select: none;
 }
+/* ================================
+   AUTH LAYOUT (CollectorConnector)
+   ================================ */
+
+.auth-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  color: #a1a1a1;
+  margin-bottom: 32px;
+}
+
+/* SOCIAL LOGIN */
+.auth-social {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.auth-social-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  background: #111;
+  border: 1px solid #fff;
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* DIVIDER */
+.auth-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 28px 0;
+}
+
+/* FORM */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 15px;
+}

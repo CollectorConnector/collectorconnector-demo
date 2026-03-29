@@ -6,16 +6,22 @@ import { supabase } from "@/lib/supabase";
 
 export default function AddItemPage() {
   const router = useRouter();
-  const params = useParams<{ collectionId: string }>();
-  const collectionId = Array.isArray(params?.collectionId)
-    ? params.collectionId[0]
-    : params?.collectionId || "";
+  const params = useParams();
+
+  // ⭐ Correct param extraction
+  const rawCollectionId = params.collectionId;
+  const collectionId = Array.isArray(rawCollectionId)
+    ? rawCollectionId[0]
+    : rawCollectionId;
 
   const [title, setTitle] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [collection, setCollection] = useState<any>(null);
+
+  // Debug log (you can remove later)
+  console.log("collectionId from params:", collectionId);
 
   // Load collection info
   useEffect(() => {
@@ -34,7 +40,7 @@ export default function AddItemPage() {
     loadCollection();
   }, [collectionId]);
 
-  // Resize image (same as Create Collection)
+  // Resize image
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -98,6 +104,11 @@ export default function AddItemPage() {
       return;
     }
 
+    if (!collectionId) {
+      alert("Invalid collection ID — route is wrong.");
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -128,20 +139,16 @@ export default function AddItemPage() {
 
       const imageUrl = urlData.publicUrl;
 
-      // Insert item row (FIXED: uses title instead of name)
+      // Insert item row
       const { error: insertError } = await supabase.from("items").insert({
+        id: crypto.randomUUID(), // ⭐ Safe now that schema is fixed
         user_id: user.id,
         collection_id: collectionId,
-        title: title.trim(), // ⭐ FIXED
+        title: title.trim(),
         image_url: imageUrl,
       });
 
       if (insertError) throw insertError;
-
-      // Update collection item count
-      await supabase.rpc("increment_item_count", {
-        collection_id_input: collectionId,
-      });
 
       router.push(`/profile/${user.id}`);
     } catch (err: any) {
@@ -167,7 +174,6 @@ export default function AddItemPage() {
         Add Item to {collection.title}
       </h1>
 
-      {/* FULL-WIDTH CC LOGO BANNER */}
       <label htmlFor="item-upload" className="cursor-pointer w-full flex flex-col items-center">
         <div className="w-full flex justify-center">
           <img
@@ -194,7 +200,6 @@ export default function AddItemPage() {
         onChange={handleImageChange}
       />
 
-      {/* ITEM NAME */}
       <div>
         <label className="block text-lg mb-2">Item Name</label>
         <input
@@ -205,7 +210,6 @@ export default function AddItemPage() {
         />
       </div>
 
-      {/* ADD BUTTON */}
       <button
         onClick={addItem}
         disabled={saving}

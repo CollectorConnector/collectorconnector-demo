@@ -113,7 +113,7 @@ export default function ProfilePage() {
           .eq("id", userId)
           .single();
 
-        // Fallback: create profile if missing (this stops the redirect loop)
+        // Fallback: create profile if missing
         if (error || !data) {
           console.log("Profile missing — creating fallback");
           const fallback = {
@@ -546,6 +546,21 @@ export default function ProfilePage() {
         </section>
       </main>
 
+      {/* Logout button - placed outside header, at bottom of profile */}
+      {isOwnProfile && (
+        <div className="max-w-[720px] mx-auto px-4 pb-10">
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push("/auth/login");
+            }}
+            className="w-full py-4 bg-red-600 hover:bg-red-500 rounded-xl text-white text-xl font-semibold transition"
+          >
+            Log Out
+          </button>
+        </div>
+      )}
+
       <Footer />
     </div>
   );
@@ -580,26 +595,6 @@ function ProfileHeader() {
               <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
             </svg>
           </a>
-
- {/* LOGOUT BUTTON */}
-      {isOwnProfile && (
-        <div className="max-w-[720px] mx-auto px-4 pb-10">
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              router.push("/auth/login");
-            }}
-            className="w-full py-4 bg-red-600 hover:bg-red-500 rounded-xl text-white text-xl font-semibold transition"
-          >
-            Log Out
-          </button>
-        </div>
-      )}
-
-      <Footer />
-    </div>
-  );
-}
 
           {/* Facebook */}
           <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
@@ -639,4 +634,3 @@ function ProfileHeader() {
     </>
   );
 }
-

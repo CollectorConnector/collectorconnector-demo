@@ -43,11 +43,11 @@ export default function FollowersPage() {
       if (error) {
         console.error("Followers load error:", error);
       } else {
-        // Correctly flatten the nested profiles
-        const flatFollowers: Follower[] = data
-          ?.map((item: any) => item.profiles)
-          .filter((profile: any) => profile !== null) || [];
-        
+        // Safe flattening for Supabase join structure
+        const flatFollowers: Follower[] = (data || [])
+          .map((item: any) => item.profiles)
+          .filter((profile: any): profile is Follower => profile !== null);
+
         setFollowers(flatFollowers);
       }
       setLoading(false);
@@ -66,7 +66,7 @@ export default function FollowersPage() {
       .eq("following_id", currentUserId);
 
     if (!error) {
-      setFollowers(followers.filter(f => f.id !== followerId));
+      setFollowers((prev) => prev.filter(f => f.id !== followerId));
     }
   };
 

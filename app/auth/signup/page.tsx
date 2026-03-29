@@ -33,17 +33,22 @@ export default function SignUpPage() {
         return;
       }
 
-      // If email confirmation is ON, Supabase does NOT log the user in yet.
-      // So we show a message and stop.
+      // If email confirmation is ON:
+      // Supabase returns a user but NO session.
       if (data.user && !data.session) {
         alert("Check your email to confirm your account.");
         return;
       }
 
-      // If email confirmation is OFF, user is logged in immediately.
-      if (data.session) {
+      // If email confirmation is OFF:
+      // Supabase returns both user + session.
+      if (data.session && data.user) {
         router.push("/profile/" + data.user.id);
+        return;
       }
+
+      // Fallback (should never happen)
+      alert("Signup complete. Please check your email.");
     } catch (err: any) {
       alert(err.message || "Signup failed.");
     } finally {

@@ -94,7 +94,7 @@ export default function ProfilePage() {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
   }, []);
 
-  // Load profile
+  // Load profile (with safe fallback)
   useEffect(() => {
     if (!userId) {
       router.replace("/not-found");
@@ -111,7 +111,7 @@ export default function ProfilePage() {
           .eq("id", userId)
           .single();
 
-        // SAFE fallback logic (no Stacy defaults)
+        // SAFE fallback logic
         if (error || !data) {
           const fallback = {
             id: userId,
@@ -293,10 +293,11 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
+  }
 
   const displayName = useMemo(
     () => profile?.display_url || profile?.username || "Collector",
-    profile
+    [profile]
   );
 
   const getTierIcon = (tier?: string | null) => {
@@ -343,7 +344,10 @@ export default function ProfilePage() {
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-        {/* COLLECTIONS */}
+            {/* COLLECTIONS */}
+          </div>
+        </section>
+
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">Collections</h2>
 
@@ -413,7 +417,7 @@ export default function ProfilePage() {
         </section>
       </main>
 
-      {/* LOGOUT BUTTON — visible, correct placement */}
+      {/* LOGOUT BUTTON */}
       {isOwnProfile && (
         <div className="max-w-[720px] mx-auto px-4 pb-10">
           <button

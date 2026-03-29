@@ -293,11 +293,10 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
-  }
 
   const displayName = useMemo(
     () => profile?.display_url || profile?.username || "Collector",
-    [profile]
+    profile
   );
 
   const getTierIcon = (tier?: string | null) => {

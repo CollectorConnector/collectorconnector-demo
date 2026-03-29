@@ -24,6 +24,18 @@ export default function AuthCallback() {
 
     finishLogin();
   }, [router]);
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("id")
+  .eq("id", data.user.id)
+  .maybeSingle();
+
+if (!profile) {
+  router.replace("/onboarding");
+  return;
+}
+
+router.replace(`/profile/${data.user.id}`);
 
   return (
     <div className="auth-callback">

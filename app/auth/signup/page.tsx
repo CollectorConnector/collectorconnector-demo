@@ -20,100 +20,85 @@ export default function SignUpPage() {
 
     setLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-      console.log("SIGNUP RESULT:", { data, error });
+    setLoading(false);
 
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      // If email confirmation is ON:
-      // Supabase returns a user but NO session.
-      if (data.user && !data.session) {
-        alert("Check your email to confirm your account.");
-        return;
-      }
-
-      // If email confirmation is OFF:
-      // Supabase returns both user + session.
-      if (data.session && data.user) {
-        router.push("/profile/" + data.user.id);
-        return;
-      }
-
-      // Fallback (should never happen)
-      alert("Signup complete. Please check your email.");
-    } catch (err: any) {
-      alert(err.message || "Signup failed.");
-    } finally {
-      setLoading(false);
+    if (error) {
+      alert(error.message);
+      return;
     }
+
+    // If email confirmation is ON → no session yet
+    if (data.user && !data.session) {
+      alert("Check your email to confirm your account.");
+      return;
+    }
+
+    // If email confirmation is OFF → user + session exist
+    if (data.session && data.user) {
+      const userId = data.user.id;
+
+      // Check if profile exists
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
+
+      // No profile → onboarding
+      if (!profile) {
+        router.replace("/onboarding");
+        return;
+      }
+
+      // Profile exists → go to profile
+      router.replace(`/profile/${userId}`);
+      return;
+    }
+
+    // Fallback
+    alert("Signup complete. Please check your email.");
+  }
+
+  async function handleOAuthSignup() {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
   }
 
   return (
-    <div style={{ textAlign: "center", color: "#fff" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
-        Create your account
-      </h1>
+    <div className="auth-container">
+      <h1 className="auth-title">Create your account</h1>
+      <p className="auth-subtitle">Start your CollectorConnector journey</p>
 
-      <p style={{ color: "#A1A1A1", marginBottom: 32 }}>
-        Start your CollectorConnector journey
-      </p>
-
-      {/* SOCIAL BUTTONS */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* SOCIAL SIGNUP */}
+      <div className="auth-social">
         <button
-          onClick={() =>
-            supabase.auth.signInWithOAuth({
-              provider: "google",
-              options: { redirectTo: `${window.location.origin}/auth/callback` },
-            })
-          }
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: 10,
-            background: "#111",
-            border: "1px solid #fff",
-            color: "#fff",
-            fontWeight: 600,
-          }}
+          onClick={handleOAuthSignup}
+          disabled={loading}
+          className="auth-social-btn"
         >
-          Sign up with Google
+          {loading ? <span className="spinner" /> : "Sign up with Google"}
         </button>
       </div>
 
-      {/* DIVIDER */}
-      <div
-        style={{
-          margin: "28px 0",
-          height: 1,
-          background: "rgba(255,255,255,0.1)",
-        }}
-      />
+      <div className="auth-divider" />
 
-      {/* EMAIL FORM */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* EMAIL SIGNUP */}
+      <div className="auth-form">
         <input
           type="email"
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: 10,
-            background: "#111",
-            border: "1px solid rgba(255,255,255,0.2)",
-            color: "#fff",
-            fontSize: 15,
-          }}
+          className="auth-input"
         />
 
         <input
@@ -121,39 +106,22 @@ export default function SignUpPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: 10,
-            background: "#111",
-            border: "1px solid rgba(255,255,255,0.2)",
-            color: "#fff",
-            fontSize: 15,
-          }}
+          className="auth-input"
         />
 
         <button
           onClick={handleEmailSignup}
           disabled={loading}
-          style={{
-            width: "100%",
-            padding: "14px",
-            borderRadius: 10,
-            background: "#fff",
-            color: "#000",
-            fontWeight: 700,
-            fontSize: 16,
-            marginTop: 4,
-            opacity: loading ? 0.6 : 1,
-          }}
+          className="auth-submit"
         >
+          {loading && <span className="spinner" />}
           {loading ? "Signing up..." : "Sign Up"}
         </button>
       </div>
 
-      <p style={{ marginTop: 24, color: "#A1A1A1" }}>
+      <p className="auth-footer">
         Already have an account{" "}
-        <Link href="/auth/login" style={{ color: "#fff", fontWeight: 600 }}>
+        <Link href="/auth/login" className="auth-link">
           Log in
         </Link>
       </p>

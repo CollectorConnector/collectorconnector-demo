@@ -13,8 +13,11 @@ export default function OnboardingPage() {
 
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
+  const [available, setAvailable] = useState<boolean | null>(null);
 
-  // STEP 1 — Get the logged-in user
+  // Debounce timer
+  const [typingTimer, setTypingTimer] = useState<any>(null);
+
   useEffect(() => {
     async function loadUser() {
       const { data, error } = await supabase.auth.getUser();
@@ -26,7 +29,6 @@ export default function OnboardingPage() {
 
       setUserId(data.user.id);
 
-      // Check if profile already exists (in case user refreshes)
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
@@ -44,9 +46,35 @@ export default function OnboardingPage() {
     loadUser();
   }, [router]);
 
-  // STEP 2 — Save profile
+  // Username availability check
+  useEffect(() => {
+    if (!username.trim()) {
+      setAvailable(null);
+      return;
+    }
+
+    if (typingTimer) clearTimeout(typingTimer);
+
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", username.toLowerCase())
+        .maybeSingle();
+
+      setAvailable(!data);
+    }, 400);
+
+    setTypingTimer(timer);
+  }, [username]);
+
   async function handleCreateProfile() {
     if (!userId) return;
+
+    if (!available) {
+      alert("Username is not available.");
+      return;
+    }
 
     setSaving(true);
 
@@ -98,6 +126,15 @@ export default function OnboardingPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
+
+        {available === true && (
+          <p style={{ color: "#4ade80", fontSize: 14 }}>Username available</p>
+        )}
+        {available === false && (
+          <p style={{ color: "#f87171", fontSize: 14 }}>
+            Username already taken
+          </p>
+        )}
 
         <button
           onClick={handleCreateProfile}

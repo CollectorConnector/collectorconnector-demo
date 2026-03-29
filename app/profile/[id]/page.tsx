@@ -386,8 +386,6 @@ export default function ProfilePage() {
     {isFollowing ? "Unfollow" : "Follow"}
   </button>
 )}
-
-
             {/* COLLECTIONS */}
           </div>
         </section>

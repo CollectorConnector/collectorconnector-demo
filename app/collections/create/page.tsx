@@ -132,7 +132,7 @@ export default function CreateCollectionPage() {
       {/* COVER PREVIEW + CC LOGO UPLOAD BUTTON */}
       <div className="flex flex-col items-center">
         <label htmlFor="cover-upload" className="cursor-pointer group">
-          <div className="w-40 h-40 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900 flex items-center justify-center">
+          <div className="w-24 h-24 rounded-2xl overflow-hidden border border-zinc-700 shadow-xl bg-zinc-900 flex items-center justify-center">
             {previewImage ? (
               <img
                 src={previewImage}
@@ -143,7 +143,7 @@ export default function CreateCollectionPage() {
               <img
                 src="/CC-main-logo.png"
                 alt="Upload Cover"
-                className="w-10 opacity-60 group-hover:opacity-100 transition"
+                className="w-6 opacity-60 group-hover:opacity-100 transition"
               />
             )}
           </div>

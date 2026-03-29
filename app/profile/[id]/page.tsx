@@ -334,7 +334,7 @@ export default function ProfilePage() {
         </div>
       </div>
     );
-  }
+  
 
   return (
     <div className="min-h-screen bg-black text-white">

@@ -344,8 +344,49 @@ export default function ProfilePage() {
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-            </div>
-</section>
+          <img
+  src={profile.avatar_url || "/default-avatar.png"}
+  alt="Avatar"
+  className="w-32 h-32 rounded-full object-cover border border-zinc-700 mb-4"
+/>
+
+<h1 className="text-3xl font-bold mb-2">{displayName}</h1>
+
+{tierIconSrc && (
+  <img
+    src={tierIconSrc}
+    alt="Tier"
+    className="w-10 h-10 mb-4"
+  />
+)}
+
+{profile.location && (
+  <p className="text-white/70 mb-2">{profile.location}</p>
+)}
+
+{profile.bio && (
+  <p className="text-white/70 mb-4 max-w-[500px]">{profile.bio}</p>
+)}
+
+{isOwnProfile ? (
+  <button
+    onClick={() => setEditMode(true)}
+    className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full text-white font-medium transition mb-4"
+  >
+    Edit Profile
+  </button>
+) : (
+  <button
+    onClick={toggleFollow}
+    disabled={followLoading}
+    className={`px-6 py-2 rounded-full text-white font-medium transition mb-4 ${
+      isFollowing ? "bg-red-600 hover:bg-red-500" : "bg-blue-600 hover:bg-blue-500"
+    }`}
+  >
+    {isFollowing ? "Unfollow" : "Follow"}
+  </button>
+)}
+
 
             {/* COLLECTIONS */}
           </div>

@@ -11,14 +11,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
-  const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password,
-  options: {
-    expiresIn: remember ? 60 * 60 * 24 * 30 : 60 * 60, // 30 days vs 1 hour
-  },
-});
-
 
   async function handleEmailLogin() {
     setLoading(true);
@@ -27,7 +19,8 @@ export default function LoginPage() {
       email,
       password,
       options: {
-        expiresIn: remember ? 60 * 60 * 24 * 30 : 60 * 60, // 30 days vs 1 hour
+        // 30 days vs 1 hour
+        expiresIn: remember ? 60 * 60 * 24 * 30 : 60 * 60,
       },
     });
 
@@ -69,11 +62,7 @@ export default function LoginPage() {
           disabled={loading}
           className="auth-social-btn"
         >
-          {loading ? (
-            <span className="spinner" />
-          ) : (
-            "Log in with Google"
-          )}
+          {loading ? <span className="spinner" /> : "Log in with Google"}
         </button>
       </div>
 

@@ -131,10 +131,10 @@ export default function AddItemPage() {
 
       const imageUrl = urlData.publicUrl;
 
-      // ⭐ Corrected insert — uses "collection" not "collection_id"
+      // ⭐ Corrected insert — uses "collection_id"
       const { error: insertError } = await supabase.from("items").insert({
         user_id: user.id,
-        collection: collectionId, // ← FIXED
+        collection_id: collectionId, // ← FIXED
         title: title.trim(),
         image_url: imageUrl,
       });

@@ -7,8 +7,6 @@ import { supabase } from "@/lib/supabase";
 export default function AddItemPage() {
   const router = useRouter();
   const params = useParams();
-
-  // Read the dynamic route param
   const collectionId = params.collectionId as string;
 
   const [title, setTitle] = useState("");
@@ -16,10 +14,14 @@ export default function AddItemPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [collection, setCollection] = useState<any>(null);
+  const [loadingCollection, setLoadingCollection] = useState(true);
 
   // Load collection info
   useEffect(() => {
-    if (!collectionId) return;
+    if (!collectionId) {
+      setLoadingCollection(false);
+      return;
+    }
 
     async function loadCollection() {
       const { data, error } = await supabase
@@ -28,7 +30,12 @@ export default function AddItemPage() {
         .eq("id", collectionId)
         .single();
 
-      if (!error && data) setCollection(data);
+      if (error) {
+        console.error("Failed to load collection:", error);
+      } else {
+        setCollection(data);
+      }
+      setLoadingCollection(false);
     }
 
     loadCollection();
@@ -58,7 +65,6 @@ export default function AddItemPage() {
 
         canvas.width = width;
         canvas.height = height;
-
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(img, 0, 0, width, height);
 
@@ -90,14 +96,12 @@ export default function AddItemPage() {
       alert("Please enter an item name.");
       return;
     }
-
     if (!imageFile) {
       alert("Please choose an image.");
       return;
     }
-
     if (!collectionId) {
-      alert("Invalid collection ID — route param missing.");
+      alert("Invalid collection — please try again.");
       return;
     }
 
@@ -108,12 +112,12 @@ export default function AddItemPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) throw new Error("Not logged in");
+      if (!user) throw new Error("You must be logged in to add items.");
 
       // Resize image
       const resized = await resizeImage(imageFile, 512);
 
-      // Upload to storage
+      // Upload image
       const timestamp = Date.now();
       const ext = imageFile.name.split(".").pop() || "jpg";
       const fileName = `item-${timestamp}.${ext}`;
@@ -123,7 +127,7 @@ export default function AddItemPage() {
         .from("item-images")
         .upload(filePath, resized, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) throw new Error("Image upload failed: " + uploadError.message);
 
       const { data: urlData } = supabase.storage
         .from("item-images")
@@ -131,29 +135,44 @@ export default function AddItemPage() {
 
       const imageUrl = urlData.publicUrl;
 
-      // ⭐ Corrected insert — uses "collection_id"
+      // Insert item into database
       const { error: insertError } = await supabase.from("items").insert({
         user_id: user.id,
-        collection_id: collectionId, // ← FIXED
+        collection_id: collectionId,
         title: title.trim(),
         image_url: imageUrl,
       });
 
-      if (insertError) throw insertError;
+      if (insertError) throw new Error("Failed to save item: " + insertError.message);
 
-      router.push(`/profile/${user.id}`);
+      alert("Item added successfully!");
+      router.push(`/collections/${collectionId}`);   // ← Better UX: back to collection
     } catch (err: any) {
       console.error("Add item failed:", err);
-      alert("Failed to add item: " + (err.message || "Check console"));
+      alert(err.message || "Failed to add item. Please try again.");
     } finally {
       setSaving(false);
     }
   }
 
-  if (!collection) {
+  if (loadingCollection) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        Loading...
+        Loading collection...
+      </div>
+    );
+  }
+
+  if (!collection) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6">
+        <p className="text-xl text-red-400">Collection not found</p>
+        <button
+          onClick={() => router.back()}
+          className="mt-6 px-6 py-3 bg-zinc-800 rounded-xl"
+        >
+          Go Back
+        </button>
       </div>
     );
   }
@@ -168,17 +187,13 @@ export default function AddItemPage() {
         <div className="w-full flex justify-center">
           <img
             src={previewImage || "/CC-main-logo.png"}
-            alt="Upload Item"
+            alt="Upload preview"
             className="object-contain opacity-90 hover:opacity-100 transition"
-            style={{
-              width: "360px",
-              height: "auto",
-            }}
+            style={{ width: "360px", height: "auto" }}
           />
         </div>
-
         <div className="text-center mt-3 text-blue-400 hover:underline">
-          Choose Item Image
+          Tap to choose item image
         </div>
       </label>
 
@@ -196,16 +211,17 @@ export default function AddItemPage() {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700"
+          className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
+          placeholder="e.g. Charizard VMAX"
         />
       </div>
 
       <button
         onClick={addItem}
-        disabled={saving}
-        className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-full text-xl font-medium transition disabled:opacity-50"
+        disabled={saving || !imageFile || !title.trim()}
+        className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 rounded-full text-xl font-medium transition"
       >
-        {saving ? "Adding..." : "Add Item"}
+        {saving ? "Adding Item..." : "Add Item"}
       </button>
     </div>
   );

@@ -510,36 +510,41 @@ export default function ProfilePage() {
         {showImportModal && (
           <ImportInstagramModal onClose={() => setShowImportModal(false)} />
         )}
-
-        {/* Stats, Collections, Recent Drops sections remain unchanged */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
-            <div>
-              <p className="text-5xl font-bold">{profile.items_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Items</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.collections_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Collections</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.followers_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Followers</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.following_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Following</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Vault Value</p>
-            </div>
-            <div>
-              <p className="text-5xl font-bold">{profile.likes_count ?? 0}</p>
-              <p className="text-gray-500 text-xl mt-3">Likes</p>
-            </div>
-          </div>
-        </section>
+{/* REAL STATS SECTION */}
+<section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
+    <div>
+      <p className="text-5xl font-bold">{profile?.items_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Items</p>
+    </div>
+    <div>
+      <p className="text-5xl font-bold">{profile?.collections_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Collections</p>
+    </div>
+    <div 
+      onClick={() => router.push("/followers")}
+      className="cursor-pointer hover:text-indigo-400 transition"
+    >
+      <p className="text-5xl font-bold">{profile?.followers_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Followers</p>
+    </div>
+    <div 
+      onClick={() => router.push("/following")}
+      className="cursor-pointer hover:text-indigo-400 transition"
+    >
+      <p className="text-5xl font-bold">{profile?.following_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Following</p>
+    </div>
+    <div>
+      <p className="text-5xl font-bold">£{profile?.vault_value ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Vault Value</p>
+    </div>
+    <div>
+      <p className="text-5xl font-bold">{profile?.likes_count ?? 0}</p>
+      <p className="text-gray-500 text-xl mt-3">Likes</p>
+    </div>
+  </div>
+</section>
 
         {/* Collections Section */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">

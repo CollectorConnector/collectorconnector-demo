@@ -510,7 +510,7 @@ export default function ProfilePage() {
         {showImportModal && (
           <ImportInstagramModal onClose={() => setShowImportModal(false)} />
         )}
-{/* REAL STATS SECTION */}
+{/* REAL LIVE STATS */}
 <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
     <div>

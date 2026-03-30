@@ -409,48 +409,48 @@ export default function ProfilePage() {
           </div>
         </section>
 
-       {/* SWIPEABLE COLLECTIONS CAROUSEL */}
-<section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-  <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
+        {/* SWIPEABLE COLLECTIONS CAROUSEL */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+          <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
 
-  {isOwnProfile && (
-    <div className="flex justify-center mb-8">
-      <button
-        onClick={() => router.push("/collections/create")}
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
-      >
-        + Add New Collection
-      </button>
-    </div>
-  )}
-
-  {collections.length === 0 ? (
-    <p className="text-center text-zinc-500 text-xl py-12">No collections yet. Create your first one above!</p>
-  ) : (
-    <div className="overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory flex gap-6">
-      {collections.map((col) => (
-        <div
-          key={col.id}
-          onClick={() => router.push(`/collections/${col.id}`)}
-          className="min-w-[280px] snap-center cursor-pointer group"
-        >
-          <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-zinc-700 shadow-xl">
-            <img
-              src={col.cover_url || "/CC-main-logo.png"}
-              alt={col.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <p className="text-white text-2xl font-bold tracking-tight line-clamp-2">{col.title}</p>
-              <p className="text-zinc-400 text-sm mt-1">{col.item_count || 0} items</p>
+          {isOwnProfile && (
+            <div className="flex justify-center mb-8">
+              <button
+                onClick={() => router.push("/collections/create")}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+              >
+                + Add New Collection
+              </button>
             </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</section>
+          )}
+
+          {collections.length === 0 ? (
+            <p className="text-center text-zinc-500 text-xl py-12">No collections yet. Create your first one above!</p>
+          ) : (
+            <div className="overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory flex gap-6">
+              {collections.map((col) => (
+                <div
+                  key={col.id}
+                  onClick={() => router.push(`/collections/${col.id}`)}
+                  className="min-w-[280px] snap-center cursor-pointer group flex-shrink-0"
+                >
+                  <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-zinc-700 shadow-xl">
+                    <img
+                      src={col.cover_url || "/CC-main-logo.png"}
+                      alt={col.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      <p className="text-white text-2xl font-bold tracking-tight line-clamp-2">{col.title}</p>
+                      <p className="text-zinc-400 text-sm mt-1">{col.item_count || 0} items</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Live Community Feed */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
@@ -489,7 +489,7 @@ export default function ProfilePage() {
   );
 }
 
-/* Full ProfileHeader - All social icons restored exactly as you had them */
+/* Full ProfileHeader with all social icons */
 function ProfileHeader() {
   const router = useRouter();
 

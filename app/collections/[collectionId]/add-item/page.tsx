@@ -8,7 +8,7 @@ export default function AddItemPage() {
   const router = useRouter();
   const params = useParams();
 
-  // ⭐ Read the param EXACTLY as Next.js gives it
+  // Read the dynamic route param
   const collectionId = params.collectionId as string;
 
   const [title, setTitle] = useState("");
@@ -16,10 +16,6 @@ export default function AddItemPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [collection, setCollection] = useState<any>(null);
-
-  // ⭐ Debug — shows us the REAL param Next.js is giving you
-  console.log("PARAMS:", params);
-  console.log("collectionId:", collectionId);
 
   // Load collection info
   useEffect(() => {
@@ -38,7 +34,7 @@ export default function AddItemPage() {
     loadCollection();
   }, [collectionId]);
 
-  // Resize image
+  // Resize image before upload
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -135,10 +131,10 @@ export default function AddItemPage() {
 
       const imageUrl = urlData.publicUrl;
 
-      // ⭐ Insert item (let DB generate id)
+      // ⭐ Corrected insert — uses "collection" not "collection_id"
       const { error: insertError } = await supabase.from("items").insert({
         user_id: user.id,
-        collection_id: collectionId,
+        collection: collectionId, // ← FIXED
         title: title.trim(),
         image_url: imageUrl,
       });
@@ -164,7 +160,6 @@ export default function AddItemPage() {
 
   return (
     <div className="min-h-screen bg-black text-white px-6 py-10 max-w-md mx-auto space-y-10">
-
       <h1 className="text-4xl font-bold text-center">
         Add Item to {collection.title}
       </h1>

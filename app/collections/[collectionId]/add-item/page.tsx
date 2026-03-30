@@ -15,6 +15,14 @@ export default function AddItemPage() {
   const [saving, setSaving] = useState(false);
   const [collection, setCollection] = useState<any>(null);
   const [loadingCollection, setLoadingCollection] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
 
   // Load collection info
   useEffect(() => {
@@ -41,7 +49,7 @@ export default function AddItemPage() {
     loadCollection();
   }, [collectionId]);
 
-  // Resize image before upload
+  // Resize image
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -70,11 +78,8 @@ export default function AddItemPage() {
 
         canvas.toBlob(
           (blob) => {
-            if (blob) {
-              resolve(new File([blob], file.name, { type: file.type }));
-            } else {
-              resolve(file);
-            }
+            if (blob) resolve(new File([blob], file.name, { type: file.type }));
+            else resolve(file);
           },
           file.type,
           0.85
@@ -86,7 +91,6 @@ export default function AddItemPage() {
   function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setImageFile(file);
     setPreviewImage(URL.createObjectURL(file));
   }
@@ -101,7 +105,7 @@ export default function AddItemPage() {
       return;
     }
     if (!collectionId) {
-      alert("Invalid collection — please try again.");
+      alert("Invalid collection.");
       return;
     }
 
@@ -112,12 +116,10 @@ export default function AddItemPage() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) throw new Error("You must be logged in to add items.");
+      if (!user) throw new Error("You must be logged in.");
 
-      // Resize image
       const resized = await resizeImage(imageFile, 512);
 
-      // Upload image
       const timestamp = Date.now();
       const ext = imageFile.name.split(".").pop() || "jpg";
       const fileName = `item-${timestamp}.${ext}`;
@@ -127,26 +129,23 @@ export default function AddItemPage() {
         .from("item-images")
         .upload(filePath, resized, { upsert: true });
 
-      if (uploadError) throw new Error("Image upload failed: " + uploadError.message);
+      if (uploadError) throw new Error("Image upload failed");
 
       const { data: urlData } = supabase.storage
         .from("item-images")
         .getPublicUrl(filePath);
 
-      const imageUrl = urlData.publicUrl;
-
-      // Insert item into database
       const { error: insertError } = await supabase.from("items").insert({
         user_id: user.id,
         collection_id: collectionId,
         title: title.trim(),
-        image_url: imageUrl,
+        image_url: urlData.publicUrl,
       });
 
-      if (insertError) throw new Error("Failed to save item: " + insertError.message);
+      if (insertError) throw new Error("Failed to save item");
 
       alert("Item added successfully!");
-      router.push(`/collections/${collectionId}`);   // ← Better UX: back to collection
+      router.push(`/collections/${collectionId}`);
     } catch (err: any) {
       console.error("Add item failed:", err);
       alert(err.message || "Failed to add item. Please try again.");
@@ -155,10 +154,20 @@ export default function AddItemPage() {
     }
   }
 
+  // Home button - goes to YOUR profile
+  const goToHome = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      router.push(`/profile/${user.id}`);
+    } else {
+      router.push("/auth/login");
+    }
+  };
+
   if (loadingCollection) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        Loading collection...
+        Loading...
       </div>
     );
   }
@@ -167,11 +176,8 @@ export default function AddItemPage() {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6">
         <p className="text-xl text-red-400">Collection not found</p>
-        <button
-          onClick={() => router.back()}
-          className="mt-6 px-6 py-3 bg-zinc-800 rounded-xl"
-        >
-          Go Back
+        <button onClick={goToHome} className="mt-6 px-6 py-3 bg-zinc-800 rounded-xl">
+          Go to Home
         </button>
       </div>
     );
@@ -179,9 +185,21 @@ export default function AddItemPage() {
 
   return (
     <div className="min-h-screen bg-black text-white px-6 py-10 max-w-md mx-auto space-y-10">
-      <h1 className="text-4xl font-bold text-center">
-        Add Item to {collection.title}
-      </h1>
+      {/* Top Bar with Home Button */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={goToHome}
+          className="flex items-center gap-2 text-indigo-400 hover:text-white transition"
+        >
+          ← Home
+        </button>
+        <h1 className="text-3xl font-bold">Add Item</h1>
+        <div className="w-8" /> {/* Spacer for centering */}
+      </div>
+
+      <h2 className="text-2xl text-center text-zinc-400">
+        to {collection.title}
+      </h2>
 
       <label htmlFor="item-upload" className="cursor-pointer w-full flex flex-col items-center">
         <div className="w-full flex justify-center">

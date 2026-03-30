@@ -1,162 +1,246 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-export default function CollectionViewPage() {
-  const { collectionId } = useParams();
+export default function AddItemPage() {
   const router = useRouter();
+  const params = useParams();
+  const collectionId = params.collectionId as string;
 
+  const [title, setTitle] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [collection, setCollection] = useState<any>(null);
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingCollection, setLoadingCollection] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
+
+  // Load collection info
   useEffect(() => {
     if (!collectionId) {
-      setError("No collection ID provided");
-      setLoading(false);
+      setLoadingCollection(false);
       return;
     }
 
-    async function loadData() {
-      try {
-        setLoading(true);
+    async function loadCollection() {
+      const { data, error } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("id", collectionId)
+        .single();
 
-        // Load collection
-        const { data: colData, error: colError } = await supabase
-          .from("collections")
-          .select("*")
-          .eq("id", collectionId)
-          .single();
-
-        if (colError) throw colError;
-        if (!colData) throw new Error("Collection not found");
-
-        setCollection(colData);
-
-        // Load items in this collection
-        const { data: itemData, error: itemError } = await supabase
-          .from("items")
-          .select("*")
-          .eq("collection_id", collectionId)
-          .order("created_at", { ascending: false });
-
-        if (itemError) {
-          console.error("Items load error:", itemError);
-        } else {
-          setItems(itemData || []);
-        }
-      } catch (err: any) {
-        console.error("Collection load error:", err);
-        setError(err.message || "Failed to load collection");
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error("Failed to load collection:", error);
+      } else {
+        setCollection(data);
       }
+      setLoadingCollection(false);
     }
 
-    loadData();
+    loadCollection();
   }, [collectionId]);
 
-  if (loading) {
+  // Resize image
+  async function resizeImage(file: File, maxSize: number): Promise<File> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(new File([blob], file.name, { type: file.type }));
+            else resolve(file);
+          },
+          file.type,
+          0.85
+        );
+      };
+    });
+  }
+
+  function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreviewImage(URL.createObjectURL(file));
+  }
+
+  async function addItem() {
+    if (!title.trim()) {
+      alert("Please enter an item name.");
+      return;
+    }
+    if (!imageFile) {
+      alert("Please choose an image.");
+      return;
+    }
+    if (!collectionId) {
+      alert("Invalid collection.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) throw new Error("You must be logged in.");
+
+      const resized = await resizeImage(imageFile, 512);
+
+      const timestamp = Date.now();
+      const ext = imageFile.name.split(".").pop() || "jpg";
+      const fileName = `item-${timestamp}.${ext}`;
+      const filePath = `${user.id}/collections/${collectionId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("item-images")
+        .upload(filePath, resized, { upsert: true });
+
+      if (uploadError) throw new Error("Image upload failed");
+
+      const { data: urlData } = supabase.storage
+        .from("item-images")
+        .getPublicUrl(filePath);
+
+      const { error: insertError } = await supabase.from("items").insert({
+        user_id: user.id,
+        collection_id: collectionId,
+        title: title.trim(),
+        image_url: urlData.publicUrl,
+      });
+
+      if (insertError) throw new Error("Failed to save item");
+
+      alert("Item added successfully!");
+      router.push(`/collections/${collectionId}`);
+    } catch (err: any) {
+      console.error("Add item failed:", err);
+      alert(err.message || "Failed to add item. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Home button - goes to YOUR profile
+  const goToHome = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      router.push(`/profile/${user.id}`);
+    } else {
+      router.push("/auth/login");
+    }
+  };
+
+  if (loadingCollection) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center text-xl">
-        Loading collection...
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading...
       </div>
     );
   }
 
-  if (error || !collection) {
+  if (!collection) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-xl">
-        <h1 className="text-3xl mb-4">Error</h1>
-        <p className="text-white/70 mb-6">{error || "Collection not found"}</p>
-        <button
-          onClick={() => router.push("/")}
-          className="px-8 py-4 bg-zinc-800 hover:bg-zinc-700 rounded-full text-white"
-        >
-          Back to Home
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6">
+        <p className="text-xl text-red-400">Collection not found</p>
+        <button onClick={goToHome} className="mt-6 px-6 py-3 bg-zinc-800 rounded-xl">
+          Go to Home
         </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-4xl mx-auto space-y-8">
-
-        {/* Cover Image */}
-        {collection.cover_url ? (
-          <img
-            src={collection.cover_url}
-            alt={collection.title}
-            className="w-full h-80 object-cover rounded-3xl border border-zinc-800 shadow-2xl"
-          />
-        ) : (
-          <div className="w-full h-80 bg-zinc-900 rounded-3xl border border-zinc-800 flex items-center justify-center">
-            <p className="text-zinc-500 text-xl">No cover image yet</p>
-          </div>
-        )}
-
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-5xl font-bold mb-2">{collection.title}</h1>
-            <p className="text-zinc-400 text-xl">{collection.nichem || "Collection"}</p>
-          </div>
-
-          <button
-            onClick={() => router.push(`/collections/${collectionId}/add-item`)}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl text-lg font-medium transition flex items-center gap-2"
-          >
-            + Add Item
-          </button>
-        </div>
-
-        {/* Stats */}
-        <p className="text-zinc-400 text-lg">
-          {items.length} item{items.length !== 1 ? "s" : ""}
-        </p>
-
-        {/* Items Grid */}
-        {items.length === 0 ? (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-16 text-center">
-            <p className="text-2xl text-zinc-400 mb-4">This collection is empty</p>
-            <p className="text-zinc-500 mb-8">Add your first item to get started</p>
-            <button
-              onClick={() => router.push(`/collections/${collectionId}/add-item`)}
-              className="px-10 py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl text-lg font-medium"
-            >
-              Add Your First Item
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => router.push(`/items/${item.id}`)}
-                className="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden hover:border-zinc-500 transition cursor-pointer group"
-              >
-                <div className="relative aspect-square">
-                  <img
-                    src={item.image_url}
-                    alt={item.title || "Item"}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-4">
-                  <p className="font-medium line-clamp-2">{item.title || "Untitled Item"}</p>
-                  {item.caption && (
-                    <p className="text-sm text-zinc-400 line-clamp-2 mt-1">{item.caption}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="min-h-screen bg-black text-white px-6 py-10 max-w-md mx-auto space-y-10">
+      {/* Top Bar with Home Button */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={goToHome}
+          className="flex items-center gap-2 text-indigo-400 hover:text-white transition"
+        >
+          ← Home
+        </button>
+        <h1 className="text-3xl font-bold">Add Item</h1>
+        <div className="w-8" /> {/* Spacer for centering */}
       </div>
+
+      <h2 className="text-2xl text-center text-zinc-400">
+        to {collection.title}
+      </h2>
+
+      <label htmlFor="item-upload" className="cursor-pointer w-full flex flex-col items-center">
+        <div className="w-full flex justify-center">
+          <img
+            src={previewImage || "/CC-main-logo.png"}
+            alt="Upload preview"
+            className="object-contain opacity-90 hover:opacity-100 transition"
+            style={{ width: "360px", height: "auto" }}
+          />
+        </div>
+        <div className="text-center mt-3 text-blue-400 hover:underline">
+          Tap to choose item image
+        </div>
+      </label>
+
+      <input
+        id="item-upload"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageChange}
+      />
+
+      <div>
+        <label className="block text-lg mb-2">Item Name</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-white"
+          placeholder="e.g. Charizard VMAX"
+        />
+      </div>
+
+      <button
+        onClick={addItem}
+        disabled={saving || !imageFile || !title.trim()}
+        className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 rounded-full text-xl font-medium transition"
+      >
+        {saving ? "Adding Item..." : "Add Item"}
+      </button>
     </div>
   );
 }

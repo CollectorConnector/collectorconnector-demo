@@ -7,12 +7,6 @@ import ImportInstagramModal from "@/components/ImportInstagramModal";
 import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 
-// NOTE: Add this to your global CSS (e.g. globals.css):
-// .touch-pan-x {
-//   touch-action: pan-x;
-//   -webkit-overflow-scrolling: touch;
-// }
-
 type Profile = {
   id: string;
   avatar_url?: string | null;
@@ -45,6 +39,7 @@ type Collection = {
   item_count: number | null;
 };
 
+/* Full ProfileHeader with all social icons */
 function ProfileHeader() {
   const router = useRouter();
 
@@ -66,13 +61,15 @@ function ProfileHeader() {
           padding: "0 16px",
         }}
       >
-        <button onClick={() => router.push("/")} aria-label="Home">
+        <button
+          onClick={() => router.push("/")}
+          aria-label="Home"
+          className="h-full flex items-center"
+        >
           <img
             src="/CC-main-logo.png"
             alt="Collector Connector"
-            width={130}
-            height={130}
-            style={{ objectFit: "contain" }}
+            className="h-8 w-auto block"
           />
         </button>
 
@@ -83,8 +80,19 @@ function ProfileHeader() {
             className="hover:scale-110 transition-transform p-2"
             aria-label="Search"
           >
-            <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 01-14 0 7 7 0 0114 0z" />
+            <svg
+              width="26"
+              height="26"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-6-6m2-5a7 7 0 01-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </button>
 
@@ -711,8 +719,8 @@ export default function ProfilePage() {
             </p>
           ) : (
             <div
-              className="overflow-x-auto pb-6 scrollbar-hide snap-x snap-center snap-proximity flex gap-6 touch-pan-x"
-              style={{ WebkitOverflowScrolling: "touch" }}
+              className="overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory flex gap-6"
+              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
             >
               {collections.map((col) => (
                 <div

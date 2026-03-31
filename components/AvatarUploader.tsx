@@ -12,7 +12,12 @@ type Props = {
   onSaved?: (url: string) => void;
 };
 
-export default function AvatarUploader({ userId: userIdProp, bucket = "avatars", editable = true, onSaved }: Props) {
+export default function AvatarUploader({
+  userId: userIdProp,
+  bucket = "avatars",
+  editable = true,
+  onSaved,
+}: Props) {
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,22 +61,35 @@ export default function AvatarUploader({ userId: userIdProp, bucket = "avatars",
         <img
           src={previewUrl}
           alt="avatar preview"
-          className="w-24 h-24 rounded-full object-cover border shadow"
+          className="w-24 h-24 object-cover border shadow overflow-hidden"
+          style={{ borderRadius: "35% / 30%" }} // ⭐ SQUIRCLE
           onError={(ev) => {
             ev.currentTarget.src = "/default-avatar.png";
             ev.currentTarget.onerror = null;
           }}
         />
       ) : (
-        <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">No photo</div>
+        <div
+          className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 overflow-hidden"
+          style={{ borderRadius: "35% / 30%" }} // ⭐ SQUIRCLE
+        >
+          No photo
+        </div>
       )}
 
       {editable && (
         <>
           <label className="px-4 py-2 rounded bg-blue-600 text-white cursor-pointer">
             {loading ? "Uploading…" : "Change avatar"}
-            <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" disabled={loading} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+              disabled={loading}
+            />
           </label>
+
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         </>
       )}

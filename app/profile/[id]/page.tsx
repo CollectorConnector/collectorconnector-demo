@@ -425,32 +425,46 @@ export default function ProfilePage() {
           )}
 
           {collections.length === 0 ? (
-            <p className="text-center text-zinc-500 text-xl py-12">No collections yet. Create your first one above!</p>
-          ) : (
-            <div className="overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory flex gap-6">
-              {collections.map((col) => (
-                <div
-                  key={col.id}
-                  onClick={() => router.push(`/collections/${col.id}`)}
-                  className="min-w-[280px] snap-center cursor-pointer group flex-shrink-0"
-                >
-                  <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-zinc-700 shadow-xl">
-                    <img
-                      src={col.cover_url || "/CC-main-logo.png"}
-                      alt={col.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <p className="text-white text-2xl font-bold tracking-tight line-clamp-2">{col.title}</p>
-                      <p className="text-zinc-400 text-sm mt-1">{col.item_count || 0} items</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+  <p className="text-center text-zinc-500 text-xl py-12">
+    No collections yet. Create your first one above!
+  </p>
+) : (
+  <div
+    className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+    style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+  >
+    {collections.map((col) => (
+      <div
+        key={col.id}
+        onClick={() => router.push(`/collections/${col.id}`)}
+        className="relative w-48 h-64 flex-shrink-0 snap-center rounded-2xl overflow-hidden cursor-pointer group"
+      >
+        {/* Cover Image */}
+        <img
+          src={col.cover_url || "/CC-main-logo.png"}
+          alt={col.title}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+
+        {/* Dark gradient overlay (bottom) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+        {/* Item count badge (top-right) */}
+        <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md">
+          {col.item_count || 0}
+        </div>
+
+        {/* Title (bottom) */}
+        <div className="absolute bottom-3 left-3 right-3">
+          <p className="text-white text-lg font-semibold tracking-tight line-clamp-1">
+            {col.title}
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
 
         {/* Live Community Feed */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">

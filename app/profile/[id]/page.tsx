@@ -349,6 +349,9 @@ export default function ProfilePage() {
     );
   }
 
+  {/* version bump */}
+
+
   return (
     <div className="min-h-screen bg-black text-white">
       <ProfileHeader />

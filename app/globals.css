@@ -150,6 +150,14 @@ body {
   font-weight: 600;
 }
 
+.mask-squircle {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M50 0c27.6 0 50 22.4 50 50s-22.4 50-50 50S0 77.6 0 50 22.4 0 50 0z'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M50 0c27.6 0 50 22.4 50 50s-22.4 50-50 50S0 77.6 0 50 22.4 0 50 0z'/></svg>");
+  mask-size: cover;
+  -webkit-mask-size: cover;
+}
+
+
 /* CALLBACK PAGE */
 .auth-callback {
   min-height: 100vh;

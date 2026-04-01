@@ -32,7 +32,7 @@ type RecentDrop = {
   name: string;
   image_url: string | null;
   created_at: string;
-  profiles?: { username: string | null } | null;
+  profiles?: { username: string | null } | null;   // Fixed: can be null or single object
 };
 
 export default function ProfilePage() {
@@ -49,7 +49,7 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Resize image before upload (keeps file size small)
+  // Resize image before upload
   const resizeImage = (file: File, maxSize: number = 256): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -116,7 +116,10 @@ export default function ProfilePage() {
       setCurrentUserId(user?.id || null);
       setIsOwnProfile(user?.id === userId);
 
-      if (!userId) return;
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
 
       // Load profile
       const { data: profileData } = await supabase
@@ -125,7 +128,7 @@ export default function ProfilePage() {
         .eq("id", userId)
         .single();
 
-      setProfile(profileData);
+      setProfile(profileData || null);
 
       // Load collections
       const { data: colData } = await supabase
@@ -135,14 +138,26 @@ export default function ProfilePage() {
 
       setCollections(colData || []);
 
-      // Load recent community drops (simple example)
+      // Load recent community drops - FIXED join handling
       const { data: dropData } = await supabase
         .from("items")
-        .select("id, name, image_url, created_at, profiles(username)")
+        .select(`
+          id, 
+          name, 
+          image_url, 
+          created_at, 
+          profiles (username)
+        `)
         .order("created_at", { ascending: false })
         .limit(6);
 
-      setRecentDrops(dropData || []);
+      // Safely flatten the join (profiles comes as array from Supabase)
+      const safeDrops: RecentDrop[] = (dropData || []).map((item: any) => ({
+        ...item,
+        profiles: item.profiles && item.profiles.length > 0 ? item.profiles[0] : null,
+      }));
+
+      setRecentDrops(safeDrops);
 
       setLoading(false);
     }
@@ -162,7 +177,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white pb-20">
       <div className="max-w-[720px] mx-auto px-4 pt-8">
 
-        {/* AVATAR - Exact squircle from your reference */}
+        {/* AVATAR - Exact squircle */}
         <div className="flex justify-center mb-8">
           {isOwnProfile ? (
             <label htmlFor="avatar-upload" className="relative cursor-pointer group">
@@ -277,10 +292,16 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {recentDrops.map((drop) => (
               <div key={drop.id} className="rounded-2xl overflow-hidden border border-zinc-800">
-                <img src={drop.image_url || ""} alt={drop.name} className="w-full aspect-square object-cover" />
+                <img 
+                  src={drop.image_url || ""} 
+                  alt={drop.name} 
+                  className="w-full aspect-square object-cover" 
+                />
                 <div className="p-3 text-sm">
                   <p className="font-medium line-clamp-1">{drop.name}</p>
-                  <p className="text-xs text-zinc-500">by @{drop.profiles?.username}</p>
+                  <p className="text-xs text-zinc-500">
+                    by @{drop.profiles?.username || "Unknown"}
+                  </p>
                 </div>
               </div>
             ))}

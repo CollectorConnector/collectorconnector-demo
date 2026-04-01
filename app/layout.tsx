@@ -14,9 +14,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className="bg-black text-white">
-        <div className="app-shell">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );

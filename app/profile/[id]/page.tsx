@@ -155,7 +155,7 @@ export default function ProfilePage() {
     loadData();
   }, [userId, router, isOwnProfile]);
 
-  // Follow logic
+  // Follow logic (unchanged)
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) {
       setIsFollowing(false);
@@ -199,7 +199,7 @@ export default function ProfilePage() {
     }
   }
 
-  // Avatar resize & upload
+  // Avatar resize & upload (unchanged)
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -559,7 +559,7 @@ export default function ProfilePage() {
 
         {/* Swipeable Collections Carousel */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
+          <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
 
           {isOwnProfile && (
             <div className="flex justify-center mb-8">
@@ -727,6 +727,7 @@ function ProfileHeader() {
             </svg>
           </button>
 
+          {/* Social icons - kept as before */}
           <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />

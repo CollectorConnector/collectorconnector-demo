@@ -1,9 +1,20 @@
 // components/SellOnEbayModal.tsx
 "use client";
 
+interface SellOnEbayModalProps {
+  item: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    estimatedValue?: number;
+  };
+  onClose: () => void;
+}
+
+
 import { useState } from "react";
 
-export default function SellOnEbayModal({ item, onClose }) {
+export default function SellOnEbayModal({ item, onClose }: SellOnEbayModalProps) {
   const [price, setPrice] = useState(item.estimatedValue || "");
   const [condition, setCondition] = useState("Like New");
   const [shipping, setShipping] = useState("buyer_pays");

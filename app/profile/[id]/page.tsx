@@ -66,7 +66,7 @@ export default function ProfilePage() {
   return (
     <div className="p-6 text-white w-full">
 
-      {/* ⭐ Profile header — centered */}
+      {/* Profile header */}
       <div className="flex flex-col items-center">
 
         {/* Avatar — working version, 50% smaller, squircle preserved */}
@@ -116,23 +116,17 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ⭐ Collections — horizontal carousel with NO wrapper interference */}
+      {/* ⭐ Collections — SIMPLE VERTICAL LIST */}
       <div className="w-full mt-10">
         <h2 className="text-lg font-semibold mb-4">Collections</h2>
 
         {collections.length === 0 ? (
           <p className="text-gray-500 text-sm">No collections yet.</p>
         ) : (
-          <div
-            className="inline-flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory whitespace-nowrap scrollbar-hide"
-            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-          >
+          <div className="flex flex-col gap-6">
             {collections.map((col) => (
-              <div
-                key={col.id}
-                className="w-32 inline-block align-top snap-center cursor-pointer"
-              >
-                <div className="relative w-32 h-32 rounded-2xl overflow-hidden border border-white/10 bg-[#111]">
+              <div key={col.id} className="w-full">
+                <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-white/10 bg-[#111]">
                   <img
                     src={col.cover_url || "/CC-main-logo.png"}
                     alt={col.name}
@@ -140,9 +134,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <p className="mt-2 text-sm font-semibold truncate">
-                  {col.name}
-                </p>
+                <p className="mt-2 text-base font-semibold">{col.name}</p>
                 <p className="text-xs text-gray-400">
                   {col.item_count || 0} items
                 </p>

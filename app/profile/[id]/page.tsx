@@ -118,7 +118,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ⭐ Collections — Horizontal Carousel */}
+      {/* ⭐ Collections — HARD-FORCED HORIZONTAL CAROUSEL */}
       <div className="w-full mt-10 flex flex-col items-start">
         <h2 className="text-lg font-semibold mb-4">Collections</h2>
 
@@ -126,13 +126,13 @@ export default function ProfilePage() {
           <p className="text-gray-500 text-sm">No collections yet.</p>
         ) : (
           <div
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+            className="inline-flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory whitespace-nowrap scrollbar-hide"
             style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
           >
             {collections.map((col) => (
               <div
                 key={col.id}
-                className="w-32 flex-shrink-0 snap-center cursor-pointer"
+                className="w-32 inline-block align-top snap-center cursor-pointer"
               >
                 <div className="relative w-32 h-32 rounded-2xl overflow-hidden border border-white/10 bg-[#111]">
                   <img

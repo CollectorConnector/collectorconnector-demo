@@ -66,7 +66,6 @@ export default function ProfilePage() {
         <p>Loading…</p>
       </div>
     );
-  }
 
   return (
     <div className="p-6 text-white flex flex-col items-center">

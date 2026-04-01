@@ -16,14 +16,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function loadData() {
-      // 1. Get logged‑in user
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) return;
 
-      // 2. Load profile
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
@@ -32,7 +30,6 @@ export default function ProfilePage() {
 
       setProfile(profileData);
 
-      // 3. Load followers count
       const { count: followers } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -40,7 +37,6 @@ export default function ProfilePage() {
 
       setFollowersCount(followers || 0);
 
-      // 4. Load following count
       const { count: following } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -48,7 +44,6 @@ export default function ProfilePage() {
 
       setFollowingCount(following || 0);
 
-      // 5. Load collections
       const { data: collectionsData } = await supabase
         .from("collections")
         .select("*")
@@ -69,9 +64,32 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="p-6 text-white flex flex-col items-center">
+    <div className="p-6 text-white flex flex-col">
 
-      {/* Avatar (50% smaller, matching logo squircle) */}
+      {/* ============================
+          TEMP CAROUSEL TEST
+         ============================ */}
+      <div className="w-full overflow-x-auto" style={{ border: "2px solid red" }}>
+        <div
+          className="flex flex-row flex-nowrap gap-4"
+          style={{ border: "2px solid lime", width: "max-content", padding: "8px" }}
+        >
+          {[1, 2, 3, 4, 5].map((n) => (
+            <div
+              key={n}
+              className="w-32 h-32 flex-shrink-0 bg-zinc-800 rounded-xl"
+              style={{ border: "2px solid cyan" }}
+            >
+              <p className="text-center mt-12">{n}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ============================
+          PROFILE HEADER
+         ============================ */}
+
       <img
         src={profile.avatar_url || "/default-avatar.png"}
         alt="Profile"
@@ -79,31 +97,26 @@ export default function ProfilePage() {
         style={{ borderRadius: "14%" }}
       />
 
-      {/* Name */}
       <h1 className="mt-4 text-xl font-bold">
         {profile.full_name || "Unnamed User"}
       </h1>
 
-      {/* Username */}
       <p className="text-gray-400 text-sm">
         @{profile.username || "username"}
       </p>
 
-      {/* Bio */}
       {profile.bio && (
-        <p className="mt-3 text-center text-gray-300 text-sm max-w-xs">
+        <p className="mt-3 text-gray-300 text-sm max-w-xs">
           {profile.bio}
         </p>
       )}
 
-      {/* Location */}
       {profile.location && (
         <p className="mt-1 text-gray-400 text-xs">
           📍 {profile.location}
         </p>
       )}
 
-      {/* Edit Profile */}
       <button
         className="mt-4 px-4 py-2 rounded-lg border border-white/20 text-sm"
         onClick={() => alert("Edit Profile coming soon")}
@@ -111,7 +124,6 @@ export default function ProfilePage() {
         Edit Profile
       </button>
 
-      {/* Followers / Following */}
       <div className="flex gap-8 mt-6 text-center">
         <div>
           <p className="text-lg font-semibold">{followersCount}</p>
@@ -123,7 +135,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Collections */}
+      {/* ============================
+          COLLECTIONS
+         ============================ */}
       <div className="w-full mt-10">
         <h2 className="text-lg font-semibold mb-3">Collections</h2>
 

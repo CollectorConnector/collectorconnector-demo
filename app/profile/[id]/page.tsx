@@ -64,61 +64,64 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="p-6 text-white flex flex-col items-center">
+    <div className="p-6 text-white w-full">
 
-      {/* ⭐ Avatar — working version, 50% smaller, squircle preserved */}
-      <img
-        src={profile.avatar_url || "/default-avatar.png"}
-        alt="Profile"
-        className="w-7 h-7 object-cover border border-white/10 shadow"
-        style={{ borderRadius: "14%" }}
-      />
+      {/* Profile header – centered */}
+      <div className="flex flex-col items-center">
+        {/* Avatar — working version, 50% smaller, squircle preserved */}
+        <img
+          src={profile.avatar_url || "/default-avatar.png"}
+          alt="Profile"
+          className="w-7 h-7 object-cover border border-white/10 shadow"
+          style={{ borderRadius: "14%" }}
+        />
 
-      {/* Name */}
-      <h1 className="mt-4 text-xl font-bold">
-        {profile.full_name || "Unnamed User"}
-      </h1>
+        {/* Name */}
+        <h1 className="mt-4 text-xl font-bold">
+          {profile.full_name || "Unnamed User"}
+        </h1>
 
-      {/* Username */}
-      <p className="text-gray-400 text-sm">
-        @{profile.username || "username"}
-      </p>
-
-      {/* Bio */}
-      {profile.bio && (
-        <p className="mt-3 text-center text-gray-300 text-sm max-w-xs">
-          {profile.bio}
+        {/* Username */}
+        <p className="text-gray-400 text-sm">
+          @{profile.username || "username"}
         </p>
-      )}
 
-      {/* Location */}
-      {profile.location && (
-        <p className="mt-1 text-gray-400 text-xs">
-          📍 {profile.location}
-        </p>
-      )}
+        {/* Bio */}
+        {profile.bio && (
+          <p className="mt-3 text-center text-gray-300 text-sm max-w-xs">
+            {profile.bio}
+          </p>
+        )}
 
-      {/* Edit Profile */}
-      <button
-        className="mt-4 px-4 py-2 rounded-lg border border-white/20 text-sm"
-        onClick={() => alert("Edit Profile coming soon")}
-      >
-        Edit Profile
-      </button>
+        {/* Location */}
+        {profile.location && (
+          <p className="mt-1 text-gray-400 text-xs">
+            📍 {profile.location}
+          </p>
+        )}
 
-      {/* Followers / Following */}
-      <div className="flex gap-8 mt-6 text-center">
-        <div>
-          <p className="text-lg font-semibold">{followersCount}</p>
-          <p className="text-gray-400 text-xs">Followers</p>
-        </div>
-        <div>
-          <p className="text-lg font-semibold">{followingCount}</p>
-          <p className="text-gray-400 text-xs">Following</p>
+        {/* Edit Profile */}
+        <button
+          className="mt-4 px-4 py-2 rounded-lg border border-white/20 text-sm"
+          onClick={() => alert("Edit Profile coming soon")}
+        >
+          Edit Profile
+        </button>
+
+        {/* Followers / Following */}
+        <div className="flex gap-8 mt-6 text-center">
+          <div>
+            <p className="text-lg font-semibold">{followersCount}</p>
+            <p className="text-gray-400 text-xs">Followers</p>
+          </div>
+          <div>
+            <p className="text-lg font-semibold">{followingCount}</p>
+            <p className="text-gray-400 text-xs">Following</p>
+          </div>
         </div>
       </div>
 
-      {/* ⭐ Collections — HARD-FORCED HORIZONTAL CAROUSEL */}
+      {/* Collections — hard-forced horizontal carousel */}
       <div className="w-full mt-10 flex flex-col items-start">
         <h2 className="text-lg font-semibold mb-4">Collections</h2>
 
@@ -142,7 +145,9 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <p className="mt-2 text-sm font-semibold truncate">{col.name}</p>
+                <p className="mt-2 text-sm font-semibold truncate">
+                  {col.name}
+                </p>
                 <p className="text-xs text-gray-400">
                   {col.item_count || 0} items
                 </p>

@@ -66,8 +66,9 @@ export default function ProfilePage() {
   return (
     <div className="p-6 text-white w-full">
 
-      {/* Profile header – centered */}
+      {/* ⭐ Profile header — centered */}
       <div className="flex flex-col items-center">
+
         {/* Avatar — working version, 50% smaller, squircle preserved */}
         <img
           src={profile.avatar_url || "/default-avatar.png"}
@@ -76,31 +77,26 @@ export default function ProfilePage() {
           style={{ borderRadius: "14%" }}
         />
 
-        {/* Name */}
         <h1 className="mt-4 text-xl font-bold">
           {profile.full_name || "Unnamed User"}
         </h1>
 
-        {/* Username */}
         <p className="text-gray-400 text-sm">
           @{profile.username || "username"}
         </p>
 
-        {/* Bio */}
         {profile.bio && (
           <p className="mt-3 text-center text-gray-300 text-sm max-w-xs">
             {profile.bio}
           </p>
         )}
 
-        {/* Location */}
         {profile.location && (
           <p className="mt-1 text-gray-400 text-xs">
             📍 {profile.location}
           </p>
         )}
 
-        {/* Edit Profile */}
         <button
           className="mt-4 px-4 py-2 rounded-lg border border-white/20 text-sm"
           onClick={() => alert("Edit Profile coming soon")}
@@ -108,7 +104,6 @@ export default function ProfilePage() {
           Edit Profile
         </button>
 
-        {/* Followers / Following */}
         <div className="flex gap-8 mt-6 text-center">
           <div>
             <p className="text-lg font-semibold">{followersCount}</p>
@@ -121,8 +116,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Collections — hard-forced horizontal carousel */}
-      <div className="w-full mt-10 flex flex-col items-start">
+      {/* ⭐ Collections — horizontal carousel with NO wrapper interference */}
+      <div className="w-full mt-10">
         <h2 className="text-lg font-semibold mb-4">Collections</h2>
 
         {collections.length === 0 ? (

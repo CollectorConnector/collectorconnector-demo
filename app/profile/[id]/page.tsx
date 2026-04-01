@@ -16,12 +16,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function loadData() {
+      // 1. Get logged‑in user
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) return;
 
+      // 2. Load profile
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
@@ -30,6 +32,7 @@ export default function ProfilePage() {
 
       setProfile(profileData);
 
+      // 3. Load followers count
       const { count: followers } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -37,6 +40,7 @@ export default function ProfilePage() {
 
       setFollowersCount(followers || 0);
 
+      // 4. Load following count
       const { count: following } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -44,6 +48,7 @@ export default function ProfilePage() {
 
       setFollowingCount(following || 0);
 
+      // 5. Load collections
       const { data: collectionsData } = await supabase
         .from("collections")
         .select("*")
@@ -66,17 +71,13 @@ export default function ProfilePage() {
   return (
     <div className="p-6 text-white flex flex-col items-center">
 
-      {/* ⭐ Avatar — perfect squircle, stable, premium */}
-      <div
-        className="w-14 h-14 overflow-hidden border border-white/10 shadow-xl"
+      {/* Avatar (50% smaller, matching logo squircle) */}
+      <img
+        src={profile.avatar_url || "/default-avatar.png"}
+        alt="Profile"
+        className="w-14 h-14 object-cover border border-white/10 shadow"
         style={{ borderRadius: "14%" }}
-      >
-        <img
-          src={profile.avatar_url || "/default-avatar.png"}
-          alt="Profile"
-          className="w-full h-full object-cover"
-        />
-      </div>
+      />
 
       {/* Name */}
       <h1 className="mt-4 text-xl font-bold">

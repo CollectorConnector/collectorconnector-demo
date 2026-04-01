@@ -1,28 +1,26 @@
-* {
-  outline: 1px solid red !important;
-}
-
+/* =========================================
+   TAILWIND CORE
+   ========================================= */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ================================
-   GLOBAL BASE
-   ================================ */
+/* =========================================
+   GLOBAL RESET
+   ========================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 html, body {
   background: #000;
   color: #fff;
-  margin: 0;
-  padding: 0;
   height: 100%;
-}
-
-body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
 }
 
 /* Remove blue link styling */
@@ -36,86 +34,19 @@ a:focus {
   outline: none;
 }
 
-/* SVG consistency */
+/* =========================================
+   SVG CONSISTENCY
+   ========================================= */
 svg {
-  width: 28px !important;
-  height: 28px !important;
-  flex-shrink: 0 !important;
-  display: inline-block !important;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: inline-block;
 }
 
-/* Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* ================================
-   PAGE LAYOUT (IMPORTANT)
-   ================================ */
-
-/* Root layout wrapper */
-.page-body {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  width: 100%;
-  padding-top: 64px;
-  box-sizing: border-box;
-}
-
-/* ⭐ FIX: Allow main content to expand fully inside flex container */
-.page-body > main {
-  flex: 1 1 100%;
-  width: 100%;
-  max-width: 720px; /* keeps your centered look */
-  padding: 0 16px 80px;
-  text-align: center;
-}
-
-/* ================================
-   CARDS / UI ELEMENTS
-   ================================ */
-
-.card {
-  background: rgba(15, 15, 20, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-}
-
-section.bg-zinc-950 {
-  @apply card;
-}
-
-/* ================================
-   AVATAR STYLES
-   ================================ */
-
-.mask-squircle {
-  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M50 0c27.6 0 50 22.4 50 50s-22.4 50-50 50S0 77.6 0 50 22.4 0 50 0z'/></svg>");
-  mask-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M50 0c27.6 0 50 22.4 50 50s-22.4 50-50 50S0 77.6 0 50 22.4 0 50 0z'/></svg>");
-  mask-size: cover;
-  -webkit-mask-size: cover;
-}
-
-.avatar-large {
-  @apply rounded-full object-cover border-8 border-zinc-700/80 shadow-2xl;
-  transition: all 0.3s ease;
-}
-.avatar-large:hover {
-  transform: scale(1.03);
-  box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
-}
-
-/* ================================
+/* =========================================
    AUTH / FORMS / BUTTONS
-   ================================ */
-
+   ========================================= */
 .auth-container {
   max-width: 400px;
   margin: 0 auto;
@@ -198,10 +129,9 @@ button:focus {
   outline-offset: 2px;
 }
 
-/* ================================
+/* =========================================
    SCROLLBAR
-   ================================ */
-
+   ========================================= */
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent;
@@ -210,10 +140,9 @@ button:focus {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* ================================
+/* =========================================
    MISC
-   ================================ */
-
+   ========================================= */
 .no-select {
   user-select: none;
 }

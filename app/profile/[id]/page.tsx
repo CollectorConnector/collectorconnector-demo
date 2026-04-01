@@ -41,12 +41,13 @@ export default function ProfilePage() {
 
   return (
     <div className="p-6 text-white flex flex-col items-center">
+
       {/* Avatar */}
       <img
         src={profile.avatar_url || "/default-avatar.png"}
         alt="Profile"
-        className="w-24 h-24 object-cover border shadow"
-        style={{ borderRadius: "35% / 30%" }}
+        className="w-28 h-28 object-cover border border-white/10 shadow"
+        style={{ borderRadius: "14%" }} // matches your logo shape
       />
 
       {/* Name */}
@@ -55,7 +56,10 @@ export default function ProfilePage() {
       </h1>
 
       {/* Username */}
-      <p className="text-gray-400">@{profile.username}</p>
+      <p className="text-gray-400 text-sm">
+        @{profile.username || "username"}
+      </p>
+
     </div>
   );
 }

@@ -16,14 +16,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function loadData() {
-      // 1. Get logged‑in user
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) return;
 
-      // 2. Load profile
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
@@ -32,7 +30,6 @@ export default function ProfilePage() {
 
       setProfile(profileData);
 
-      // 3. Load followers count
       const { count: followers } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -40,7 +37,6 @@ export default function ProfilePage() {
 
       setFollowersCount(followers || 0);
 
-      // 4. Load following count
       const { count: following } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -48,7 +44,6 @@ export default function ProfilePage() {
 
       setFollowingCount(following || 0);
 
-      // 5. Load collections
       const { data: collectionsData } = await supabase
         .from("collections")
         .select("*")
@@ -66,17 +61,22 @@ export default function ProfilePage() {
         <p>Loading…</p>
       </div>
     );
+  }
 
   return (
     <div className="p-6 text-white flex flex-col items-center">
 
-      {/* Avatar (50% smaller, matching logo squircle) */}
-      <img
-        src={profile.avatar_url || "/default-avatar.png"}
-        alt="Profile"
-        className="w-14 h-14 object-cover border border-white/10 shadow"
+      {/* ⭐ Avatar — DO NOT TOUCH */}
+      <div
+        className="w-14 h-14 overflow-hidden border border-white/10 shadow"
         style={{ borderRadius: "14%" }}
-      />
+      >
+        <img
+          src={profile.avatar_url || "/default-avatar.png"}
+          alt="Profile"
+          className="w-full h-full object-cover"
+        />
+      </div>
 
       {/* Name */}
       <h1 className="mt-4 text-xl font-bold">
@@ -122,36 +122,39 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Collections */}
-<div className="w-full mt-10">
-  <h2 className="text-lg font-semibold mb-4">Collections</h2>
+      {/* ⭐ Collections — Instagram‑style carousel */}
+      <div className="w-full mt-10">
+        <h2 className="text-lg font-semibold mb-4">Collections</h2>
 
-  {collections.length === 0 ? (
-    <p className="text-gray-500 text-sm">No collections yet.</p>
-  ) : (
-    <div
-      className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
-      style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-    >
-      {collections.map((col) => (
-        <div
-          key={col.id}
-          className="w-32 flex-shrink-0 snap-center cursor-pointer"
-        >
-          <div className="relative w-32 h-32 rounded-2xl overflow-hidden border border-white/10 bg-[#111]">
-            <img
-              src={col.cover_url || "/CC-main-logo.png"}
-              alt={col.name}
-              className="w-full h-full object-cover"
-            />
+        {collections.length === 0 ? (
+          <p className="text-gray-500 text-sm">No collections yet.</p>
+        ) : (
+          <div
+            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+          >
+            {collections.map((col) => (
+              <div
+                key={col.id}
+                className="w-32 flex-shrink-0 snap-center cursor-pointer"
+              >
+                <div className="relative w-32 h-32 rounded-2xl overflow-hidden border border-white/10 bg-[#111]">
+                  <img
+                    src={col.cover_url || "/CC-main-logo.png"}
+                    alt={col.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <p className="mt-2 text-sm font-semibold truncate">{col.name}</p>
+                <p className="text-xs text-gray-400">
+                  {col.item_count || 0} items
+                </p>
+              </div>
+            ))}
           </div>
-
-          <p className="mt-2 text-sm font-semibold truncate">{col.name}</p>
-          <p className="text-xs text-gray-400">
-            {col.item_count || 0} items
-          </p>
-        </div>
-      ))}
+        )}
+      </div>
     </div>
-  )}
-</div>
+  );
+}

@@ -355,7 +355,7 @@ export default function ProfilePage() {
         {/* Profile Card */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-            {/* Clean Squircle Avatar - No old uploader */}
+            {/* Clean Squircle Avatar - Instagram/Facebook style */}
             <div className="relative mb-8">
               {isOwnProfile ? (
                 <label

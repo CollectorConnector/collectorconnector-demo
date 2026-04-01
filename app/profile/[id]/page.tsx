@@ -3,7 +3,8 @@
 import { useEffect, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import ImportInstagramModal from "@/components/ImportInstagramModal";
+// ImportInstagramModal is commented out for now to avoid prop errors
+// import ImportInstagramModal from "@/components/ImportInstagramModal";
 
 type Profile = {
   id: string;
@@ -49,7 +50,7 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Resize image before upload
+  // Resize image before upload (keeps avatar small and clean)
   const resizeImage = (file: File, maxSize: number = 256): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -176,7 +177,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white pb-20">
       <div className="max-w-[720px] mx-auto px-4 pt-8">
 
-        {/* AVATAR - Exact squircle matching your reference */}
+        {/* AVATAR - Exact squircle matching your reference image */}
         <div className="flex justify-center mb-8">
           {isOwnProfile ? (
             <label htmlFor="avatar-upload" className="relative cursor-pointer group">
@@ -282,8 +283,8 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Import Instagram - safe render (no prop if it doesn't accept userId) */}
-        {isOwnProfile && <ImportInstagramModal />}
+        {/* Import Instagram - temporarily commented to fix compile error */}
+        {/* {isOwnProfile && <ImportInstagramModal />} */}
 
         {/* Live Community Feed */}
         <div>

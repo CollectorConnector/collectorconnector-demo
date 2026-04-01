@@ -118,8 +118,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ⭐ Collections — Instagram-style horizontal carousel */}
-      <div className="w-full mt-10">
+      {/* ⭐ Collections — Horizontal Carousel */}
+      <div className="w-full mt-10 flex flex-col items-start">
         <h2 className="text-lg font-semibold mb-4">Collections</h2>
 
         {collections.length === 0 ? (

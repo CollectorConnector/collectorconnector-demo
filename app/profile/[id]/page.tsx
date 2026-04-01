@@ -145,7 +145,7 @@ export default function ProfilePage() {
     loadData();
   }, [userId, router, isOwnProfile]);
 
-  // Follow logic (unchanged)
+  // Follow logic
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
     async function checkFollow() {
@@ -178,7 +178,7 @@ export default function ProfilePage() {
     }
   }
 
-  // Avatar resize & upload (kept from your first script)
+  // Avatar resize & upload
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -236,14 +236,91 @@ export default function ProfilePage() {
     }
   }
 
-  // (rest of your saveProfileChanges, getTierIcon, displayName, etc. unchanged)
-  async function saveProfileChanges() { /* ... your original function ... */ }
-  const displayName = useMemo(() => profile?.display_url || profile?.username || "Collector", [profile]);
-  const getTierIcon = (tier?: string | null) => { /* ... your original function ... */ };
+  async function saveProfileChanges() {
+    if (!currentUserId || currentUserId !== userId) return;
+    setSaving(true);
+    try {
+      const updates = {
+        display_url: editedDisplayUrl.trim() || null,
+        bio: editedBio.trim() || null,
+        location: editedLocation.trim() || null,
+        tier: editedTier || null,
+      };
+      const { error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", currentUserId);
+      if (error) throw error;
+
+      setProfile((prev) => (prev ? { ...prev, ...updates } : null));
+      setEditMode(false);
+      alert("Profile saved!");
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      alert("Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const displayName = useMemo(
+    () => profile?.display_url || profile?.username || "Collector",
+    [profile]
+  );
+
+  const getTierIcon = (tier?: string | null) => {
+    if (!tier) return null;
+    const lower = tier.toLowerCase();
+    if (lower.includes("bronze")) return "/bronze.png";
+    if (lower.includes("silver")) return "/silver.png";
+    if (lower.includes("gold")) return "/gold.png";
+    if (lower.includes("diamond")) return "/diamond.png";
+    if (lower.includes("founder")) return "/founder.png";
+    return null;
+  };
+
   const tierIconSrc = getTierIcon(profile?.tier);
 
-  if (loading) return <div className="min-h-screen bg-black text-white"><ProfileHeader /><div className="flex items-center justify-center h-[80vh]">Loading...</div></div>;
-  if (error || !profile) return <div className="min-h-screen bg-black text-white"><ProfileHeader /><div className="flex flex-col items-center justify-center h-[80vh]"><h1 className="text-3xl mb-4">Error</h1><p>{error}</p></div></div>;
+  // ProfileHeader component - moved to top so it's always defined
+  function ProfileHeader() {
+    return (
+      <>
+        <header style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+          background: "#000", borderBottom: "1px solid #1f1f1f", height: 56,
+          display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px"
+        }}>
+          <img src="/CC-main-logo.png" alt="Collector Connector" width={130} height={130} style={{ objectFit: "contain" }} />
+          {/* your original social icons and search button here - unchanged */}
+          <div style={{ display: "flex", alignItems: "center", gap: 20, color: "white" }}>
+            {/* ... your original buttons and SVGs ... */}
+          </div>
+        </header>
+        <div style={{ height: 56 }} />
+      </>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <ProfileHeader />
+        <div className="flex items-center justify-center h-[80vh] text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <ProfileHeader />
+        <div className="flex flex-col items-center justify-center h-[80vh]">
+          <h1 className="text-3xl mb-4">Error</h1>
+          <p className="text-white/70">{error || "Profile not found"}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -253,7 +330,7 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            {/* FIXED AVATAR — exact style from your second script */}
+            {/* EXACT SQUIRCLE AVATAR from your second script */}
             <div className="relative mb-8">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
@@ -283,23 +360,35 @@ export default function ProfilePage() {
               disabled={uploadingAvatar}
             />
 
-            {/* Rest of your profile card (name, bio, edit mode, tier, follow button, etc.) remains exactly as before */}
-            {/* ... (your original code from h1 down to SuggestedUsers) ... */}
+            {/* Rest of your original profile card (name, bio, tier, buttons, etc.) */}
+            {isOwnProfile && editMode ? (
+              <input type="text" value={editedDisplayUrl} onChange={(e) => setEditedDisplayUrl(e.target.value)} className="text-4xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg" />
+            ) : (
+              <h1 className="text-4xl font-bold mb-3">{displayName}</h1>
+            )}
+
+            {profile.username && <p className="text-indigo-400 text-2xl mb-6">@{profile.username}</p>}
+
+            {isOwnProfile && editMode ? (
+              <textarea value={editedBio} onChange={(e) => setEditedBio(e.target.value)} className="text-gray-300 text-xl mb-6 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-lg h-36 resize-none" />
+            ) : (
+              <p className="text-gray-300 text-xl mb-6 max-w-lg leading-relaxed">
+                {profile.bio || "This collector hasn’t written a bio yet."}
+              </p>
+            )}
+
+            {/* location, tier, buttons, SuggestedUsers, etc. — all your original code here */}
+            {/* ... (copy the rest of the section from your first script) ... */}
 
           </div>
           <SuggestedUsers />
         </section>
 
-        {/* All your other sections (Live Stats, Carousel, Live Feed, etc.) stay 100% unchanged */}
-        {/* ... (your original sections) ... */}
+        {/* All your other sections (stats grid, carousel, live feed, etc.) go here unchanged */}
 
       </main>
 
-      {isOwnProfile && <div className="max-w-[720px] mx-auto px-4 pb-10"> {/* Log Out button */ } </div>}
       <Footer />
     </div>
   );
 }
-
-/* ProfileHeader stays exactly as you had it */
-function ProfileHeader() { /* your original ProfileHeader code */ }

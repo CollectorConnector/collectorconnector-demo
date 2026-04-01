@@ -32,7 +32,7 @@ type RecentDrop = {
   name: string;
   image_url: string | null;
   created_at: string;
-  profiles?: { username: string | null } | null;   // Fixed: can be null or single object
+  profiles?: { username: string | null } | null;
 };
 
 export default function ProfilePage() {
@@ -138,7 +138,7 @@ export default function ProfilePage() {
 
       setCollections(colData || []);
 
-      // Load recent community drops - FIXED join handling
+      // Load recent community drops
       const { data: dropData } = await supabase
         .from("items")
         .select(`
@@ -151,7 +151,6 @@ export default function ProfilePage() {
         .order("created_at", { ascending: false })
         .limit(6);
 
-      // Safely flatten the join (profiles comes as array from Supabase)
       const safeDrops: RecentDrop[] = (dropData || []).map((item: any) => ({
         ...item,
         profiles: item.profiles && item.profiles.length > 0 ? item.profiles[0] : null,
@@ -177,7 +176,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white pb-20">
       <div className="max-w-[720px] mx-auto px-4 pt-8">
 
-        {/* AVATAR - Exact squircle */}
+        {/* AVATAR - Exact squircle matching your reference */}
         <div className="flex justify-center mb-8">
           {isOwnProfile ? (
             <label htmlFor="avatar-upload" className="relative cursor-pointer group">
@@ -283,8 +282,8 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Import Instagram Button */}
-        {isOwnProfile && <ImportInstagramModal userId={userId} />}
+        {/* Import Instagram - safe render (no prop if it doesn't accept userId) */}
+        {isOwnProfile && <ImportInstagramModal />}
 
         {/* Live Community Feed */}
         <div>

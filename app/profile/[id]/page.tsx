@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
       setFollowingCount(following || 0);
 
-      // 5. Load collections (placeholder until items are ready)
+      // 5. Load collections
       const { data: collectionsData } = await supabase
         .from("collections")
         .select("*")
@@ -71,16 +71,16 @@ export default function ProfilePage() {
   return (
     <div className="p-6 text-white flex flex-col items-center">
 
-      {/* Avatar */}
+      {/* Avatar (50% smaller, matching logo squircle) */}
       <img
         src={profile.avatar_url || "/default-avatar.png"}
         alt="Profile"
-        className="w-28 h-28 object-cover border border-white/10 shadow"
-        style={{ borderRadius: "14%" }} // matches your logo shape
+        className="w-14 h-14 object-cover border border-white/10 shadow"
+        style={{ borderRadius: "14%" }}
       />
 
       {/* Name */}
-      <h1 className="mt-4 text-2xl font-bold">
+      <h1 className="mt-4 text-xl font-bold">
         {profile.full_name || "Unnamed User"}
       </h1>
 

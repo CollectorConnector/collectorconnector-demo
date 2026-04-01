@@ -118,7 +118,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ⭐ Collections — Instagram-style carousel */}
+      {/* ⭐ Collections — Instagram-style horizontal carousel */}
       <div className="w-full mt-10">
         <h2 className="text-lg font-semibold mb-4">Collections</h2>
 

@@ -70,7 +70,7 @@ export default function ProfilePage() {
   return (
     <div className="p-6 text-white flex flex-col items-center">
 
-      {/* ⭐ Avatar — Perfect squircle */}
+      {/* Avatar — hard‑locked squircle */}
       <div
         className="w-14 h-14 overflow-hidden border border-white/10 shadow-xl"
         style={{ borderRadius: "14%" }}

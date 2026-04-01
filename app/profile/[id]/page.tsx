@@ -124,25 +124,35 @@ export default function ProfilePage() {
       </div>
 
       {/* Collections */}
-      <div className="w-full mt-10">
-        <h2 className="text-lg font-semibold mb-3">Collections</h2>
+<div className="w-full mt-10">
+  <h2 className="text-lg font-semibold mb-4">Collections</h2>
 
-        {collections.length === 0 ? (
-          <p className="text-gray-500 text-sm">No collections yet.</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {collections.map((col) => (
-              <div
-                key={col.id}
-                className="p-4 bg-[#111] rounded-xl border border-white/10"
-              >
-                <p className="font-semibold">{col.name}</p>
-                <p className="text-xs text-gray-400">{col.description}</p>
-              </div>
-            ))}
+  {collections.length === 0 ? (
+    <p className="text-gray-500 text-sm">No collections yet.</p>
+  ) : (
+    <div
+      className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+      style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+    >
+      {collections.map((col) => (
+        <div
+          key={col.id}
+          className="w-32 flex-shrink-0 snap-center cursor-pointer"
+        >
+          <div className="relative w-32 h-32 rounded-2xl overflow-hidden border border-white/10 bg-[#111]">
+            <img
+              src={col.cover_url || "/CC-main-logo.png"}
+              alt={col.name}
+              className="w-full h-full object-cover"
+            />
           </div>
-        )}
-      </div>
+
+          <p className="mt-2 text-sm font-semibold truncate">{col.name}</p>
+          <p className="text-xs text-gray-400">
+            {col.item_count || 0} items
+          </p>
+        </div>
+      ))}
     </div>
-  );
-}
+  )}
+</div>

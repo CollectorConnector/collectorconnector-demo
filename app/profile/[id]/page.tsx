@@ -10,25 +10,22 @@ const supabase = createClient(
 );
 
 export default function ProfilePage() {
-  const router = useRouter();
-
   const [profile, setProfile] = useState<any>(null);
-  const [userId, setUserId] = useState<string | null>(null);
   const [followersCount, setFollowersCount] = useState<number>(0);
   const [followingCount, setFollowingCount] = useState<number>(0);
   const [collections, setCollections] = useState<any[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     async function loadData() {
-      // 1. Logged‑in user
+      // 1. Get logged‑in user
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) return;
-      setUserId(user.id);
 
-      // 2. Profile
+      // 2. Load profile
       const { data: profileData } = await supabase
         .from("profiles")
         .select("*")
@@ -37,7 +34,7 @@ export default function ProfilePage() {
 
       setProfile(profileData);
 
-      // 3. Followers count
+      // 3. Load followers count
       const { count: followers } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -45,7 +42,7 @@ export default function ProfilePage() {
 
       setFollowersCount(followers || 0);
 
-      // 4. Following count
+      // 4. Load following count
       const { count: following } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -53,12 +50,11 @@ export default function ProfilePage() {
 
       setFollowingCount(following || 0);
 
-      // 5. Collections (your real uploaded ones)
+      // 5. Load collections
       const { data: collectionsData } = await supabase
         .from("collections")
         .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq("user_id", user.id);
 
       setCollections(collectionsData || []);
     }
@@ -74,12 +70,12 @@ export default function ProfilePage() {
     );
   }
 
-  const isOwnProfile = true; // for now, until multi-user profiles are enabled
+  const isOwnProfile = true; // later: compare user.id to params.id
 
   return (
     <div className="p-6 text-white flex flex-col items-center">
 
-      {/* Avatar (50% smaller, matching logo squircle) */}
+      {/* Avatar (50% smaller, logo-matching squircle) */}
       <img
         src={profile.avatar_url || "/default-avatar.png"}
         alt="Profile"
@@ -111,14 +107,6 @@ export default function ProfilePage() {
         </p>
       )}
 
-      {/* Edit Profile */}
-      <button
-        className="mt-4 px-4 py-2 rounded-lg border border-white/20 text-sm"
-        onClick={() => alert("Edit Profile coming soon")}
-      >
-        Edit Profile
-      </button>
-
       {/* Followers / Following */}
       <div className="flex gap-8 mt-6 text-center">
         <div>
@@ -132,14 +120,14 @@ export default function ProfilePage() {
       </div>
 
       {/* Swipeable Collections Carousel */}
-      <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30 mt-10 w-full">
-        <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
+      <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-lg shadow-black/30 mt-10 w-full">
+        <h2 className="text-2xl font-bold mb-6 text-center">My Collections 📕</h2>
 
         {isOwnProfile && (
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6">
             <button
               onClick={() => router.push("/collections/create")}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-sm font-medium transition"
             >
               + Add New Collection
             </button>
@@ -147,19 +135,19 @@ export default function ProfilePage() {
         )}
 
         {collections.length === 0 ? (
-          <p className="text-center text-zinc-500 text-xl py-12">
+          <p className="text-center text-zinc-500 text-sm py-8">
             No collections yet. Create your first one above!
           </p>
         ) : (
           <div
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+            className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide"
             style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
           >
             {collections.map((col) => (
               <div
                 key={col.id}
                 onClick={() => router.push(`/collections/${col.id}`)}
-                className="relative w-48 h-64 flex-shrink-0 snap-center rounded-2xl overflow-hidden cursor-pointer group"
+                className="relative w-40 h-56 flex-shrink-0 snap-center rounded-2xl overflow-hidden cursor-pointer group bg-black"
               >
                 <img
                   src={col.cover_url || "/CC-main-logo.png"}
@@ -167,11 +155,11 @@ export default function ProfilePage() {
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md">
-                  {col.item_count || 0}
+                <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-md">
+                  {col.item_count || 0} items
                 </div>
                 <div className="absolute bottom-3 left-3 right-3">
-                  <p className="text-white text-lg font-semibold tracking-tight line-clamp-1">
+                  <p className="text-white text-sm font-semibold tracking-tight line-clamp-1">
                     {col.title}
                   </p>
                 </div>

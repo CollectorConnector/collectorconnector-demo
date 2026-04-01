@@ -11,5 +11,5 @@ export default function AvatarUpload() {
 
   if (!userId) return null;
 
-  return <AvatarUploader userId={userId} editable={true} />;
+  return <AvatarUploader userId={userId} editable={false} />;
 }

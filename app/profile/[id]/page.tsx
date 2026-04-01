@@ -3,8 +3,6 @@
 import { useEffect, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-// ImportInstagramModal is commented out for now to avoid prop errors
-// import ImportInstagramModal from "@/components/ImportInstagramModal";
 
 type Profile = {
   id: string;
@@ -50,7 +48,7 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Resize image before upload (keeps avatar small and clean)
+  // Resize avatar before upload
   const resizeImage = (file: File, maxSize: number = 256): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -103,7 +101,7 @@ export default function ProfilePage() {
       setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : null));
       setPreviewImage(urlData.publicUrl);
       alert("Profile picture updated!");
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       alert("Failed to update avatar");
     } finally {
@@ -139,14 +137,14 @@ export default function ProfilePage() {
 
       setCollections(colData || []);
 
-      // Load recent community drops
+      // Load recent drops
       const { data: dropData } = await supabase
         .from("items")
         .select(`
-          id, 
-          name, 
-          image_url, 
-          created_at, 
+          id,
+          name,
+          image_url,
+          created_at,
           profiles (username)
         `)
         .order("created_at", { ascending: false })
@@ -177,13 +175,13 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white pb-20">
       <div className="max-w-[720px] mx-auto px-4 pt-8">
 
-        {/* AVATAR - Exact squircle matching your reference image */}
+        {/* ⭐ AVATAR — Perfect squircle */}
         <div className="flex justify-center mb-8">
           {isOwnProfile ? (
             <label htmlFor="avatar-upload" className="relative cursor-pointer group">
               <div
-                className="w-24 h-24 overflow-hidden border-4 border-white shadow-2xl"
-                style={{ borderRadius: "35% / 30%" }}
+                className="w-14 h-14 overflow-hidden border border-white/10 shadow-xl transition-all"
+                style={{ borderRadius: "14%" }}
               >
                 <img
                   src={previewImage || profile.avatar_url || "/default-avatar.png"}
@@ -191,14 +189,15 @@ export default function ProfilePage() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all rounded-[35%/30%]">
-                <span className="text-white text-xs font-medium">Change Photo</span>
+
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-all rounded-[14%]">
+                <span className="text-white text-[10px] font-medium">Change</span>
               </div>
             </label>
           ) : (
             <div
-              className="w-24 h-24 overflow-hidden border-4 border-white shadow-2xl"
-              style={{ borderRadius: "35% / 30%" }}
+              className="w-14 h-14 overflow-hidden border border-white/10 shadow-xl"
+              style={{ borderRadius: "14%" }}
             >
               <img
                 src={profile.avatar_url || "/default-avatar.png"}
@@ -283,19 +282,16 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Import Instagram - temporarily commented to fix compile error */}
-        {/* {isOwnProfile && <ImportInstagramModal />} */}
-
         {/* Live Community Feed */}
         <div>
           <h2 className="text-2xl font-bold mb-4 px-1">Live from the Community</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {recentDrops.map((drop) => (
               <div key={drop.id} className="rounded-2xl overflow-hidden border border-zinc-800">
-                <img 
-                  src={drop.image_url || ""} 
-                  alt={drop.name} 
-                  className="w-full aspect-square object-cover" 
+                <img
+                  src={drop.image_url || ""}
+                  alt={drop.name}
+                  className="w-full aspect-square object-cover"
                 />
                 <div className="p-3 text-sm">
                   <p className="font-medium line-clamp-1">{drop.name}</p>

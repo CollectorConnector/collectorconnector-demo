@@ -9,7 +9,6 @@ import ImportInstagramModal from "@/components/ImportInstagramModal";
 import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 
-// ✅ YOUR BASE TYPES ----------------------------------------------------
 type Profile = {
   id: string;
   avatar_url?: string | null;
@@ -42,7 +41,6 @@ type Collection = {
   item_count: number | null;
 };
 
-// ✅ START OF PAGE ------------------------------------------------------
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -69,7 +67,7 @@ export default function ProfilePage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
 
-  // ✅ Load current user -------------------------------------------------
+  // Load current user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) =>
       setCurrentUserId(data.user?.id || null)
@@ -78,23 +76,20 @@ export default function ProfilePage() {
 
   const isOwnProfile = currentUserId === userId;
 
-  // ✅ Load collections ---------------------------------------------------
+  // Load collections
   useEffect(() => {
     if (!userId) return;
-
     async function loadCollections() {
       const { data } = await supabase
         .from("collections")
         .select("id, title, nichem, cover_url, item_count")
         .eq("user_id", userId);
-
       if (data) setCollections(data as Collection[]);
     }
-
     loadCollections();
   }, [userId]);
 
-  // ✅ Load recent drops --------------------------------------------------
+  // Load recent drops
   useEffect(() => {
     async function loadRecentDrops() {
       const { data } = await supabase
@@ -117,25 +112,23 @@ export default function ProfilePage() {
 
       setRecentDrops(cleaned);
     }
-
     loadRecentDrops();
   }, []);
 
-  // ✅ Load profile -------------------------------------------------------
+  // Load profile
   useEffect(() => {
     if (!userId) return;
 
     async function loadData() {
       try {
         setLoading(true);
-
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .single();
 
-        if (!data || error) {
+        if (error || !data) {
           if (isOwnProfile) {
             router.replace("/onboarding/step1");
             return;
@@ -146,7 +139,7 @@ export default function ProfilePage() {
 
         setProfile(data as Profile);
 
-        if (isOwnProfile) {
+        if (data && isOwnProfile) {
           setEditedDisplayUrl(data.display_url || "");
           setEditedBio(data.bio || "");
           setEditedLocation(data.location || "");
@@ -158,30 +151,26 @@ export default function ProfilePage() {
     }
 
     loadData();
-  }, [userId, isOwnProfile, router]);
+  }, [userId, router, isOwnProfile]);
 
-  // ✅ Follow check -------------------------------------------------------
+  // Follow logic
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
-
-    (async () => {
+    async function checkFollow() {
       const { data } = await supabase
         .from("follows")
         .select("*")
         .eq("follower_id", currentUserId)
         .eq("following_id", userId)
         .maybeSingle();
-
       setIsFollowing(!!data);
-    })();
+    }
+    checkFollow();
   }, [currentUserId, userId]);
 
-  // ✅ Follow toggle ------------------------------------------------------
   async function toggleFollow() {
-    if (!currentUserId || currentUserId === userId) return;
-
+    if (!currentUserId || currentUserId === userId || followLoading) return;
     setFollowLoading(true);
-
     try {
       if (isFollowing) {
         await supabase
@@ -189,13 +178,11 @@ export default function ProfilePage() {
           .delete()
           .eq("follower_id", currentUserId)
           .eq("following_id", userId);
-
         setIsFollowing(false);
       } else {
         await supabase
           .from("follows")
           .insert({ follower_id: currentUserId, following_id: userId });
-
         setIsFollowing(true);
       }
     } finally {
@@ -203,16 +190,14 @@ export default function ProfilePage() {
     }
   }
 
-  // ✅ Resize + upload avatar -------------------------------------------
+  // Avatar resize & upload
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
-
       img.onload = () => {
         const canvas = document.createElement("canvas");
         let { width, height } = img;
-
         if (width > height) {
           if (width > maxSize) {
             height = Math.round((height * maxSize) / width);
@@ -224,13 +209,9 @@ export default function ProfilePage() {
             height = maxSize;
           }
         }
-
         canvas.width = width;
         canvas.height = height;
-
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, width, height);
-
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
         canvas.toBlob(
           (blob) =>
             resolve(blob ? new File([blob], file.name, { type: file.type }) : file),
@@ -243,29 +224,35 @@ export default function ProfilePage() {
 
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !currentUserId) return;
+    if (!file || !currentUserId || currentUserId !== userId) return;
 
     setUploadingAvatar(true);
-
     try {
-      const resized = await resizeImage(file, 256);
-      const ext = file.name.split(".").pop();
-      const path = `${currentUserId}/avatar-${Date.now()}.${ext}`;
+      const resizedFile = await resizeImage(file, 256);
+      const timestamp = Date.now();
+      const ext = file.name.split(".").pop() || "jpg";
+      const fileName = `avatar-${timestamp}.${ext}`;
+      const filePath = `${currentUserId}/${fileName}`;
 
       const { error } = await supabase.storage
         .from("avatars")
-        .upload(path, resized, { upsert: true });
+        .upload(filePath, resizedFile, {
+          upsert: true,
+          cacheControl: "31536000"
+        });
 
       if (error) throw error;
 
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
-      await supabase.from("profiles").update({ avatar_url: data.publicUrl });
+      await supabase
+        .from("profiles")
+        .update({ avatar_url: data.publicUrl })
+        .eq("id", currentUserId);
 
       setProfile((prev) =>
         prev ? { ...prev, avatar_url: data.publicUrl } : prev
       );
-
       setPreviewImage(data.publicUrl);
     } finally {
       setUploadingAvatar(false);
@@ -273,24 +260,24 @@ export default function ProfilePage() {
   }
 
   async function saveProfileChanges() {
-    if (!currentUserId) return;
-
+    if (!currentUserId || currentUserId !== userId) return;
     setSaving(true);
-
     try {
       const updates = {
-        display_url: editedDisplayUrl,
-        bio: editedBio,
-        location: editedLocation,
-        tier: editedTier
+        display_url: editedDisplayUrl.trim() || null,
+        bio: editedBio.trim() || null,
+        location: editedLocation.trim() || null,
+        tier: editedTier || null
       };
 
-      await supabase.from("profiles").update(updates).eq("id", currentUserId);
+      const { error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", currentUserId);
 
-      setProfile((prev) =>
-        prev ? { ...prev, ...updates } : prev
-      );
+      if (error) throw error;
 
+      setProfile((prev) => (prev ? { ...prev, ...updates } : prev));
       setEditMode(false);
     } finally {
       setSaving(false);
@@ -302,20 +289,20 @@ export default function ProfilePage() {
     [profile]
   );
 
-  const tierIconSrc =
-    profile?.tier?.toLowerCase().includes("bronze")
-      ? "/bronze.png"
-      : profile?.tier?.toLowerCase().includes("silver")
-      ? "/silver.png"
-      : profile?.tier?.toLowerCase().includes("gold")
-      ? "/gold.png"
-      : profile?.tier?.toLowerCase().includes("diamond")
-      ? "/diamond.png"
-      : profile?.tier?.toLowerCase().includes("founder")
-      ? "/founder.png"
-      : null;
+  const getTierIcon = (tier?: string | null) => {
+    if (!tier) return null;
+    const t = tier.toLowerCase();
+    if (t.includes("bronze")) return "/bronze.png";
+    if (t.includes("silver")) return "/silver.png";
+    if (t.includes("gold")) return "/gold.png";
+    if (t.includes("diamond")) return "/diamond.png";
+    if (t.includes("founder")) return "/founder.png";
+    return null;
+  };
 
-  // ✅ ORIGINAL HEADER PRESERVED EXACTLY ----------------------------------
+  const tierIconSrc = getTierIcon(profile?.tier);
+
+  // ✅ ✅ ✅ FIXED HEADER (your original)
   function ProfileHeader() {
     return (
       <>
@@ -335,36 +322,113 @@ export default function ProfilePage() {
             padding: "0 16px"
           }}
         >
-          /CC-main-logo.png" style={{ objectFit: "contain" }} width={130} height={130} />
+          <img
+            src="/CC-main-logo.png"
+            alt="Collector Connector"
+            width={130}
+            height={130}
+            style={{ objectFit: "contain" }}
+          />
 
-          <div style={{ display: "flex", alignItems: "center", gap: 20, color: "white" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 20,
+              color: "white"
+            }}
+          >
             {/* Search */}
             <button
               onClick={() => router.push("/search")}
               className="hover:scale-110 transition-transform p-2"
+              aria-label="Search"
             >
-              <svg width="26" height="26" stroke="currentColor" strokeWidth="2.5" fill="none">
-                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 1114 0z" />
+              <svg
+                width="26"
+                height="26"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-6-6m2-5a7 7 0 01-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </button>
 
             {/* Instagram */}
-            https://instagram.com
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-110 transition-transform"
+            >
+              <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 ... " />
+              </svg>
+            </a>
 
             {/* Facebook */}
-            https://facebook.com
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-110 transition-transform"
+            >
+              <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M22 12c0-5.523-4.477-10..." />
+              </svg>
+            </a>
 
             {/* eBay */}
-            https://ebay.com
+            <a
+              href="https://ebay.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-base font-bold tracking-wide hover:scale-110 transition-transform"
+            >
+              eBay
+            </a>
 
             {/* Discord */}
-            https://discord.com
+            <a
+              href="https://discord.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-110 transition-transform"
+            >
+              <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.317 4.3698a19.7913... " />
+              </svg>
+            </a>
 
             {/* Whatnot */}
-            https://whatnot.com
+            <a
+              href="https://whatnot.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-110 transition-transform"
+            >
+              <svg width="26" height="26" viewBox="0 0 256 256" fill="currentColor">
+                <path d="M28 64c0-8.8 7.2-16..." />
+              </svg>
+            </a>
 
             {/* X */}
-            https://twitter.com
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-110 transition-transform"
+            >
+              <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308..." />
+              </svg>
+            </a>
           </div>
         </header>
 
@@ -372,16 +436,13 @@ export default function ProfilePage() {
       </>
     );
   }
-  // =====================================================================
-  // MAIN PAGE RENDER
-  // =====================================================================
+
+  // ✅ RENDER
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
         <ProfileHeader />
-        <div className="flex items-center justify-center h-[80vh]">
-          Loading...
-        </div>
+        <div className="flex items-center justify-center h-[80vh]">Loading...</div>
       </div>
     );
   }
@@ -403,10 +464,8 @@ export default function ProfilePage() {
       <ProfileHeader />
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
-        
-        {/* ===========================================================
-            PROFILE CARD
-        ============================================================ */}
+
+        {/* ✅ PROFILE CARD */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
@@ -440,7 +499,7 @@ export default function ProfilePage() {
               disabled={uploadingAvatar}
             />
 
-            {/* NAME */}
+            {/* ✅ NAME */}
             {isOwnProfile && editMode ? (
               <input
                 type="text"
@@ -449,15 +508,15 @@ export default function ProfilePage() {
                 className="text-4xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg"
               />
             ) : (
-              <h1 className="text-4xl font-bold mb-3">{displayName}</h1>
+              <h1 className="text-4xl font-bold">{displayName}</h1>
             )}
 
-            {/* USERNAME */}
+            {/* ✅ USERNAME */}
             {profile.username && (
               <p className="text-indigo-400 text-2xl mb-6">@{profile.username}</p>
             )}
 
-            {/* BIO */}
+            {/* ✅ BIO */}
             {isOwnProfile && editMode ? (
               <textarea
                 value={editedBio}
@@ -470,12 +529,12 @@ export default function ProfilePage() {
               </p>
             )}
 
-            {/* LOCATION */}
+            {/* ✅ LOCATION */}
             {profile.location && (
               <p className="text-gray-400 text-xl mb-6">{profile.location}</p>
             )}
 
-            {/* TIER */}
+            {/* ✅ TIER */}
             <div className="flex items-center gap-4 mb-8">
               {tierIconSrc && (
                 <img
@@ -491,7 +550,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* BUTTONS */}
+            {/* ✅ BUTTONS */}
             <div className="mt-10 flex gap-6 flex-wrap justify-center">
               {isOwnProfile ? (
                 editMode ? (
@@ -542,26 +601,20 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Suggested Collectors */}
           <SuggestedUsers />
         </section>
 
-        {/* ===========================================================
-            LIVE STATS
-        ============================================================ */}
+        {/* ✅ LIVE STATS */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
-
             <div>
               <p className="text-5xl font-bold">{profile.items_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Items</p>
             </div>
-
             <div>
               <p className="text-5xl font-bold">{profile.collections_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Collections</p>
             </div>
-
             <div
               onClick={() => router.push(`/profile/${userId}/followers`)}
               className="cursor-pointer hover:text-indigo-400 transition"
@@ -569,7 +622,6 @@ export default function ProfilePage() {
               <p className="text-5xl font-bold">{profile.followers_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Followers</p>
             </div>
-
             <div
               onClick={() => router.push(`/profile/${userId}/following`)}
               className="cursor-pointer hover:text-indigo-400 transition"
@@ -577,23 +629,18 @@ export default function ProfilePage() {
               <p className="text-5xl font-bold">{profile.following_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Following</p>
             </div>
-
             <div>
               <p className="text-5xl font-bold">£{profile.vault_value ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Vault Value</p>
             </div>
-
             <div>
               <p className="text-5xl font-bold">{profile.likes_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Likes</p>
             </div>
-
           </div>
         </section>
 
-        {/* ===========================================================
-            ✅ COLLECTIONS — FIXED HORIZONTAL CAROUSEL
-        ============================================================ */}
+        {/* ✅ COLLECTIONS CAROUSEL */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
 
@@ -608,17 +655,16 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* ✅ Horizontal, swipeable, perfect carousel */}
-          <div
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
-            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-          >
-            {collections.length === 0 ? (
-              <p className="text-center text-zinc-500 text-xl py-12">
-                No collections yet. Create your first one above!
-              </p>
-            ) : (
-              collections.map((col) => (
+          {collections.length === 0 ? (
+            <p className="text-center text-zinc-500 text-xl py-12">
+              No collections yet. Create your first one above!
+            </p>
+          ) : (
+            <div
+              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide"
+              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+            >
+              {collections.map((col) => (
                 <div
                   key={col.id}
                   onClick={() => router.push(`/collections/${col.id}`)}
@@ -629,27 +675,22 @@ export default function ProfilePage() {
                     alt={col.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
                   <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md">
                     {col.item_count || 0}
                   </div>
-
                   <div className="absolute bottom-3 left-3 right-3">
                     <p className="text-white text-lg font-semibold tracking-tight line-clamp-1">
                       {col.title}
                     </p>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
-        {/* ===========================================================
-            COMMUNITY FEED
-        ============================================================ */}
+        {/* ✅ COMMUNITY FEED */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">Live from the Community</h2>
 
@@ -662,15 +703,14 @@ export default function ProfilePage() {
               recentDrops.map((drop) => (
                 <div
                   key={drop.id}
-                  onClick={() => router.push(`/items/${drop.id}`)}
                   className="group relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition cursor-pointer"
+                  onClick={() => router.push(`/items/${drop.id}`)}
                 >
                   <img
                     src={drop.image_url || "/default-item.png"}
                     alt={drop.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-4">
                     <p className="text-white text-sm font-medium">
                       @{drop.profiles?.username || "collector"}

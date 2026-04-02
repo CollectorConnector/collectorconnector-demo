@@ -4,14 +4,6 @@ export async function POST(req: Request) {
   try {
     const { username } = await req.json();
 
-    if (!username) {
-      return NextResponse.json(
-        { error: "NO_USERNAME", message: "Username is required" },
-        { status: 400 }
-      );
-    }
-
-    // Build full Instagram URL
     const profileUrl = `https://www.instagram.com/${username.replace("@", "")}/`;
 
     const res = await fetch("https://emjii5mdpdyh.runs.apify.net", {
@@ -30,29 +22,13 @@ export async function POST(req: Request) {
       })
     });
 
-    const data = await res.json();
+    // Read raw text instead of JSON
+    const raw = await res.text();
 
-    if (!res.ok) {
-      return NextResponse.json(
-        {
-          error: "APIFY_REQUEST_FAILED",
-          status: res.status,
-          message: data?.error || "Apify request failed"
-        },
-        { status: 500 }
-      );
-    }
-
-    const result = data?.[0];
-
-    if (!result || !result?.posts) {
-      return NextResponse.json(
-        { error: "NO_POSTS_FOUND", message: "No posts returned" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ posts: result.posts });
+    return NextResponse.json({
+      status: res.status,
+      raw
+    });
   } catch (err) {
     return NextResponse.json(
       { error: "SERVER_ERROR", message: String(err) },

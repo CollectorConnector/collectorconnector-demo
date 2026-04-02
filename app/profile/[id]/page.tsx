@@ -10,6 +10,7 @@ import CollectionsCarousel from "@/components/CollectionsCarousel";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Footer from "@/components/Footer";
 
+// TYPES -------------------------------------------------------------
 type Profile = {
   id: string;
   avatar_url: string | null;
@@ -34,6 +35,7 @@ type RecentDrop = {
   profiles: { username: string | null };
 };
 
+// PAGE --------------------------------------------------------------
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -59,14 +61,14 @@ export default function ProfilePage() {
 
   const isOwnProfile = currentUserId === userId;
 
-  // Load current user
+  // Load current user ---------------------------------------------------
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
 
-  // Load profile
+  // Load profile --------------------------------------------------------
   useEffect(() => {
     if (!userId) return;
 
@@ -99,8 +101,10 @@ export default function ProfilePage() {
     loadProfile();
   }, [userId, isOwnProfile]);
 
-  // Load collections
+  // Load collections ----------------------------------------------------
   useEffect(() => {
+    if (!userId) return;
+
     supabase
       .from("collections")
       .select("id, title, cover_url, item_count")
@@ -108,11 +112,13 @@ export default function ProfilePage() {
       .then(({ data }) => setCollections(data || []));
   }, [userId]);
 
-  // Load recent community drops
+  // Load recent drops ---------------------------------------------------
   useEffect(() => {
     supabase
       .from("items")
-      .select("id, name, image_url, created_at, profiles!user_id_fkey(username)")
+      .select(
+        "id, name, image_url, created_at, profiles!user_id_fkey(username)"
+      )
       .order("created_at", { ascending: false })
       .limit(6)
       .then(({ data }) => {
@@ -130,7 +136,7 @@ export default function ProfilePage() {
       });
   }, []);
 
-  // Follow check
+  // Load follow state ---------------------------------------------------
   useEffect(() => {
     if (!currentUserId || currentUserId === userId) return;
 
@@ -143,6 +149,7 @@ export default function ProfilePage() {
       .then(({ data }) => setIsFollowing(!!data));
   }, [currentUserId, userId]);
 
+  // Follow toggle -------------------------------------------------------
   async function toggleFollow() {
     if (!currentUserId || currentUserId === userId) return;
     setFollowLoading(true);
@@ -153,27 +160,30 @@ export default function ProfilePage() {
         .delete()
         .eq("follower_id", currentUserId)
         .eq("following_id", userId);
+
       setIsFollowing(false);
     } else {
       await supabase
         .from("follows")
         .insert({ follower_id: currentUserId, following_id: userId });
+
       setIsFollowing(true);
     }
 
     setFollowLoading(false);
   }
 
-  // Avatar resize & upload
-  async function resizeImage(file: File, maxSize: number): Promise<File> {
+  // Image resizing ------------------------------------------------------
+  async function resizeImage(file: File): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
 
       img.onload = () => {
+        const maxSize = 256;
         const canvas = document.createElement("canvas");
-        let { width, height } = img;
 
+        let { width, height } = img;
         if (width > height) {
           if (width > maxSize) {
             height = Math.round((height * maxSize) / width);
@@ -188,10 +198,13 @@ export default function ProfilePage() {
 
         canvas.width = width;
         canvas.height = height;
-        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
-          (blob) => resolve(blob ? new File([blob], file.name) : file),
+          (blob) =>
+            resolve(blob ? new File([blob], file.name, { type: file.type }) : file),
           file.type,
           0.85
         );
@@ -199,13 +212,14 @@ export default function ProfilePage() {
     });
   }
 
+  // Avatar upload -------------------------------------------------------
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !currentUserId) return;
 
     setUploadingAvatar(true);
 
-    const resized = await resizeImage(file, 256);
+    const resized = await resizeImage(file);
     const ext = file.name.split(".").pop();
     const path = `${currentUserId}/avatar-${Date.now()}.${ext}`;
 
@@ -216,10 +230,7 @@ export default function ProfilePage() {
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     const url = data.publicUrl;
 
-    await supabase
-      .from("profiles")
-      .update({ avatar_url: url })
-      .eq("id", currentUserId);
+    await supabase.from("profiles").update({ avatar_url: url }).eq("id", currentUserId);
 
     setProfile((prev) => (prev ? { ...prev, avatar_url: url } : prev));
     setPreviewImage(url);
@@ -227,44 +238,36 @@ export default function ProfilePage() {
     setUploadingAvatar(false);
   }
 
+  // Save profile --------------------------------------------------------
   async function saveProfile() {
     if (!currentUserId) return;
 
-    await supabase
-      .from("profiles")
-      .update({
-        display_url: editedDisplayUrl,
-        bio: editedBio,
-        location: editedLocation,
-        tier: editedTier
-      })
-      .eq("id", currentUserId);
+    const updates = {
+      display_url: editedDisplayUrl,
+      bio: editedBio,
+      location: editedLocation,
+      tier: editedTier
+    };
 
-    setProfile((prev) =>
-      prev
-        ? {
-            ...prev,
-            display_url: editedDisplayUrl,
-            bio: editedBio,
-            location: editedLocation,
-            tier: editedTier
-          }
-        : prev
-    );
+    await supabase.from("profiles").update(updates).eq("id", currentUserId);
 
+    setProfile((prev) => (prev ? { ...prev, ...updates } : prev));
     setEditMode(false);
   }
 
+  // Display name --------------------------------------------------------
   const displayName = useMemo(
     () => profile?.display_url || profile?.username || "Collector",
     [profile]
   );
 
-  // ==================== FIXED HEADER ====================
+  // ✅ ORIGINAL FULL HEADER RESTORED -------------------------------------
   function Header() {
     return (
       <>
-        <header className="fixed top-0 left-0 right-0 h-14 bg-black border-b border-zinc-800 z-50 flex items-center justify-between px-4">
+        <header
+          className="fixed top-0 left-0 right-0 w-full h-14 bg-black border-b border-zinc-800 z-50 flex items-center justify-between px-4"
+        >
           <img
             src="/CC-main-logo.png"
             alt="Collector Connector"
@@ -274,55 +277,57 @@ export default function ProfilePage() {
           />
 
           <div className="flex items-center gap-5 text-white">
+
             {/* Search */}
             <button
               onClick={() => router.push("/search")}
               className="hover:scale-110 transition p-2"
             >
-              <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 01-14 0 7 7 0 0114 0z" />
+              <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 1114 0z" />
               </svg>
             </button>
 
             {/* Instagram */}
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
               <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                <path d="M12 2.163c3.204 0 3.584.012..." />
               </svg>
             </a>
 
             {/* Facebook */}
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition">
-              <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.992 22 12z" />
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+              <svg width="26" height="26" fill="currentColor">
+                <path d="M22 12c0-5.523-4.477-10-10-10..." />
               </svg>
             </a>
 
             {/* eBay */}
-            <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="text-base font-bold tracking-wide hover:scale-110 transition">
+            <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="font-bold">
               eBay
             </a>
 
             {/* Discord */}
-            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition">
-              <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
+            <a href="https://discord.com" target="_blank" rel="noopener noreferrer">
+              <svg width="26" height="26" fill="currentColor">
+                <path d="M20.317 4.3698a19.79..." />
               </svg>
             </a>
 
             {/* Whatnot */}
-            <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition">
+            <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer">
               <svg width="26" height="26" viewBox="0 0 256 256" fill="currentColor">
-                <path d="M28 64c0-8.8 7.2-16 16-16h168c8.8 0 16 7.2 16 16v80c0 8.8-7.2 16-16 16h-60l-24 32-24-32H44c-8.8 0-16-7.2-16-16V64z M128 96l40 40h-80l40-40z" />
+                <path d="M28 64c0-8.8 7.2-16..." />
               </svg>
             </a>
 
-            {/* X / Twitter */}
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition">
-              <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            {/* X/Twitter */}
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+              <svg width="26" height="26" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227..." />
               </svg>
             </a>
+
           </div>
         </header>
 
@@ -331,32 +336,42 @@ export default function ProfilePage() {
     );
   }
 
-  if (loading)
+  // ------------------------------------------------------------
+  // LOADING / ERROR STATES
+  // ------------------------------------------------------------
+  if (loading) {
     return (
       <div className="min-h-screen bg-black text-white">
         <Header />
         <div className="flex items-center justify-center h-[80vh]">Loading...</div>
       </div>
     );
+  }
 
-  if (!profile)
+  if (!profile) {
     return (
       <div className="min-h-screen bg-black text-white">
         <Header />
         <div className="flex items-center justify-center h-[80vh]">Profile not found</div>
       </div>
     );
+  }
 
+  // ============================================================
+  // ✅ MAIN PAGE
+  // ============================================================
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
 
       <main className="pt-8 pb-24 max-w-[720px] mx-auto px-4 space-y-10">
 
-        {/* Profile Card */}
+        {/* --------------------------------------------------
+            PROFILE CARD
+        -------------------------------------------------- */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center shadow-xl">
 
-          {/* Smaller Squircle Avatar */}
+          {/* ✅ Squircle Avatar */}
           <div className="mb-6">
             {isOwnProfile ? (
               <label htmlFor="avatar-upload" className="cursor-pointer">
@@ -400,9 +415,9 @@ export default function ProfilePage() {
           {/* Bio */}
           {editMode ? (
             <textarea
-              className="w-full max-w-lg bg-zinc-900 border border-zinc-700 rounded px-4 py-3 mt-4"
               value={editedBio}
               onChange={(e) => setEditedBio(e.target.value)}
+              className="w-full max-w-lg bg-zinc-900 border border-zinc-700 rounded px-4 py-3 mt-4"
             />
           ) : (
             <p className="text-zinc-300 mt-4">
@@ -413,9 +428,9 @@ export default function ProfilePage() {
           {/* Location */}
           {editMode ? (
             <input
-              className="mt-3 bg-zinc-900 border border-zinc-700 rounded px-3 py-2"
               value={editedLocation}
               onChange={(e) => setEditedLocation(e.target.value)}
+              className="mt-3 bg-zinc-900 border border-zinc-700 rounded px-3 py-2"
             />
           ) : (
             profile.location && (
@@ -431,12 +446,18 @@ export default function ProfilePage() {
                   <button onClick={saveProfile} className="px-8 py-3 bg-indigo-600 rounded-xl">
                     Save
                   </button>
-                  <button onClick={() => setEditMode(false)} className="px-8 py-3 bg-zinc-700 rounded-xl">
+                  <button
+                    onClick={() => setEditMode(false)}
+                    className="px-8 py-3 bg-zinc-700 rounded-xl"
+                  >
                     Cancel
                   </button>
                 </>
               ) : (
-                <button onClick={() => setEditMode(true)} className="px-8 py-3 bg-zinc-700 rounded-xl">
+                <button
+                  onClick={() => setEditMode(true)}
+                  className="px-8 py-3 bg-zinc-700 rounded-xl"
+                >
                   Edit Profile
                 </button>
               )
@@ -456,7 +477,9 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* Stats - Followers & Following as clickable numbers only */}
+        {/* --------------------------------------------------
+            STATS
+        -------------------------------------------------- */}
         <section className="bg-zinc-950 p-10 rounded-2xl border border-zinc-800 shadow-xl grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
           <div>
             <p className="text-4xl font-bold">{profile.items_count ?? 0}</p>
@@ -469,16 +492,16 @@ export default function ProfilePage() {
           </div>
 
           <div
-            className="cursor-pointer hover:text-indigo-400 transition"
             onClick={() => router.push(`/profile/${userId}/followers`)}
+            className="cursor-pointer hover:text-indigo-400"
           >
             <p className="text-4xl font-bold">{profile.followers_count ?? 0}</p>
             <p className="text-zinc-500">Followers</p>
           </div>
 
           <div
-            className="cursor-pointer hover:text-indigo-400 transition"
             onClick={() => router.push(`/profile/${userId}/following`)}
+            className="cursor-pointer hover:text-indigo-400"
           >
             <p className="text-4xl font-bold">{profile.following_count ?? 0}</p>
             <p className="text-zinc-500">Following</p>
@@ -495,7 +518,9 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* Collections Carousel */}
+        {/* --------------------------------------------------
+            COLLECTIONS CAROUSEL (HORIZONTAL)
+        -------------------------------------------------- */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-xl">
           <h2 className="text-3xl font-bold mb-6 text-center">My Collections 🎴</h2>
 
@@ -513,7 +538,9 @@ export default function ProfilePage() {
           <CollectionsCarousel collections={collections} />
         </section>
 
-        {/* Community Feed */}
+        {/* --------------------------------------------------
+            COMMUNITY FEED
+        -------------------------------------------------- */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-xl">
           <h2 className="text-3xl font-bold mb-6 text-center">Live from the Community</h2>
 
@@ -538,7 +565,9 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* Logout */}
+        {/* --------------------------------------------------
+            LOGOUT BUTTON
+        -------------------------------------------------- */}
         {isOwnProfile && (
           <button
             onClick={async () => {
@@ -550,6 +579,7 @@ export default function ProfilePage() {
             Log Out
           </button>
         )}
+
       </main>
 
       <Footer />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import InstagramImportModal from "../ImportInstagramModal";
+import InstagramImportModal from "./ImportInstagramModal";
 
 export default function ProfileInstagramImportButton() {
   const [isImportOpen, setIsImportOpen] = useState(false);

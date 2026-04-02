@@ -2,8 +2,6 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
-import ImportInstagramModal from "@/components/ImportInstagramModal";
 import { useEffect, useMemo, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -454,53 +452,52 @@ export default function ProfilePage() {
           </div>
         </section>
 
-       <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-  <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+          <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
 
-  {isOwnProfile && (
-    <div className="flex justify-center mb-8">
-      <button
-        onClick={() => router.push("/collections/create")}
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
-      >
-        + Add New Collection
-      </button>
-    </div>
-  )}
+          {isOwnProfile && (
+            <div className="flex justify-center mb-8">
+              <button
+                onClick={() => router.push("/collections/create")}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+              >
+                + Add New Collection
+              </button>
+            </div>
+          )}
 
-  {collections.length === 0 ? (
-    <p className="text-center text-zinc-500 text-xl py-12">
-      No collections yet. Create your first one above!
-    </p>
-  ) : (
-    <div className="grid grid-cols-3 sm:grid-cols-4 gap-6">
-      {collections.map((col) => (
-        <div
-          key={col.id}
-          onClick={() => router.push(`/collections/${col.id}`)}
-          className="cursor-pointer"
-        >
-          <div className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
-            <img
-              src={col.cover_url || "/CC-main-logo.png"}
-              alt={col.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          {collections.length === 0 ? (
+            <p className="text-center text-zinc-500 text-xl py-12">
+              No collections yet. Create your first one above!
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-6">
+              {collections.map((col) => (
+                <div
+                  key={col.id}
+                  onClick={() => router.push(`/collections/${col.id}`)}
+                  className="cursor-pointer"
+                >
+                  <div className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
+                    <img
+                      src={col.cover_url || "/CC-main-logo.png"}
+                      alt={col.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-          <p className="text-white text-center font-semibold mt-3 truncate">
-            {col.title}
-          </p>
+                  <p className="text-white text-center font-semibold mt-3 truncate">
+                    {col.title}
+                  </p>
 
-          <p className="text-zinc-400 text-center text-sm">
-            {col.item_count || 0} items
-          </p>
-        </div>
-      ))}
-    </div>
-  )}
-</section>
-
+                  <p className="text-zinc-400 text-center text-sm">
+                    {col.item_count || 0} items
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Live Community Feed */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
@@ -525,20 +522,29 @@ export default function ProfilePage() {
 
       {isOwnProfile && (
         <div className="max-w-[720px] mx-auto px-4 pb-10">
-          <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} className="w-full py-4 bg-red-600 hover:bg-red-500 rounded-xl text-white text-xl font-semibold transition">
+          <button 
+            onClick={async () => { 
+              await supabase.auth.signOut(); 
+              router.push("/auth/login"); 
+            }} 
+            className="w-full py-4 bg-red-600 hover:bg-red-500 rounded-xl text-white text-xl font-semibold transition"
+          >
             Log Out
-          false)} />
-            <button
-  onClick={() => setIsImportOpen(true)}
-  className="bg-black text-white px-4 py-2 rounded"
->
-  Import from Instagram
-</button>
-<ImportInstagramModal
-  isOpen={isImportOpen}
-  onClose={() => setIsImportOpen(false)}
-/>
+          </button>
 
+          <button
+            onClick={() => setIsImportOpen(true)}
+            className="bg-black text-white px-4 py-2 rounded mt-4 w-full"
+          >
+            Import from Instagram
+          </button>
+
+          <ImportInstagramModal
+            isOpen={isImportOpen}
+            onClose={() => setIsImportOpen(false)}
+          />
+        </div>
+      )}
 
       <Footer />
     </div>

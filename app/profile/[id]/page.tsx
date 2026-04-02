@@ -358,7 +358,7 @@ export default function ProfilePage() {
                   <img
                     src={previewImage || profile.avatar_url || "/default-avatar.png"}
                     alt="Avatar"
-                    className="w-20 h-20 object-cover border-2 border-white shadow-md"
+                    className="w-12 h-12 object-cover border-2 border-white shadow-md"
                     style={{ borderRadius: "14%" }}
                   />
                 </label>

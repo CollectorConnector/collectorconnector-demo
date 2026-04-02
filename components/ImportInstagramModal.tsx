@@ -56,7 +56,7 @@ const [loading, setLoading] = useState(false);
   }
 
   // ⭐ Select / deselect posts
-  function togglePost(id) {
+  function togglePost(id: string) {
     setSelectedPosts((prev) =>
       prev.includes(id)
         ? prev.filter((p) => p !== id)

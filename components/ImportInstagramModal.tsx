@@ -1,10 +1,6 @@
 "use client";
-useEffect(() => {
-  loadCollections();
-}, []);
 
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -19,7 +15,11 @@ export default function InstagramImportModal({ onClose }) {
   const [newCollectionName, setNewCollectionName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Load user collections
+  // ⭐ Load collections IMMEDIATELY when modal opens
+  useEffect(() => {
+    loadCollections();
+  }, []);
+
   async function loadCollections() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -33,8 +33,13 @@ export default function InstagramImportModal({ onClose }) {
     setCollections(data || []);
   }
 
-  // Fetch Instagram posts (mock or real)
+  // ⭐ Fetch Instagram posts
   async function fetchPosts() {
+    if (!username.trim()) {
+      alert("Enter a username first");
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/instagram/fetch", {
@@ -46,11 +51,9 @@ export default function InstagramImportModal({ onClose }) {
     const data = await res.json();
     setPosts(data.posts || []);
     setLoading(false);
-
-    loadCollections();
   }
 
-  // Toggle selected posts
+  // ⭐ Select / deselect posts
   function togglePost(id) {
     setSelectedPosts((prev) =>
       prev.includes(id)
@@ -59,7 +62,7 @@ export default function InstagramImportModal({ onClose }) {
     );
   }
 
-  // Import selected posts
+  // ⭐ Import selected posts
   async function handleImport() {
     if (selectedPosts.length === 0) {
       alert("Select at least one post");
@@ -68,7 +71,7 @@ export default function InstagramImportModal({ onClose }) {
 
     let collectionIdToUse = selectedCollection;
 
-    // Create new collection if chosen
+    // ⭐ Create new collection if chosen
     if (selectedCollection === "new") {
       if (!newCollectionName.trim()) {
         alert("Enter a name for the new collection");
@@ -94,7 +97,7 @@ export default function InstagramImportModal({ onClose }) {
       collectionIdToUse = newCol.id;
     }
 
-    // Send selected posts to backend importer
+    // ⭐ Send selected posts to backend importer
     const res = await fetch("/api/instagram/import", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -164,11 +167,13 @@ export default function InstagramImportModal({ onClose }) {
               className="w-full p-3 rounded-xl bg-zinc-800 border border-zinc-700 mb-3"
             >
               <option value="">Select a collection</option>
+
               {collections.map((col) => (
                 <option key={col.id} value={col.id}>
                   {col.title}
                 </option>
               ))}
+
               <option value="new">+ Create New Collection</option>
             </select>
 

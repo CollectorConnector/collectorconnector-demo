@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+console.log("RapidAPI key loaded:", !!process.env.RAPIDAPI_KEY);
 
 export async function POST(req: NextRequest) {
   try {

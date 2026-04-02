@@ -789,10 +789,12 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <ImportInstagramModal
-            isOpen={isImportOpen}
-            onClose={() => setIsImportOpen(false)}
-          />
+         {isImportOpen && (
+  <ImportInstagramModal
+    onClose={() => setIsImportOpen(false)}
+  />
+)}
+
         </>
       )}
 

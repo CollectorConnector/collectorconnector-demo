@@ -26,7 +26,7 @@ export default function ImportInstagramModal({ isOpen, onClose }: ImportInstagra
   } = useInstagramImport();
 
   // ⭐ Load user collections
-  const [collections, setCollections] = useState([]);
+  const [collections, setCollections] = useState<any[]>([]);   // ← Fixed: proper type
 
   useEffect(() => {
     const loadCollections = async () => {

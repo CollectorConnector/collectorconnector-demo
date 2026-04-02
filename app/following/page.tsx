@@ -46,9 +46,10 @@ export default function FollowingPage() {
         const flatFollowing: FollowingUser[] = data
           ?.map((item: any) => item.profiles)
           .filter((profile: any) => profile !== null) || [];
-        
+
         setFollowing(flatFollowing);
       }
+
       setLoading(false);
     }
 
@@ -83,22 +84,25 @@ export default function FollowingPage() {
         <h1 className="text-4xl font-bold mb-8 text-center">Following</h1>
 
         {following.length === 0 ? (
-          <p className="text-center text-zinc-400 text-xl">You aren't following anyone yet.</p>
+          <p className="text-center text-zinc-400 text-xl">
+            You aren't following anyone yet.
+          </p>
         ) : (
           <div className="space-y-4">
             {following.map((user) => (
-              <div key={user.id} className="flex items-center gap-4 bg-zinc-950 border border-zinc-800 rounded-2xl p-5">
-                <div className="w-16 h-16 rounded-[30%] overflow-hidden border-2 border-zinc-700 flex-shrink-0">
-                  <img
-                    src={user.avatar_url || "/default-avatar.png"}
-                    alt={user.display_url || ""}
-                    className="w-full h-full object-cover"
-                  />
+              <div
+                key={user.id}
+                className="flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-2xl p-5"
+              >
+                <div className="flex flex-col min-w-0">
+                  <p className="font-semibold text-xl truncate">
+                    {user.display_url || user.username}
+                  </p>
+                  <p className="text-zinc-400">
+                    @{user.username || "collector"}
+                  </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-xl truncate">{user.display_url || user.username}</p>
-                  <p className="text-zinc-400">@{user.username || "collector"}</p>
-                </div>
+
                 <button
                   onClick={() => handleUnfollow(user.id)}
                   className="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-xl text-sm font-medium"

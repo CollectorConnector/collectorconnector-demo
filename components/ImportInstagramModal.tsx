@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-// Define types for clarity
 interface InstagramPost {
   id: string;
   imageUrl: string;
@@ -23,7 +22,6 @@ export default function InstagramImportModal({
 }) {
   const router = useRouter();
 
-  // Typed state
   const [username, setUsername] = useState<string>("");
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
@@ -32,7 +30,7 @@ export default function InstagramImportModal({
   const [newCollectionName, setNewCollectionName] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Load collections immediately when modal opens
+  // Load collections immediately
   useEffect(() => {
     loadCollections();
   }, []);
@@ -51,7 +49,6 @@ export default function InstagramImportModal({
     setCollections((data as Collection[]) || []);
   }
 
-  // Fetch Instagram posts
   async function fetchPosts() {
     if (!username.trim()) {
       alert("Enter a username first");
@@ -71,7 +68,6 @@ export default function InstagramImportModal({
     setLoading(false);
   }
 
-  // Select / deselect posts
   function togglePost(id: string) {
     setSelectedPosts((prev) =>
       prev.includes(id)
@@ -80,7 +76,6 @@ export default function InstagramImportModal({
     );
   }
 
-  // Import selected posts
   async function handleImport() {
     if (selectedPosts.length === 0) {
       alert("Select at least one post");
@@ -89,7 +84,6 @@ export default function InstagramImportModal({
 
     let collectionIdToUse = selectedCollection;
 
-    // Create new collection
     if (selectedCollection === "new") {
       if (!newCollectionName.trim()) {
         alert("Enter a name for the new collection");
@@ -117,7 +111,6 @@ export default function InstagramImportModal({
       collectionIdToUse = newCol.id;
     }
 
-    // Send selected posts to backend importer
     const res = await fetch("/api/instagram/import", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -140,7 +133,6 @@ export default function InstagramImportModal({
       <div className="bg-zinc-900 p-6 rounded-2xl w-full max-w-lg border border-zinc-700">
         <h2 className="text-2xl font-bold mb-4">Import from Instagram</h2>
 
-        {/* Username input */}
         <input
           type="text"
           placeholder="Instagram username"
@@ -156,7 +148,6 @@ export default function InstagramImportModal({
           {loading ? "Fetching..." : "Fetch Posts"}
         </button>
 
-        {/* Posts grid */}
         {posts.length > 0 && (
           <div className="grid grid-cols-3 gap-2 mb-4">
             {posts.map((post) => (
@@ -178,7 +169,6 @@ export default function InstagramImportModal({
           </div>
         )}
 
-        {/* Collection selector */}
         {posts.length > 0 && (
           <>
             <select
@@ -209,7 +199,6 @@ export default function InstagramImportModal({
           </>
         )}
 
-        {/* Import button */}
         {posts.length > 0 && (
           <button
             onClick={handleImport}

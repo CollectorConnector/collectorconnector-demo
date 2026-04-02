@@ -341,8 +341,7 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return <div className="min-h-screen bg-black text-white"><ProfileHeader /><div className="flex flex-col items-center justify-center h-[80vh]"><h1 className="text-3xl mb-4">Error</h1><p>{error}</p></div></div>;
-
-    <div className="min-h-screen bg-black text-white">
+             
       <ProfileHeader />
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">

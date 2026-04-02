@@ -527,6 +527,9 @@ export default function ProfilePage() {
           </button>
         </div>
       )}
+{showImportModal && (
+  <ImportInstagramModal onClose={() => setShowImportModal(false)} />
+)}
 
       <Footer />
     </div>

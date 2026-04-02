@@ -8,7 +8,7 @@ export default function InstagramImportModal({ onClose }: { onClose: () => void 
 
   const router = useRouter();
 
-  const [username, setUsername] = useState("");
+const [username, setUsername] = useState("");
 const [posts, setPosts] = useState<any[]>([]);
 const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
 const [collections, setCollections] = useState<any[]>([]);
@@ -86,7 +86,7 @@ const [loading, setLoading] = useState(false);
         .from("collections")
         .insert({
           title: newCollectionName,
-          user_id: user.id,
+          user_id: user! .id,
         })
         .select()
         .single();

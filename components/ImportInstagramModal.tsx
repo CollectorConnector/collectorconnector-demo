@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useInstagramImport } from "@/hooks/useInstagramImport";
 
-export default function ImportInstagramModal({ isOpen, onClose }) {
+interface ImportInstagramModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function ImportInstagramModal({ isOpen, onClose }: ImportInstagramModalProps) {
   const {
     username,
     setUsername,

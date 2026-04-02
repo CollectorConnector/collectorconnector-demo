@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-export default function InstagramImportModal({ onClose }) {
+export default function InstagramImportModal({ onClose }: { onClose: () => void }) {
+
   const router = useRouter();
 
   const [username, setUsername] = useState("");

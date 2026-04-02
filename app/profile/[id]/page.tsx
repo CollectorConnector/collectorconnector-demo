@@ -358,7 +358,7 @@ export default function ProfilePage() {
                   <img
                     src={previewImage || profile.avatar_url || "/default-avatar.png"}
                     alt="Avatar"
-                    className="w-20 h-20 object-cover border-2 border-white shadow-md"
+                    className="w-12 h-12 object-cover border-2 border-white shadow-md"
                     style={{ borderRadius: "14%" }}
                   />
                 </label>
@@ -443,12 +443,23 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
             <div><p className="text-5xl font-bold">{profile?.items_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Items</p></div>
-            <div><p className="text-5xl font-bold">{profile?.collections_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Collections</p></div>
-            <div onClick={() => router.push("/followers")} className="cursor-pointer hover:text-indigo-400 transition"><p className="text-5xl font-bold">{profile?.followers_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Followers</p></div>
-            <div onClick={() => router.push("/following")} className="cursor-pointer hover:text-indigo-400 transition"><p className="text-5xl font-bold">{profile?.following_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Following</p></div>
-            <div><p className="text-5xl font-bold">£{profile?.vault_value ?? 0}</p><p className="text-gray-500 text-xl mt-3">Vault Value</p></div>
-            <div><p className="text-5xl font-bold">{profile?.likes_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Likes</p></div>
-          </div>
+            <div><p className="text-5xl font-bold">{profile?.collections_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Collections</p></
+            <div
+  className="cursor-pointer hover:text-indigo-400 transition"
+  onClick={() => router.push(`/profile/${userId}/followers`)}
+>
+  <p className="text-5xl font-bold">{profile?.followers_count ?? 0}</p>
+  <p className="text-gray-500 text-xl mt-3">Followers</p>
+</div>
+
+<div
+  className="cursor-pointer hover:text-indigo-400 transition"
+  onClick={() => router.push(`/profile/${userId}/following`)}
+>
+  <p className="text-5xl font-bold">{profile?.following_count ?? 0}</p>
+  <p className="text-gray-500 text-xl mt-3">Following</p>
+</div>
+
         </section>
 
         {/* Collections Carousel with + Add button */}

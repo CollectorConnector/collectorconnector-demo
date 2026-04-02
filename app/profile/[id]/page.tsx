@@ -270,7 +270,7 @@ export default function ProfilePage() {
 
   const tierIconSrc = getTierIcon(profile?.tier);
 
-  // ProfileHeader with ALL social icons restored
+  // ProfileHeader with ALL social icons
   function ProfileHeader() {
     return (
       <>
@@ -341,21 +341,24 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return <div className="min-h-screen bg-black text-white"><ProfileHeader /><div className="flex flex-col items-center justify-center h-[80vh]"><h1 className="text-3xl mb-4">Error</h1><p>{error}</p></div></div>;
-             
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
       <ProfileHeader />
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            {/* Clean squircle avatar - the one you liked */}
+            {/* Clean squircle avatar */}
             <div className="relative mb-8">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
                   <img
                     src={previewImage || profile.avatar_url || "/default-avatar.png"}
                     alt="Avatar"
-                    className="w-12 h-12 object-cover border-2 border-white shadow-md"
+                    className="w-20 h-20 object-cover border-2 border-white shadow-md"
                     style={{ borderRadius: "14%" }}
                   />
                 </label>
@@ -378,7 +381,6 @@ export default function ProfilePage() {
               disabled={uploadingAvatar}
             />
 
-            {/* All your original profile content (name, bio, tier, buttons, etc.) */}
             {isOwnProfile && editMode ? (
               <input type="text" value={editedDisplayUrl} onChange={(e) => setEditedDisplayUrl(e.target.value)} className="text-4xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg" />
             ) : (
@@ -440,26 +442,21 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
             <div><p className="text-5xl font-bold">{profile?.items_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Items</p></div>
-            <div><p className="text-5xl font-bold">{profile?.collections_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Collections</p></
-            <div
-  className="cursor-pointer hover:text-indigo-400 transition"
-  onClick={() => router.push(`/profile/${userId}/followers`)}
->
-  <p className="text-5xl font-bold">{profile?.followers_count ?? 0}</p>
-  <p className="text-gray-500 text-xl mt-3">Followers</p>
-</div>
-
-<div
-  className="cursor-pointer hover:text-indigo-400 transition"
-  onClick={() => router.push(`/profile/${userId}/following`)}
->
-  <p className="text-5xl font-bold">{profile?.following_count ?? 0}</p>
-  <p className="text-gray-500 text-xl mt-3">Following</p>
-</div>
-
+            <div><p className="text-5xl font-bold">{profile?.collections_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Collections</p></div>
+            <div onClick={() => router.push(`/profile/${userId}/followers`)} className="cursor-pointer hover:text-indigo-400 transition">
+              <p className="text-5xl font-bold">{profile?.followers_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Followers</p>
+            </div>
+            <div onClick={() => router.push(`/profile/${userId}/following`)} className="cursor-pointer hover:text-indigo-400 transition">
+              <p className="text-5xl font-bold">{profile?.following_count ?? 0}</p>
+              <p className="text-gray-500 text-xl mt-3">Following</p>
+            </div>
+            <div><p className="text-5xl font-bold">£{profile?.vault_value ?? 0}</p><p className="text-gray-500 text-xl mt-3">Vault Value</p></div>
+            <div><p className="text-5xl font-bold">{profile?.likes_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Likes</p></div>
+          </div>
         </section>
 
-        {/* Collections Carousel with + Add button */}
+        {/* Collections Carousel */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
 

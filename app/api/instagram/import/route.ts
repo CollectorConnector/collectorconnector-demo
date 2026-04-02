@@ -12,17 +12,32 @@ export async function POST(req: Request) {
       );
     }
 
-    // Insert each post as an item
+    // Get the logged-in user (required for user_id column)
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    // Build items to insert
     const itemsToInsert = posts.map((post: any) => ({
+      user_id: user.id,
       collection_id: collectionId,
       title: post.caption || "Instagram Post",
-      imageUrl: post.imageUrl, // camelCase for Instagram imports
+      description: post.caption || null,
+      image_url: post.imageUrl,   // FIXED: snake_case
+      estimated_value: 0,
+      image_hash: null,
     }));
 
     const { error } = await supabase.from("items").insert(itemsToInsert);
 
     if (error) {
-      console.error(error);
+      console.error("Supabase insert error:", error);
       return NextResponse.json(
         { error: "Failed to import posts" },
         { status: 500 }
@@ -30,8 +45,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
+
   } catch (err) {
-    console.error(err);
+    console.error("Server error:", err);
     return NextResponse.json(
       { error: "Server error" },
       { status: 500 }

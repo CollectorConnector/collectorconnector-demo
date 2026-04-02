@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Automatically convert username → full Instagram URL
+    // Build full Instagram URL
     const profileUrl = `https://www.instagram.com/${username.replace("@", "")}/`;
 
     const res = await fetch("https://emjii5mdpdyh.runs.apify.net", {
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         addParentData: false,
         directUrls: [profileUrl],
-        resultsLimit: 50,
+        resultsLimit: 200,
         resultsType: "posts",
         searchLimit: 1,
         searchType: "hashtag"

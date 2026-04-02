@@ -8,34 +8,28 @@ export async function POST(req: Request) {
   }
 
   try {
-    const taskId = process.env.APIFY_INSTAGRAM_TASK_ID!;
-    const token = process.env.APIFY_API_TOKEN!;
+    // Replace with your chosen scraper endpoint
+    const SCRAPER_URL = `https://instagram-scraper-api-url.com/user/${username}`;
 
-    const scraperRes = await fetch(
-      `https://api.apify.com/v2/actor-tasks/${taskId}/run-sync-get-dataset-items?token=${token}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          directUrls: [`https://www.instagram.com/${username}/`],
-          resultsLimit: 12,
-        }),
-      }
-    );
+    const res = await fetch(SCRAPER_URL);
+    if (!res.ok) throw new Error("Scraper request failed");
 
-    if (!scraperRes.ok) throw new Error("Apify request failed");
+    const json = await res.json();
 
-    const posts = await scraperRes.json();
-
-    const formatted = posts.map((p: any) => ({
-      id: p.id || Date.now().toString(),
-      imageUrl: p.displayUrl || p.imageUrl,
-      caption: p.caption || p.text || "",
+    // Normalise into the shape your hook expects
+    const posts = json.items.slice(0, 12).map((p: any) => ({
+      id: p.id,
+      imageUrl: p.imageUrl || p.displayUrl || p.thumbnail,
+      caption: p.caption || "",
+      timestamp: p.timestamp || null,
     }));
 
-    return NextResponse.json({ posts: formatted });
-  } catch (error: any) {
+    return NextResponse.json({ posts });
+  } catch (error) {
     console.error("Instagram fetch error:", error);
-    return NextResponse.json({ error: "Failed to fetch from Instagram" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch Instagram posts" },
+      { status: 500 }
+    );
   }
 }

@@ -39,13 +39,15 @@ export function useInstagramImport() {
       });
 
       const data = await res.json();
-     if (!res.ok || data.error) {
-  alert(`Error: ${data.error} (${data.status || ""})`);
-  setLoading(false);
-  return;
-}
 
+      // Correct error handling — only error if res.ok is false
+      if (!res.ok) {
+        alert(`Error: ${data.error || "Unknown error"}`);
+        setLoading(false);
+        return;
+      }
 
+      // Success — backend returns { posts: [...] }
       setPosts(data.posts || []);
     } catch (err) {
       console.error("Fetch posts failed:", err);

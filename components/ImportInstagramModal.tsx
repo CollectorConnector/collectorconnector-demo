@@ -9,12 +9,13 @@ export default function InstagramImportModal({ onClose }: { onClose: () => void 
   const router = useRouter();
 
   const [username, setUsername] = useState("");
-  const [posts, setPosts] = useState([]);
-  const [selectedPosts, setSelectedPosts] = useState([]);
-  const [collections, setCollections] = useState([]);
-  const [selectedCollection, setSelectedCollection] = useState("");
-  const [newCollectionName, setNewCollectionName] = useState("");
-  const [loading, setLoading] = useState(false);
+const [posts, setPosts] = useState<any[]>([]);
+const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
+const [collections, setCollections] = useState<any[]>([]);
+const [selectedCollection, setSelectedCollection] = useState("");
+const [newCollectionName, setNewCollectionName] = useState("");
+const [loading, setLoading] = useState(false);
+
 
   // ⭐ Load collections IMMEDIATELY when modal opens
   useEffect(() => {

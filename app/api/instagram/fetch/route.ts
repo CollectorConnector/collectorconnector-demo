@@ -5,9 +5,10 @@ export async function POST(req: NextRequest) {
     const { username } = await req.json();
 
     if (!username) {
-      return NextResponse.json({ error: "NO_USERNAME" }, { status: 400 });
+      return NextResponse.json({ error: "NO_USERNAME_PROVIDED" }, { status: 400 });
     }
 
+    // Correct RapidAPI endpoint
     const url = `https://instagram-scraper-2022.p.rapidapi.com/ig/user_info/?user=${username}`;
 
     const res = await fetch(url, {
@@ -18,14 +19,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: "RAPIDAPI_REQUEST_FAILED", status: res.status },
+        { status: 500 }
+      );
+    }
+
     const data = await res.json();
 
+    // Validate structure
     if (!data || !data.edge_owner_to_timeline_media) {
-      return NextResponse.json({ error: "NO_POSTS" }, { status: 404 });
+      return NextResponse.json({ error: "NO_POSTS_FOUND" }, { status: 404 });
     }
 
     const edges = data.edge_owner_to_timeline_media.edges;
 
+    // Transform into the shape your hook expects
     const posts = edges.map((edge: any) => ({
       id: edge.node.id,
       imageUrl: edge.node.display_url,

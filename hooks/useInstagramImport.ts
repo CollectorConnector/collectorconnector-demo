@@ -39,11 +39,12 @@ export function useInstagramImport() {
       });
 
       const data = await res.json();
-      if (!res.ok || data.error) {
-        console.error("Fetch error:", data.error);
-        setLoading(false);
-        return;
-      }
+     if (!res.ok || data.error) {
+  alert(`Error: ${data.error} (${data.status || ""})`);
+  setLoading(false);
+  return;
+}
+
 
       setPosts(data.posts || []);
     } catch (err) {

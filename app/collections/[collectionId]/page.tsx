@@ -13,16 +13,19 @@ export default function CollectionViewPage() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  // Load logged-in user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
 
+  // Load collection + items
   useEffect(() => {
     if (!collectionId) return;
 
     async function loadData() {
+      // Load collection
       const { data: colData } = await supabase
         .from("collections")
         .select("*")
@@ -31,6 +34,7 @@ export default function CollectionViewPage() {
 
       setCollection(colData);
 
+      // Load items (manual + Instagram imports)
       const { data: itemData } = await supabase
         .from("items")
         .select("*")
@@ -78,11 +82,19 @@ export default function CollectionViewPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!collection) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Collection not found</div>;
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        Collection not found
+      </div>
+    );
   }
 
   const isOwnCollection = currentUserId === collection.user_id;
@@ -90,20 +102,26 @@ export default function CollectionViewPage() {
   return (
     <div className="min-h-screen bg-black text-white px-6 py-10">
       <div className="flex items-center justify-between mb-8">
-        <button onClick={goToHome} className="text-indigo-400 hover:text-white">← Home</button>
+        <button onClick={goToHome} className="text-indigo-400 hover:text-white">
+          ← Home
+        </button>
         <h1 className="text-3xl font-bold">{collection.title}</h1>
         <div className="w-8" />
       </div>
 
       {collection.cover_url && (
         <div className="mb-8 rounded-2xl overflow-hidden border border-zinc-700">
-          <img src={collection.cover_url} alt="Cover" className="w-full h-auto object-cover" />
+          <img
+            src={collection.cover_url}
+            alt="Cover"
+            className="w-full h-auto object-cover"
+          />
         </div>
       )}
 
       <div className="flex justify-between items-center mb-8">
         <p className="text-xl text-zinc-400">{items.length} items</p>
-        
+
         {isOwnCollection && (
           <div className="flex gap-3">
             <button
@@ -123,16 +141,27 @@ export default function CollectionViewPage() {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-center text-zinc-500 py-12">No items yet. Add some!</p>
+        <p className="text-center text-zinc-500 py-12">
+          No items yet. Add some!
+        </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
           {items.map((item) => (
-            <div key={item.id} className="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden group">
+            <div
+              key={item.id}
+              className="bg-zinc-900 border border-zinc-700 rounded-2xl overflow-hidden group"
+            >
               <div className="aspect-square relative">
-                <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                <img
+                  src={item.imageUrl || item.image_url}
+                  alt={item.title || "Item"}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="p-4 flex justify-between items-center">
-                <p className="font-medium truncate">{item.title}</p>
+                <p className="font-medium truncate">
+                  {item.title || "Untitled"}
+                </p>
                 {isOwnCollection && (
                   <button
                     onClick={() => deleteItem(item.id)}

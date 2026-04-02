@@ -11,15 +11,22 @@ export async function POST(req: Request) {
       );
     }
 
+    // Automatically convert username → full Instagram URL
+    const profileUrl = `https://www.instagram.com/${username.replace("@", "")}/`;
+
     const res = await fetch("https://emjii5mdpdyh.runs.apify.net", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Actor-Token": "VJCIl3lGPLZoRGxML"
+        "X-Actor-Token": process.env.APIFY_ACTOR_TOKEN || ""
       },
       body: JSON.stringify({
-        usernames: [username],
-        resultsLimit: 50
+        addParentData: false,
+        directUrls: [profileUrl],
+        resultsLimit: 50,
+        resultsType: "posts",
+        searchLimit: 1,
+        searchType: "hashtag"
       })
     });
 
@@ -36,17 +43,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // The actor returns an array of profiles
-    const profile = data?.[0];
+    const result = data?.[0];
 
-    if (!profile || !profile.posts) {
+    if (!result || !result?.posts) {
       return NextResponse.json(
         { error: "NO_POSTS_FOUND", message: "No posts returned" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ posts: profile.posts });
+    return NextResponse.json({ posts: result.posts });
   } catch (err) {
     return NextResponse.json(
       { error: "SERVER_ERROR", message: String(err) },

@@ -31,7 +31,7 @@ type RecentDrop = {
   name: string;
   image_url: string | null;
   created_at: string;
-  profiles: { username: string | null } | null;
+  profiles: { username: string | null };
 };
 
 export default function ProfilePage() {
@@ -39,19 +39,19 @@ export default function ProfilePage() {
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
-  // State
   const [profile, setProfile] = useState<Profile | null>(null);
   const [collections, setCollections] = useState<any[]>([]);
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
 
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [editMode, setEditMode] = useState(false);
   const [editedDisplayUrl, setEditedDisplayUrl] = useState("");
   const [editedBio, setEditedBio] = useState("");
   const [editedLocation, setEditedLocation] = useState("");
   const [editedTier, setEditedTier] = useState("");
 
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
@@ -60,18 +60,22 @@ export default function ProfilePage() {
 
   const isOwnProfile = currentUserId === userId;
 
+  //
   // Load current user
+  //
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
 
+  //
   // Load profile
+  //
   useEffect(() => {
     if (!userId) return;
 
-    async function getProfile() {
+    async function loadProfile() {
       setLoading(true);
 
       const { data, error } = await supabase
@@ -80,8 +84,7 @@ export default function ProfilePage() {
         .eq("id", userId)
         .single();
 
-      if (error) {
-        console.error(error);
+      if (error || !data) {
         setLoading(false);
         return;
       }
@@ -98,10 +101,12 @@ export default function ProfilePage() {
       setLoading(false);
     }
 
-    getProfile();
+    loadProfile();
   }, [userId, isOwnProfile]);
 
+  //
   // Load collections
+  //
   useEffect(() => {
     if (!userId) return;
 
@@ -114,17 +119,35 @@ export default function ProfilePage() {
       });
   }, [userId]);
 
-  // Load community drops
+  //
+  // Load community drops (FIXED)
+  //
   useEffect(() => {
     supabase
       .from("items")
       .select(`id, name, image_url, created_at, profiles!user_id_fkey(username)`)
       .order("created_at", { ascending: false })
       .limit(6)
-      .then(({ data }) => setRecentDrops(data as RecentDrop[]));
+      .then(({ data }) => {
+        if (!data) return setRecentDrops([]);
+
+        const cleaned = data.map((drop: any) => ({
+          id: drop.id,
+          name: drop.name,
+          image_url: drop.image_url,
+          created_at: drop.created_at,
+          profiles: {
+            username: drop.profiles?.[0]?.username || null,
+          },
+        })) as RecentDrop[];
+
+        setRecentDrops(cleaned);
+      });
   }, []);
 
+  //
   // Check follow state
+  //
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
 
@@ -134,12 +157,16 @@ export default function ProfilePage() {
       .eq("follower_id", currentUserId)
       .eq("following_id", userId)
       .maybeSingle()
-      .then(({ data }) => setIsFollowing(!!data));
+      .then(({ data }) => {
+        setIsFollowing(!!data);
+      });
   }, [currentUserId, userId]);
 
+  //
   // Follow/unfollow
+  //
   async function toggleFollow() {
-    if (!currentUserId || currentUserId === userId) return;
+    if (!currentUserId || currentUserId === userId || followLoading) return;
 
     setFollowLoading(true);
 
@@ -149,23 +176,28 @@ export default function ProfilePage() {
         .delete()
         .eq("follower_id", currentUserId)
         .eq("following_id", userId);
+
       setIsFollowing(false);
     } else {
       await supabase.from("follows").insert({
         follower_id: currentUserId,
         following_id: userId,
       });
+
       setIsFollowing(true);
     }
 
     setFollowLoading(false);
   }
 
-  // Resize + upload avatar
+  //
+  // Resize avatar
+  //
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
+
       img.onload = () => {
         const canvas = document.createElement("canvas");
         let { width, height } = img;
@@ -190,9 +222,8 @@ export default function ProfilePage() {
 
         canvas.toBlob(
           (blob) => {
-            if (blob) {
-              resolve(new File([blob], file.name, { type: file.type }));
-            } else resolve(file);
+            if (!blob) return resolve(file);
+            resolve(new File([blob], file.name, { type: file.type }));
           },
           file.type,
           0.85
@@ -201,6 +232,9 @@ export default function ProfilePage() {
     });
   }
 
+  //
+  // Upload avatar
+  //
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !currentUserId) return;
@@ -208,9 +242,8 @@ export default function ProfilePage() {
     setUploadingAvatar(true);
 
     const resized = await resizeImage(file, 256);
-    const timestamp = Date.now();
     const ext = file.name.split(".").pop();
-    const path = `${currentUserId}/avatar-${timestamp}.${ext}`;
+    const path = `${currentUserId}/avatar-${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
@@ -227,52 +260,49 @@ export default function ProfilePage() {
 
     await supabase.from("profiles").update({ avatar_url: url }).eq("id", currentUserId);
 
-    setProfile((prev) => (prev ? { ...prev, avatar_url: url } : prev));
     setPreviewImage(url);
+    setProfile((prev) => (prev ? { ...prev, avatar_url: url } : prev));
 
     setUploadingAvatar(false);
   }
 
-  // Save profile edits
+  //
+  // Save profile
+  //
   async function saveProfile() {
     if (!currentUserId) return;
 
     const updates = {
-      display_url: editedDisplayUrl.trim() || null,
-      bio: editedBio.trim() || null,
-      location: editedLocation.trim() || null,
-      tier: editedTier.trim() || null,
+      display_url: editedDisplayUrl || null,
+      bio: editedBio || null,
+      location: editedLocation || null,
+      tier: editedTier || null,
     };
 
-    const { error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", currentUserId);
-
-    if (error) {
-      alert("Save failed");
-      return;
-    }
+    await supabase.from("profiles").update(updates).eq("id", currentUserId);
 
     setProfile((prev) => (prev ? { ...prev, ...updates } : prev));
     setEditMode(false);
   }
 
+  //
   // Display name
+  //
   const displayName = useMemo(() => {
     return profile?.display_url || profile?.username || "Collector";
   }, [profile]);
 
+  //
   // Header
+  //
   function Header() {
     return (
       <>
-        <header className="fixed top-0 left-0 right-0 h-14 bg-black border-b border-zinc-800 z-50 flex items-center justify-between px-4">
-          <img src="/CC-main-logo.png" alt="logo" className="h-10 object-contain" />
-
+        <header className="fixed top-0 left-0 right-0 h-14 bg-black border-b border-zinc-800 z-50 px-4 flex items-center justify-between">
+          <img src="/CC-main-logo.png" alt="logo" className="h-8" />
           <button
             onClick={() => router.push("/search")}
-            className="text-white hover:text-indigo-400 transition"
+            className="text-white text-xl"
           >
             🔍
           </button>
@@ -282,184 +312,188 @@ export default function ProfilePage() {
     );
   }
 
-  if (loading)
+  //
+  // Loading state
+  //
+  if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <Header />
-        <div className="flex items-center justify-center h-[80vh]">Loading...</div>
+        Loading...
       </div>
     );
+  }
 
-  if (!profile)
+  //
+  // No profile found
+  //
+  if (!profile) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <Header />
-        <div className="flex items-center justify-center h-[80vh]">Profile not found</div>
+        Profile not found
       </div>
     );
+  }
 
+  //
+  // ✅ MAIN PAGE
+  //
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
 
       <main className="pt-8 pb-20 max-w-[720px] mx-auto px-4 space-y-10">
-        {/* Profile card */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-xl">
-          <div className="flex flex-col items-center text-center">
 
-            {/* Avatar */}
-            <div className="mb-6">
-              {isOwnProfile ? (
-                <label htmlFor="avatar-upload" className="cursor-pointer">
-                  <img
-                    src={previewImage || profile.avatar_url || "/default-avatar.png"}
-                    alt="avatar"
-                    className="w-16 h-16 object-cover border-2 border-white rounded-xl shadow"
-                  />
-                </label>
-              ) : (
+        {/* PROFILE CARD */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-xl text-center">
+
+          {/* Avatar */}
+          <div className="mb-5">
+            {isOwnProfile ? (
+              <label htmlFor="avatar-upload" className="cursor-pointer">
                 <img
-                  src={profile.avatar_url || "/default-avatar.png"}
-                  className="w-16 h-16 object-cover border-2 border-white rounded-xl shadow"
+                  src={previewImage || profile.avatar_url || "/default-avatar.png"}
+                  className="w-16 h-16 object-cover rounded-xl border border-zinc-700"
                 />
-              )}
-            </div>
+              </label>
+            ) : (
+              <img
+                src={profile.avatar_url || "/default-avatar.png"}
+                className="w-16 h-16 object-cover rounded-xl border border-zinc-700"
+              />
+            )}
+          </div>
 
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+            disabled={uploadingAvatar}
+          />
+
+          {/* Display Name */}
+          {editMode ? (
             <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
+              className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xl font-bold text-center w-full max-w-xs mx-auto"
+              value={editedDisplayUrl}
+              onChange={(e) => setEditedDisplayUrl(e.target.value)}
             />
+          ) : (
+            <h1 className="text-3xl font-bold">{displayName}</h1>
+          )}
 
-            {/* Name */}
-            {editMode ? (
-              <input
-                className="text-3xl font-bold bg-zinc-900 border border-zinc-700 rounded px-4 py-2 w-full max-w-xs mb-4"
-                value={editedDisplayUrl}
-                onChange={(e) => setEditedDisplayUrl(e.target.value)}
-              />
-            ) : (
-              <h1 className="text-3xl font-bold mb-2">{displayName}</h1>
-            )}
+          {/* Username */}
+          {profile.username && (
+            <p className="text-indigo-400 text-xl">@{profile.username}</p>
+          )}
 
-            {profile.username && (
-              <p className="text-indigo-400 text-xl">@{profile.username}</p>
-            )}
+          {/* Bio */}
+          {editMode ? (
+            <textarea
+              className="w-full max-w-lg bg-zinc-900 border border-zinc-700 rounded px-4 py-3 mt-4"
+              value={editedBio}
+              onChange={(e) => setEditedBio(e.target.value)}
+            />
+          ) : (
+            <p className="text-zinc-300 mt-4">
+              {profile.bio || "This collector hasn't written a bio yet."}
+            </p>
+          )}
 
-            {/* Bio */}
-            {editMode ? (
-              <textarea
-                className="w-full max-w-lg bg-zinc-900 border border-zinc-700 rounded px-4 py-3 mt-4"
-                value={editedBio}
-                onChange={(e) => setEditedBio(e.target.value)}
-              />
-            ) : (
-              <p className="text-zinc-300 mt-4">
-                {profile.bio || "This collector hasn’t written a bio yet."}
-              </p>
-            )}
+          {/* Location */}
+          {editMode ? (
+            <input
+              className="mt-3 bg-zinc-900 border border-zinc-700 rounded px-3 py-2"
+              value={editedLocation}
+              onChange={(e) => setEditedLocation(e.target.value)}
+            />
+          ) : (
+            profile.location && (
+              <p className="text-zinc-400 mt-2">{profile.location}</p>
+            )
+          )}
 
-            {/* Location */}
-            {editMode ? (
-              <input
-                className="mt-4 bg-zinc-900 border border-zinc-700 rounded px-3 py-2"
-                value={editedLocation}
-                onChange={(e) => setEditedLocation(e.target.value)}
-              />
-            ) : (
-              profile.location && (
-                <p className="text-zinc-400 mt-2">{profile.location}</p>
-              )
-            )}
-
-            {/* Buttons */}
-            <div className="flex gap-4 mt-6">
-              {isOwnProfile ? (
-                editMode ? (
-                  <>
-                    <button
-                      onClick={saveProfile}
-                      className="px-8 py-3 bg-indigo-600 rounded-xl text-lg"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditMode(false)}
-                      className="px-8 py-3 bg-zinc-700 rounded-xl text-lg"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
+          {/* Buttons */}
+          <div className="flex gap-4 justify-center mt-6">
+            {isOwnProfile ? (
+              editMode ? (
+                <>
                   <button
-                    onClick={() => setEditMode(true)}
+                    onClick={saveProfile}
+                    className="px-8 py-3 bg-indigo-600 rounded-xl text-lg"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditMode(false)}
                     className="px-8 py-3 bg-zinc-700 rounded-xl text-lg"
                   >
-                    Edit Profile
+                    Cancel
                   </button>
-                )
+                </>
               ) : (
                 <button
-                  onClick={toggleFollow}
-                  disabled={followLoading}
-                  className="px-8 py-3 bg-indigo-600 rounded-xl text-lg"
+                  onClick={() => setEditMode(true)}
+                  className="px-8 py-3 bg-zinc-700 rounded-xl text-lg"
                 >
-                  {isFollowing ? "Unfollow" : "Follow"}
+                  Edit Profile
                 </button>
-              )}
-            </div>
+              )
+            ) : (
+              <button
+                onClick={toggleFollow}
+                disabled={followLoading}
+                className="px-8 py-3 bg-indigo-600 rounded-xl text-lg"
+              >
+                {isFollowing ? "Unfollow" : "Follow"}
+              </button>
+            )}
+          </div>
 
-            {/* Suggested Collectors */}
-            <div className="mt-10 w-full">
-              <SuggestedUsers />
-            </div>
+          {/* Suggested Collectors */}
+          <div className="mt-10">
+            <SuggestedUsers />
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="bg-zinc-950 p-10 rounded-2xl border border-zinc-800 shadow-xl">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
-            <div>
-              <p className="text-4xl font-bold">{profile.items_count ?? 0}</p>
-              <p className="text-zinc-500">Items</p>
-            </div>
-
-            <div>
-              <p className="text-4xl font-bold">{profile.collections_count ?? 0}</p>
-              <p className="text-zinc-500">Collections</p>
-            </div>
-
-            <div
-              className="cursor-pointer"
-              onClick={() => router.push(`/profile/${userId}/followers`)}
-            >
-              <p className="text-4xl font-bold">{profile.followers_count ?? 0}</p>
-              <p className="text-zinc-500">Followers</p>
-            </div>
-
-            <div
-              className="cursor-pointer"
-              onClick={() => router.push(`/profile/${userId}/following`)}
-            >
-              <p className="text-4xl font-bold">{profile.following_count ?? 0}</p>
-              <p className="text-zinc-500">Following</p>
-            </div>
-
-            <div>
-              <p className="text-4xl font-bold">£{profile.vault_value ?? 0}</p>
-              <p className="text-zinc-500">Vault Value</p>
-            </div>
-
-            <div>
-              <p className="text-4xl font-bold">{profile.likes_count ?? 0}</p>
-              <p className="text-zinc-500">Likes</p>
-            </div>
+        {/* STATS */}
+        <section className="bg-zinc-950 p-10 rounded-2xl border border-zinc-800 text-center grid grid-cols-2 sm:grid-cols-3 gap-6 shadow-xl">
+          <div>
+            <p className="text-4xl font-bold">{profile.items_count ?? 0}</p>
+            <p className="text-zinc-500">Items</p>
+          </div>
+          <div>
+            <p className="text-4xl font-bold">{profile.collections_count ?? 0}</p>
+            <p className="text-zinc-500">Collections</p>
+          </div>
+          <div
+            className="cursor-pointer"
+            onClick={() => router.push(`/profile/${userId}/followers`)}
+          >
+            <p className="text-4xl font-bold">{profile.followers_count ?? 0}</p>
+            <p className="text-zinc-500">Followers</p>
+          </div>
+          <div
+            className="cursor-pointer"
+            onClick={() => router.push(`/profile/${userId}/following`)}
+          >
+            <p className="text-4xl font-bold">{profile.following_count ?? 0}</p>
+            <p className="text-zinc-500">Following</p>
+          </div>
+          <div>
+            <p className="text-4xl font-bold">£{profile.vault_value ?? 0}</p>
+            <p className="text-zinc-500">Vault Value</p>
+          </div>
+          <div>
+            <p className="text-4xl font-bold">{profile.likes_count ?? 0}</p>
+            <p className="text-zinc-500">Likes</p>
           </div>
         </section>
 
-        {/* Collections */}
+        {/* COLLECTIONS */}
         <section className="bg-zinc-950 p-10 rounded-2xl border border-zinc-800 shadow-xl">
           <h2 className="text-3xl font-bold mb-6 text-center">My Collections 🎴</h2>
 
@@ -477,11 +511,9 @@ export default function ProfilePage() {
           <CollectionsCarousel collections={collections} />
         </section>
 
-        {/* Community Feed */}
+        {/* COMMUNITY FEED */}
         <section className="bg-zinc-950 p-10 rounded-2xl border border-zinc-800 shadow-xl">
-          <h2 className="text-3xl font-bold mb-6 text-center">
-            Live from the Community
-          </h2>
+          <h2 className="text-3xl font-bold mb-6 text-center">Live from the Community</h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {recentDrops.map((drop) => (
@@ -497,22 +529,23 @@ export default function ProfilePage() {
 
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2">
                   <p className="text-white text-sm">
-                    @{drop.profiles?.username || "collector"}
+                    @{drop.profiles.username || "collector"}
                   </p>
-                  <p className="text-zinc-400 text-xs">{drop.name}</p>
+                  <p className="text-zinc-300 text-xs">{drop.name}</p>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
+        {/* Logout */}
         {isOwnProfile && (
           <button
             onClick={async () => {
               await supabase.auth.signOut();
               router.push("/auth/login");
             }}
-            className="w-full py-4 bg-red-600 rounded-xl text-xl mt-4"
+            className="w-full py-4 bg-red-600 rounded-xl text-xl"
           >
             Log Out
           </button>

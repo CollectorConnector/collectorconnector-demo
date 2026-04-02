@@ -8,21 +8,31 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Replace with your chosen scraper endpoint
-    const SCRAPER_URL = `https://instagram-scraper-api-url.com/user/${username}`;
+    const url = `https://instagram-scraper-2022.p.rapidapi.com/ig/user_info?user=${username}`;
 
-    const res = await fetch(SCRAPER_URL);
+    const res = await fetch(url, {
+      headers: {
+        "x-rapidapi-key": process.env.RAPIDAPI_KEY!,
+        "x-rapidapi-host": "instagram-scraper-2022.p.rapidapi.com",
+      },
+    });
+
     if (!res.ok) throw new Error("Scraper request failed");
 
     const json = await res.json();
 
-    // Normalise into the shape your hook expects
-    const posts = json.items.slice(0, 12).map((p: any) => ({
-      id: p.id,
-      imageUrl: p.imageUrl || p.displayUrl || p.thumbnail,
-      caption: p.caption || "",
-      timestamp: p.timestamp || null,
-    }));
+    // Extract posts (limit to 12 for your UI)
+    const posts = (json?.data?.user?.edge_owner_to_timeline_media?.edges || [])
+      .slice(0, 12)
+      .map((edge: any) => {
+        const node = edge.node;
+        return {
+          id: node.id,
+          imageUrl: node.display_url,
+          caption: node.edge_media_to_caption?.edges?.[0]?.node?.text || "",
+          timestamp: node.taken_at_timestamp || null,
+        };
+      });
 
     return NextResponse.json({ posts });
   } catch (error) {

@@ -451,35 +451,53 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* Collections Carousel with + Add button */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
+       <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+  <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
 
-          {isOwnProfile && (
-            <div className="flex justify-center mb-8">
-              <button onClick={() => router.push("/collections/create")} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition">
-                + Add New Collection
-              </button>
-            </div>
-          )}
+  {isOwnProfile && (
+    <div className="flex justify-center mb-8">
+      <button
+        onClick={() => router.push("/collections/create")}
+        className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+      >
+        + Add New Collection
+      </button>
+    </div>
+  )}
 
-          {collections.length === 0 ? (
-            <p className="text-center text-zinc-500 text-xl py-12">No collections yet. Create your first one above!</p>
-          ) : (
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}>
-              {collections.map((col) => (
-                <div key={col.id} onClick={() => router.push(`/collections/${col.id}`)} className="relative w-48 h-64 flex-shrink-0 snap-center rounded-2xl overflow-hidden cursor-pointer group">
-                  <img src={col.cover_url || "/CC-main-logo.png"} alt={col.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md">{col.item_count || 0}</div>
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <p className="text-white text-lg font-semibold tracking-tight line-clamp-1">{col.title}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+  {collections.length === 0 ? (
+    <p className="text-center text-zinc-500 text-xl py-12">
+      No collections yet. Create your first one above!
+    </p>
+  ) : (
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-6">
+      {collections.map((col) => (
+        <div
+          key={col.id}
+          onClick={() => router.push(`/collections/${col.id}`)}
+          className="cursor-pointer"
+        >
+          <div className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
+            <img
+              src={col.cover_url || "/CC-main-logo.png"}
+              alt={col.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          <p className="text-white text-center font-semibold mt-3 truncate">
+            {col.title}
+          </p>
+
+          <p className="text-zinc-400 text-center text-sm">
+            {col.item_count || 0} items
+          </p>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
+
 
         {/* Live Community Feed */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">

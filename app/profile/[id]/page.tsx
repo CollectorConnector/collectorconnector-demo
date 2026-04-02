@@ -2,6 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
+import { useState } from "react";
+import ImportInstagramModal from "@/components/ImportInstagramModal";
 import { useEffect, useMemo, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -45,6 +47,7 @@ export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -524,12 +527,18 @@ export default function ProfilePage() {
         <div className="max-w-[720px] mx-auto px-4 pb-10">
           <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} className="w-full py-4 bg-red-600 hover:bg-red-500 rounded-xl text-white text-xl font-semibold transition">
             Log Out
-          </button>
-        </div>
-      )}
-{showImportModal && (
-  <ImportInstagramModal onClose={() => setShowImportModal(false)} />
-)}
+          false)} />
+            <button
+  onClick={() => setIsImportOpen(true)}
+  className="bg-black text-white px-4 py-2 rounded"
+>
+  Import from Instagram
+</button>
+<ImportInstagramModal
+  isOpen={isImportOpen}
+  onClose={() => setIsImportOpen(false)}
+/>
+
 
       <Footer />
     </div>

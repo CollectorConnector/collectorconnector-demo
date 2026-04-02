@@ -1,77 +1,132 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useInstagramImport } from "@/hooks/useInstagramImport";
+import { useRouter } from "next/navigation";
 
-interface ImportInstagramModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+export default function InstagramImportModal({ onClose }) {
+  const router = useRouter();
 
-export default function ImportInstagramModal({ isOpen, onClose }: ImportInstagramModalProps) {
-  const {
-    username,
-    setUsername,
-    posts,
-    selected,
-    toggleSelect,
-    fetchPosts,
-    importSelected,
-    loading,
-    importing,
-    progress,
-    selectedCollectionId,
-    setSelectedCollectionId,
-  } = useInstagramImport();
+  const [username, setUsername] = useState("");
+  const [posts, setPosts] = useState([]);
+  const [selectedPosts, setSelectedPosts] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [selectedCollection, setSelectedCollection] = useState("");
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // ⭐ Load user collections
-  const [collections, setCollections] = useState<any[]>([]);   // ← Fixed: proper type
+  // Load user collections
+  async function loadCollections() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-  useEffect(() => {
-    const loadCollections = async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      const userId = auth.user?.id;
-      if (!userId) return;
+    const { data } = await supabase
+      .from("collections")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
-      const { data, error } = await supabase
+    setCollections(data || []);
+  }
+
+  // Fetch Instagram posts (mock or real)
+  async function fetchPosts() {
+    setLoading(true);
+
+    const res = await fetch("/api/instagram/fetch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+
+    const data = await res.json();
+    setPosts(data.posts || []);
+    setLoading(false);
+
+    loadCollections();
+  }
+
+  // Toggle selected posts
+  function togglePost(id) {
+    setSelectedPosts((prev) =>
+      prev.includes(id)
+        ? prev.filter((p) => p !== id)
+        : [...prev, id]
+    );
+  }
+
+  // Import selected posts
+  async function handleImport() {
+    if (selectedPosts.length === 0) {
+      alert("Select at least one post");
+      return;
+    }
+
+    let collectionIdToUse = selectedCollection;
+
+    // Create new collection if chosen
+    if (selectedCollection === "new") {
+      if (!newCollectionName.trim()) {
+        alert("Enter a name for the new collection");
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { data: newCol, error } = await supabase
         .from("collections")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+        .insert({
+          title: newCollectionName,
+          user_id: user.id,
+        })
+        .select()
+        .single();
 
-      if (!error) setCollections(data);
-    };
+      if (error) {
+        alert("Failed to create collection");
+        return;
+      }
 
-    if (isOpen) loadCollections();
-  }, [isOpen]);
+      collectionIdToUse = newCol.id;
+    }
 
-  if (!isOpen) return null;
+    // Send selected posts to backend importer
+    const res = await fetch("/api/instagram/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        collectionId: collectionIdToUse,
+        posts: posts.filter((p) => selectedPosts.includes(p.id)),
+      }),
+    });
+
+    if (res.ok) {
+      onClose();
+      router.refresh();
+    } else {
+      alert("Import failed");
+    }
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl">
-        <h2 className="text-xl font-semibold mb-4">Import from Instagram</h2>
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-6">
+      <div className="bg-zinc-900 p-6 rounded-2xl w-full max-w-lg border border-zinc-700">
+        <h2 className="text-2xl font-bold mb-4">Import from Instagram</h2>
 
         {/* Username input */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Instagram Username</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-            placeholder="e.g. cardcollector123"
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="Instagram username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="w-full p-3 rounded-xl bg-zinc-800 border border-zinc-700 mb-4"
+        />
 
-        {/* Fetch button */}
         <button
           onClick={fetchPosts}
-          disabled={loading}
-          className="w-full bg-black text-white py-2 rounded mb-4"
+          className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl mb-4"
         >
-          {loading ? "Fetching…" : "Fetch Posts"}
+          {loading ? "Fetching..." : "Fetch Posts"}
         </button>
 
         {/* Posts grid */}
@@ -80,56 +135,66 @@ export default function ImportInstagramModal({ isOpen, onClose }: ImportInstagra
             {posts.map((post) => (
               <div
                 key={post.id}
-                onClick={() => toggleSelect(post.id)}
-                className={`relative cursor-pointer border rounded overflow-hidden ${
-                  selected.includes(post.id) ? "ring-2 ring-black" : ""
+                onClick={() => togglePost(post.id)}
+                className={`border rounded-xl overflow-hidden cursor-pointer ${
+                  selectedPosts.includes(post.id)
+                    ? "border-blue-500"
+                    : "border-zinc-700"
                 }`}
               >
-                <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={post.imageUrl}
+                  className="w-full h-full object-cover"
+                />
               </div>
             ))}
           </div>
         )}
 
-        {/* ⭐ Collection picker */}
+        {/* Collection selector */}
         {posts.length > 0 && (
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">Choose a collection</label>
+          <>
             <select
-              value={selectedCollectionId}
-              onChange={(e) => setSelectedCollectionId(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              value={selectedCollection}
+              onChange={(e) => setSelectedCollection(e.target.value)}
+              className="w-full p-3 rounded-xl bg-zinc-800 border border-zinc-700 mb-3"
             >
-              <option value="">Select a collection…</option>
-
-              {collections.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
+              <option value="">Select a collection</option>
+              {collections.map((col) => (
+                <option key={col.id} value={col.id}>
+                  {col.title}
                 </option>
               ))}
+              <option value="new">+ Create New Collection</option>
             </select>
-          </div>
+
+            {selectedCollection === "new" && (
+              <input
+                type="text"
+                placeholder="New collection name"
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                className="w-full p-3 rounded-xl bg-zinc-800 border border-zinc-700 mb-4"
+              />
+            )}
+          </>
         )}
 
         {/* Import button */}
-        {selected.length > 0 && (
+        {posts.length > 0 && (
           <button
-            onClick={importSelected}
-            disabled={importing}
-            className="w-full bg-black text-white py-2 rounded mt-4"
+            onClick={handleImport}
+            className="w-full py-3 bg-green-600 hover:bg-green-500 rounded-xl mb-4"
           >
-            {importing
-              ? `Importing ${progress.current}/${progress.total}…`
-              : `Import ${selected.length} Items`}
+            Import Selected Posts
           </button>
         )}
 
-        {/* Close button */}
         <button
           onClick={onClose}
-          className="w-full text-center text-sm text-gray-500 mt-4"
+          className="w-full py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl"
         >
-          Close
+          Cancel
         </button>
       </div>
     </div>

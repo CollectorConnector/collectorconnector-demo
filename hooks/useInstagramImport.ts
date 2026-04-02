@@ -33,7 +33,7 @@ export function useInstagramImport() {
     try {
       console.log("Fetching posts for:", username);
 
-      const res = await fetch("/api/instagram/import", {
+      const res = await fetch("/api/instagram/fetch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username }),
@@ -126,3 +126,4 @@ export function useInstagramImport() {
     progress,
   };
 }
+

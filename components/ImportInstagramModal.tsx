@@ -4,26 +4,42 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-export default function InstagramImportModal({ onClose }: { onClose: () => void }) {
+// Define types for clarity
+interface InstagramPost {
+  id: string;
+  imageUrl: string;
+  caption?: string;
+}
 
+interface Collection {
+  id: string;
+  title: string;
+}
+
+export default function InstagramImportModal({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
   const router = useRouter();
 
-const [username, setUsername] = useState("");
-const [posts, setPosts] = useState<any[]>([]);
-const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
-const [collections, setCollections] = useState<any[]>([]);
-const [selectedCollection, setSelectedCollection] = useState("");
-const [newCollectionName, setNewCollectionName] = useState("");
-const [loading, setLoading] = useState(false);
+  // Typed state
+  const [username, setUsername] = useState<string>("");
+  const [posts, setPosts] = useState<InstagramPost[]>([]);
+  const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<string>("");
+  const [newCollectionName, setNewCollectionName] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-
-  // ⭐ Load collections IMMEDIATELY when modal opens
+  // Load collections immediately when modal opens
   useEffect(() => {
     loadCollections();
   }, []);
 
   async function loadCollections() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
     if (!user) return;
 
     const { data } = await supabase
@@ -32,10 +48,10 @@ const [loading, setLoading] = useState(false);
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    setCollections(data || []);
+    setCollections((data as Collection[]) || []);
   }
 
-  // ⭐ Fetch Instagram posts
+  // Fetch Instagram posts
   async function fetchPosts() {
     if (!username.trim()) {
       alert("Enter a username first");
@@ -51,11 +67,11 @@ const [loading, setLoading] = useState(false);
     });
 
     const data = await res.json();
-    setPosts(data.posts || []);
+    setPosts((data.posts as InstagramPost[]) || []);
     setLoading(false);
   }
 
-  // ⭐ Select / deselect posts
+  // Select / deselect posts
   function togglePost(id: string) {
     setSelectedPosts((prev) =>
       prev.includes(id)
@@ -64,7 +80,7 @@ const [loading, setLoading] = useState(false);
     );
   }
 
-  // ⭐ Import selected posts
+  // Import selected posts
   async function handleImport() {
     if (selectedPosts.length === 0) {
       alert("Select at least one post");
@@ -73,20 +89,22 @@ const [loading, setLoading] = useState(false);
 
     let collectionIdToUse = selectedCollection;
 
-    // ⭐ Create new collection if chosen
+    // Create new collection
     if (selectedCollection === "new") {
       if (!newCollectionName.trim()) {
         alert("Enter a name for the new collection");
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth?.user;
+      if (!user) return;
 
       const { data: newCol, error } = await supabase
         .from("collections")
         .insert({
           title: newCollectionName,
-          user_id: user! .id,
+          user_id: user.id,
         })
         .select()
         .single();
@@ -99,7 +117,7 @@ const [loading, setLoading] = useState(false);
       collectionIdToUse = newCol.id;
     }
 
-    // ⭐ Send selected posts to backend importer
+    // Send selected posts to backend importer
     const res = await fetch("/api/instagram/import", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

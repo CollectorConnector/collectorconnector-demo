@@ -1,56 +1,56 @@
-import { NextRequest, NextResponse } from "next/server";
-console.log("RapidAPI key loaded:", !!process.env.RAPIDAPI_KEY);
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const { username } = await req.json();
 
     if (!username) {
       return NextResponse.json(
-        { error: "NO_USERNAME_PROVIDED" },
+        { error: "NO_USERNAME", message: "Username is required" },
         { status: 400 }
       );
     }
 
-    // WORKING RapidAPI endpoint
-    const url = `https://instagram-scraper-api2.p.rapidapi.com/v1.2/posts?username_or_id_or_url=${username}`;
-
-    const res = await fetch(url, {
-      method: "GET",
+    const res = await fetch("https://emjii5mdpdyh.runs.apify.net", {
+      method: "POST",
       headers: {
-        "x-rapidapi-key": process.env.RAPIDAPI_KEY!,
-        "x-rapidapi-host": "instagram-scraper-api2.p.rapidapi.com",
+        "Content-Type": "application/json",
+        "X-Actor-Token": "VJCIl3lGPLZoRGxML"
       },
+      body: JSON.stringify({
+        usernames: [username],
+        resultsLimit: 50
+      })
     });
-
-    if (!res.ok) {
-      return NextResponse.json(
-  { error: "RAPIDAPI_REQUEST_FAILED", status: res.status, message: "RapidAPI request failed" },
-  { status: 500 }
-);
-
-    }
 
     const data = await res.json();
 
-    // Validate structure
-    if (!data || !data.data || !Array.isArray(data.data.items)) {
+    if (!res.ok) {
       return NextResponse.json(
-        { error: "NO_POSTS_FOUND" },
+        {
+          error: "APIFY_REQUEST_FAILED",
+          status: res.status,
+          message: data?.error || "Apify request failed"
+        },
+        { status: 500 }
+      );
+    }
+
+    // The actor returns an array of profiles
+    const profile = data?.[0];
+
+    if (!profile || !profile.posts) {
+      return NextResponse.json(
+        { error: "NO_POSTS_FOUND", message: "No posts returned" },
         { status: 404 }
       );
     }
 
-    const posts = data.data.items.map((item: any) => ({
-      id: item.id,
-      imageUrl: item.image_versions2?.candidates?.[0]?.url || "",
-      caption: item.caption?.text || "",
-      timestamp: item.taken_at || null,
-    }));
-
-    return NextResponse.json({ posts });
+    return NextResponse.json({ posts: profile.posts });
   } catch (err) {
-    console.error("Fetch route failed:", err);
-    return NextResponse.json({ error: "SERVER_ERROR" }, { status: 500 });
+    return NextResponse.json(
+      { error: "SERVER_ERROR", message: String(err) },
+      { status: 500 }
+    );
   }
 }

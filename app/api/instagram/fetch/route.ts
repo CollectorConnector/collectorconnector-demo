@@ -25,9 +25,10 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       return NextResponse.json(
-        { error: "RAPIDAPI_REQUEST_FAILED", status: res.status },
-        { status: 500 }
-      );
+  { error: "RAPIDAPI_REQUEST_FAILED", status: res.status, message: "RapidAPI request failed" },
+  { status: 500 }
+);
+
     }
 
     const data = await res.json();

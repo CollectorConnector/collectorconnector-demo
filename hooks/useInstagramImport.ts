@@ -21,20 +21,32 @@ export function useInstagramImport() {
 
   // Fetch posts from Instagram
   const fetchPosts = async () => {
-    if (!username.trim()) return;
+    if (!username.trim()) {
+      console.warn("No username entered");
+      return;
+    }
 
     setLoading(true);
     setPosts([]);
     setSelected([]);
 
     try {
-      const res = await fetch("/api/import-instagram", {
+      console.log("Fetching posts for:", username);
+
+      const res = await fetch("/api/instagram/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username }),
       });
 
+      if (!res.ok) {
+        console.error("API returned error:", res.status);
+        setLoading(false);
+        return;
+      }
+
       const data = await res.json();
+      console.log("API response:", data);
 
       if (data.error) {
         console.error("Instagram error:", data.error);
@@ -87,9 +99,10 @@ export function useInstagramImport() {
       });
 
       const data = await res.json();
+      console.log("Import results:", data);
 
       let count = 0;
-      for (const r of data.results) {
+      for (const r of data.results || []) {
         count++;
         setProgress({ current: count, total: selected.length });
       }

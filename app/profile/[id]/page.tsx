@@ -8,21 +8,23 @@ import CollectionsCarousel from "@/components/CollectionsCarousel";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Footer from "@/components/Footer";
 
-// Types
+// -----------------------
+// TYPES
+// -----------------------
 type Profile = {
   id: string;
-  avatar_url?: string | null;
-  display_url?: string | null;
-  username?: string | null;
-  location?: string | null;
-  bio?: string | null;
-  tier?: string | null;
-  items_count?: number | null;
-  collections_count?: number | null;
-  followers_count?: number | null;
-  following_count?: number | null;
-  vault_value?: number | null;
-  likes_count?: number | null;
+  avatar_url: string | null;
+  display_url: string | null;
+  username: string | null;
+  location: string | null;
+  bio: string | null;
+  tier: string | null;
+  items_count: number | null;
+  collections_count: number | null;
+  followers_count: number | null;
+  following_count: number | null;
+  vault_value: number | null;
+  likes_count: number | null;
 };
 
 type RecentDrop = {
@@ -33,11 +35,15 @@ type RecentDrop = {
   profiles: { username: string | null };
 };
 
+// -----------------------
+// PAGE COMPONENT
+// -----------------------
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
 
+  // STATE
   const [profile, setProfile] = useState<Profile | null>(null);
   const [collections, setCollections] = useState<any[]>([]);
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
@@ -58,14 +64,18 @@ export default function ProfilePage() {
 
   const isOwnProfile = currentUserId === userId;
 
-  // ✅ Load logged-in user
+  // -----------------------
+  // LOAD CURRENT USER
+  // -----------------------
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
 
-  // ✅ Load profile
+  // -----------------------
+  // LOAD PROFILE
+  // -----------------------
   useEffect(() => {
     if (!userId) return;
 
@@ -98,10 +108,10 @@ export default function ProfilePage() {
     loadProfile();
   }, [userId, isOwnProfile]);
 
-  // ✅ Load collections
+  // -----------------------
+  // LOAD COLLECTIONS
+  // -----------------------
   useEffect(() => {
-    if (!userId) return;
-
     supabase
       .from("collections")
       .select("id, title, cover_url, item_count")
@@ -109,7 +119,9 @@ export default function ProfilePage() {
       .then(({ data }) => setCollections(data || []));
   }, [userId]);
 
-  // ✅ Load community feed (cleaned + fixed)
+  // -----------------------
+  // LOAD RECENT COMMUNITY DROPS
+  // -----------------------
   useEffect(() => {
     supabase
       .from("items")
@@ -133,9 +145,11 @@ export default function ProfilePage() {
       });
   }, []);
 
-  // ✅ Follow check
+  // -----------------------
+  // FOLLOW CHECK
+  // -----------------------
   useEffect(() => {
-    if (!currentUserId || userId === currentUserId) return;
+    if (!currentUserId || currentUserId === userId) return;
 
     supabase
       .from("follows")
@@ -146,10 +160,11 @@ export default function ProfilePage() {
       .then(({ data }) => setIsFollowing(!!data));
   }, [currentUserId, userId]);
 
-  // ✅ Follow/unfollow
+  // -----------------------
+  // FOLLOW/UNFOLLOW
+  // -----------------------
   async function toggleFollow() {
     if (!currentUserId || currentUserId === userId) return;
-
     setFollowLoading(true);
 
     if (isFollowing) {
@@ -158,20 +173,20 @@ export default function ProfilePage() {
         .delete()
         .eq("follower_id", currentUserId)
         .eq("following_id", userId);
-
       setIsFollowing(false);
     } else {
       await supabase
         .from("follows")
         .insert({ follower_id: currentUserId, following_id: userId });
-
       setIsFollowing(true);
     }
 
     setFollowLoading(false);
   }
 
-  // ✅ Resize image before uploading
+  // -----------------------
+  // IMAGE RESIZE (AVATAR)
+  // -----------------------
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -206,7 +221,9 @@ export default function ProfilePage() {
     });
   }
 
-  // ✅ Avatar upload
+  // -----------------------
+  // AVATAR UPLOAD
+  // -----------------------
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !currentUserId) return;
@@ -217,9 +234,9 @@ export default function ProfilePage() {
     const ext = file.name.split(".").pop();
     const path = `${currentUserId}/avatar-${Date.now()}.${ext}`;
 
-    await supabase.storage.from("avatars").upload(path, resized, {
-      upsert: true
-    });
+    await supabase.storage
+      .from("avatars")
+      .upload(path, resized, { upsert: true });
 
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     const url = data.publicUrl;
@@ -235,62 +252,68 @@ export default function ProfilePage() {
     setUploadingAvatar(false);
   }
 
-  // ✅ Save profile edits
+  // -----------------------
+  // SAVE PROFILE
+  // -----------------------
   async function saveProfile() {
     if (!currentUserId) return;
 
-    const updates = {
-      display_url: editedDisplayUrl || null,
-      bio: editedBio || null,
-      location: editedLocation || null,
-      tier: editedTier || null
-    };
+    await supabase
+      .from("profiles")
+      .update({
+        display_url: editedDisplayUrl,
+        bio: editedBio,
+        location: editedLocation,
+        tier: editedTier
+      })
+      .eq("id", currentUserId);
 
-    await supabase.from("profiles").update(updates).eq("id", currentUserId);
+    setProfile((prev) =>
+      prev
+        ? {
+            ...prev,
+            display_url: editedDisplayUrl,
+            bio: editedBio,
+            location: editedLocation,
+            tier: editedTier
+          }
+        : prev
+    );
 
-    setProfile((prev) => (prev ? { ...prev, ...updates } : prev));
     setEditMode(false);
   }
 
+  // -----------------------
+  // DISPLAY NAME
+  // -----------------------
   const displayName = useMemo(
     () => profile?.display_url || profile?.username || "Collector",
     [profile]
   );
 
-  // ✅ ✅ ✅ FULLY RESTORED HEADER WITH ALL ICONS ✅ ✅ ✅
+  // -----------------------
+  // ✅ RESTORED ORIGINAL HEADER (CORRECT + UNBROKEN)
+  // -----------------------
   function Header() {
     return (
       <>
         <header
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 50,
-            background: "#000",
-            borderBottom: "1px solid #1f1f1f",
-            height: 56,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 16px"
-          }}
+          className="fixed top-0 left-0 right-0 h-14 bg-black border-b border-zinc-800 z-50 flex items-center justify-between px-4"
         >
-          /CC-main-logo.png
+          <img
+            src="/CC-main-logo.png"
+            alt="Collector Connector"
+            width={130}
+            height={130}
+            style={{ objectFit: "contain" }}
+          />
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 20,
-              color: "white"
-            }}
-          >
+          <div className="flex items-center gap-5 text-white">
+
             {/* Search */}
             <button
               onClick={() => router.push("/search")}
-              className="hover:scale-110 transition-transform p-2"
+              className="hover:scale-110 transition p-2"
             >
               <svg
                 width="26"
@@ -309,65 +332,118 @@ export default function ProfilePage() {
             </button>
 
             {/* Instagram */}
-            https://instagram.com
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              className="hover:scale-110 transition"
+            >
+              <img src="/icons/instagram.svg" width="26" />
+            </a>
 
             {/* Facebook */}
-            https://facebook.com
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              className="hover:scale-110 transition"
+            >
+              <img src="/icons/facebook.svg" width="26" />
+            </a>
 
             {/* eBay */}
-            https://ebay.com
+            <a
+              href="https://ebay.com"
+              target="_blank"
+              className="hover:scale-110 transition font-bold"
+            >
+              eBay
+            </a>
 
             {/* Discord */}
-            https://discord.com
+            <a
+              href="https://discord.com"
+              target="_blank"
+              className="hover:scale-110 transition"
+            >
+              <img src="/icons/discord.svg" width="26" />
+            </a>
 
             {/* Whatnot */}
-            https://whatnot.com
+            <a
+              href="https://whatnot.com"
+              target="_blank"
+              className="hover:scale-110 transition"
+            >
+              <img src="/icons/whatnot.svg" width="26" />
+            </a>
 
-            {/* X */}
-            https://twitter.com
+            {/* X / Twitter */}
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              className="hover:scale-110 transition"
+            >
+              <img src="/icons/x.svg" width="26" />
+            </a>
           </div>
         </header>
 
-        <div style={{ height: 56 }} />
+        <div className="h-14" />
       </>
     );
   }
 
+  // -----------------------
+  // LOADING
+  // -----------------------
   if (loading)
     return (
       <div className="min-h-screen bg-black text-white">
         <Header />
-        <div className="flex justify-center items-center h-[80vh]">
+        <div className="flex items-center justify-center h-[80vh]">
           Loading...
         </div>
       </div>
     );
 
+  // -----------------------
+  // PROFILE NOT FOUND
+  // -----------------------
   if (!profile)
     return (
       <div className="min-h-screen bg-black text-white">
         <Header />
-        <div className="flex justify-center items-center h-[80vh]">
+        <div className="flex items-center justify-center h-[80vh]">
           Profile not found
         </div>
       </div>
     );
 
+  // -----------------------
+  // ✅ MAIN PROFILE PAGE
+  // -----------------------
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
 
-      <main className="pt-8 pb-20 max-w-[720px] mx-auto px-4 space-y-10">
-        {/* PROFILE CARD */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-xl text-center">
+      <main className="pt-8 pb-24 max-w-[720px] mx-auto px-4 space-y-10">
+
+        {/* ---------------- PROFILE CARD ---------------- */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center shadow-xl">
+
           {/* Avatar */}
           <div className="mb-6">
             {isOwnProfile ? (
               <label htmlFor="avatar-upload" className="cursor-pointer">
-                {previewImage
+                <img
+                  src={previewImage || profile.avatar_url || "/default-avatar.png"}
+                  className="w-16 h-16 rounded-xl object-cover border border-zinc-700"
+                />
               </label>
             ) : (
-              {profile.avatar_url
+              <img
+                src={profile.avatar_url || "/default-avatar.png"}
+                className="w-16 h-16 rounded-xl object-cover border border-zinc-700"
+              />
             )}
           </div>
 
@@ -382,9 +458,9 @@ export default function ProfilePage() {
           {/* Name */}
           {editMode ? (
             <input
-              className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xl font-bold text-center w-full max-w-xs mx-auto"
               value={editedDisplayUrl}
               onChange={(e) => setEditedDisplayUrl(e.target.value)}
+              className="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-xl font-bold w-full max-w-xs mx-auto text-center"
             />
           ) : (
             <h1 className="text-3xl font-bold">{displayName}</h1>
@@ -421,7 +497,7 @@ export default function ProfilePage() {
             )
           )}
 
-          {/* Edit / Follow buttons */}
+          {/* Buttons */}
           <div className="flex justify-center gap-4 mt-6">
             {isOwnProfile ? (
               editMode ? (
@@ -458,45 +534,53 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Suggested users */}
           <div className="mt-10">
             <SuggestedUsers />
           </div>
         </section>
 
-        {/* STATS */}
-        <section className="bg-zinc-950 p-10 rounded-2xl border border-zinc-800 shadow-xl text-center grid grid-cols-2 sm:grid-cols-3 gap-6">
+        {/* ---------------- STATS ---------------- */}
+        <section className="bg-zinc-950 p-10 rounded-2xl border border-zinc-800 shadow-xl grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
           <div>
             <p className="text-4xl font-bold">{profile.items_count ?? 0}</p>
             <p className="text-zinc-500">Items</p>
           </div>
+
           <div>
             <p className="text-4xl font-bold">{profile.collections_count ?? 0}</p>
             <p className="text-zinc-500">Collections</p>
           </div>
-          <div onClick={() => router.push(`/profile/${userId}/followers`)}>
+
+          <div
+            className="cursor-pointer"
+            onClick={() => router.push(`/profile/${userId}/followers`)}
+          >
             <p className="text-4xl font-bold">{profile.followers_count ?? 0}</p>
             <p className="text-zinc-500">Followers</p>
           </div>
-          <div onClick={() => router.push(`/profile/${userId}/following`)}>
+
+          <div
+            className="cursor-pointer"
+            onClick={() => router.push(`/profile/${userId}/following`)}
+          >
             <p className="text-4xl font-bold">{profile.following_count ?? 0}</p>
             <p className="text-zinc-500">Following</p>
           </div>
+
           <div>
             <p className="text-4xl font-bold">£{profile.vault_value ?? 0}</p>
             <p className="text-zinc-500">Vault Value</p>
           </div>
+
           <div>
             <p className="text-4xl font-bold">{profile.likes_count ?? 0}</p>
             <p className="text-zinc-500">Likes</p>
           </div>
         </section>
 
-        {/* ✅ FIXED HORIZONTAL COLLECTIONS CAROUSEL */}
+        {/* ---------------- COLLECTIONS (HORIZONTAL) ---------------- */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-xl">
-          <h2 className="text-3xl font-bold mb-6 text-center">
-            My Collections 🎴
-          </h2>
+          <h2 className="text-3xl font-bold mb-6 text-center">My Collections 🎴</h2>
 
           {isOwnProfile && (
             <div className="flex justify-center mb-6">
@@ -512,7 +596,7 @@ export default function ProfilePage() {
           <CollectionsCarousel collections={collections} />
         </section>
 
-        {/* COMMUNITY FEED */}
+        {/* ---------------- COMMUNITY FEED ---------------- */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-xl">
           <h2 className="text-3xl font-bold mb-6 text-center">
             Live from the Community
@@ -541,14 +625,14 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* LOGOUT */}
+        {/* ---------------- LOGOUT ---------------- */}
         {isOwnProfile && (
           <button
             onClick={async () => {
               await supabase.auth.signOut();
               router.push("/auth/login");
             }}
-            className="w-full py-4 bg-red-600 rounded-xl text-xl"
+            className="w-full py-4 bg-red-600 rounded-xl text-xl mt-4"
           >
             Log Out
           </button>

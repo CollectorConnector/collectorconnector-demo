@@ -23,40 +23,57 @@ export function useInstagramImport() {
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
-  // Fetch posts from Instagram
+  // Fetch posts using the current working route
   const fetchPosts = async () => {
-    if (!username.trim()) return;
+    if (!username.trim()) {
+      alert("Please enter a username");
+      return;
+    }
 
     setLoading(true);
     setPosts([]);
     setSelected([]);
+    setProgress({ current: 0, total: 0 });
 
     try {
-      const res = await fetch("/api/instagram/fetch", {
+      const res = await fetch("/api/import-instagram/fetch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username: username.trim() }),
       });
 
       const data = await res.json();
 
-      // Correct error handling — only error if res.ok is false
       if (!res.ok) {
-        alert(`Error: ${data.error || "Unknown error"}`);
+        alert(data.error || "Failed to fetch posts. Make sure the profile is public.");
         setLoading(false);
         return;
       }
 
-      // Success — backend returns { posts: [...] }
-      setPosts(data.posts || []);
-    } catch (err) {
-      console.error("Fetch posts failed:", err);
-    }
+      // Safe mapping with fallback for imageUrl
+      const safePosts: InstagramPost[] = (data.posts || [])
+        .filter((p: any) => p && (p.imageUrl || p.displayUrl))
+        .map((p: any) => ({
+          id: String(p.id || "post-" + Date.now() + Math.random()),
+          imageUrl: String(p.imageUrl || p.displayUrl || ""),
+          caption: String(p.caption || p.text || "").slice(0, 150),
+          timestamp: p.timestamp || null,
+        }));
 
-    setLoading(false);
+      setPosts(safePosts);
+
+      if (safePosts.length === 0) {
+        alert("No posts with images found. The profile may be private or have no recent posts.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to fetch posts. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Select / unselect posts
+  // Toggle selection
   const toggleSelect = (id: string) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -65,7 +82,11 @@ export function useInstagramImport() {
 
   // Import selected posts
   const importSelected = async () => {
-    if (selected.length === 0) return;
+    if (selected.length === 0) {
+      alert("Please select at least one post");
+      return;
+    }
+
     if (!selectedCollectionId) {
       alert("Please choose a collection first.");
       return;
@@ -78,7 +99,7 @@ export function useInstagramImport() {
     const userId = auth.user?.id;
 
     if (!userId) {
-      alert("You must be logged in to import.");
+      alert("You must be logged in");
       setImporting(false);
       return;
     }
@@ -86,7 +107,7 @@ export function useInstagramImport() {
     const selectedPosts = posts.filter((p) => selected.includes(p.id));
 
     try {
-      const res = await fetch("/api/import-instagram", {
+      const res = await fetch("/api/import-instagram/confirm", {   // your existing confirm endpoint
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -96,23 +117,28 @@ export function useInstagramImport() {
         }),
       });
 
-      const data = await res.json();
-      console.log("Import results:", data);
+      const result = await res.json();
+
+      if (!res.ok) {
+        alert(result.error || "Import failed");
+        setImporting(false);
+        return;
+      }
 
       let count = 0;
-      for (const r of data.results || []) {
+      for (const r of result.results || []) {
         count++;
         setProgress({ current: count, total: selected.length });
       }
 
-      if (data.redirectTo) {
-        router.push(data.redirectTo);
-      }
+      alert(`Successfully imported ${selected.length} items!`);
+      router.push(`/profile/${userId}`);   // or wherever you want to redirect
     } catch (err) {
       console.error("Import failed:", err);
+      alert("Import failed. Check console for details.");
+    } finally {
+      setImporting(false);
     }
-
-    setImporting(false);
   };
 
   return {

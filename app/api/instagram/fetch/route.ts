@@ -11,30 +11,35 @@ export async function POST(req: Request) {
       );
     }
 
-    const url = `https://instagram-scraper.p.rapidapi.com/user/${username}/posts`;
+    const url = "https://instagram120.p.rapidapi.com/api/instagram/posts";
 
     const options = {
-      method: "GET",
+      method: "POST",
       headers: {
-        "x-rapidapi-key": process.env.RAPIDAPI_KEY!, // safer
-        "x-rapidapi-host": "instagram-scraper.p.rapidapi.com",
+        "Content-Type": "application/json",
+        "x-rapidapi-key": process.env.RAPIDAPI_KEY!,
+        "x-rapidapi-host": "instagram120.p.rapidapi.com",
       },
+      body: JSON.stringify({
+        username,
+        maxId: "",
+      }),
     };
 
     const response = await fetch(url, options);
     const data = await response.json();
 
-    if (!data || !data.items) {
+    if (!data || !data.data) {
       return NextResponse.json(
         { posts: [], error: "No posts found" },
         { status: 404 }
       );
     }
 
-    const posts = data.items.map((item: any) => ({
+    const posts = data.data.map((item: any) => ({
       id: item.id,
-      imageUrl: item.media_url || item.display_url || item.thumbnail_src,
-      caption: item.caption || "",
+      imageUrl: item.image_versions2?.candidates?.[0]?.url || item.thumbnail_url,
+      caption: item.caption?.text || "",
     }));
 
     return NextResponse.json({ posts });

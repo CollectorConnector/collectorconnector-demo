@@ -5,16 +5,17 @@ export async function POST(req: NextRequest) {
     const { username } = await req.json();
 
     if (!username) {
-      return NextResponse.json({ error: "NO_USERNAME" }, { status: 400 });
+      return NextResponse.json({ error: "NO_USERNAME_PROVIDED" }, { status: 400 });
     }
 
-    // Old public Instagram JSON endpoint
-    const url = `https://www.instagram.com/${username}/?__a=1&__d=dis`;
+    // New working Instagram endpoint
+    const url = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
 
     const igRes = await fetch(url, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "X-IG-App-ID": "936619743392459",
       },
     });
 
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     const json = await igRes.json();
 
     const edges =
-      json?.graphql?.user?.edge_owner_to_timeline_media?.edges || [];
+      json?.data?.user?.edge_owner_to_timeline_media?.edges || [];
 
     const posts = edges.map((edge: any) => ({
       id: edge.node.id,

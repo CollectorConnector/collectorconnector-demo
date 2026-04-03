@@ -58,9 +58,23 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
 
       if (!res.ok) throw new Error(data.error || "Failed to fetch posts");
 
-      setPosts(data.posts || []);
+      // Safe filtering
+      const safePosts = (data.posts || []).filter((p: any) => {
+        return p && (p.imageUrl || p.displayUrl);
+      }).map((p: any) => ({
+        id: p.id || `post-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        imageUrl: p.imageUrl || p.displayUrl || "",
+        caption: p.caption || p.text || "",
+        timestamp: p.timestamp || null,
+      }));
+
+      setPosts(safePosts);
+
+      if (safePosts.length === 0) {
+        setError("No posts with images found. Make sure the profile is public.");
+      }
     } catch (err: any) {
-      setError(err.message || "Failed to load posts");
+      setError(err.message || "Failed to load posts. Try again.");
     } finally {
       setLoading(false);
     }
@@ -96,7 +110,11 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
       const selectedPosts = posts.filter((p) => selected.includes(p.id));
 
       for (const post of selectedPosts) {
+        if (!post.imageUrl) continue;
+
         const imgRes = await fetch(post.imageUrl);
+        if (!imgRes.ok) continue;
+
         const buffer = Buffer.from(await imgRes.arrayBuffer());
 
         const fileName = `ig-${Date.now()}.jpg`;
@@ -124,7 +142,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Some items failed to import");
+      alert("Some items failed to import. Check console for details.");
     } finally {
       setImporting(false);
     }
@@ -135,7 +153,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
       <div className="bg-zinc-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <div className="p-6 border-b border-zinc-700">
           <h2 className="text-2xl font-bold">Import from Instagram</h2>
-          <p className="text-zinc-400 text-sm mt-1">Public profile only</p>
+          <p className="text-zinc-400 text-sm mt-1">Public profiles only</p>
         </div>
 
         <div className="p-6 flex-1 overflow-auto space-y-6">

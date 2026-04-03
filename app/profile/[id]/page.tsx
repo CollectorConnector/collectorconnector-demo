@@ -576,6 +576,13 @@ export default function ProfilePage() {
                 editMode ? (
                   <>
                     <button
+  onClick={() => setShowAddItem(true)}
+  className="border px-4 py-2 rounded-lg text-sm hover:bg-neutral-900 transition"
+>
+  + Add Item
+</button>
+
+                    <button
                       onClick={saveProfileChanges}
                       disabled={saving}
                       className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]"

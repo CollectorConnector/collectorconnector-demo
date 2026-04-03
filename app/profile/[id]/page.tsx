@@ -251,7 +251,6 @@ export default function ProfilePage() {
       const fileName = `item-${Date.now()}.${ext}`;
       const filePath = `${currentUserId}/items/${fileName}`;
 
-      // Upload image
       const { error: uploadError } = await supabase.storage
         .from("items")
         .upload(filePath, file, { upsert: true });
@@ -260,7 +259,6 @@ export default function ProfilePage() {
 
       const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
 
-      // Insert into items table
       const { error: insertError } = await supabase
         .from("items")
         .insert({
@@ -279,7 +277,7 @@ export default function ProfilePage() {
       setPreview(null);
       setFile(null);
 
-      window.location.reload(); // simple refresh for now
+      window.location.reload();
     } catch (err) {
       console.error(err);
       alert("Upload failed — check console for details");

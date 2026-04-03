@@ -523,7 +523,32 @@ export default function ProfilePage() {
         </section>
 
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
+          <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
+
+          {isOwnProfile && (
+            <div className="flex justify-center mb-8">
+              <button
+                onClick={() => router.push("/collections/create")}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+              >
+                + Add New Collection
+              </button>
+            </div>
+          )}
+
+          {collections.length === 0 ? (
+            <p className="text-center text-zinc-500 text-xl py-12">
+              No collections yet. Create your first one above!
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-6">
+              {collections.map((col) => (
+                <div
+                  key={col.id}
+                  onClick={() => router.push(`/collections/${col.id}`)}
+                  className="cursor-pointer"
+                >
+                  <div className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
                     <img
                       src={col.cover_url || "/CC-main-logo.png"}
                       alt={col.title}

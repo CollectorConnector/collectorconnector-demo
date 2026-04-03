@@ -242,7 +242,7 @@ export default function ProfilePage() {
     }
   }
 
-  // FIXED: Direct Supabase upload (no missing API route)
+  // Direct Supabase upload for Add Item
   async function handleUpload() {
     if (!file || !currentUserId) return;
 
@@ -595,8 +595,8 @@ export default function ProfilePage() {
             Import from Instagram
           </button>
 
+          {/* Fixed ImportInstagramModal - only onClose */}
           <ImportInstagramModal
-            isOpen={isImportOpen}
             onClose={() => setIsImportOpen(false)}
           />
 

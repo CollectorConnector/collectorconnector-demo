@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+console.log("FETCH ROUTE VERSION: 7");
+
 export async function POST(req: Request) {
   try {
     const { username } = await req.json();

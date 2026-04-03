@@ -46,7 +46,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
-  // NEW STATE FOR ADD ITEM MODAL
+  // Add Item modal state
   const [showAddItem, setShowAddItem] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -205,29 +205,24 @@ export default function ProfilePage() {
   }
 
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !currentUserId || currentUserId !== userId) return;
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile || !currentUserId || currentUserId !== userId) return;
 
     setUploadingAvatar(true);
     try {
-      const resizedFile = await resizeImage(file, 256);
+      const resizedFile = await resizeImage(selectedFile, 256);
       const timestamp = Date.now();
-      const fileExt = file.name.split(".").pop() || "jpg";
+      const fileExt = selectedFile.name.split(".").pop() || "jpg";
       const fileName = `avatar-${timestamp}.${fileExt}`;
       const filePath = `${currentUserId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, resizedFile, {
-          upsert: true,
-          cacheControl: "31536000",
-        });
+        .upload(filePath, resizedFile, { upsert: true, cacheControl: "31536000" });
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("id", currentUserId);
 
@@ -242,9 +237,12 @@ export default function ProfilePage() {
     }
   }
 
-  // Direct Supabase upload for Add Item
+  // Direct Supabase upload + insert into items table
   async function handleUpload() {
-    if (!file || !currentUserId) return;
+    if (!file || !currentUserId) {
+      alert("Please select a file");
+      return;
+    }
 
     setUploadingAvatar(true);
 
@@ -253,6 +251,7 @@ export default function ProfilePage() {
       const fileName = `item-${Date.now()}.${ext}`;
       const filePath = `${currentUserId}/items/${fileName}`;
 
+      // Upload image
       const { error: uploadError } = await supabase.storage
         .from("items")
         .upload(filePath, file, { upsert: true });
@@ -261,14 +260,29 @@ export default function ProfilePage() {
 
       const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
 
-      alert("Item uploaded successfully! URL: " + urlData.publicUrl);
+      // Insert into items table
+      const { error: insertError } = await supabase
+        .from("items")
+        .insert({
+          user_id: currentUserId,
+          image_url: urlData.publicUrl,
+          name: "New Collection Item",
+          caption: "",
+          collection_id: null,
+        });
+
+      if (insertError) throw insertError;
+
+      alert("Item uploaded and saved successfully!");
 
       setShowAddItem(false);
       setPreview(null);
       setFile(null);
+
+      window.location.reload(); // simple refresh for now
     } catch (err) {
       console.error(err);
-      alert("Upload failed");
+      alert("Upload failed — check console for details");
     } finally {
       setUploadingAvatar(false);
     }
@@ -509,32 +523,7 @@ export default function ProfilePage() {
         </section>
 
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
-
-          {isOwnProfile && (
-            <div className="flex justify-center mb-8">
-              <button
-                onClick={() => router.push("/collections/create")}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
-              >
-                + Add New Collection
-              </button>
-            </div>
-          )}
-
-          {collections.length === 0 ? (
-            <p className="text-center text-zinc-500 text-xl py-12">
-              No collections yet. Create your first one above!
-            </p>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-6">
-              {collections.map((col) => (
-                <div
-                  key={col.id}
-                  onClick={() => router.push(`/collections/${col.id}`)}
-                  className="cursor-pointer"
-                >
-                  <div className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
+          className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
                     <img
                       src={col.cover_url || "/CC-main-logo.png"}
                       alt={col.title}
@@ -595,7 +584,6 @@ export default function ProfilePage() {
             Import from Instagram
           </button>
 
-          {/* Fixed ImportInstagramModal - only onClose */}
           <ImportInstagramModal
             onClose={() => setIsImportOpen(false)}
           />

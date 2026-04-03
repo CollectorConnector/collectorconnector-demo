@@ -57,19 +57,22 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
 
       if (!res.ok) throw new Error(data.error || "Failed to fetch");
 
-      // Extra safe filtering
+      // Ultra-safe filtering
       const safePosts = (data.posts || [])
-        .filter((p: any) => p && typeof p === "object" && (p.imageUrl || p.displayUrl))
+        .filter((p: any) => {
+          const url = p?.imageUrl || p?.displayUrl;
+          return typeof url === "string" && url.length > 10 && url.startsWith("http");
+        })
         .map((p: any) => ({
-          id: String(p.id || Date.now() + Math.random()),
-          imageUrl: String(p.imageUrl || p.displayUrl || ""),
+          id: String(p.id || "post-" + Date.now() + Math.random()),
+          imageUrl: String(p.imageUrl || p.displayUrl),
           caption: String(p.caption || p.text || "").slice(0, 150),
         }));
 
       setPosts(safePosts);
 
       if (safePosts.length === 0) {
-        setError("No valid posts with images found. Make sure the profile is public.");
+        setError("No valid image posts found. Make sure the profile is public and has recent posts.");
       }
     } catch (err: any) {
       setError(err.message || "Failed to load posts");
@@ -104,12 +107,13 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
       const selectedPosts = posts.filter((p) => selected.includes(p.id));
 
       for (const post of selectedPosts) {
-        if (!post.imageUrl || post.imageUrl.length < 5) continue;
+        if (!post.imageUrl || !post.imageUrl.startsWith("http")) continue;
 
         const imgRes = await fetch(post.imageUrl);
         if (!imgRes.ok) continue;
 
-        const buffer = Buffer.from(await imgRes.arrayBuffer());
+        const arrayBuffer = await imgRes.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
         const fileName = `ig-${Date.now()}.jpg`;
         const filePath = `items/${fileName}`;
@@ -118,7 +122,10 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
           .from("items")
           .upload(filePath, buffer, { contentType: "image/jpeg", upsert: true });
 
-        if (uploadError) continue;
+        if (uploadError) {
+          console.error("Upload error for", post.imageUrl, uploadError);
+          continue;
+        }
 
         const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
 
@@ -132,11 +139,11 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
         });
       }
 
-      alert(`Imported ${selected.length} items!`);
+      alert(`Imported ${selected.length} items successfully!`);
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Some items failed to import");
+      alert("Some items failed to import. Check console.");
     } finally {
       setImporting(false);
     }
@@ -173,7 +180,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
           {posts.length > 0 && (
             <>
               <div className="flex justify-between items-center">
-                <p className="text-zinc-400">{posts.length} posts</p>
+                <p className="text-zinc-400">{posts.length} posts found</p>
                 <button onClick={toggleSelectAll} className="text-indigo-400 hover:underline text-sm">
                   {selected.length === posts.length ? "Deselect All" : "Select All"}
                 </button>
@@ -192,7 +199,9 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
                       src={post.imageUrl} 
                       alt="" 
                       className="w-full h-full object-cover" 
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
                     />
                     {selected.includes(post.id) && (
                       <div className="absolute inset-0 bg-indigo-600/40 flex items-center justify-center">

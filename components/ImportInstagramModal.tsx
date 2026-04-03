@@ -18,7 +18,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
   const [collections, setCollections] = useState<any[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>("");
 
-  // Load user's collections
+  // Load collections
   useEffect(() => {
     const loadCollections = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -32,13 +32,12 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
 
       if (data) setCollections(data);
     };
-
     loadCollections();
   }, []);
 
   const fetchPosts = async () => {
     if (!username.trim()) {
-      setError("Please enter an Instagram username");
+      setError("Please enter a username");
       return;
     }
 
@@ -56,25 +55,24 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || "Failed to fetch posts");
+      if (!res.ok) throw new Error(data.error || "Failed to fetch");
 
-      // Safe filtering
-      const safePosts = (data.posts || []).filter((p: any) => {
-        return p && (p.imageUrl || p.displayUrl);
-      }).map((p: any) => ({
-        id: p.id || `post-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        imageUrl: p.imageUrl || p.displayUrl || "",
-        caption: p.caption || p.text || "",
-        timestamp: p.timestamp || null,
-      }));
+      // Extra safe filtering
+      const safePosts = (data.posts || [])
+        .filter((p: any) => p && typeof p === "object" && (p.imageUrl || p.displayUrl))
+        .map((p: any) => ({
+          id: String(p.id || Date.now() + Math.random()),
+          imageUrl: String(p.imageUrl || p.displayUrl || ""),
+          caption: String(p.caption || p.text || "").slice(0, 150),
+        }));
 
       setPosts(safePosts);
 
       if (safePosts.length === 0) {
-        setError("No posts with images found. Make sure the profile is public.");
+        setError("No valid posts with images found. Make sure the profile is public.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to load posts. Try again.");
+      setError(err.message || "Failed to load posts");
     } finally {
       setLoading(false);
     }
@@ -87,20 +85,16 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
   };
 
   const toggleSelectAll = () => {
-    if (selected.length === posts.length) {
-      setSelected([]);
-    } else {
-      setSelected(posts.map((p) => p.id));
-    }
+    setSelected(selected.length === posts.length ? [] : posts.map((p) => p.id));
   };
 
   const importSelected = async () => {
     if (selected.length === 0) {
-      alert("Please select at least one post");
+      alert("Select at least one post");
       return;
     }
     if (!selectedCollectionId) {
-      alert("Please select a collection");
+      alert("Choose a collection");
       return;
     }
 
@@ -110,7 +104,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
       const selectedPosts = posts.filter((p) => selected.includes(p.id));
 
       for (const post of selectedPosts) {
-        if (!post.imageUrl) continue;
+        if (!post.imageUrl || post.imageUrl.length < 5) continue;
 
         const imgRes = await fetch(post.imageUrl);
         if (!imgRes.ok) continue;
@@ -131,18 +125,18 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
         await supabase.from("items").insert({
           user_id: (await supabase.auth.getUser()).data.user?.id,
           image_url: urlData.publicUrl,
-          name: post.caption?.slice(0, 80) || "Instagram Import",
+          name: post.caption || "Instagram Import",
           caption: post.caption || "",
           collection_id: selectedCollectionId,
           source: "instagram",
         });
       }
 
-      alert(`Imported ${selected.length} items successfully!`);
+      alert(`Imported ${selected.length} items!`);
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Some items failed to import. Check console for details.");
+      alert("Some items failed to import");
     } finally {
       setImporting(false);
     }
@@ -162,7 +156,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. nike or breaking_cajun"
+              placeholder="e.g. nike"
               className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500"
             />
             <button
@@ -179,7 +173,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
           {posts.length > 0 && (
             <>
               <div className="flex justify-between items-center">
-                <p className="text-zinc-400">{posts.length} posts found</p>
+                <p className="text-zinc-400">{posts.length} posts</p>
                 <button onClick={toggleSelectAll} className="text-indigo-400 hover:underline text-sm">
                   {selected.length === posts.length ? "Deselect All" : "Select All"}
                 </button>
@@ -194,7 +188,12 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
                       selected.includes(post.id) ? "border-indigo-500" : "border-transparent"
                     }`}
                   >
-                    <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
+                    <img 
+                      src={post.imageUrl} 
+                      alt="" 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
                     {selected.includes(post.id) && (
                       <div className="absolute inset-0 bg-indigo-600/40 flex items-center justify-center">
                         <div className="bg-white text-black w-7 h-7 rounded-full flex items-center justify-center text-lg">✓</div>
@@ -235,7 +234,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
             disabled={selected.length === 0 || importing || !selectedCollectionId}
             className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium disabled:opacity-50"
           >
-            {importing ? `Importing ${selected.length}...` : `Import ${selected.length} Items`}
+            {importing ? `Importing...` : `Import ${selected.length} Items`}
           </button>
         </div>
       </div>

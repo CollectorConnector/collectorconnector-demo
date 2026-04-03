@@ -11,23 +11,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // ⭐ TEMPORARY MOCK DATA — ALWAYS RETURNS POSTS
-    // This guarantees your modal works while you build the real Instagram API later.
     return NextResponse.json({
       posts: [
         {
           id: "demo-1",
-          imageUrl: "https://via.placeholder.com/300?text=Post+1",
+          imageUrl: "https://picsum.photos/300?random=1",
           caption: "Demo post 1",
         },
         {
           id: "demo-2",
-          imageUrl: "https://via.placeholder.com/300?text=Post+2",
+          imageUrl: "https://picsum.photos/300?random=2",
           caption: "Demo post 2",
         },
         {
           id: "demo-3",
-          imageUrl: "https://via.placeholder.com/300?text=Post+3",
+          imageUrl: "https://picsum.photos/300?random=3",
           caption: "Demo post 3",
         },
       ],

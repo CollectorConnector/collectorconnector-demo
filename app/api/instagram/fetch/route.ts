@@ -11,35 +11,37 @@ export async function POST(req: Request) {
       );
     }
 
-    const url = "https://instagram120.p.rapidapi.com/api/instagram/posts";
+    // Build the Apify URL using your token stored in Vercel
+    const url = `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync?token=${process.env.APIFY_TOKEN}`;
 
-    const options = {
+    // Apify expects a POST body with directUrls
+    const body = {
+      directUrls: [`https://www.instagram.com/${username}/`],
+      resultsType: "posts",
+      resultsLimit: 50,
+    };
+
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-rapidapi-key": process.env.RAPIDAPI_KEY!,
-        "x-rapidapi-host": "instagram120.p.rapidapi.com",
       },
-      body: JSON.stringify({
-        username,
-        maxId: "",
-      }),
-    };
+      body: JSON.stringify(body),
+    });
 
-    const response = await fetch(url, options);
     const data = await response.json();
 
-    if (!data || !data.data) {
-      return NextResponse.json(
-        { posts: [], error: "No posts found" },
-        { status: 404 }
-      );
-    }
+    // Apify returns results inside data.items or data.data
+    const items = data?.data?.items || data?.items || [];
 
-    const posts = data.data.map((item: any) => ({
+    const posts = items.map((item: any) => ({
       id: item.id,
-      imageUrl: item.image_versions2?.candidates?.[0]?.url || item.thumbnail_url,
-      caption: item.caption?.text || "",
+      imageUrl:
+        item.displayUrl ||
+        item.display_url ||
+        item.thumbnail_url ||
+        item.thumbnailUrl,
+      caption: item.caption || "",
     }));
 
     return NextResponse.json({ posts });

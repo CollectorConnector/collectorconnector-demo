@@ -1,8 +1,5 @@
 "use client";
 
-// redeploy fix
-
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -18,22 +15,18 @@ interface Collection {
   title: string;
 }
 
-export default function InstagramImportModal({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
+export default function InstagramImportModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
 
-  const [username, setUsername] = useState<string>("");
+  const [username, setUsername] = useState("");
   const [posts, setPosts] = useState<InstagramPost[]>([]);
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState<string>("");
-  const [newCollectionName, setNewCollectionName] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [selectedCollection, setSelectedCollection] = useState("");
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Load collections immediately
+  // Load user collections
   useEffect(() => {
     loadCollections();
   }, []);
@@ -52,6 +45,7 @@ export default function InstagramImportModal({
     setCollections((data as Collection[]) || []);
   }
 
+  // ⭐ RESTORED: OLD WORKING FETCH ROUTE
   async function fetchPosts() {
     if (!username.trim()) {
       alert("Enter a username first");
@@ -60,25 +54,24 @@ export default function InstagramImportModal({
 
     setLoading(true);
 
-    const res = await fetch("/api/instagram/fetch", {
+    const res = await fetch("/api/import-instagram/fetch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username }),
     });
 
     const data = await res.json();
-    setPosts((data.posts as InstagramPost[]) || []);
+    setPosts(data.posts || []);
     setLoading(false);
   }
 
   function togglePost(id: string) {
     setSelectedPosts((prev) =>
-      prev.includes(id)
-        ? prev.filter((p) => p !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
   }
 
+  // ⭐ RESTORED: OLD WORKING IMPORT ROUTE
   async function handleImport() {
     if (selectedPosts.length === 0) {
       alert("Select at least one post");
@@ -87,6 +80,7 @@ export default function InstagramImportModal({
 
     let collectionIdToUse = selectedCollection;
 
+    // Create new collection if needed
     if (selectedCollection === "new") {
       if (!newCollectionName.trim()) {
         alert("Enter a name for the new collection");
@@ -114,7 +108,7 @@ export default function InstagramImportModal({
       collectionIdToUse = newCol.id;
     }
 
-    const res = await fetch("/api/instagram/import", {
+    const res = await fetch("/api/import-instagram", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -163,10 +157,7 @@ export default function InstagramImportModal({
                     : "border-zinc-700"
                 }`}
               >
-                <img
-                  src={post.imageUrl}
-                  className="w-full h-full object-cover"
-                />
+                <img src={post.imageUrl} className="w-full h-full object-cover" />
               </div>
             ))}
           </div>

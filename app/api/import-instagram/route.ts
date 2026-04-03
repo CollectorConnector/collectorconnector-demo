@@ -1,4 +1,4 @@
-// app/api/import-instagram/fetch/route.ts   (or just /route.ts)
+// app/api/import-instagram/fetch/route.ts
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     const APIFY_TOKEN = process.env.APIFY_TOKEN;
     if (!APIFY_TOKEN) {
-      return NextResponse.json({ error: "Apify token not configured. Add APIFY_TOKEN to .env.local" }, { status: 500 });
+      return NextResponse.json({ error: "Apify token not configured in .env.local" }, { status: 500 });
     }
 
     const cleanUsername = username.trim().replace("@", "");
@@ -23,12 +23,10 @@ export async function POST(req: Request) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           directUrls: [`https://www.instagram.com/${cleanUsername}/`],
-          resultsLimit: 24,           // Start small for speed/cost
+          resultsLimit: 24,           // Start with 24 for speed
           resultsType: "posts",
           onlyPosts: true,
           scrapeComments: false,
-          scrapeHashtags: false,
-          scrapeMentions: false,
         }),
       }
     );
@@ -36,21 +34,21 @@ export async function POST(req: Request) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Apify error:", errorText);
-      return NextResponse.json({ error: "Failed to fetch Instagram data. Profile may be private or temporarily unavailable." }, { status: 500 });
+      return NextResponse.json({ 
+        error: "Failed to fetch Instagram data. Profile may be private or temporarily unavailable." 
+      }, { status: 500 });
     }
 
     const rawPosts = await response.json();
 
-    // Clean and format for your modal
     const formattedPosts = rawPosts
-      .filter((p: any) => p.displayUrl || p.imageUrl) // Only posts with images
+      .filter((p: any) => p.displayUrl || p.imageUrl)
       .map((p: any) => ({
         id: p.id || `post-${Date.now()}`,
         imageUrl: p.displayUrl || p.imageUrl || p.thumbnailUrl,
         caption: p.caption || p.text || "",
         timestamp: p.timestamp || null,
         likes: p.likesCount || 0,
-        comments: p.commentsCount || 0,
       }));
 
     return NextResponse.json({ 

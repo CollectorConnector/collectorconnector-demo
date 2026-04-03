@@ -1,213 +1,242 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
 
-interface InstagramPost {
-  id: string;
-  imageUrl: string;
-  caption?: string;
+interface ImportInstagramModalProps {
+  onClose: () => void;
 }
 
-interface Collection {
-  id: string;
-  title: string;
-}
-
-export default function InstagramImportModal({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
-
+export default function ImportInstagramModal({ onClose }: ImportInstagramModalProps) {
   const [username, setUsername] = useState("");
-  const [posts, setPosts] = useState<InstagramPost[]>([]);
-  const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState("");
-  const [newCollectionName, setNewCollectionName] = useState("");
+  const [posts, setPosts] = useState<any[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load user collections
+  // Collections for the user to choose from
+  const [collections, setCollections] = useState<any[]>([]);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string>("");
+
+  // Load user's collections when modal opens
   useEffect(() => {
+    const loadCollections = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("collections")
+        .select("id, title")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) setCollections(data);
+    };
+
     loadCollections();
   }, []);
 
-  async function loadCollections() {
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth?.user;
-    if (!user) return;
-
-    const { data } = await supabase
-      .from("collections")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    setCollections((data as Collection[]) || []);
-  }
-
-  // ⭐ RESTORED: OLD WORKING FETCH ROUTE
-  async function fetchPosts() {
+  const fetchPosts = async () => {
     if (!username.trim()) {
-      alert("Enter a username first");
+      setError("Please enter an Instagram username");
       return;
     }
 
     setLoading(true);
+    setError(null);
+    setPosts([]);
+    setSelected([]);
 
-    const res = await fetch("/api/import-instagram/fetch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username }),
-    });
+    try {
+      const res = await fetch("/api/import-instagram/fetch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim() }),
+      });
 
-    const data = await res.json();
-    setPosts(data.posts || []);
-    setLoading(false);
-  }
+      const data = await res.json();
 
-  function togglePost(id: string) {
-    setSelectedPosts((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch posts");
+      }
+
+      if (data.posts && data.posts.length > 0) {
+        setPosts(data.posts);
+      } else {
+        setError("No posts found. Make sure the profile is public.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSelect = (postId: string) => {
+    setSelected((prev) =>
+      prev.includes(postId) ? prev.filter((id) => id !== postId) : [...prev, postId]
     );
-  }
+  };
 
-  // ⭐ RESTORED: OLD WORKING IMPORT ROUTE
-  async function handleImport() {
-    if (selectedPosts.length === 0) {
-      alert("Select at least one post");
+  const toggleSelectAll = () => {
+    if (selected.length === posts.length) {
+      setSelected([]);
+    } else {
+      setSelected(posts.map((p) => p.id));
+    }
+  };
+
+  const importSelected = async () => {
+    if (selected.length === 0) {
+      alert("Please select at least one post");
       return;
     }
 
-    let collectionIdToUse = selectedCollection;
-
-    // Create new collection if needed
-    if (selectedCollection === "new") {
-      if (!newCollectionName.trim()) {
-        alert("Enter a name for the new collection");
-        return;
-      }
-
-      const { data: auth } = await supabase.auth.getUser();
-      const user = auth?.user;
-      if (!user) return;
-
-      const { data: newCol, error } = await supabase
-        .from("collections")
-        .insert({
-          title: newCollectionName,
-          user_id: user.id,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        alert("Failed to create collection");
-        return;
-      }
-
-      collectionIdToUse = newCol.id;
+    if (!selectedCollectionId) {
+      alert("Please select a collection to import into");
+      return;
     }
 
-    const res = await fetch("/api/import-instagram", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        collectionId: collectionIdToUse,
-        posts: posts.filter((p) => selectedPosts.includes(p.id)),
-      }),
-    });
+    setImporting(true);
 
-    if (res.ok) {
+    try {
+      const selectedPosts = posts.filter((p) => selected.includes(p.id));
+
+      for (const post of selectedPosts) {
+        const imgRes = await fetch(post.imageUrl);
+        const buffer = Buffer.from(await imgRes.arrayBuffer());
+
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const filePath = `items/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("items")
+          .upload(filePath, buffer, { contentType: "image/jpeg", upsert: true });
+
+        if (uploadError) continue;
+
+        const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
+
+        await supabase.from("items").insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          image_url: urlData.publicUrl,
+          name: post.caption?.slice(0, 100) || "Instagram Import",
+          caption: post.caption || "",
+          collection_id: selectedCollectionId,
+          source: "instagram",
+        });
+      }
+
+      alert(`Successfully imported ${selected.length} items!`);
       onClose();
-      router.refresh();
-    } else {
-      alert("Import failed");
+    } catch (err) {
+      alert("Some items failed to import. Check console.");
+      console.error(err);
+    } finally {
+      setImporting(false);
     }
-  }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-6">
-      <div className="bg-zinc-900 p-6 rounded-2xl w-full max-w-lg border border-zinc-700">
-        <h2 className="text-2xl font-bold mb-4">Import from Instagram</h2>
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+      <div className="bg-zinc-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-zinc-700">
+          <h2 className="text-2xl font-bold">Import from Instagram</h2>
+          <p className="text-zinc-400 text-sm mt-1">Enter a public Instagram username</p>
+        </div>
 
-        <input
-          type="text"
-          placeholder="Instagram username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 rounded-xl bg-zinc-800 border border-zinc-700 mb-4"
-        />
-
-        <button
-          onClick={fetchPosts}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl mb-4"
-        >
-          {loading ? "Fetching..." : "Fetch Posts"}
-        </button>
-
-        {posts.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                onClick={() => togglePost(post.id)}
-                className={`border rounded-xl overflow-hidden cursor-pointer ${
-                  selectedPosts.includes(post.id)
-                    ? "border-blue-500"
-                    : "border-zinc-700"
-                }`}
-              >
-                <img src={post.imageUrl} className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {posts.length > 0 && (
-          <>
-            <select
-              value={selectedCollection}
-              onChange={(e) => setSelectedCollection(e.target.value)}
-              className="w-full p-3 rounded-xl bg-zinc-800 border border-zinc-700 mb-3"
+        <div className="p-6 flex-1 overflow-auto">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="e.g. nike or breaking_cajun"
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500"
+            />
+            <button
+              onClick={fetchPosts}
+              disabled={loading || !username.trim()}
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium disabled:opacity-50 transition"
             >
-              <option value="">Select a collection</option>
+              {loading ? "Fetching..." : "Fetch"}
+            </button>
+          </div>
 
-              {collections.map((col) => (
-                <option key={col.id} value={col.id}>
-                  {col.title}
-                </option>
-              ))}
+          {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
 
-              <option value="new">+ Create New Collection</option>
-            </select>
+          {posts.length > 0 && (
+            <>
+              <div className="flex justify-between items-center mt-6 mb-3">
+                <p className="text-zinc-400 text-sm">{posts.length} posts found</p>
+                <button
+                  onClick={toggleSelectAll}
+                  className="text-indigo-400 text-sm hover:underline"
+                >
+                  {selected.length === posts.length ? "Deselect All" : "Select All"}
+                </button>
+              </div>
 
-            {selectedCollection === "new" && (
-              <input
-                type="text"
-                placeholder="New collection name"
-                value={newCollectionName}
-                onChange={(e) => setNewCollectionName(e.target.value)}
-                className="w-full p-3 rounded-xl bg-zinc-800 border border-zinc-700 mb-4"
-              />
-            )}
-          </>
-        )}
+              <div className="grid grid-cols-3 gap-3 max-h-96 overflow-auto">
+                {posts.map((post) => (
+                  <div
+                    key={post.id}
+                    onClick={() => toggleSelect(post.id)}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-2 cursor-pointer transition ${
+                      selected.includes(post.id) ? "border-indigo-500" : "border-transparent"
+                    }`}
+                  >
+                    <img
+                      src={post.imageUrl}
+                      alt={post.caption}
+                      className="w-full h-full object-cover"
+                    />
+                    {selected.includes(post.id) && (
+                      <div className="absolute inset-0 bg-indigo-600/30 flex items-center justify-center">
+                        <div className="bg-white text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">✓</div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-        {posts.length > 0 && (
+              {/* Collection Picker */}
+              <div className="mt-6">
+                <label className="block text-sm text-zinc-400 mb-2">Import into Collection</label>
+                <select
+                  value={selectedCollectionId}
+                  onChange={(e) => setSelectedCollectionId(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white"
+                >
+                  <option value="">Select a collection...</option>
+                  {collections.map((col) => (
+                    <option key={col.id} value={col.id}>
+                      {col.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="p-6 border-t border-zinc-700 flex gap-3">
           <button
-            onClick={handleImport}
-            className="w-full py-3 bg-green-600 hover:bg-green-500 rounded-xl mb-4"
+            onClick={onClose}
+            className="flex-1 py-3 rounded-xl border border-zinc-700 hover:bg-zinc-800 transition"
           >
-            Import Selected Posts
+            Cancel
           </button>
-        )}
 
-        <button
-          onClick={onClose}
-          className="w-full py-3 bg-zinc-700 hover:bg-zinc-600 rounded-xl"
-        >
-          Cancel
-        </button>
+          <button
+            onClick={importSelected}
+            disabled={selected.length === 0 || importing || !selectedCollectionId}
+            className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium disabled:opacity-50 transition"
+          >
+            {importing ? `Importing ${selected.length}...` : `Import ${selected.length} Items`}
+          </button>
+        </div>
       </div>
     </div>
   );

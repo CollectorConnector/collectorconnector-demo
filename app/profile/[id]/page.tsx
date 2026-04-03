@@ -242,11 +242,11 @@ export default function ProfilePage() {
     }
   }
 
-  // FIXED: Simple direct upload for Add Item (no missing API route)
+  // FIXED: Direct Supabase upload (no missing API route)
   async function handleUpload() {
     if (!file || !currentUserId) return;
 
-    setUploadingAvatar(true); // reuse the same loading state for simplicity
+    setUploadingAvatar(true);
 
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -261,8 +261,6 @@ export default function ProfilePage() {
 
       const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
 
-      // TODO: Insert into "items" table if you have one
-      // For now just close the modal
       alert("Item uploaded successfully! URL: " + urlData.publicUrl);
 
       setShowAddItem(false);

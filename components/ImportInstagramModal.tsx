@@ -15,23 +15,22 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Collections for the user to choose from
   const [collections, setCollections] = useState<any[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>("");
 
-  // Load user's collections when modal opens
+  // Load user's collections
   useEffect(() => {
     const loadCollections = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("collections")
         .select("id, title")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (!error && data) setCollections(data);
+      if (data) setCollections(data);
     };
 
     loadCollections();
@@ -57,17 +56,11 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to fetch posts");
-      }
+      if (!res.ok) throw new Error(data.error || "Failed to fetch posts");
 
-      if (data.posts && data.posts.length > 0) {
-        setPosts(data.posts);
-      } else {
-        setError("No posts found. Make sure the profile is public.");
-      }
+      setPosts(data.posts || []);
     } catch (err: any) {
-      setError(err.message || "Something went wrong");
+      setError(err.message || "Failed to load posts");
     } finally {
       setLoading(false);
     }
@@ -92,9 +85,8 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
       alert("Please select at least one post");
       return;
     }
-
     if (!selectedCollectionId) {
-      alert("Please select a collection to import into");
+      alert("Please select a collection");
       return;
     }
 
@@ -107,7 +99,7 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
         const imgRes = await fetch(post.imageUrl);
         const buffer = Buffer.from(await imgRes.arrayBuffer());
 
-        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const fileName = `ig-${Date.now()}.jpg`;
         const filePath = `items/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -121,18 +113,18 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
         await supabase.from("items").insert({
           user_id: (await supabase.auth.getUser()).data.user?.id,
           image_url: urlData.publicUrl,
-          name: post.caption?.slice(0, 100) || "Instagram Import",
+          name: post.caption?.slice(0, 80) || "Instagram Import",
           caption: post.caption || "",
           collection_id: selectedCollectionId,
           source: "instagram",
         });
       }
 
-      alert(`Successfully imported ${selected.length} items!`);
+      alert(`Imported ${selected.length} items successfully!`);
       onClose();
     } catch (err) {
-      alert("Some items failed to import. Check console.");
       console.error(err);
+      alert("Some items failed to import");
     } finally {
       setImporting(false);
     }
@@ -143,10 +135,10 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
       <div className="bg-zinc-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <div className="p-6 border-b border-zinc-700">
           <h2 className="text-2xl font-bold">Import from Instagram</h2>
-          <p className="text-zinc-400 text-sm mt-1">Enter a public Instagram username</p>
+          <p className="text-zinc-400 text-sm mt-1">Public profile only</p>
         </div>
 
-        <div className="p-6 flex-1 overflow-auto">
+        <div className="p-6 flex-1 overflow-auto space-y-6">
           <div className="flex gap-3">
             <input
               type="text"
@@ -158,27 +150,24 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
             <button
               onClick={fetchPosts}
               disabled={loading || !username.trim()}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium disabled:opacity-50 transition"
+              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium disabled:opacity-50 transition"
             >
               {loading ? "Fetching..." : "Fetch"}
             </button>
           </div>
 
-          {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           {posts.length > 0 && (
             <>
-              <div className="flex justify-between items-center mt-6 mb-3">
-                <p className="text-zinc-400 text-sm">{posts.length} posts found</p>
-                <button
-                  onClick={toggleSelectAll}
-                  className="text-indigo-400 text-sm hover:underline"
-                >
+              <div className="flex justify-between items-center">
+                <p className="text-zinc-400">{posts.length} posts found</p>
+                <button onClick={toggleSelectAll} className="text-indigo-400 hover:underline text-sm">
                   {selected.length === posts.length ? "Deselect All" : "Select All"}
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 max-h-96 overflow-auto">
+              <div className="grid grid-cols-3 gap-3 max-h-80 overflow-auto">
                 {posts.map((post) => (
                   <div
                     key={post.id}
@@ -187,29 +176,24 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
                       selected.includes(post.id) ? "border-indigo-500" : "border-transparent"
                     }`}
                   >
-                    <img
-                      src={post.imageUrl}
-                      alt={post.caption}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
                     {selected.includes(post.id) && (
-                      <div className="absolute inset-0 bg-indigo-600/30 flex items-center justify-center">
-                        <div className="bg-white text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">✓</div>
+                      <div className="absolute inset-0 bg-indigo-600/40 flex items-center justify-center">
+                        <div className="bg-white text-black w-7 h-7 rounded-full flex items-center justify-center text-lg">✓</div>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
 
-              {/* Collection Picker */}
-              <div className="mt-6">
+              <div>
                 <label className="block text-sm text-zinc-400 mb-2">Import into Collection</label>
                 <select
                   value={selectedCollectionId}
                   onChange={(e) => setSelectedCollectionId(e.target.value)}
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white"
                 >
-                  <option value="">Select a collection...</option>
+                  <option value="">Choose collection...</option>
                   {collections.map((col) => (
                     <option key={col.id} value={col.id}>
                       {col.title}
@@ -224,15 +208,14 @@ export default function ImportInstagramModal({ onClose }: ImportInstagramModalPr
         <div className="p-6 border-t border-zinc-700 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl border border-zinc-700 hover:bg-zinc-800 transition"
+            className="flex-1 py-3 rounded-xl border border-zinc-700 hover:bg-zinc-800"
           >
             Cancel
           </button>
-
           <button
             onClick={importSelected}
             disabled={selected.length === 0 || importing || !selectedCollectionId}
-            className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium disabled:opacity-50 transition"
+            className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium disabled:opacity-50"
           >
             {importing ? `Importing ${selected.length}...` : `Import ${selected.length} Items`}
           </button>

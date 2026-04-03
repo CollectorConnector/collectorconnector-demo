@@ -600,14 +600,7 @@ export default function ProfilePage() {
             Log Out
           </button>
 
-          <button
-            onClick={() => setIsImportOpen(true)}
-            className="bg-black text-white px-4 py-2 rounded mt-4 w-full"
-          >
-            Import from Instagram
-          </button>
-
-          <ImportInstagramModal
+         <ImportInstagramModal
             onClose={() => setIsImportOpen(false)}
           />
 

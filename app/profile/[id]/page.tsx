@@ -46,7 +46,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
-  // NEW STATE FOR ADD ITEM MODAL (added exactly as requested)
+  // NEW STATE FOR ADD ITEM MODAL
   const [showAddItem, setShowAddItem] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -242,25 +242,37 @@ export default function ProfilePage() {
     }
   }
 
-  // NEW: Upload handler for Add Item modal (added exactly as requested)
+  // FIXED: Simple direct upload for Add Item (no missing API route)
   async function handleUpload() {
-    if (!file) return;
+    if (!file || !currentUserId) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    setUploadingAvatar(true); // reuse the same loading state for simplicity
 
-    const res = await fetch("/api/items/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const fileName = `item-${Date.now()}.${ext}`;
+      const filePath = `${currentUserId}/items/${fileName}`;
 
-    if (res.ok) {
+      const { error: uploadError } = await supabase.storage
+        .from("items")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
+
+      // TODO: Insert into "items" table if you have one
+      // For now just close the modal
+      alert("Item uploaded successfully! URL: " + urlData.publicUrl);
+
       setShowAddItem(false);
       setPreview(null);
       setFile(null);
-      // TODO: refresh items list
-    } else {
+    } catch (err) {
+      console.error(err);
       alert("Upload failed");
+    } finally {
+      setUploadingAvatar(false);
     }
   }
 
@@ -376,7 +388,6 @@ export default function ProfilePage() {
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
 
-            {/* Squircle avatar */}
             <div className="relative mb-8">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
@@ -591,7 +602,7 @@ export default function ProfilePage() {
             onClose={() => setIsImportOpen(false)}
           />
 
-          {/* Add Item Modal - added exactly as you requested */}
+          {/* Add Item Modal */}
           {showAddItem && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
               <div className="bg-neutral-900 p-6 rounded-xl w-80">

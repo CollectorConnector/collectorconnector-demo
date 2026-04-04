@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/lib/supabase";
 import CollectionsGrid from "@/components/CollectionsGrid";
 
 export default function MyCollectionsPage() {
-  const supabase = createClient();
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {

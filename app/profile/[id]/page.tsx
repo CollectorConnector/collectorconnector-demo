@@ -80,16 +80,17 @@ export default function ProfilePage() {
 
   const isOwnProfile = currentUserId === userId;
 
-  // Load collections
-  useEffect(() => {
+  // Load collections with refresh capability
+  const loadCollections = async () => {
     if (!userId) return;
-    async function loadCollections() {
-      const { data } = await supabase
-        .from("collections")
-        .select("id, title, nichem, cover_url, item_count")
-        .eq("user_id", userId);
-      if (data) setCollections(data as Collection[]);
-    }
+    const { data } = await supabase
+      .from("collections")
+      .select("id, title, nichem, cover_url, item_count")
+      .eq("user_id", userId);
+    if (data) setCollections(data as Collection[]);
+  };
+
+  useEffect(() => {
     loadCollections();
   }, [userId]);
 
@@ -521,7 +522,7 @@ export default function ProfilePage() {
         </section>
 
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <h2 className="text-4xl font-bold mb-8 text-center">My Collections 🎴</h2>
+          <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
 
           {isOwnProfile && (
             <div className="flex justify-center mb-8">
@@ -600,7 +601,14 @@ export default function ProfilePage() {
             Log Out
           </button>
 
-         <ImportInstagramModal
+          <button
+            onClick={() => setIsImportOpen(true)}
+            className="bg-black text-white px-4 py-2 rounded mt-4 w-full"
+          >
+            Import from Instagram
+          </button>
+
+          <ImportInstagramModal
             onClose={() => setIsImportOpen(false)}
           />
 

@@ -8,12 +8,12 @@ export default function Header() {
       <div className="h-14 flex items-center justify-between px-4 max-w-[720px] mx-auto">
 
         {/* Main Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center border border-zinc-700 overflow-hidden">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-zinc-700 overflow-hidden">
             <img 
               src="/CC-main-logo.png" 
               alt="CollectorConnector" 
-              className="w-6 h-6"
+              className="w-8 h-8 object-contain"
             />
           </div>
           <span className="font-bold text-lg tracking-tight">CollectorConnector</span>
@@ -41,13 +41,13 @@ export default function Header() {
             eBay
           </a>
 
-          {/* Whatnot - your yellow W logo */}
+          {/* Whatnot (correct yellow W logo) */}
           <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-            <div className="w-7 h-7 bg-black rounded-2xl flex items-center justify-center overflow-hidden border border-zinc-700">
+            <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center overflow-hidden border border-zinc-700">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Whatnot_Logo.svg/512px-Whatnot_Logo.svg.png" 
+                src="/whatnot-logo.png" 
                 alt="Whatnot" 
-                className="w-5 h-5"
+                className="w-6 h-6 object-contain"
               />
             </div>
           </a>

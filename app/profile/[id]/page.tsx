@@ -340,10 +340,10 @@ export default function ProfilePage() {
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
 
-        {/* Profile Header - Centrally aligned */}
+        {/* Centrally Aligned Profile Header */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg text-center">
           <div className="flex flex-col items-center">
-            {/* Avatar - smaller 22% squircle */}
+            {/* Smaller 22% Squircle Avatar */}
             <div className="relative mb-6">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
@@ -397,7 +397,7 @@ export default function ProfilePage() {
               </p>
             )}
 
-            {/* VIEW COLLECTIONS - Prominently placed and centrally aligned */}
+            {/* VIEW COLLECTIONS BUTTON - Prominently placed and centrally aligned */}
             <Link
               href={`/profile/${userId}/collections`}
               className="inline-block w-full max-w-md mx-auto text-center bg-[#1a1a1a] hover:bg-zinc-800 text-white font-medium py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
@@ -412,7 +412,7 @@ export default function ProfilePage() {
               {profile.tier && <p className="text-indigo-400 text-xl font-medium">{profile.tier} Tier</p>}
             </div>
 
-            {/* Action Buttons - Centrally aligned, always visible for own profile */}
+            {/* Action Buttons - Clean row, centrally aligned */}
             {isOwnProfile && (
               <div className="mt-10 flex flex-wrap gap-3 justify-center">
                 <button

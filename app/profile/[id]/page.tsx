@@ -48,7 +48,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
-  // Add Item modal
   const [showAddItem, setShowAddItem] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -75,9 +74,7 @@ export default function ProfilePage() {
   const [isImportOpen, setIsImportOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
-    });
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
   }, []);
 
   const isOwnProfile = profile?.id === currentUserId;
@@ -118,7 +115,7 @@ export default function ProfilePage() {
     loadData();
   }, [userId, isOwnProfile]);
 
-  // Load collections
+  // Load collections (for the My Collections section)
   useEffect(() => {
     if (!userId) return;
     async function loadCollections() {
@@ -178,7 +175,6 @@ export default function ProfilePage() {
     }
   }
 
-  // Avatar resize + upload
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
@@ -238,7 +234,6 @@ export default function ProfilePage() {
     }
   }
 
-  // Add Item upload (direct to Supabase)
   async function handleUpload() {
     if (!file || !currentUserId) {
       alert("Please select a file");
@@ -317,8 +312,28 @@ export default function ProfilePage() {
 
   const tierIconSrc = getTierIcon(profile?.tier);
 
-  if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center"><Header /><div style={{ height: 56 }} />Loading...</div>;
-  if (error || !profile) return <div className="min-h-screen bg-black text-white flex items-center justify-center"><Header /><div style={{ height: 56 }} /><div>Error: {error}</div></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <Header />
+        <div style={{ height: 56 }} />
+        <div className="flex items-center justify-center h-[80vh]">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <Header />
+        <div style={{ height: 56 }} />
+        <div className="flex flex-col items-center justify-center h-[80vh]">
+          <h1 className="text-3xl mb-4">Error</h1>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -330,6 +345,7 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg">
           <div className="flex flex-col items-center text-center">
+            {/* Avatar - 22% squircle, smaller size */}
             <div className="relative mb-6">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
@@ -383,14 +399,15 @@ export default function ProfilePage() {
               </p>
             )}
 
+            {/* VIEW COLLECTIONS BUTTON - Prominently placed and always visible */}
             <Link
               href={`/profile/${userId}/collections`}
-              className="block w-full text-center bg-[#1a1a1a] text-white font-medium py-3 rounded-xl mt-2 border border-zinc-700 active:opacity-80 transition"
+              className="block w-full max-w-md mx-auto text-center bg-[#1a1a1a] hover:bg-zinc-800 text-white font-medium py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
             >
               View Collections
             </Link>
 
-            {profile.location && <p className="text-gray-400 text-lg mt-4">{profile.location}</p>}
+            {profile.location && <p className="text-gray-400 text-lg mt-6">{profile.location}</p>}
 
             <div className="flex items-center gap-3 mt-6">
               {tierIconSrc && <img src={tierIconSrc} alt={`${profile.tier} tier`} className="w-10 h-10 object-contain" />}
@@ -399,7 +416,7 @@ export default function ProfilePage() {
 
             {/* Owner Action Buttons - Always visible for own profile */}
             {isOwnProfile && (
-              <div className="mt-8 flex flex-wrap gap-4 justify-center">
+              <div className="mt-10 flex flex-wrap gap-4 justify-center">
                 <button
                   onClick={() => setShowAddItem(true)}
                   className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
@@ -444,7 +461,7 @@ export default function ProfilePage() {
           <SuggestedUsers />
         </section>
 
-        {/* Stats */}
+        {/* Stats Section */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
             <div><p className="text-5xl font-bold">{profile?.items_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Items</p></div>
@@ -456,12 +473,15 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* My Collections */}
+        {/* My Collections Section */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10">
           <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
           {isOwnProfile && (
             <div className="flex justify-center mb-8">
-              <button onClick={() => router.push("/collections/create")} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition">
+              <button 
+                onClick={() => router.push("/collections/create")} 
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+              >
                 + Add New Collection
               </button>
             </div>
@@ -491,8 +511,16 @@ export default function ProfilePage() {
               <div className="col-span-3 text-center py-12"><p className="text-zinc-500 text-xl">No drops yet — be the first!</p></div>
             ) : (
               recentDrops.map((drop) => (
-                <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} className="group relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition cursor-pointer">
-                  <img src={drop.image_url || "/default-item.png"} alt={drop.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                <div 
+                  key={drop.id} 
+                  onClick={() => router.push(`/items/${drop.id}`)} 
+                  className="group relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition cursor-pointer"
+                >
+                  <img 
+                    src={drop.image_url || "/default-item.png"} 
+                    alt={drop.name} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                  />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-4">
                     <p className="text-white text-sm font-medium">@{drop.profiles?.username || "collector"}</p>
                     <p className="text-zinc-400 text-xs mt-1 line-clamp-1">{drop.name}</p>

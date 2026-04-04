@@ -82,7 +82,6 @@ export default function ProfilePage() {
   // Load profile
   useEffect(() => {
     if (!userId) return;
-
     async function loadData() {
       try {
         setLoading(true);
@@ -111,11 +110,10 @@ export default function ProfilePage() {
         setLoading(false);
       }
     }
-
     loadData();
   }, [userId, isOwnProfile]);
 
-  // Load collections (for the My Collections section)
+  // Load collections
   useEffect(() => {
     if (!userId) return;
     async function loadCollections() {
@@ -342,10 +340,10 @@ export default function ProfilePage() {
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
 
-        {/* Profile Header */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg">
-          <div className="flex flex-col items-center text-center">
-            {/* Avatar - 22% squircle, smaller size */}
+        {/* Profile Header - Centrally aligned */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg text-center">
+          <div className="flex flex-col items-center">
+            {/* Avatar - smaller 22% squircle */}
             <div className="relative mb-6">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
@@ -399,24 +397,24 @@ export default function ProfilePage() {
               </p>
             )}
 
-            {/* VIEW COLLECTIONS BUTTON - Prominently placed and always visible */}
+            {/* VIEW COLLECTIONS - Prominently placed and centrally aligned */}
             <Link
               href={`/profile/${userId}/collections`}
-              className="block w-full max-w-md mx-auto text-center bg-[#1a1a1a] hover:bg-zinc-800 text-white font-medium py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
+              className="inline-block w-full max-w-md mx-auto text-center bg-[#1a1a1a] hover:bg-zinc-800 text-white font-medium py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
             >
               View Collections
             </Link>
 
             {profile.location && <p className="text-gray-400 text-lg mt-6">{profile.location}</p>}
 
-            <div className="flex items-center gap-3 mt-6">
+            <div className="flex items-center gap-3 mt-6 justify-center">
               {tierIconSrc && <img src={tierIconSrc} alt={`${profile.tier} tier`} className="w-10 h-10 object-contain" />}
               {profile.tier && <p className="text-indigo-400 text-xl font-medium">{profile.tier} Tier</p>}
             </div>
 
-            {/* Owner Action Buttons - Always visible for own profile */}
+            {/* Action Buttons - Centrally aligned, always visible for own profile */}
             {isOwnProfile && (
-              <div className="mt-10 flex flex-wrap gap-4 justify-center">
+              <div className="mt-10 flex flex-wrap gap-3 justify-center">
                 <button
                   onClick={() => setShowAddItem(true)}
                   className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
@@ -461,9 +459,9 @@ export default function ProfilePage() {
           <SuggestedUsers />
         </section>
 
-        {/* Stats Section */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
+        {/* Stats */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
             <div><p className="text-5xl font-bold">{profile?.items_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Items</p></div>
             <div><p className="text-5xl font-bold">{profile?.collections_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Collections</p></div>
             <div onClick={() => router.push("/followers")} className="cursor-pointer hover:text-indigo-400 transition"><p className="text-5xl font-bold">{profile?.followers_count ?? 0}</p><p className="text-gray-500 text-xl mt-3">Followers</p></div>
@@ -473,9 +471,9 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* My Collections Section */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10">
-          <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
+        {/* My Collections */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
+          <h2 className="text-4xl font-bold mb-8">My Collections</h2>
           {isOwnProfile && (
             <div className="flex justify-center mb-8">
               <button 
@@ -487,7 +485,7 @@ export default function ProfilePage() {
             </div>
           )}
           {collections.length === 0 ? (
-            <p className="text-center text-zinc-500 text-xl py-12">No collections yet. Create your first one above!</p>
+            <p className="text-zinc-500 text-xl py-12">No collections yet. Create your first one above!</p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-6">
               {collections.map((col) => (
@@ -504,11 +502,11 @@ export default function ProfilePage() {
         </section>
 
         {/* Live Community Feed */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10">
-          <h2 className="text-4xl font-bold mb-8 text-center">Live from the Community</h2>
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
+          <h2 className="text-4xl font-bold mb-8">Live from the Community</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
             {recentDrops.length === 0 ? (
-              <div className="col-span-3 text-center py-12"><p className="text-zinc-500 text-xl">No drops yet — be the first!</p></div>
+              <div className="col-span-3 py-12"><p className="text-zinc-500 text-xl">No drops yet — be the first!</p></div>
             ) : (
               recentDrops.map((drop) => (
                 <div 
@@ -546,7 +544,6 @@ export default function ProfilePage() {
 
           <ImportInstagramModal onClose={() => setIsImportOpen(false)} />
 
-          {/* Add Item Modal */}
           {showAddItem && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
               <div className="bg-neutral-900 p-6 rounded-xl w-80">

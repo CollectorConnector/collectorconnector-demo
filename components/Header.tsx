@@ -1,105 +1,158 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
 
 export default function Header() {
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id || null);
+    });
+  }, []);
+
   return (
-    <header className="fixed top-0 left-0 right-0 bg-black border-b border-zinc-800 z-50">
-      <div className="h-14 flex items-center justify-between px-4 max-w-[720px] mx-auto">
+    <>
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          background: "#000",
+          borderBottom: "1px solid #1f1f1f",
+          height: 56,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
+        }}
+      >
+        {/* CC LOGO → HOME BUTTON */}
+        <div
+          onClick={() => userId && router.push(`/profile/${userId}`)}
+          style={{ cursor: "pointer" }}
+        >
+          <img
+            src="/CC-main-logo.png"
+            alt="Collector Connector"
+            width={130}
+            height={130}
+            style={{ objectFit: "contain" }}
+          />
+        </div>
 
-        {/* Main Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-zinc-700 overflow-hidden">
-            <img
-              src="/CC-main-logo.png"
-              alt="CollectorConnector"
-              className="w-7 h-7 object-contain"
-            />
-          </div>
-          <span className="font-bold text-lg tracking-tight">
-            CollectorConnector
-          </span>
-        </Link>
+        {/* SOCIALS + SEARCH */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            color: "white",
+          }}
+        >
+          {/* SEARCH */}
+          <button
+            onClick={() => router.push("/search")}
+            className="hover:scale-110 transition-transform p-2"
+            aria-label="Search"
+          >
+            <svg
+              width="26"
+              height="26"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-6-6m2-5a7 7 0 01-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </button>
 
-        {/* Social Icons */}
-        <div className="flex items-center gap-5 text-white">
-
-          {/* Instagram */}
+          {/* INSTAGRAM */}
           <a
             href="https://instagram.com"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:scale-110 transition-transform"
           >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.849.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/>
+            <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
             </svg>
           </a>
 
-          {/* Facebook */}
+          {/* FACEBOOK */}
           <a
             href="https://facebook.com"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:scale-110 transition-transform"
           >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.992 22 12z" />
             </svg>
           </a>
 
-          {/* eBay */}
+          {/* EBAY */}
           <a
             href="https://ebay.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:scale-110 transition-transform text-lg font-bold tracking-tighter"
+            className="text-base font-bold tracking-wide hover:scale-110 transition-transform"
           >
             eBay
           </a>
 
-          {/* Whatnot (public SVG) */}
-          <a
-            href="https://whatnot.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:scale-110 transition-transform"
-          >
-            <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center overflow-hidden border border-zinc-700">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Whatnot_Logo.svg"
-                alt="Whatnot"
-                className="w-7 h-7 object-contain"
-              />
-            </div>
-          </a>
-
-          {/* Discord */}
+          {/* DISCORD */}
           <a
             href="https://discord.com"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:scale-110 transition-transform"
           >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.128 12.8 12.8 0 01-1.873.892.077.077 0 00-.041.105c.36.698.772 1.363 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.028z"/>
+            <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3853-.3969-.8748-.6083-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8851 1.515.0699.0699 0 00-.032.0277C.5336 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0775.0105c.1202.099.246.1981.372.2914a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6061 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
             </svg>
           </a>
 
-          {/* X */}
+          {/* WHATNOT — W‑ONLY SVG */}
           <a
-            href="https://x.com"
+            href="https://whatnot.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:scale-110 transition-transform"
+          >
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 256 256"
+              fill="currentColor"
+            >
+              <path d="M207.6 48.3c-6.9-3.9-15.6-1.5-19.5 5.4l-36.4 64.2-36.4-64.2c-3.9-6.9-12.6-9.3-19.5-5.4-6.9 3.9-9.3 12.6-5.4 19.5l45.8 80.8v48.4c0 7.8 6.3 14.1 14.1 14.1s14.1-6.3 14.1-14.1v-48.4l45.8-80.8c3.9-6.9 1.5-15.6-5.4-19.5z" />
+            </svg>
+          </a>
+
+          {/* TWITTER */}
+          <a
+            href="https://twitter.com"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:scale-110 transition-transform"
           >
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
           </a>
-
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }

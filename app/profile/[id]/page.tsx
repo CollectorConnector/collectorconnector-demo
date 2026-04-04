@@ -34,20 +34,11 @@ type RecentDrop = {
   profiles: { username: string | null } | null;
 };
 
-type Collection = {
-  id: string;
-  title: string;
-  niche: string | null;
-  cover_url: string | null;
-  item_count: number | null;
-};
-
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
-  // Add Item modal state
   const [showAddItem, setShowAddItem] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -69,32 +60,15 @@ export default function ProfilePage() {
   const [editedTier, setEditedTier] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const [collections, setCollections] = useState<Collection[]>([]);
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
-
   const [isImportOpen, setIsImportOpen] = useState(false);
 
-  // Load current user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
   }, []);
 
   const isOwnProfile = profile?.id === currentUserId;
 
-  // Load collections
-  useEffect(() => {
-    if (!userId) return;
-    async function loadCollections() {
-      const { data } = await supabase
-        .from("collections")
-        .select("id, title, niche, cover_url, item_count")
-        .eq("user_id", userId);
-      if (data) setCollections(data as Collection[]);
-    }
-    loadCollections();
-  }, [userId]);
-
-  // Load recent drops
   useEffect(() => {
     async function loadRecentDrops() {
       const { data } = await supabase
@@ -102,12 +76,12 @@ export default function ProfilePage() {
         .select(`id, name, image_url, created_at, profiles!user_id_fkey (username)`)
         .order("created_at", { ascending: false })
         .limit(6);
+
       setRecentDrops((data as unknown as RecentDrop[]) || []);
     }
     loadRecentDrops();
   }, []);
 
-  // Load profile
   useEffect(() => {
     if (!userId) return;
 
@@ -147,9 +121,9 @@ export default function ProfilePage() {
     loadData();
   }, [userId, router, isOwnProfile]);
 
-  // Follow logic
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
+
     async function checkFollow() {
       const { data } = await supabase
         .from("follows")
@@ -157,20 +131,31 @@ export default function ProfilePage() {
         .eq("follower_id", currentUserId)
         .eq("following_id", userId)
         .maybeSingle();
+
       setIsFollowing(!!data);
     }
+
     checkFollow();
   }, [currentUserId, userId]);
 
   async function toggleFollow() {
     if (!currentUserId || currentUserId === userId || followLoading) return;
+
     setFollowLoading(true);
     try {
       if (isFollowing) {
-        await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
+        await supabase
+          .from("follows")
+          .delete()
+          .eq("follower_id", currentUserId)
+          .eq("following_id", userId);
+
         setIsFollowing(false);
       } else {
-        await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
+        await supabase
+          .from("follows")
+          .insert({ follower_id: currentUserId, following_id: userId });
+
         setIsFollowing(true);
       }
     } catch (err) {
@@ -180,14 +165,15 @@ export default function ProfilePage() {
     }
   }
 
-  // Avatar resize & upload
   async function resizeImage(file: File, maxSize: number): Promise<File> {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
+
       img.onload = () => {
         const canvas = document.createElement("canvas");
         let { width, height } = img;
+
         if (width > height) {
           if (width > maxSize) {
             height = Math.round((height * maxSize) / width);
@@ -199,10 +185,13 @@ export default function ProfilePage() {
             height = maxSize;
           }
         }
+
         canvas.width = width;
         canvas.height = height;
+
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(img, 0, 0, width, height);
+
         canvas.toBlob((blob) => {
           if (blob) resolve(new File([blob], file.name, { type: file.type }));
           else resolve(file);
@@ -216,6 +205,7 @@ export default function ProfilePage() {
     if (!selectedFile || !currentUserId || currentUserId !== userId) return;
 
     setUploadingAvatar(true);
+
     try {
       const resizedFile = await resizeImage(selectedFile, 256);
       const timestamp = Date.now();
@@ -229,11 +219,19 @@ export default function ProfilePage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
 
-      await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("id", currentUserId);
+      await supabase
+        .from("profiles")
+        .update({ avatar_url: urlData.publicUrl })
+        .eq("id", currentUserId);
 
-      setProfile((prev) => (prev ? { ...prev, avatar_url: urlData.publicUrl } : null));
+      setProfile((prev) =>
+        prev ? { ...prev, avatar_url: urlData.publicUrl } : null
+      );
+
       setPreviewImage(urlData.publicUrl);
       alert("Avatar updated successfully!");
     } catch (err) {
@@ -244,7 +242,6 @@ export default function ProfilePage() {
     }
   }
 
-  // Direct Supabase upload + insert into items table
   async function handleUpload() {
     if (!file || !currentUserId) {
       alert("Please select a file");
@@ -264,17 +261,17 @@ export default function ProfilePage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
-
-      const { error: insertError } = await supabase
+      const { data: urlData } = supabase.storage
         .from("items")
-        .insert({
-          user_id: currentUserId,
-          image_url: urlData.publicUrl,
-          name: "New Collection Item",
-          caption: "",
-          collection_id: null,
-        });
+        .getPublicUrl(filePath);
+
+      const { error: insertError } = await supabase.from("items").insert({
+        user_id: currentUserId,
+        image_url: urlData.publicUrl,
+        name: "New Collection Item",
+        caption: "",
+        collection_id: null,
+      });
 
       if (insertError) throw insertError;
 
@@ -295,7 +292,9 @@ export default function ProfilePage() {
 
   async function saveProfileChanges() {
     if (!currentUserId || currentUserId !== userId) return;
+
     setSaving(true);
+
     try {
       const updates = {
         display_url: editedDisplayUrl.trim() || null,
@@ -303,11 +302,17 @@ export default function ProfilePage() {
         location: editedLocation.trim() || null,
         tier: editedTier || null,
       };
-      const { error } = await supabase.from("profiles").update(updates).eq("id", currentUserId);
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", currentUserId);
+
       if (error) throw error;
 
       setProfile((prev) => (prev ? { ...prev, ...updates } : null));
       setEditMode(false);
+
       alert("Profile saved!");
     } catch (err) {
       console.error(err);
@@ -324,12 +329,15 @@ export default function ProfilePage() {
 
   const getTierIcon = (tier?: string | null) => {
     if (!tier) return null;
+
     const lower = tier.toLowerCase();
+
     if (lower.includes("bronze")) return "/bronze.png";
     if (lower.includes("silver")) return "/silver.png";
     if (lower.includes("gold")) return "/gold.png";
     if (lower.includes("diamond")) return "/diamond.png";
     if (lower.includes("founder")) return "/founder.png";
+
     return null;
   };
 
@@ -339,6 +347,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-black text-white">
         <Header />
+        <div style={{ height: 56 }} />
         <div className="flex items-center justify-center h-[80vh]">
           Loading...
         </div>
@@ -350,6 +359,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-black text-white">
         <Header />
+        <div style={{ height: 56 }} />
         <div className="flex flex-col items-center justify-center h-[80vh]">
           <h1 className="text-3xl mb-4">Error</h1>
           <p>{error}</p>
@@ -361,6 +371,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
+      <div style={{ height: 56 }} />
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
@@ -369,7 +380,11 @@ export default function ProfilePage() {
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
                   <img
-                    src={previewImage || profile.avatar_url || "/default-avatar.png"}
+                    src={
+                      previewImage ||
+                      profile.avatar_url ||
+                      "/default-avatar.png"
+                    }
                     alt="Avatar"
                     className="w-20 h-20 object-cover border-2 border-white shadow-md"
                     style={{ borderRadius: "14%" }}
@@ -406,7 +421,9 @@ export default function ProfilePage() {
             )}
 
             {profile.username && (
-              <p className="text-indigo-400 text-2xl mb-6">@{profile.username}</p>
+              <p className="text-indigo-400 text-2xl mb-6">
+                @{profile.username}
+              </p>
             )}
 
             {isOwnProfile && editMode ? (
@@ -422,7 +439,9 @@ export default function ProfilePage() {
             )}
 
             {profile.location && (
-              <p className="text-gray-400 text-xl mb-6">{profile.location}</p>
+              <p className="text-gray-400 text-xl mb-6">
+                {profile.location}
+              </p>
             )}
 
             <div className="flex items-center gap-4 mb-8">
@@ -440,14 +459,20 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Upload buttons - always visible for own profile */}
             {isOwnProfile && (
               <div className="mt-8 flex flex-wrap gap-4 justify-center">
                 <button
                   onClick={() => setShowAddItem(true)}
-                  className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition flex items-center gap-2"
+                  className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
                 >
                   + Add Item
+                </button>
+
+                <button
+                  onClick={() => router.push("/collections/create")}
+                  className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
+                >
+                  + Add Collection
                 </button>
 
                 <button
@@ -472,7 +497,11 @@ export default function ProfilePage() {
                 disabled={followLoading}
                 className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
               >
-                {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
+                {followLoading
+                  ? "Loading..."
+                  : isFollowing
+                  ? "Unfollow"
+                  : "Follow"}
               </button>
             )}
           </div>
@@ -480,90 +509,53 @@ export default function ProfilePage() {
           <SuggestedUsers />
         </section>
 
-        {/* Live Stats */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
             <div>
-              <p className="text-5xl font-bold">{profile?.items_count ?? 0}</p>
+              <p className="text-5xl font-bold">
+                {profile?.items_count ?? 0}
+              </p>
               <p className="text-gray-500 text-xl mt-3">Items</p>
             </div>
             <div>
-              <p className="text-5xl font-bold">{profile?.collections_count ?? 0}</p>
+              <p className="text-5xl font-bold">
+                {profile?.collections_count ?? 0}
+              </p>
               <p className="text-gray-500 text-xl mt-3">Collections</p>
             </div>
             <div
               onClick={() => router.push("/followers")}
               className="cursor-pointer hover:text-indigo-400 transition"
             >
-              <p className="text-5xl font-bold">{profile?.followers_count ?? 0}</p>
+              <p className="text-5xl font-bold">
+                {profile?.followers_count ?? 0}
+              </p>
               <p className="text-gray-500 text-xl mt-3">Followers</p>
             </div>
             <div
               onClick={() => router.push("/following")}
               className="cursor-pointer hover:text-indigo-400 transition"
             >
-              <p className="text-5xl font-bold">{profile?.following_count ?? 0}</p>
+              <p className="text-5xl font-bold">
+                {profile?.following_count ?? 0}
+              </p>
               <p className="text-gray-500 text-xl mt-3">Following</p>
             </div>
             <div>
-              <p className="text-5xl font-bold">£{profile?.vault_value ?? 0}</p>
+              <p className="text-5xl font-bold">
+                £{profile?.vault_value ?? 0}
+              </p>
               <p className="text-gray-500 text-xl mt-3">Vault Value</p>
             </div>
             <div>
-              <p className="text-5xl font-bold">{profile?.likes_count ?? 0}</p>
+              <p className="text-5xl font-bold">
+                {profile?.likes_count ?? 0}
+              </p>
               <p className="text-gray-500 text-xl mt-3">Likes</p>
             </div>
           </div>
         </section>
 
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
-
-          {isOwnProfile && (
-            <div className="flex justify-center mb-8">
-              <button
-                onClick={() => router.push("/collections/create")}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
-              >
-                + Add New Collection
-              </button>
-            </div>
-          )}
-
-          {collections.length === 0 ? (
-            <p className="text-center text-zinc-500 text-xl py-12">
-              No collections yet. Create your first one above!
-            </p>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-6">
-              {collections.map((col) => (
-                <div
-                  key={col.id}
-                  onClick={() => router.push(`/collections/${col.id}`)}
-                  className="cursor-pointer"
-                >
-                  <div className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
-                    <img
-                      src={col.cover_url || "/CC-main-logo.png"}
-                      alt={col.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <p className="text-white text-center font-semibold mt-3 truncate">
-                    {col.title}
-                  </p>
-
-                  <p className="text-zinc-400 text-center text-sm">
-                    {col.item_count || 0} items
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Live Community Feed */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <h2 className="text-4xl font-bold mb-8 text-center">
             Live from the Community
@@ -616,7 +608,6 @@ export default function ProfilePage() {
 
           <ImportInstagramModal onClose={() => setIsImportOpen(false)} />
 
-          {/* Add Item Modal */}
           {showAddItem && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
               <div className="bg-neutral-900 p-6 rounded-xl w-80">

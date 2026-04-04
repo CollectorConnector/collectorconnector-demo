@@ -115,7 +115,8 @@ export default function CreateCollectionPage() {
 
       if (insertError) throw insertError;
 
-      router.push(`/collections/${data.id}/add-item`);
+      // Redirect to the actual collection page
+      router.push(`/collections/${data.id}`);
     } catch (err: any) {
       console.error("Create collection failed:", err);
       alert("Failed to create collection: " + (err.message || "Check console"));
@@ -130,7 +131,6 @@ export default function CreateCollectionPage() {
 
         <h1 className="text-4xl font-bold text-center">Create Collection</h1>
 
-        {/* FULL-WIDTH CC LOGO BANNER */}
         <label htmlFor="cover-upload" className="cursor-pointer w-full flex flex-col items-center">
           <div className="w-full flex justify-center">
             <img
@@ -138,8 +138,8 @@ export default function CreateCollectionPage() {
               alt="Upload Cover"
               className="object-contain opacity-90 hover:opacity-100 transition"
               style={{
-                width: "360px",   // Slightly inset from 420px column
-                height: "auto",   // Natural aspect ratio
+                width: "360px",
+                height: "auto",
               }}
             />
           </div>
@@ -157,7 +157,6 @@ export default function CreateCollectionPage() {
           onChange={handleCoverChange}
         />
 
-        {/* TITLE */}
         <div className="w-full">
           <label className="block text-lg mb-2">Collection Title</label>
           <input
@@ -168,7 +167,6 @@ export default function CreateCollectionPage() {
           />
         </div>
 
-        {/* NICHE */}
         <div className="w-full">
           <label className="block text-lg mb-2">Niche (optional)</label>
           <input
@@ -179,7 +177,6 @@ export default function CreateCollectionPage() {
           />
         </div>
 
-        {/* CREATE BUTTON */}
         <button
           onClick={createCollection}
           disabled={saving}

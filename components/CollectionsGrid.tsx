@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 interface Collection {
   id: string;
@@ -11,7 +11,6 @@ interface Collection {
 }
 
 export default function CollectionsGrid({ userId }: { userId: string }) {
-  const supabase = createClient();
   const router = useRouter();
 
   const [collections, setCollections] = useState<Collection[]>([]);

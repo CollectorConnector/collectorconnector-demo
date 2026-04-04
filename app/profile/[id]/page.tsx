@@ -1,7 +1,7 @@
 "use client";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0; // always fetch fresh data on Vercel
+export const revalidate = 0;
 
 import { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -40,7 +40,7 @@ type Collection = {
 
 type RecentDrop = {
   id: string;
-  name: string;
+  title: string;
   imageurl: string | null;
   createdat: string;
   profiles: { username: string | null } | null;
@@ -100,7 +100,7 @@ export default function ProfilePage() {
         setLoading(true);
         const { data, error } = await supabase
           .from("profiles")
-          .select("")
+          .select("*")
           .eq("id", userId)
           .single();
 
@@ -136,7 +136,13 @@ export default function ProfilePage() {
     (async () => {
       const { data } = await supabase
         .from("items")
-        .select(id, title:name, imageurl, createdat, profiles(username))
+        .select(`
+          id,
+          title,
+          imageurl,
+          createdat,
+          profiles(username)
+        `)
         .order("createdat", { ascending: false })
         .limit(6);
 
@@ -157,7 +163,7 @@ export default function ProfilePage() {
     (async () => {
       const { data } = await supabase
         .from("follows")
-        .select("")
+        .select("*")
         .eq("followerid", currentUserId)
         .eq("followingid", userId)
         .maybeSingle();
@@ -194,8 +200,8 @@ export default function ProfilePage() {
     setUploadingAvatar(true);
     try {
       const ext = selected.name.split(".").pop();
-      const fileName = avatar-${Date.now()}.${ext};
-      const filePath = ${currentUserId}/${fileName};
+      const fileName = `avatar-${Date.now()}.${ext}`;
+      const filePath = `${currentUserId}/${fileName}`;
 
       const { error } = await supabase.storage
         .from("avatars")
@@ -225,11 +231,11 @@ export default function ProfilePage() {
     setItemUploading(true);
     try {
       const ext = file.name.split(".").pop();
-      const fileName = item-${Date.now()}.${ext};
-      const filePath = ${currentUserId}/${fileName};
+      const fileName = `item-${Date.now()}.${ext}`;
+      const filePath = `${currentUserId}/${fileName}`;
 
       const { error } = await supabase.storage
-        .from("item-images") // correct bucket
+        .from("item-images")
         .upload(filePath, file, { upsert: true });
       if (error) throw error;
 
@@ -297,9 +303,12 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
       <Header />
       <main className="w-full max-w-[720px] flex flex-col items-center px-4 pt-12 pb-20 space-y-10">
-        {/ Profile Section /}
+
+        {/* Profile Section */}
         <section className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center shadow-md">
           <div className="flex flex-col items-center">
+
+            {/* Avatar */}
             {isOwnProfile ? (
               <label htmlFor="avatar-upload" className="cursor-pointer mb-6 relative">
                 <img
@@ -317,14 +326,16 @@ export default function ProfilePage() {
                 style={{ borderRadius: "22%" }}
               />
             )}
+
             <input
               id="avatar-upload"
               type="file"
-              accept="image/"
+              accept="image/*"
               className="hidden"
               onChange={handleAvatarChange}
             />
 
+            {/* Display Name */}
             {editMode ? (
               <input
                 value={editedDisplayUrl}
@@ -335,10 +346,20 @@ export default function ProfilePage() {
               <h1 className="text-3xl font-bold mb-1">{displayName}</h1>
             )}
 
+            {/* Username */}
             {profile.username && (
-              <p className="text-indigo-400 mb-4 text-lg">@{profile.username}</p>
+              <p className="text-gray-400 mb-6 text-lg">@{profile.username}</p>
             )}
 
+            {/* ⭐ VIEW COLLECTIONS BUTTON (Premium White Button) ⭐ */}
+            <Link
+              href={`/profile/${userId}/collections`}
+              className="w-full bg-white text-black font-semibold py-4 rounded-2xl text-lg transition active:opacity-80 mb-6"
+            >
+              View Collections
+            </Link>
+
+            {/* Bio */}
             {editMode ? (
               <textarea
                 value={editedBio}
@@ -351,15 +372,10 @@ export default function ProfilePage() {
               </p>
             )}
 
-            <Link
-              href={/profile/${userId}/collections}
-              className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-8 py-3 rounded-full text-lg transition mb-6"
-            >
-              View Collections
-            </Link>
-
+            {/* Location */}
             {profile.location && <p className="text-gray-400">{profile.location}</p>}
 
+            {/* Buttons */}
             {isOwnProfile && (
               <div className="mt-10 flex flex-wrap gap-3 justify-center">
                 <button
@@ -390,20 +406,22 @@ export default function ProfilePage() {
               </div>
             )}
 
+            {/* Follow Button */}
             {!isOwnProfile && currentUserId && (
               <button
                 onClick={handleFollowToggle}
                 disabled={followLoading}
-                className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
+                className="mt-8 px-10 py-4 bg-white text-black rounded-full text-lg font-medium transition disabled:opacity-50"
               >
                 {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
               </button>
             )}
           </div>
+
           <SuggestedUsers />
         </section>
 
-        {/ My Collections /}
+        {/* My Collections */}
         <section className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
           <h2 className="text-3xl font-bold mb-8">My Collections</h2>
           {collections.length === 0 ? (
@@ -415,7 +433,7 @@ export default function ProfilePage() {
               {collections.map((col) => (
                 <div
                   key={col.id}
-                  onClick={() => router.push(/collections/${col.id})}
+                  onClick={() => router.push(`/collections/${col.id}`)}
                   className="cursor-pointer"
                 >
                   <div className="w-24 h-24 rounded-[22%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
@@ -433,7 +451,7 @@ export default function ProfilePage() {
           )}
         </section>
 
-        {/ Community Feed /}
+        {/* Community Feed */}
         <section className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
           <h2 className="text-3xl font-bold mb-8">Live from the Community</h2>
           {recentDrops.length === 0 ? (
@@ -443,19 +461,19 @@ export default function ProfilePage() {
               {recentDrops.map((drop) => (
                 <div
                   key={drop.id}
-                  onClick={() => router.push(/items/${drop.id})}
+                  onClick={() => router.push(`/items/${drop.id}`)}
                   className="group relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition cursor-pointer"
                 >
                   <img
-                    src={drop.image_url || "/default-item.png"}
-                    alt={drop.name}
+                    src={drop.imageurl || "/default-item.png"}
+                    alt={drop.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-4">
                     <p className="text-white text-sm font-medium">
                       @{drop.profiles?.username || "collector"}
                     </p>
-                    <p className="text-zinc-400 text-xs mt-1 line-clamp-1">{drop.name}</p>
+                    <p className="text-zinc-400 text-xs mt-1 line-clamp-1">{drop.title}</p>
                   </div>
                 </div>
               ))}
@@ -463,7 +481,7 @@ export default function ProfilePage() {
           )}
         </section>
 
-        {/ Logout /}
+        {/* Logout */}
         {isOwnProfile && (
           <button
             onClick={async () => {
@@ -475,19 +493,20 @@ export default function ProfilePage() {
             Log Out
           </button>
         )}
-
+       ```tsx
         <ImportInstagramModal onClose={() => setIsImportOpen(false)} />
 
         {showAddItem && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
             <div className="bg-neutral-900 p-6 rounded-xl w-80 max-w-[90%]">
               <h2 className="text-lg font-semibold mb-4">Add Item</h2>
+
               {!preview && (
                 <label className="border border-neutral-700 rounded-lg p-4 flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition">
                   Choose Photo
                   <input
                     type="file"
-                    accept="image/"
+                    accept="image/*"
                     className="hidden"
                     onChange={(e) => {
                       const selected = e.target.files?.[0];
@@ -499,6 +518,7 @@ export default function ProfilePage() {
                   />
                 </label>
               )}
+
               {preview && (
                 <img
                   src={preview}
@@ -506,6 +526,7 @@ export default function ProfilePage() {
                   className="rounded-lg mb-4 max-h-60 object-cover mx-auto"
                 />
               )}
+
               <div className="flex gap-2 mt-4">
                 <button
                   onClick={() => setShowAddItem(false)}
@@ -513,6 +534,7 @@ export default function ProfilePage() {
                 >
                   Cancel
                 </button>
+
                 <button
                   onClick={handleItemUpload}
                   disabled={itemUploading}
@@ -525,20 +547,8 @@ export default function ProfilePage() {
           </div>
         )}
       </main>
+
       <Footer />
     </div>
   );
-} // ✅ closes the ProfilePage function correctly
-`
-
-✅ Highlights & Fixes
-• Ensures the file starts with export default function ProfilePage() and ends with the closing }.
-• All bucket names (avatars, item-images) match your Supabase setup.
-• No loose JSX — every tag properly nested.
-• Safe to build via npm run build.
-
-After saving this file:
-`bash
-npm run build
-``
-should complete without syntax errors.
+}

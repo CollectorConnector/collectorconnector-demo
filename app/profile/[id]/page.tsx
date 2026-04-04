@@ -231,48 +231,57 @@ export default function ProfilePage() {
       setUploadingAvatar(false);
     }
   }
-
-  async function handleUpload() {
-    if (!file || !currentUserId) {
-      alert("Please select a file");
-      return;
-    }
-
-    setUploadingAvatar(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const fileName = `item-${Date.now()}.${ext}`;
-      const filePath = `${currentUserId}/items/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("items")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
-
-      await supabase.from("items").insert({
-        user_id: currentUserId,
-        image_url: urlData.publicUrl,
-        name: "New Collection Item",
-        caption: "",
-        collection_id: null,
-      });
-
-      alert("Item uploaded successfully!");
-      setShowAddItem(false);
-      setPreview(null);
-      setFile(null);
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed");
-    } finally {
-      setUploadingAvatar(false);
-    }
+async function handleUpload() {
+  if (!file || !currentUserId) {
+    alert("Please select a file");
+    return;
   }
 
+  setUploadingAvatar(true);
+
+  try {
+    const ext = file.name.split(".").pop() || "jpg";
+    const fileName = `item-${Date.now()}.${ext}`;
+    const filePath = `${currentUserId}/items/${fileName}`;
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from("items")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage
+      .from("items")
+      .getPublicUrl(filePath);
+
+    // Insert into items table (MATCHES YOUR SCHEMA)
+    const { error: insertError } = await supabase.from("items").insert({
+      user_id: currentUserId,
+      title: "New Item",
+      description: "",
+      image_url: urlData.publicUrl,
+      created_at: new Date().toISOString(),
+      estimated_value: null,
+      collection_id: null,
+      image_hash: null,
+    });
+
+    if (insertError) throw insertError;
+
+    alert("Item uploaded successfully!");
+
+    setShowAddItem(false);
+    setPreview(null);
+    setFile(null);
+
+    window.location.reload();
+  } catch (err) {
+    console.error(err);
+    alert("Upload failed — check console for details");
+  } finally {
+    setUploadingAvatar(false);
+  
   async function saveProfileChanges() {
     if (!currentUserId || currentUserId !== userId) return;
     setSaving(true);
@@ -392,18 +401,19 @@ export default function ProfilePage() {
                 className="text-gray-300 text-lg mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-lg h-32 resize-none"
               />
             ) : (
-              <p className="text-gray-300 text-lg mb-4 max-w-lg leading-relaxed">
-                {profile.bio || "This collector hasn’t written a bio yet."}
-              </p>
-            )}
+             {/* Bio */}
+<p className="text-gray-300 text-lg mb-4 max-w-lg leading-relaxed">
+  {profile.bio || "This collector hasn’t written a bio yet."}
+</p>
 
-            {/* VIEW COLLECTIONS BUTTON - Prominently placed and centrally aligned */}
-            <Link
-              href={`/profile/${userId}/collections`}
-              className="inline-block w-full max-w-md mx-auto text-center bg-[#1a1a1a] hover:bg-zinc-800 text-white font-medium py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
-            >
-              View Collections
-            </Link>
+{/* ⭐ View Collections — visible to everyone */}
+<Link
+  href={`/profile/${userId}/collections`}
+  className="block w-full text-center bg-[#1a1a1a] text-white font-medium py-3 rounded-xl mt-2 border border-zinc-700 active:opacity-80 transition"
+>
+  View Collections
+</Link>
+
 
             {profile.location && <p className="text-gray-400 text-lg mt-6">{profile.location}</p>}
 
@@ -544,38 +554,55 @@ export default function ProfilePage() {
 
           <ImportInstagramModal onClose={() => setIsImportOpen(false)} />
 
-          {showAddItem && (
-            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-              <div className="bg-neutral-900 p-6 rounded-xl w-80">
-                <h2 className="text-lg font-semibold mb-4">Add Item</h2>
-                {!preview && (
-                  <label className="border border-neutral-700 rounded-lg p-4 flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition">
-                    Choose Photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const selectedFile = e.target.files?.[0];
-                        if (selectedFile) {
-                          setFile(selectedFile);
-                          setPreview(URL.createObjectURL(selectedFile));
-                        }
-                      }}
-                    />
-                  </label>
-                )}
-                {preview && <img src={preview} alt="Preview" className="rounded-lg mb-4 max-h-60 object-cover" />}
-                <div className="flex gap-2 mt-4">
-                  <button onClick={() => setShowAddItem(false)} className="flex-1 border border-neutral-700 rounded-lg py-2">Cancel</button>
-                  <button onClick={handleUpload} className="flex-1 bg-white text-black rounded-lg py-2 font-semibold">Post</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+   {showAddItem && (
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div className="bg-neutral-900 p-6 rounded-xl w-80">
+      <h2 className="text-lg font-semibold mb-4">Add Item</h2>
+
+      {!preview && (
+        <label className="border border-neutral-700 rounded-lg p-4 flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition">
+          Choose Photo
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const selectedFile = e.target.files?.[0];
+              if (selectedFile) {
+                setFile(selectedFile);
+                setPreview(URL.createObjectURL(selectedFile));
+              }
+            }}
+          />
+        </label>
       )}
 
+      {preview && (
+        <img
+          src={preview}
+          alt="Preview"
+          className="rounded-lg mb-4 max-h-60 object-cover"
+        />
+      )}
+
+      <div className="flex gap-2 mt-4">
+        <button
+          onClick={() => setShowAddItem(false)}
+          className="flex-1 border border-neutral-700 rounded-lg py-2"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleUpload}
+          className="flex-1 bg-white text-black rounded-lg py-2 font-semibold"
+        >
+          Post
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       <Footer />
     </div>
   );

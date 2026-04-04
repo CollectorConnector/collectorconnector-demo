@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import ImportInstagramModal from "@/components/ImportInstagramModal";
 import Link from "next/link";
@@ -62,11 +62,10 @@ export default function ProfilePage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [itemUploading, setItemUploading] = useState(false);
 
-  const [isImportOpen, setIsImportOpen] = useState(false);
-
-  // Avatar
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [editMode, setEditMode] = useState(false);
   const [editedBio, setEditedBio] = useState("");
@@ -93,6 +92,7 @@ export default function ProfilePage() {
           .eq("id", userId)
           .single();
         if (error || !data) throw error || new Error("Profile not found");
+
         setProfile(data);
         setEditedBio(data.bio || "");
         setEditedLocation(data.location || "");
@@ -107,7 +107,7 @@ export default function ProfilePage() {
     })();
   }, [userId]);
 
-  // Load collections
+  // Load Collections
   useEffect(() => {
     if (!userId) return;
     (async () => {
@@ -120,19 +120,29 @@ export default function ProfilePage() {
     })();
   }, [userId]);
 
-  // Load recent items
+  // Load Recent Items
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("items")
-        .select(`id, title, image_url, created_at, profiles!inner(username)`)
+        .select(`id, title, image_url, created_at, profiles(username)`)
         .order("created_at", { ascending: false })
         .limit(6);
-      setRecentItems((data as Item[]) || []);
+
+      // Normalize profiles field (array -> single object)
+      const normalized =
+        (data || []).map((item: any) => ({
+          ...item,
+          profiles: Array.isArray(item.profiles)
+            ? item.profiles[0] || null
+            : item.profiles ?? null,
+        })) as Item[];
+
+      setRecentItems(normalized);
     })();
   }, []);
 
-  // Check following state
+  // Check Follow State
   useEffect(() => {
     if (!currentUserId || !userId || currentUserId === userId) return;
     (async () => {
@@ -270,7 +280,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
       <Header />
       <main className="w-full max-w-[720px] flex flex-col items-center px-4 pt-12 pb-20 space-y-10">
-        {/* Profile Header */}
+        {/* Profile Section */}
         <section className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center shadow-md">
           <div className="flex flex-col items-center">
             {isOwnProfile ? (
@@ -323,7 +333,7 @@ export default function ProfilePage() {
               </p>
             )}
 
-            {/* View Collections Button */}
+            {/* View Collections */}
             <Link
               href={`/profile/${userId}/collections`}
               className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-8 py-3 rounded-full text-lg transition mb-6"
@@ -380,7 +390,7 @@ export default function ProfilePage() {
           <SuggestedUsers />
         </section>
 
-        {/* Collections */}
+        {/* My Collections */}
         <section className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
           <h2 className="text-3xl font-bold mb-8">My Collections</h2>
           {collections.length === 0 ? (
@@ -410,7 +420,7 @@ export default function ProfilePage() {
           )}
         </section>
 
-        {/* Community Items */}
+        {/* Live from Community */}
         <section className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
           <h2 className="text-3xl font-bold mb-8">Live from the Community</h2>
           {recentItems.length === 0 ? (
@@ -432,9 +442,7 @@ export default function ProfilePage() {
                     <p className="text-white text-sm font-medium">
                       @{item.profiles?.username || "collector"}
                     </p>
-                    <p className="text-zinc-400 text-xs mt-1 line-clamp-1">
-                      {item.title}
-                    </p>
+                    <p className="text-zinc-400 text-xs mt-1 line-clamp-1">{item.title}</p>
                   </div>
                 </div>
               ))}

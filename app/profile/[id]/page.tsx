@@ -80,17 +80,16 @@ export default function ProfilePage() {
 
   const isOwnProfile = currentUserId === userId;
 
-  // Load collections with refresh capability
-  const loadCollections = async () => {
-    if (!userId) return;
-    const { data } = await supabase
-      .from("collections")
-      .select("id, title, nichem, cover_url, item_count")
-      .eq("user_id", userId);
-    if (data) setCollections(data as Collection[]);
-  };
-
+  // Load collections
   useEffect(() => {
+    if (!userId) return;
+    async function loadCollections() {
+      const { data } = await supabase
+        .from("collections")
+        .select("id, title, nichem, cover_url, item_count")
+        .eq("user_id", userId);
+      if (data) setCollections(data as Collection[]);
+    }
     loadCollections();
   }, [userId]);
 
@@ -451,59 +450,41 @@ export default function ProfilePage() {
               {profile.tier && <p className="text-indigo-400 text-2xl font-medium">Tier: {profile.tier}</p>}
             </div>
 
-            <div className="mt-10 flex gap-6 flex-wrap justify-center">
-              {isOwnProfile ? (
-                editMode ? (
-                  <>
-                    <button
-                      onClick={() => setShowAddItem(true)}
-                      className="border px-4 py-2 rounded-lg text-sm hover:bg-neutral-900 transition"
-                    >
-                      + Add Item
-                    </button>
+            {/* Upload buttons - always visible for own profile */}
+            {isOwnProfile && (
+              <div className="mt-10 flex gap-4 flex-wrap justify-center">
+                <button
+                  onClick={() => setShowAddItem(true)}
+                  className="border px-6 py-3 rounded-lg text-sm hover:bg-neutral-900 transition flex items-center gap-2"
+                >
+                  + Add Item
+                </button>
 
-                    <button
-                      onClick={saveProfileChanges}
-                      disabled={saving}
-                      className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 rounded-full text-xl font-medium transition disabled:opacity-50 min-w-[200px]"
-                    >
-                      {saving ? "Saving..." : "Save Changes"}
-                    </button>
-                    <button
-                      onClick={() => setEditMode(false)}
-                      className="px-12 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition min-w-[200px]"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setEditMode(true)}
-                      className="px-14 py-5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-xl font-medium transition shadow-xl"
-                    >
-                      Edit Profile
-                    </button>
-                    <button
-                      onClick={() => setIsImportOpen(true)}
-                      className="px-6 py-3 bg-pink-600 rounded-full text-white"
-                    >
-                      Import from Instagram
-                    </button>
-                  </>
-                )
-              ) : (
-                currentUserId && (
-                  <button
-                    onClick={toggleFollow}
-                    disabled={followLoading}
-                    className="px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
-                  >
-                    {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
-                  </button>
-                )
-              )}
-            </div>
+                <button
+                  onClick={() => setIsImportOpen(true)}
+                  className="px-6 py-3 bg-pink-600 rounded-full text-white flex items-center gap-2"
+                >
+                  Import from Instagram
+                </button>
+
+                <button
+                  onClick={() => setEditMode(!editMode)}
+                  className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-sm font-medium transition"
+                >
+                  {editMode ? "Cancel Edit" : "Edit Profile"}
+                </button>
+              </div>
+            )}
+
+            {!isOwnProfile && currentUserId && (
+              <button
+                onClick={toggleFollow}
+                disabled={followLoading}
+                className="mt-10 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
+              >
+                {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
+              </button>
+            )}
           </div>
 
           <SuggestedUsers />
@@ -599,13 +580,6 @@ export default function ProfilePage() {
             className="w-full py-4 bg-red-600 hover:bg-red-500 rounded-xl text-white text-xl font-semibold transition"
           >
             Log Out
-          </button>
-
-          <button
-            onClick={() => setIsImportOpen(true)}
-            className="bg-black text-white px-4 py-2 rounded mt-4 w-full"
-          >
-            Import from Instagram
           </button>
 
           <ImportInstagramModal

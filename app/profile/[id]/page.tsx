@@ -9,6 +9,7 @@ import ImportInstagramModal from "@/components/ImportInstagramModal";
 import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
+import Link from "next/link";
 
 type Profile = {
   id: string;
@@ -490,6 +491,13 @@ export default function ProfilePage() {
                 </button>
               </div>
             )}
+            <Link
+  href={`/profile/${params.id}/collections`}
+  className="block w-full text-center bg-white text-black font-medium py-2 rounded-xl mt-4 active:opacity-80 transition"
+>
+  View Collections
+</Link>
+
 
             {!isOwnProfile && currentUserId && (
               <button

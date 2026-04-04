@@ -23,6 +23,52 @@ type Item = {
   collection_id: string | null;
 };
 
+// ⭐ Resize image while keeping aspect ratio + background #111
+async function resizeImageKeepAspect(
+  file: File,
+  maxSize = 1080
+): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+
+    img.onload = () => {
+      let { width, height } = img;
+
+      // Scale down while keeping aspect ratio
+      if (width > height) {
+        if (width > maxSize) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        }
+      } else {
+        if (height > maxSize) {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = "#111"; // your chosen background
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return resolve(file);
+          resolve(new File([blob], file.name, { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        0.85
+      );
+    };
+  });
+}
+
 export default function CollectionPage() {
   const params = useParams<{ collectionId: string }>();
   const router = useRouter();
@@ -46,7 +92,8 @@ export default function CollectionPage() {
     });
   }, []);
 
-  const isOwner = currentUserId && collection && currentUserId === collection.user_id;
+  const isOwner =
+    currentUserId && collection && currentUserId === collection.user_id;
 
   // Load collection + items
   useEffect(() => {
@@ -84,7 +131,7 @@ export default function CollectionPage() {
     loadData();
   }, [collectionId]);
 
-  // Add Item upload logic
+  // ⭐ Add Item upload logic (fixed + resized)
   async function handleUpload() {
     if (!file || !currentUserId || !collection) {
       alert("Please select a file");
@@ -94,33 +141,41 @@ export default function CollectionPage() {
     setUploading(true);
 
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const fileName = `item-${Date.now()}.${ext}`;
-      const filePath = `${currentUserId}/items/${fileName}`;
+      // Resize first
+      const resized = await resizeImageKeepAspect(file);
 
+      const ext = "jpg";
+      const fileName = `item-${Date.now()}.${ext}`;
+      const filePath = `${currentUserId}/${fileName}`;
+
+      // Upload resized file
       const { error: uploadError } = await supabase.storage
         .from("items")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, resized, {
+          upsert: true,
+          contentType: "image/jpeg",
+        });
 
       if (uploadError) throw uploadError;
 
+      // Get public URL
       const { data: urlData } = supabase.storage
         .from("items")
         .getPublicUrl(filePath);
 
-      const { error: insertError } = await supabase
-        .from("items")
-        .insert({
-          user_id: currentUserId,
-          collection_id: collection.id,
-          image_url: urlData.publicUrl,
-          title: "New Item",
-          description: "",
-          estimated_value: null,
-        });
+      // Insert into DB
+      const { error: insertError } = await supabase.from("items").insert({
+        user_id: currentUserId,
+        collection_id: collection.id,
+        image_url: urlData.publicUrl,
+        title: "New Item",
+        description: "",
+        estimated_value: null,
+      });
 
       if (insertError) throw insertError;
 
+      // Reset modal
       setShowAddItem(false);
       setPreview(null);
       setFile(null);
@@ -159,7 +214,6 @@ export default function CollectionPage() {
 
   return (
     <div className="min-h-screen bg-black text-white px-6 py-10 max-w-[720px] mx-auto">
-
       {/* Cover */}
       <div className="w-full flex justify-center mb-8">
         <img
@@ -170,7 +224,9 @@ export default function CollectionPage() {
       </div>
 
       {/* Title */}
-      <h1 className="text-4xl font-bold text-center mb-4">{collection.title}</h1>
+      <h1 className="text-4xl font-bold text-center mb-4">
+        {collection.title}
+      </h1>
 
       {/* Niche */}
       {collection.niche && (
@@ -191,8 +247,8 @@ export default function CollectionPage() {
         </div>
       )}
 
-      {/* Items grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+      {/* ⭐ Items grid (Instagram style) */}
+      <div className="grid grid-cols-3 gap-3">
         {items.length === 0 ? (
           <p className="col-span-3 text-center text-zinc-500 text-xl py-12">
             No items yet — add your first one!
@@ -201,18 +257,13 @@ export default function CollectionPage() {
           items.map((item) => (
             <div
               key={item.id}
-              className="rounded-xl overflow-hidden border border-zinc-700 bg-zinc-900"
+              className="rounded-xl overflow-hidden bg-[#111] border border-zinc-800"
             >
               <img
                 src={item.image_url || "/default-item.png"}
                 alt={item.title || "Item"}
-                className="w-full h-40 object-cover"
+                className="w-full aspect-square object-contain bg-[#111]"
               />
-              <div className="p-3">
-                <p className="text-white font-medium truncate">
-                  {item.title || "Untitled"}
-                </p>
-              </div>
             </div>
           ))
         )}
@@ -246,7 +297,7 @@ export default function CollectionPage() {
               <img
                 src={preview}
                 alt="Preview"
-                className="rounded-lg mb-4 max-h-60 object-cover"
+                className="rounded-lg mb-4 max-h-60 object-contain bg-[#111]"
               />
             )}
 

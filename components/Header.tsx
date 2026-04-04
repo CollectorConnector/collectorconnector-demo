@@ -6,23 +6,16 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 bg-black border-b border-zinc-800 z-50">
       <div className="max-w-[720px] mx-auto px-4 h-14 flex items-center justify-between">
-        
+
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center border border-zinc-700">
-            <img 
-              src="https://collectorconnector.net/logo.png" 
-              alt="CollectorConnector" 
-              className="w-6 h-6"
-            />
-          </div>
           <span className="font-bold text-lg tracking-tight">CollectorConnector</span>
         </Link>
 
-        {/* Social Icons */}
+        {/* Social Icons - Clean and correct */}
         <div className="flex items-center gap-5 text-white">
-          
-          {/* Instagram - better clean icon */}
+
+          {/* Instagram */}
           <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.849.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.327.273 2.7.078 7.053.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.196 4.354 2.617 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.196 6.78-2.617 6.98-6.98.058-1.281.072-1.689.072-4.948 0-3.259-.014-3.668-.072-4.948-.2-4.354-2.618-6.78-6.98-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a3.999 3.999 0 110-7.998 3.999 3.999 0 010 7.998zm6.406-11.845a1.44 1.44 0 11-2.88 0 1.44 1.44 0 012.88 0z"/>
@@ -37,13 +30,13 @@ export default function Header() {
           </a>
 
           {/* eBay */}
-          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-            <span className="text-xl font-bold tracking-tighter">eBay</span>
+          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform text-lg font-bold">
+            eBay
           </a>
 
-          {/* Whatnot - your new logo */}
+          {/* Whatnot - your yellow W logo */}
           <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-            <div className="w-7 h-7 bg-black rounded-xl flex items-center justify-center overflow-hidden">
+            <div className="w-7 h-7 bg-black rounded-2xl flex items-center justify-center overflow-hidden border border-zinc-700">
               <img 
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Whatnot_Logo.svg/512px-Whatnot_Logo.svg.png" 
                 alt="Whatnot" 

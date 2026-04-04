@@ -48,6 +48,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
+  // Add Item modal state
   const [showAddItem, setShowAddItem] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -232,6 +233,7 @@ export default function ProfilePage() {
     }
   }
 
+  // Fixed Add Item flow
   async function handleUpload() {
     if (!file || !currentUserId) {
       alert("Please select a file");
@@ -239,11 +241,13 @@ export default function ProfilePage() {
     }
 
     setUploadingAvatar(true);
+
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const fileName = `item-${Date.now()}.${ext}`;
       const filePath = `${currentUserId}/items/${fileName}`;
 
+      // 1. Upload image to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("items")
         .upload(filePath, file, { upsert: true });
@@ -252,7 +256,8 @@ export default function ProfilePage() {
 
       const { data: urlData } = supabase.storage.from("items").getPublicUrl(filePath);
 
-      await supabase.from("items").insert({
+      // 2. Insert record into items table
+      const { error: insertError } = await supabase.from("items").insert({
         user_id: currentUserId,
         image_url: urlData.publicUrl,
         name: "New Collection Item",
@@ -260,14 +265,20 @@ export default function ProfilePage() {
         collection_id: null,
       });
 
-      alert("Item uploaded successfully!");
+      if (insertError) throw insertError;
+
+      alert("Item uploaded and saved successfully!");
+
+      // Close modal and reset
       setShowAddItem(false);
       setPreview(null);
       setFile(null);
+
+      // Refresh the page so the new item appears in recent drops
       window.location.reload();
     } catch (err) {
-      console.error(err);
-      alert("Upload failed");
+      console.error("Upload error:", err);
+      alert("Upload failed — check console for details");
     } finally {
       setUploadingAvatar(false);
     }
@@ -397,7 +408,7 @@ export default function ProfilePage() {
               </p>
             )}
 
-            {/* View Collections Button - Prominently placed */}
+            {/* View Collections Button */}
             <Link
               href={`/profile/${userId}/collections`}
               className="block w-full max-w-md mx-auto text-center bg-[#1a1a1a] hover:bg-zinc-800 text-white font-medium py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
@@ -544,10 +555,12 @@ export default function ProfilePage() {
 
           <ImportInstagramModal onClose={() => setIsImportOpen(false)} />
 
+          {/* Add Item Modal */}
           {showAddItem && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-              <div className="bg-neutral-900 p-6 rounded-xl w-80">
+              <div className="bg-neutral-900 p-6 rounded-xl w-80 max-w-[90%]">
                 <h2 className="text-lg font-semibold mb-4">Add Item</h2>
+
                 {!preview && (
                   <label className="border border-neutral-700 rounded-lg p-4 flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition">
                     Choose Photo
@@ -565,10 +578,30 @@ export default function ProfilePage() {
                     />
                   </label>
                 )}
-                {preview && <img src={preview} alt="Preview" className="rounded-lg mb-4 max-h-60 object-cover" />}
+
+                {preview && (
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="rounded-lg mb-4 max-h-60 object-cover mx-auto"
+                  />
+                )}
+
                 <div className="flex gap-2 mt-4">
-                  <button onClick={() => setShowAddItem(false)} className="flex-1 border border-neutral-700 rounded-lg py-2">Cancel</button>
-                  <button onClick={handleUpload} className="flex-1 bg-white text-black rounded-lg py-2 font-semibold">Post</button>
+                  <button
+                    onClick={() => setShowAddItem(false)}
+                    className="flex-1 border border-neutral-700 rounded-lg py-2"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={handleUpload}
+                    disabled={uploadingAvatar}
+                    className="flex-1 bg-white text-black rounded-lg py-2 font-semibold disabled:opacity-50"
+                  >
+                    {uploadingAvatar ? "Uploading..." : "Post"}
+                  </button>
                 </div>
               </div>
             </div>

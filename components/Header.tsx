@@ -123,15 +123,20 @@ export default function Header() {
             </svg>
           </a>
 
-          {/* WHATNOT — CORRECT SVG */}
+          {/* WHATNOT — W‑ONLY SVG */}
           <a
             href="https://whatnot.com"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:scale-110 transition-transform"
           >
-            <svg width="26" height="26" viewBox="0 0 256 256" fill="currentColor">
-              <path d="M128 16c-8.8 0-16 7.2-16 16v80l-32-24-32 24V32c0-8.8-7.2-16-16-16S16 23.2 16 32v160c0 8.8 7.2 16 16 16s16-7.2 16-16v-48l32-24 32 24v48c0 8.8 7.2 16 16 16s16-7.2 16-16v-48l32-24 32 24v48c0 8.8 7.2 16 16 16s16-7.2 16-16V32c0-8.8-7.2-16-16-16s-16 7.2-16 16v80l-32-24-32 24V32c0-8.8-7.2-16-16-16z" />
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 256 256"
+              fill="currentColor"
+            >
+              <path d="M207.6 48.3c-6.9-3.9-15.6-1.5-19.5 5.4l-36.4 64.2-36.4-64.2c-3.9-6.9-12.6-9.3-19.5-5.4-6.9 3.9-9.3 12.6-5.4 19.5l45.8 80.8v48.4c0 7.8 6.3 14.1 14.1 14.1s14.1-6.3 14.1-14.1v-48.4l45.8-80.8c3.9-6.9 1.5-15.6-5.4-19.5z" />
             </svg>
           </a>
 
@@ -148,9 +153,6 @@ export default function Header() {
           </a>
         </div>
       </header>
-
-      {/* Spacer under fixed header */}
-      <div style={{ height: 56 }} />
     </>
   );
 }

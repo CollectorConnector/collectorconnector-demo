@@ -452,24 +452,24 @@ export default function ProfilePage() {
 
             {/* Upload buttons - always visible for own profile */}
             {isOwnProfile && (
-              <div className="mt-10 flex gap-4 flex-wrap justify-center">
+              <div className="mt-8 flex flex-wrap gap-4 justify-center">
                 <button
                   onClick={() => setShowAddItem(true)}
-                  className="border px-6 py-3 rounded-lg text-sm hover:bg-neutral-900 transition flex items-center gap-2"
+                  className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition flex items-center gap-2"
                 >
                   + Add Item
                 </button>
 
                 <button
                   onClick={() => setIsImportOpen(true)}
-                  className="px-6 py-3 bg-pink-600 rounded-full text-white flex items-center gap-2"
+                  className="bg-pink-600 hover:bg-pink-500 px-6 py-3 rounded-xl text-white font-medium transition"
                 >
                   Import from Instagram
                 </button>
 
                 <button
                   onClick={() => setEditMode(!editMode)}
-                  className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-full text-sm font-medium transition"
+                  className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
                 >
                   {editMode ? "Cancel Edit" : "Edit Profile"}
                 </button>
@@ -480,7 +480,7 @@ export default function ProfilePage() {
               <button
                 onClick={toggleFollow}
                 disabled={followLoading}
-                className="mt-10 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
+                className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
               >
                 {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
               </button>

@@ -78,7 +78,7 @@ export default function ProfilePage() {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
   }, []);
 
-  const isOwnProfile = currentUserId === userId;
+  const isOwnProfile = profile?.id === currentUserId;
 
   // Load collections
   useEffect(() => {

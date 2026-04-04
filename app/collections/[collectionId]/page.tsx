@@ -1,30 +1,56 @@
-import AddItemForm from "@/components/AddItemForm";
-import { supabase } from "@/lib/supabase";
+import React from 'react';
+import { useParams } from 'react-router-dom';
+import './styles.css'; // Assuming styles are defined in a separate CSS file
 
-export default async function CollectionPage({ params }: any) {
-  const { id } = params;
+const CollectionPage = () => {
+    const { collectionId } = useParams();
 
-  const { data: items } = await supabase
-    .from("items")
-    .select("*")
-    .eq("collection_id", id)
-    .order("created_at", { ascending: false });
+    // Simulated data fetching function
+    const fetchCollectionData = async (id) => {
+        // Replace this with actual data fetching logic
+        return {
+            title: `Collection ${id}`,
+            description: 'Description for the collection.',
+            items: [
+                { id: 1, name: 'Item 1', image: 'url_to_image_1' },
+                { id: 2, name: 'Item 2', image: 'url_to_image_2' },
+                { id: 3, name: 'Item 3', image: 'url_to_image_3' }
+            ]
+        };
+    };
 
-  return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Collection</h1>
+    const [collection, setCollection] = React.useState(null);
 
-      <AddItemForm collectionId={id} />
+    React.useEffect(() => {
+        const loadCollection = async () => {
+            const data = await fetchCollectionData(collectionId);
+            setCollection(data);
+        };
 
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        {items?.map((item) => (
-          <div key={item.id} className="border p-2 rounded">
-            <img src={item.image_url} className="w-full rounded" />
-            <h2 className="font-semibold mt-2">{item.title}</h2>
-            <p className="text-sm text-gray-600">{item.description}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+        loadCollection();
+    }, [collectionId]);
+
+    if (!collection) return <div>Loading...</div>;
+
+    return (
+        <div className="collection-page dark-theme">
+            <header className="collection-header">
+                <h1>{collection.title}</h1>
+                <p>{collection.description}</p>
+            </header>
+            <main className="collection-items">
+                <h2>Items</h2>
+                <div className="items-grid">
+                    {collection.items.map(item => (
+                        <div key={item.id} className="item-card">
+                            <img src={item.image} alt={item.name} />
+                            <h3>{item.name}</h3>
+                        </div>
+                    ))}
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export default CollectionPage;

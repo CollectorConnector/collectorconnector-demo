@@ -375,19 +375,19 @@ export default function ProfilePage() {
       <div style={{ height: 56 }} />
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
+
+        {/* POLISHED PROFILE HEADER */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="flex flex-col items-center text-center">
-            <div className="relative mb-8">
+
+            {/* Avatar */}
+            <div className="relative mb-6">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
                   <img
-                    src={
-                      previewImage ||
-                      profile.avatar_url ||
-                      "/default-avatar.png"
-                    }
+                    src={previewImage || profile.avatar_url || "/default-avatar.png"}
                     alt="Avatar"
-                    className="w-20 h-20 object-cover border-2 border-white shadow-md"
+                    className="w-24 h-24 object-cover border-2 border-white shadow-md"
                     style={{ borderRadius: "14%" }}
                   />
                 </label>
@@ -395,7 +395,7 @@ export default function ProfilePage() {
                 <img
                   src={profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
-                  className="w-20 h-20 object-cover border-2 border-white shadow-md"
+                  className="w-24 h-24 object-cover border-2 border-white shadow-md"
                   style={{ borderRadius: "14%" }}
                 />
               )}
@@ -410,56 +410,66 @@ export default function ProfilePage() {
               disabled={uploadingAvatar}
             />
 
+            {/* Display Name */}
             {isOwnProfile && editMode ? (
               <input
                 type="text"
                 value={editedDisplayUrl}
                 onChange={(e) => setEditedDisplayUrl(e.target.value)}
-                className="text-4xl font-bold mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg"
+                className="text-4xl font-bold mb-3 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg"
               />
             ) : (
-              <h1 className="text-4xl font-bold mb-3">{displayName}</h1>
+              <h1 className="text-4xl font-bold mb-1">{displayName}</h1>
             )}
 
+            {/* Username */}
             {profile.username && (
-              <p className="text-indigo-400 text-2xl mb-6">
-                @{profile.username}
-              </p>
+              <p className="text-indigo-400 text-xl mb-4">@{profile.username}</p>
             )}
 
+            {/* Bio */}
             {isOwnProfile && editMode ? (
               <textarea
                 value={editedBio}
                 onChange={(e) => setEditedBio(e.target.value)}
-                className="text-gray-300 text-xl mb-6 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-lg h-36 resize-none"
+                className="text-gray-300 text-lg mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-lg h-32 resize-none"
               />
             ) : (
-              <p className="text-gray-300 text-xl mb-6 max-w-lg leading-relaxed">
+              <p className="text-gray-300 text-lg mb-4 max-w-lg leading-relaxed">
                 {profile.bio || "This collector hasn’t written a bio yet."}
               </p>
             )}
 
+            {/* View Collections — visible to everyone */}
+            <Link
+              href={`/profile/${userId}/collections`}
+              className="block w-full text-center bg-[#1a1a1a] text-white font-medium py-3 rounded-xl mt-2 border border-zinc-700 active:opacity-80 transition"
+            >
+              View Collections
+            </Link>
+
+            {/* Location */}
             {profile.location && (
-              <p className="text-gray-400 text-xl mb-6">
-                {profile.location}
-              </p>
+              <p className="text-gray-400 text-lg mt-4">{profile.location}</p>
             )}
 
-            <div className="flex items-center gap-4 mb-8">
+            {/* Tier */}
+            <div className="flex items-center gap-3 mt-6">
               {tierIconSrc && (
                 <img
                   src={tierIconSrc}
                   alt={`${profile.tier} tier`}
-                  className="w-14 h-14 object-contain"
+                  className="w-10 h-10 object-contain"
                 />
               )}
               {profile.tier && (
-                <p className="text-indigo-400 text-2xl font-medium">
-                  Tier: {profile.tier}
+                <p className="text-indigo-400 text-xl font-medium">
+                  {profile.tier} Tier
                 </p>
               )}
             </div>
 
+            {/* Owner Actions - Always visible for own profile */}
             {isOwnProfile && (
               <div className="mt-8 flex flex-wrap gap-4 justify-center">
                 <button
@@ -491,25 +501,15 @@ export default function ProfilePage() {
                 </button>
               </div>
             )}
-            <Link
-  href={`/profile/${params.id}/collections`}
-  className="block w-full text-center bg-white text-black font-medium py-2 rounded-xl mt-4 active:opacity-80 transition"
->
-  View Collections
-</Link>
 
-
+            {/* Follow Button for other users */}
             {!isOwnProfile && currentUserId && (
               <button
                 onClick={toggleFollow}
                 disabled={followLoading}
                 className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
               >
-                {followLoading
-                  ? "Loading..."
-                  : isFollowing
-                  ? "Unfollow"
-                  : "Follow"}
+                {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
               </button>
             )}
           </div>
@@ -517,83 +517,97 @@ export default function ProfilePage() {
           <SuggestedUsers />
         </section>
 
+        {/* Stats Section */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
             <div>
-              <p className="text-5xl font-bold">
-                {profile?.items_count ?? 0}
-              </p>
+              <p className="text-5xl font-bold">{profile?.items_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Items</p>
             </div>
             <div>
-              <p className="text-5xl font-bold">
-                {profile?.collections_count ?? 0}
-              </p>
+              <p className="text-5xl font-bold">{profile?.collections_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Collections</p>
             </div>
-            <div
-              onClick={() => router.push("/followers")}
-              className="cursor-pointer hover:text-indigo-400 transition"
-            >
-              <p className="text-5xl font-bold">
-                {profile?.followers_count ?? 0}
-              </p>
+            <div onClick={() => router.push("/followers")} className="cursor-pointer hover:text-indigo-400 transition">
+              <p className="text-5xl font-bold">{profile?.followers_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Followers</p>
             </div>
-            <div
-              onClick={() => router.push("/following")}
-              className="cursor-pointer hover:text-indigo-400 transition"
-            >
-              <p className="text-5xl font-bold">
-                {profile?.following_count ?? 0}
-              </p>
+            <div onClick={() => router.push("/following")} className="cursor-pointer hover:text-indigo-400 transition">
+              <p className="text-5xl font-bold">{profile?.following_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Following</p>
             </div>
             <div>
-              <p className="text-5xl font-bold">
-                £{profile?.vault_value ?? 0}
-              </p>
+              <p className="text-5xl font-bold">£{profile?.vault_value ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Vault Value</p>
             </div>
             <div>
-              <p className="text-5xl font-bold">
-                {profile?.likes_count ?? 0}
-              </p>
+              <p className="text-5xl font-bold">{profile?.likes_count ?? 0}</p>
               <p className="text-gray-500 text-xl mt-3">Likes</p>
             </div>
           </div>
         </section>
 
+        {/* My Collections */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
-          <h2 className="text-4xl font-bold mb-8 text-center">
-            Live from the Community
-          </h2>
+          <h2 className="text-4xl font-bold mb-8 text-center">My Collections</h2>
+
+          {isOwnProfile && (
+            <div className="flex justify-center mb-8">
+              <button
+                onClick={() => router.push("/collections/create")}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-lg font-medium transition"
+              >
+                + Add New Collection
+              </button>
+            </div>
+          )}
+
+          {collections.length === 0 ? (
+            <p className="text-center text-zinc-500 text-xl py-12">
+              No collections yet. Create your first one above!
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-6">
+              {collections.map((col) => (
+                <div
+                  key={col.id}
+                  onClick={() => router.push(`/collections/${col.id}`)}
+                  className="cursor-pointer"
+                >
+                  <div className="w-24 h-24 rounded-[14%] overflow-hidden border border-zinc-700 bg-zinc-900 mx-auto">
+                    <img
+                      src={col.cover_url || "/CC-main-logo.png"}
+                      alt={col.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <p className="text-white text-center font-semibold mt-3 truncate">
+                    {col.title}
+                  </p>
+
+                  <p className="text-zinc-400 text-center text-sm">
+                    {col.item_count || 0} items
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Live Community Feed */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg shadow-black/30">
+          <h2 className="text-4xl font-bold mb-8 text-center">Live from the Community</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
             {recentDrops.length === 0 ? (
-              <div className="col-span-3 text-center py-12">
-                <p className="text-zinc-500 text-xl">
-                  No drops yet — be the first!
-                </p>
-              </div>
+              <div className="col-span-3 text-center py-12"><p className="text-zinc-500 text-xl">No drops yet — be the first!</p></div>
             ) : (
               recentDrops.map((drop) => (
-                <div
-                  key={drop.id}
-                  className="group relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition cursor-pointer"
-                  onClick={() => router.push(`/items/${drop.id}`)}
-                >
-                  <img
-                    src={drop.image_url || "/default-item.png"}
-                    alt={drop.name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
+                <div key={drop.id} className="group relative aspect-square rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition cursor-pointer" onClick={() => router.push(`/items/${drop.id}`)}>
+                  <img src={drop.image_url || "/default-item.png"} alt={drop.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-4">
-                    <p className="text-white text-sm font-medium">
-                      @{drop.profiles?.username || "collector"}
-                    </p>
-                    <p className="text-zinc-400 text-xs mt-1 line-clamp-1">
-                      {drop.name}
-                    </p>
+                    <p className="text-white text-sm font-medium">@{drop.profiles?.username || "collector"}</p>
+                    <p className="text-zinc-400 text-xs mt-1 line-clamp-1">{drop.name}</p>
                   </div>
                 </div>
               ))
@@ -604,18 +618,21 @@ export default function ProfilePage() {
 
       {isOwnProfile && (
         <div className="max-w-[720px] mx-auto px-4 pb-10">
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              router.push("/auth/login");
-            }}
+          <button 
+            onClick={async () => { 
+              await supabase.auth.signOut(); 
+              router.push("/auth/login"); 
+            }} 
             className="w-full py-4 bg-red-600 hover:bg-red-500 rounded-xl text-white text-xl font-semibold transition"
           >
             Log Out
           </button>
 
-          <ImportInstagramModal onClose={() => setIsImportOpen(false)} />
+          <ImportInstagramModal
+            onClose={() => setIsImportOpen(false)}
+          />
 
+          {/* Add Item Modal */}
           {showAddItem && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
               <div className="bg-neutral-900 p-6 rounded-xl w-80">

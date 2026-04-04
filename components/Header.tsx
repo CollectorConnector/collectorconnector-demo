@@ -5,14 +5,21 @@ import Link from "next/link";
 export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 bg-black border-b border-zinc-800 z-50">
-      <div className="max-w-[720px] mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="h-14 flex items-center justify-between px-4 max-w-[720px] mx-auto">
 
-        {/* Logo */}
+        {/* Main Logo */}
         <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center border border-zinc-700 overflow-hidden">
+            <img 
+              src="/CC-main-logo.png" 
+              alt="CollectorConnector" 
+              className="w-6 h-6"
+            />
+          </div>
           <span className="font-bold text-lg tracking-tight">CollectorConnector</span>
         </Link>
 
-        {/* Social Icons - Clean and correct */}
+        {/* Social Icons */}
         <div className="flex items-center gap-5 text-white">
 
           {/* Instagram */}
@@ -30,7 +37,7 @@ export default function Header() {
           </a>
 
           {/* eBay */}
-          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform text-lg font-bold">
+          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform text-lg font-bold tracking-tighter">
             eBay
           </a>
 
@@ -52,7 +59,7 @@ export default function Header() {
             </svg>
           </a>
 
-          {/* X (Twitter) */}
+          {/* X */}
           <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>

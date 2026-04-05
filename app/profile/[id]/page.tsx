@@ -85,7 +85,6 @@ export default function ProfilePage() {
     loadData();
   }, [userId]);
 
-  // Handle Logic
   async function handlePostItem() {
     if (!file || !userId || !niche) return;
     setUploading(true);
@@ -114,16 +113,18 @@ export default function ProfilePage() {
     if (error) alert(error.message); else window.location.reload();
   }
 
-  // Determine Badge based on membership_tier
-  const getBadgeIcon = () => {
+  // FIXED: Explicitly return string or undefined to satisfy TypeScript
+  const getBadgeIcon = (): string | undefined => {
     const tier = profile?.membership_tier?.toLowerCase();
     if (tier === 'diamond') return "/diamond.png";
     if (tier === 'founder') return "/founder.png";
     if (tier === 'gold') return "/gold.png";
     if (tier === 'silver') return "/silver.png";
     if (tier === 'bronze') return "/bronze.png";
-    return null; // Standard users get no badge yet
+    return undefined;
   };
+
+  const badgeSrc = getBadgeIcon();
 
   if (loading) return <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>SYNCING VAULT...</div>;
 
@@ -132,14 +133,14 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* PROFILE CARD */}
+        {/* PROFILE HEADER */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ marginBottom: '24px' }}>
-              <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} />
+              <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} alt="Avatar" />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800', margin: 0 }}>{profile?.display_url || profile?.username}</h1>
-              {getBadgeIcon() && <img src={getBadgeIcon()} style={{ width: '32px', height: '32px', objectFit: 'contain' }} alt="Tier Badge" />}
+              {badgeSrc && <img src={badgeSrc} style={{ width: '32px', height: '32px', objectFit: 'contain' }} alt="Tier Badge" />}
             </div>
             <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '8px', marginTop: 0 }}>@{profile?.username}</p>
             
@@ -190,13 +191,13 @@ export default function ProfilePage() {
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', margin: 0 }}>RECENT DROPS</h2>
-            <img src="/CC-SML-Logo.png" style={{ width: '18px', height: '18px' }} />
+            <img src="/CC-SML-Logo.png" style={{ width: '18px', height: '18px' }} alt="Logo" />
           </div>
           {recentDrops.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                 {recentDrops.map((drop) => (
                 <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a' }}>
-                    <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Drop" />
                 </div>
                 ))}
             </div>
@@ -250,7 +251,7 @@ export default function ProfilePage() {
             )}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
                 <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ flex: 1, background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', boxSizing: 'border-box' }} />
-                <a href="https://130point.com/sales/" target="_blank" style={{ background: '#27272a', padding: '10px', borderRadius: '12px', color: '#fff', fontSize: '10px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center' }}>CHECK VALUE ↗</a>
+                <a href="https://130point.com/sales/" target="_blank" rel="noopener noreferrer" style={{ background: '#27272a', padding: '10px', borderRadius: '12px', color: '#fff', fontSize: '10px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center' }}>CHECK VALUE ↗</a>
             </div>
             {!preview ? (
               <label style={{ border: '2px dashed #3f3f46', borderRadius: '12px', padding: '30px', display: 'flex', justifyContent: 'center', cursor: 'pointer', color: '#71717a' }}>
@@ -258,7 +259,7 @@ export default function ProfilePage() {
                 <input type="file" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if(f){ setFile(f); setPreview(URL.createObjectURL(f)); }}} />
               </label>
             ) : (
-              <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px', maxHeight: '180px', objectFit: 'cover' }} />
+              <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px', maxHeight: '180px', objectFit: 'cover' }} alt="Preview" />
             )}
             <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
               <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>

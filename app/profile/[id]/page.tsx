@@ -25,7 +25,6 @@ type Collection = {
   title: string;
   niche?: string;
   cover_url?: string;
-  // Added this to handle the automated cover logic
   items?: { image_url: string }[];
 };
 
@@ -45,7 +44,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [itemCount, setItemCount] = useState(0);
-  const [vaultValue, setVaultValue] = useState(0);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
 
@@ -58,9 +56,9 @@ export default function ProfilePage() {
   // INPUTS
   const [newCollName, setNewCollName] = useState("");
   const [selectedNiche, setSelectedNiche] = useState(""); 
-  const [customNiche, setCustomNiche] = useState(""); // NEW: For the "Other" elaboration
+  const [customNiche, setCustomNiche] = useState("");
   const [itemName, setItemName] = useState("");
-  const [itemValue, setItemValue] = useState("");
+  const [itemValue, setItemValue] = useState(""); // Kept for DB integrity, but ignored in UI
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
   const [files, setFiles] = useState<File[]>([]);
 
@@ -80,13 +78,9 @@ export default function ProfilePage() {
         const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
         if (prof) setProfile(prof);
         
-        const { data: items } = await supabase.from("items").select("estimated_value").eq("user_id", userId);
-        if (items) {
-          setItemCount(items.length);
-          setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
-        }
+        const { data: items } = await supabase.from("items").select("id").eq("user_id", userId);
+        if (items) setItemCount(items.length);
 
-        // UPDATED: Fetching collections AND the image of the first item for the cover fallback
         const { data: colls } = await supabase
           .from("collections")
           .select(`*, items (image_url)`)
@@ -96,7 +90,7 @@ export default function ProfilePage() {
         const { data: drops } = await supabase.from("items").select("id, title, image_url, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(6);
         setRecentDrops(drops || []);
       } catch (err) { 
-        console.error("Data Load Error:", err); 
+        console.error("Vault Sync Error:", err); 
       } finally { 
         setLoading(false); 
       }
@@ -112,8 +106,6 @@ export default function ProfilePage() {
   async function handleCreateCollection() {
     if (!newCollName || !userId) return;
     setUploading(true);
-    
-    // Determine the final niche string
     const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
 
     try {
@@ -135,7 +127,7 @@ export default function ProfilePage() {
             user_id: userId,
             title: itemName || "Untitled",
             image_url: publicUrl,
-            estimated_value: parseFloat(itemValue) || 0,
+            estimated_value: 0,
             collection_id: newColl.id,
             status: "active"
           });
@@ -157,7 +149,7 @@ export default function ProfilePage() {
           user_id: userId,
           title: itemName || "Untitled",
           image_url: publicUrl,
-          estimated_value: parseFloat(itemValue) || 0,
+          estimated_value: 0,
           collection_id: selectedCollectionId || null,
           status: "active"
         });
@@ -203,29 +195,27 @@ export default function ProfilePage() {
             )}
         </section>
 
-        {/* LIVE STATS */}
+        {/* LIVE STATS - VALUE REMOVED FOR STABILITY */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>ITEMS</p></div>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{collections.length}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>COLLS</p></div>
-            <div><p style={{ fontSize: '22px', fontWeight: '900', color: '#4ade80', margin: 0 }}>£{vaultValue.toLocaleString()}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>VALUE</p></div>
+            <Link href={`/collections?user=${userId}`} style={{ textDecoration: 'none', color: '#fff' }}>
+              <div><p style={{ fontSize: '22px', fontWeight: '900', color: '#818cf8', margin: 0 }}>↗</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>VIEW ALL</p></div>
+            </Link>
           </div>
         </section>
 
-        {/* COLLECTIONS GRID - UPDATED FOR DYNAMIC COVERS */}
+        {/* COLLECTIONS GRID */}
         <section style={{ background: '#000', padding: '10px 0' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                 {collections.map((c) => {
-                  // Fallback: If no cover_url, use the image from the first item in the collection
-                  const displayCover = c.cover_url || c.items?.[0]?.image_url;
-                  
+                  const displayCover = c.cover_url || (c.items && c.items.length > 0 ? c.items[0].image_url : null);
                   return (
                     <Link href={`/collections/${c.id}`} key={c.id} style={{ textDecoration: 'none' }}>
                         <div style={{ background: '#18181b', aspectRatio: '1/1', borderRadius: '32px', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                            {displayCover && (
-                              <img src={displayCover} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
-                            )}
+                            {displayCover && <img src={displayCover} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />}
                             <span style={{ position: 'relative', zIndex: 2, fontWeight: '900', fontSize: '16px', textTransform: 'uppercase', color: '#fff', textAlign: 'center', padding: '0 10px', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{c.title}</span>
                             <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(0,0,0,0.6)', padding: '6px 12px', borderRadius: '10px', fontSize: '10px', color: '#fff', fontWeight: '900', border: '1px solid #27272a', zIndex: 2 }}>VIEW ↗</div>
                         </div>
@@ -254,12 +244,11 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODAL: ADD COLLECTION + ELABORATED NICHE */}
+      {/* MODAL: ADD COLLECTION */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
-            
             <select value={selectedNiche} onChange={(e) => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }}>
               <option value="">Select Category</option>
               <option value="Pokemon">Pokemon</option>
@@ -271,10 +260,9 @@ export default function ProfilePage() {
               <option value="Other">Other (Specify...)</option>
             </select>
 
-            {/* DYNAMIC NICHE INPUT */}
             {selectedNiche === "Other" && (
               <input 
-                placeholder="What's the niche? (e.g. Cliff Richard Shells)" 
+                placeholder="What's the niche?" 
                 value={customNiche} 
                 onChange={e => setCustomNiche(e.target.value)} 
                 style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }} 
@@ -287,14 +275,11 @@ export default function ProfilePage() {
             <input type="file" multiple accept="image/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} style={{ color: '#71717a', fontSize: '12px', marginBottom: '10px' }} />
             
             {files.length > 0 && (
-              <>
-                <input placeholder="Item Names" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '12px', marginBottom: '5px', boxSizing: 'border-box' }} />
-                <input placeholder="Value per item (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '12px', marginBottom: '15px', boxSizing: 'border-box' }} />
-              </>
+              <input placeholder="Item Names" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '12px', marginBottom: '5px', boxSizing: 'border-box' }} />
             )}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-              <button onClick={() => { setShowAddCollection(false); setFiles([]); setSelectedNiche(""); setCustomNiche(""); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
+              <button onClick={() => { setShowAddCollection(false); setFiles([]); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
               <button onClick={handleCreateCollection} disabled={uploading} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer', opacity: uploading ? 0.5 : 1 }}>
                 {uploading ? 'LAUNCHING...' : 'CREATE VAULT'}
               </button>
@@ -303,7 +288,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: STANDARD ADD ITEM */}
+      {/* MODAL: ADD ITEM */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -313,7 +298,6 @@ export default function ProfilePage() {
               {collections.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
             <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }} />
-            <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '15px', boxSizing: 'border-box' }} />
             <input type="file" multiple accept="image/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} style={{ color: '#71717a', marginBottom: '20px', fontSize: '14px' }} />
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => { setShowAddItem(false); setFiles([]); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>

@@ -1,324 +1,61 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
-type Collection = {
-  id: string;
-  user_id: string;
-  title: string;
-  niche: string | null;
-  cover_url: string | null;
-  item_count: number | null;
-};
-
-type Item = {
-  id: string;
-  title: string | null;
-  description: string | null;
-  image_url: string | null;
-  created_at: string;
-  estimated_value: number | null;
-  collection_id: string | null;
-};
-
-// ⭐ Resize image while keeping aspect ratio + background #111
-async function resizeImageKeepAspect(
-  file: File,
-  maxSize = 1080
-): Promise<File> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-
-    img.onload = () => {
-      let { width, height } = img;
-
-      // Scale down while keeping aspect ratio
-      if (width > height) {
-        if (width > maxSize) {
-          height = Math.round((height * maxSize) / width);
-          width = maxSize;
-        }
-      } else {
-        if (height > maxSize) {
-          width = Math.round((width * maxSize) / height);
-          height = maxSize;
-        }
-      }
-
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext("2d")!;
-      ctx.fillStyle = "#111"; // your chosen background
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0, width, height);
-
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return resolve(file);
-          resolve(new File([blob], file.name, { type: "image/jpeg" }));
-        },
-        "image/jpeg",
-        0.85
-      );
-    };
-  });
-}
-
-export default function CollectionPage() {
-  const params = useParams<{ collectionId: string }>();
-  const router = useRouter();
-  const collectionId = params.collectionId;
-
-  const [collection, setCollection] = useState<Collection | null>(null);
-  const [items, setItems] = useState<Item[]>([]);
+export default function CollectionDetailPage() {
+  const params = useParams();
+  const [collection, setCollection] = useState<any>(null);
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Add Item modal state
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-
-  // Load current user
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
-    });
-  }, []);
-
-  const isOwner =
-    currentUserId && collection && currentUserId === collection.user_id;
-
-  // Load collection + items
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-
-        // Load collection
-        const { data: col, error: colErr } = await supabase
-          .from("collections")
-          .select("*")
-          .eq("id", collectionId)
-          .single();
-
-        if (colErr || !col) {
-          setCollection(null);
-          return;
-        }
-
-        setCollection(col as Collection);
-
-        // Load items
-        const { data: itemData } = await supabase
-          .from("items")
-          .select("*")
-          .eq("collection_id", collectionId)
-          .order("created_at", { ascending: false });
-
-        setItems((itemData as Item[]) || []);
-      } finally {
-        setLoading(false);
-      }
+    async function loadCollectionData() {
+      const { data: coll } = await supabase.from("collections").select("*").eq("id", params.id).single();
+      const { data: collItems } = await supabase.from("items").select("*").eq("collection_id", params.id);
+      
+      setCollection(coll);
+      setItems(collItems || []);
+      setLoading(false);
     }
+    if (params.id) loadCollectionData();
+  }, [params.id]);
 
-    loadData();
-  }, [collectionId]);
-
-  // ⭐ Add Item upload logic (fixed + resized)
-  async function handleUpload() {
-    if (!file || !currentUserId || !collection) {
-      alert("Please select a file");
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      // Resize first
-      const resized = await resizeImageKeepAspect(file);
-
-      const ext = "jpg";
-      const fileName = `item-${Date.now()}.${ext}`;
-      const filePath = `${currentUserId}/${fileName}`;
-
-      // Upload resized file
-      const { error: uploadError } = await supabase.storage
-        .from("items")
-        .upload(filePath, resized, {
-          upsert: true,
-          contentType: "image/jpeg",
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("items")
-        .getPublicUrl(filePath);
-
-      // Insert into DB
-      const { error: insertError } = await supabase.from("items").insert({
-        user_id: currentUserId,
-        collection_id: collection.id,
-        image_url: urlData.publicUrl,
-        title: "New Item",
-        description: "",
-        estimated_value: null,
-      });
-
-      if (insertError) throw insertError;
-
-      // Reset modal
-      setShowAddItem(false);
-      setPreview(null);
-      setFile(null);
-
-      // Reload items
-      const { data: itemData } = await supabase
-        .from("items")
-        .select("*")
-        .eq("collection_id", collection.id)
-        .order("created_at", { ascending: false });
-
-      setItems((itemData as Item[]) || []);
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed — check console");
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        Loading…
-      </div>
-    );
-  }
-
-  if (!collection) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <h1 className="text-3xl">Collection not found</h1>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ background: '#000', minHeight: '100vh' }} />;
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-10 max-w-[720px] mx-auto">
-      {/* Cover */}
-      <div className="w-full flex justify-center mb-8">
-        <img
-          src={collection.cover_url || "/CC-main-logo.png"}
-          alt={collection.title}
-          className="w-64 h-64 object-cover rounded-2xl border border-zinc-700"
-        />
-      </div>
-
-      {/* Title */}
-      <h1 className="text-4xl font-bold text-center mb-4">
-        {collection.title}
-      </h1>
-
-      {/* Niche */}
-      {collection.niche && (
-        <p className="text-center text-zinc-400 text-xl mb-6">
-          {collection.niche}
-        </p>
-      )}
-
-      {/* Add Item button (owner only) */}
-      {isOwner && (
-        <div className="flex justify-center mb-10">
-          <button
-            onClick={() => setShowAddItem(true)}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-full text-lg font-medium"
-          >
-            + Add Item
-          </button>
+    <div style={{ background: '#000', minHeight: '100vh', color: '#fff', fontFamily: 'sans-serif' }}>
+      <Header />
+      <main style={{ maxWidth: '800px', margin: '100px auto 0', padding: '0 16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '8px' }}>{collection?.title || collection?.name}</h1>
+            <p style={{ color: '#818cf8', fontWeight: 'bold' }}>{items.length} ITEMS IN VAULT</p>
         </div>
-      )}
 
-      {/* ⭐ Items grid (Instagram style) */}
-      <div className="grid grid-cols-3 gap-3">
-        {items.length === 0 ? (
-          <p className="col-span-3 text-center text-zinc-500 text-xl py-12">
-            No items yet — add your first one!
-          </p>
-        ) : (
-          items.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-xl overflow-hidden bg-[#111] border border-zinc-800"
-            >
-              <img
-                src={item.image_url || "/default-item.png"}
-                alt={item.title || "Item"}
-                className="w-full aspect-square object-contain bg-[#111]"
-              />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          {items.map((item) => (
+            <div key={item.id} style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '32px', overflow: 'hidden' }}>
+                <div style={{ aspectRatio: '1/1', background: '#18181b' }}>
+                    <img src={item.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div style={{ padding: '16px', textAlign: 'center' }}>
+                    <p style={{ fontWeight: '900', margin: '0 0 4px 0', fontSize: '14px' }}>{item.title}</p>
+                    <p style={{ color: '#4ade80', fontWeight: 'bold', fontSize: '12px', margin: 0 }}>£{item.estimated_value}</p>
+                </div>
             </div>
-          ))
+          ))}
+        </div>
+        
+        {items.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '60px 0', color: '#52525b' }}>
+                <p>This collection is currently empty.</p>
+            </div>
         )}
-      </div>
-
-      {/* Add Item Modal */}
-      {showAddItem && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-neutral-900 p-6 rounded-xl w-80">
-            <h2 className="text-lg font-semibold mb-4">Add Item</h2>
-
-            {!preview && (
-              <label className="border border-neutral-700 rounded-lg p-4 flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition">
-                Choose Photo
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const selectedFile = e.target.files?.[0];
-                    if (selectedFile) {
-                      setFile(selectedFile);
-                      setPreview(URL.createObjectURL(selectedFile));
-                    }
-                  }}
-                />
-              </label>
-            )}
-
-            {preview && (
-              <img
-                src={preview}
-                alt="Preview"
-                className="rounded-lg mb-4 max-h-60 object-contain bg-[#111]"
-              />
-            )}
-
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => setShowAddItem(false)}
-                className="flex-1 border border-neutral-700 rounded-lg py-2"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleUpload}
-                className="flex-1 bg-white text-black rounded-lg py-2 font-semibold"
-              >
-                {uploading ? "Posting…" : "Post"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </main>
+      <Footer />
     </div>
   );
 }

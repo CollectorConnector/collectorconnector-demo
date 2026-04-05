@@ -27,11 +27,9 @@ export default function ProfilePage() {
   const [collections, setCollections] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   
-  // UI Modals
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
   
-  // Form States
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
   const [niche, setNiche] = useState("");
@@ -124,7 +122,6 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* PROFILE CARD */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b', marginBottom: '24px' }} alt="Avatar" />
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
@@ -136,20 +133,18 @@ export default function ProfilePage() {
             {isOwnProfile && (
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button onClick={() => setShowAddItem(true)} style={{ background: '#fff', color: '#000', padding: '10px 20px', borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer' }}>+ ITEM</button>
-                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>+ COLL</button>
+                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>+ ADD COLLECTION</button>
                 <button onClick={handleLogout} style={{ background: '#450a0a', border: '1px solid #7f1d1d', color: '#f87171', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}>LOGOUT</button>
               </div>
             )}
         </section>
 
-        {/* STATS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', textAlign: 'center' }}>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>ITEMS</p></div>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{collectionCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>COLLS</p></div>
             <div><p style={{ fontSize: '22px', fontWeight: '900', color: '#4ade80', margin: 0 }}>£{vaultValue.toLocaleString()}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>VALUE</p></div>
         </section>
 
-        {/* COLLECTIONS (SQUIRCLES) */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
@@ -157,14 +152,13 @@ export default function ProfilePage() {
                     <Link href={`/collections/${c.id}`} key={c.id} style={{ textDecoration: 'none' }}>
                         <div style={{ background: '#18181b', aspectRatio: '1/1', borderRadius: '32px', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                             <span style={{ fontWeight: '900', fontSize: '14px', textTransform: 'uppercase', color: '#fff' }}>{c.title}</span>
-                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(0,0,0,0.6)', padding: '4px 8px', borderRadius: '8px', fontSize: '10px', color: '#818cf8', fontWeight: 'bold' }}>VIEW ↗</div>
+                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '10px', fontSize: '10px', color: '#818cf8', fontWeight: '900', border: '1px solid #27272a' }}>VIEW COLLECTION ↗</div>
                         </div>
                     </Link>
                 ))}
             </div>
         </section>
 
-        {/* RECENT DROPS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>RECENT DROPS</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
@@ -179,7 +173,7 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODALS (ADD ITEM / ADD COLL) */}
+      {/* MODALS */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '450px', border: '1px solid #27272a' }}>

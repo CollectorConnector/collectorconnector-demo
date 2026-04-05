@@ -7,65 +7,79 @@ import CollectionsGrid from "@/components/CollectionsGrid";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-// 1. This component handles the search params logic
 function CollectionsContent() {
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const queryUserId = searchParams.get("user");
 
   useEffect(() => {
     async function getUser() {
-      // Priority 1: User ID from the URL (?user=...)
-      if (queryUserId) {
-        setTargetUserId(queryUserId);
-        return;
+      let finalId = queryUserId;
+
+      if (!finalId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) finalId = user.id;
       }
 
-      // Priority 2: Fallback to the currently logged in user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setTargetUserId(user.id);
+      if (finalId) {
+        setTargetUserId(finalId);
+        // Fetch the username so the header looks personalized
+        const { data: prof } = await supabase.from("profiles").select("username").eq("id", finalId).single();
+        if (prof) setUsername(prof.username);
       }
     }
-
     getUser();
   }, [queryUserId]);
 
   if (!targetUserId) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-zinc-500">Loading collection data...</p>
+      <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>
+        SYNCING VAULT...
       </div>
     );
   }
 
   return (
-    <div className="mt-20 px-4 max-w-[720px] mx-auto">
-      <h1 className="text-2xl font-bold mb-6">
-        {queryUserId ? "User Collections" : "My Collections"}
-      </h1>
-      <CollectionsGrid userId={targetUserId} />
-    </div>
+    /* MATCHING THE PROFILE SPACING: 100px margin top, 800px max width */
+    <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px' }}>
+      
+      {/* HEADER SECTION - Styled like the Profile Stats */}
+      <header style={{ 
+        background: '#09090b', 
+        border: '1px solid #27272a', 
+        borderRadius: '24px', 
+        padding: '24px', 
+        marginBottom: '24px',
+        textAlign: 'center' 
+      }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>
+          {username ? `${username}'S VAULT` : "COLLECTIONS"}
+        </h1>
+        <p style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold', marginTop: '4px', letterSpacing: '1px' }}>
+          DIGITAL ARCHIVE
+        </p>
+      </header>
+
+      {/* THE GRID */}
+      <div style={{ background: '#000', borderRadius: '24px' }}>
+        <CollectionsGrid userId={targetUserId} />
+      </div>
+    </main>
   );
 }
 
-// 2. This is the main page that wraps everything in Suspense
 export default function MyCollectionsPage() {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white" style={{ background: '#000' }}>
       <Header />
-      
-      {/* Next.js requires useSearchParams to be inside a Suspense boundary 
-          to allow the rest of the site to build statically.
-      */}
       <Suspense fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <p>Loading...</p>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p style={{ fontWeight: '900' }}>LOADING...</p>
         </div>
       }>
         <CollectionsContent />
       </Suspense>
-
       <Footer />
     </div>
   );

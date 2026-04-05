@@ -18,7 +18,7 @@ type Profile = {
   display_url?: string | null;
   username?: string | null;
   bio?: string | null;
-  tier?: string | null; // e.g., 'diamond', 'gold', 'silver', 'bronze'
+  tier?: string | null; 
 };
 
 type RecentDrop = {
@@ -157,23 +157,17 @@ export default function ProfilePage() {
               <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{displayName}</h1>
-              {/* DYNAMIC TIER ICON FROM PUBLIC FOLDER */}
-              {profile?.tier && (
-                <img 
-                  src={`/${profile.tier}.png`} 
-                  style={{ width: '28px', height: '28px', objectFit: 'contain' }} 
-                  alt={profile.tier} 
-                  onError={(e) => (e.currentTarget.style.display = 'none')}
-                />
-              )}
+              {/* DIAMOND TIER ICON - NOW NEXT TO NAME */}
+              <img 
+                src="/diamond.png" 
+                style={{ width: '38px', height: '38px', objectFit: 'contain' }} 
+                alt="Diamond Tier" 
+              />
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-              <p style={{ color: '#818cf8', fontSize: '18px' }}>@{profile?.username}</p>
-              <img src="/CC-SML-Logo.png" style={{ width: '16px', height: '16px', opacity: 0.8 }} alt="Verified" />
-            </div>
+            <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '16px' }}>@{profile?.username}</p>
             
             <p style={{ color: '#a1a1aa', fontSize: '16px', marginBottom: '24px', maxWidth: '400px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
@@ -219,7 +213,7 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODAL: ADD COLLECTION */}
+      {/* MODALS (ADD COLL, ADD ITEM, IMPORT IG) STAY THE SAME AS BEFORE */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -233,7 +227,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: ADD ITEM */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>

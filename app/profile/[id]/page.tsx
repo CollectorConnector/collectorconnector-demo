@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useMemo, useState, ChangeEvent } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ImportInstagramModal from "@/components/ImportInstagramModal";
@@ -19,6 +19,11 @@ type Profile = {
   username?: string | null;
   bio?: string | null;
   membership_tier?: string | null; 
+};
+
+type Collection = {
+  id: string;
+  title: string;
 };
 
 type RecentDrop = {
@@ -39,25 +44,22 @@ export default function ProfilePage() {
   
   // LIVE STATS
   const [itemCount, setItemCount] = useState(0);
-  const [collectionCount, setCollectionCount] = useState(0);
   const [vaultValue, setVaultValue] = useState(0);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
 
   // UI STATES
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
-  const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
-  const [editMode, setEditMode] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   
   // INPUTS
-  const [editedDisplayUrl, setEditedDisplayUrl] = useState("");
-  const [editedBio, setEditedBio] = useState("");
   const [newCollName, setNewCollName] = useState("");
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [selectedCollectionId, setSelectedCollectionId] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
 
   const isOwnProfile = currentUserId === userId;
 
@@ -74,11 +76,7 @@ export default function ProfilePage() {
       try {
         setLoading(true);
         const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
-        if (prof) {
-          setProfile(prof);
-          setEditedDisplayUrl(prof.display_url || "");
-          setEditedBio(prof.bio || "");
-        }
+        if (prof) setProfile(prof);
 
         const { data: items } = await supabase.from("items").select("estimated_value").eq("user_id", userId);
         if (items) {
@@ -86,8 +84,8 @@ export default function ProfilePage() {
           setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
         }
 
-        const { count } = await supabase.from("collections").select("*", { count: 'exact', head: true }).eq("user_id", userId);
-        setCollectionCount(count || 0);
+        const { data: colls } = await supabase.from("collections").select("id, title").eq("user_id", userId);
+        setCollections(colls || []);
 
         const { data: drops } = await supabase.from("items").select("id, title, image_url, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(6);
         setRecentDrops(drops || []);
@@ -107,19 +105,23 @@ export default function ProfilePage() {
   };
 
   async function handlePostItem() {
-    if (!file || !userId) return;
+    if (!files.length || !userId) return;
     setUploading(true);
     try {
-      const fileName = `${userId}/${Date.now()}.jpg`;
-      await supabase.storage.from("item-images").upload(fileName, file);
-      const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
-      await supabase.from("items").insert({
-        user_id: userId,
-        title: itemName || "Untitled",
-        image_url: publicUrl,
-        estimated_value: parseFloat(itemValue) || 0,
-        status: "active"
-      });
+      for (const file of files) {
+        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+        await supabase.storage.from("item-images").upload(fileName, file);
+        const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
+        
+        await supabase.from("items").insert({
+          user_id: userId,
+          title: itemName || "Untitled",
+          image_url: publicUrl,
+          estimated_value: parseFloat(itemValue) || 0,
+          collection_id: selectedCollectionId || null,
+          status: "active"
+        });
+      }
       window.location.reload();
     } catch (err) {
       alert("Post failed");
@@ -130,9 +132,8 @@ export default function ProfilePage() {
 
   async function handleCreateCollection() {
     if (!newCollName || !userId) return;
-    setSaving(true);
+    setUploading(true);
     try {
-      // Fixed column name to 'title' to match your DB schema
       await supabase.from("collections").insert({
         user_id: userId,
         title: newCollName
@@ -141,7 +142,7 @@ export default function ProfilePage() {
     } catch (err) {
       alert("Failed to create collection");
     } finally {
-      setSaving(false);
+      setUploading(false);
     }
   }
 
@@ -154,7 +155,7 @@ export default function ProfilePage() {
 
   const displayName = profile?.display_url || profile?.username || "Collector";
 
-  if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center font-black">SYNCING VAULT...</div>;
+  if (loading) return <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>SYNCING VAULT...</div>;
 
   return (
     <div className="min-h-screen bg-black text-white" style={{ background: '#000' }}>
@@ -169,18 +170,11 @@ export default function ProfilePage() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
-              <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{displayName}</h1>
-              {getBadge() && (
-                <img 
-                  src={getBadge() || ""} 
-                  style={{ width: '38px', height: '38px', objectFit: 'contain' }} 
-                  alt="Tier Badge" 
-                />
-              )}
+              <h1 style={{ fontSize: '32px', fontWeight: '800', margin: 0 }}>{displayName}</h1>
+              {getBadge() && <img src={getBadge() || ""} style={{ width: '38px', height: '38px', objectFit: 'contain' }} alt="Badge" />}
             </div>
             
             <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '16px' }}>@{profile?.username}</p>
-            
             <p style={{ color: '#a1a1aa', fontSize: '16px', marginBottom: '24px', maxWidth: '400px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', width: '100%', maxWidth: '320px', backgroundColor: '#ffffff', color: '#000000', fontWeight: '900', padding: '16px 0', borderRadius: '16px', textAlign: 'center', textDecoration: 'none', fontSize: '16px', marginBottom: '20px' }}>
@@ -189,10 +183,9 @@ export default function ProfilePage() {
 
             {isOwnProfile && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
-                <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ITEM</button>
-                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ADD COLLECTION</button>
-                <button onClick={() => setEditMode(!editMode)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EDIT</button>
-                <button onClick={handleLogout} style={{ background: '#450a0a', color: '#f87171', border: '1px solid #7f1d1d', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>LOGOUT</button>
+                <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ITEM</button>
+                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ADD COLLECTION</button>
+                <button onClick={handleLogout} style={{ background: '#450a0a', border: '1px solid #7f1d1d', color: '#f87171', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>LOGOUT</button>
               </div>
             )}
         </section>
@@ -200,10 +193,25 @@ export default function ProfilePage() {
         {/* LIVE STATS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
-            <div><p style={{ fontSize: '22px', fontWeight: '900' }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>ITEMS</p></div>
-            <div><p style={{ fontSize: '22px', fontWeight: '900' }}>{collectionCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>COLLS</p></div>
-            <div><p style={{ fontSize: '22px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue.toLocaleString()}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>VALUE</p></div>
+            <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>ITEMS</p></div>
+            <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{collections.length}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>COLLS</p></div>
+            <div><p style={{ fontSize: '22px', fontWeight: '900', color: '#4ade80', margin: 0 }}>£{vaultValue.toLocaleString()}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>VALUE</p></div>
           </div>
+        </section>
+
+        {/* COLLECTIONS GRID (SQUIRCLES) */}
+        <section style={{ background: '#000', padding: '10px 0' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                {collections.map((c) => (
+                    <Link href={`/collections/${c.id}`} key={c.id} style={{ textDecoration: 'none' }}>
+                        <div style={{ background: '#18181b', aspectRatio: '1/1', borderRadius: '32px', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                            <span style={{ fontWeight: '900', fontSize: '14px', textTransform: 'uppercase', color: '#fff', textAlign: 'center', padding: '0 10px' }}>{c.title}</span>
+                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '10px', fontSize: '10px', color: '#818cf8', fontWeight: '900', border: '1px solid #27272a' }}>VIEW COLLECTION ↗</div>
+                        </div>
+                    </Link>
+                ))}
+            </div>
         </section>
 
         {/* RECENT DROPS GRID */}
@@ -212,7 +220,7 @@ export default function ProfilePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             {recentDrops.length > 0 ? (
               recentDrops.map((drop) => (
-                <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a' }}>
                   <img src={drop.image_url || "/default-item.png"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                 </div>
               ))
@@ -230,7 +238,7 @@ export default function ProfilePage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
-            <input placeholder="Collection Title" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px' }} />
+            <input placeholder="Collection Title" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px', boxSizing: 'border-box' }} />
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
               <button onClick={handleCreateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer' }}>CREATE</button>
@@ -242,35 +250,29 @@ export default function ProfilePage() {
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW ITEM</h2>
-            <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }} />
-            <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '15px' }} />
+            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>VAULT DROP</h2>
             
-            {!preview ? (
-              <label style={{ border: '2px dashed #3f3f46', borderRadius: '12px', padding: '30px', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
-                <span style={{ color: '#71717a' }}>Upload Photo</span>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if(f) { setFile(f); setPreview(URL.createObjectURL(f)); }
-                }} />
-              </label>
-            ) : (
-              <div style={{ position: 'relative' }}>
-                <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px' }} />
-                <button onClick={() => setPreview(null)} style={{ position: 'absolute', top: 5, right: 5, background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: '#fff', padding: '5px' }}>×</button>
-              </div>
-            )}
+            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }}>
+              <option value="">No Collection</option>
+              {collections.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+            </select>
+
+            <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }} />
+            <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '15px', boxSizing: 'border-box' }} />
             
-            <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-              <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
-              <button onClick={handlePostItem} disabled={uploading || !file} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1, cursor: 'pointer' }}>
-                {uploading ? 'POSTING...' : 'POST ITEM'}
+            <input type="file" multiple accept="image/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} style={{ color: '#71717a', marginBottom: '20px', fontSize: '14px' }} />
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => { setShowAddItem(false); setFiles([]); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
+              <button onClick={handlePostItem} disabled={uploading || files.length === 0} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1, cursor: 'pointer' }}>
+                {uploading ? 'DROPPING...' : `VAULT ${files.length} ITEMS`}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {isImportOpen && <ImportInstagramModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} userId={userId} />}
       <Footer />
     </div>
   );

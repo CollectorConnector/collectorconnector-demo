@@ -58,7 +58,6 @@ export default function ProfilePage() {
   const [editedDisplayUrl, setEditedDisplayUrl] = useState("");
   const [editedBio, setEditedBio] = useState("");
   const [editedLocation, setEditedLocation] = useState("");
-  const [editedTier, setEditedTier] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -92,7 +91,6 @@ export default function ProfilePage() {
         setEditedDisplayUrl(data.display_url || "");
         setEditedBio(data.bio || "");
         setEditedLocation(data.location || "");
-        setEditedTier(data.tier || "");
       } catch (err) {
         console.error(err);
       } finally {
@@ -136,7 +134,6 @@ export default function ProfilePage() {
         display_url: editedDisplayUrl.trim() || null,
         bio: editedBio.trim() || null,
         location: editedLocation.trim() || null,
-        tier: editedTier || null,
       };
       const { error } = await supabase.from("profiles").update(updates).eq("id", currentUserId);
       if (error) throw error;
@@ -192,29 +189,33 @@ export default function ProfilePage() {
   if (error || !profile) return <div className="min-h-screen bg-black text-white flex items-center justify-center">{error || "Not Found"}</div>;
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-indigo-500">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
       <Header />
       
-      {/* Increased margin to force content below the 56px fixed header */}
-      <main className="mt-20 pb-20 space-y-10 max-w-[720px] mx-auto px-4 relative z-10">
+      {/* 1. Fix: We use pt-24 (96px) to ensure we are well below the 56px header. 
+          2. Fix: Added flex-col to keep the vertical flow predictable.
+      */}
+      <main className="pt-24 pb-20 flex flex-col items-center px-4 max-w-[800px] mx-auto relative z-10">
         
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-xl text-center">
-          <div className="flex flex-col items-center">
+        {/* PROFILE CARD */}
+        <section className="w-full bg-zinc-950 border border-zinc-800 rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col items-center text-center">
             
+            {/* Avatar */}
             <div className="mb-6 relative group">
               <img
                 src={profile.avatar_url || "/default-avatar.png"}
                 alt="Avatar"
-                className={`w-28 h-28 object-cover rounded-2xl border-2 border-zinc-800 shadow-md ${uploading ? 'opacity-50' : ''}`}
+                className={`w-32 h-32 object-cover rounded-2xl border-4 border-zinc-900 shadow-xl ${uploading ? 'opacity-50' : ''}`}
               />
               {isOwnProfile && (
                 <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition cursor-pointer rounded-2xl">
-                  <span className="text-xs font-bold text-white">Change</span>
+                  <span className="text-sm font-bold text-white">Edit</span>
                   <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                 </label>
               )}
             </div>
 
+            {/* Display Info */}
             {editMode ? (
               <div className="w-full max-w-sm space-y-4">
                 <input
@@ -232,91 +233,105 @@ export default function ProfilePage() {
                 />
                 <div className="flex gap-2">
                   <button onClick={saveProfileChanges} disabled={saving} className="flex-1 bg-white text-black py-3 rounded-xl font-bold">
-                    {saving ? "..." : "Save"}
+                    {saving ? "Saving..." : "Save"}
                   </button>
                   <button onClick={() => setEditMode(false)} className="flex-1 bg-zinc-800 py-3 rounded-xl">Cancel</button>
                 </div>
               </div>
             ) : (
-              <>
-                <h1 className="text-3xl font-bold mb-1">{displayName}</h1>
-                {profile.username && <p className="text-indigo-400 text-lg mb-4">@{profile.username}</p>}
-                <p className="text-zinc-400 text-base mb-6 max-w-md">{profile.bio || "No bio yet."}</p>
-              </>
-            )}
-
-            {/* THE COLLECTIONS LINK */}
-            <Link 
-              href={`/collections?user=${userId}`} 
-              className="w-full max-w-sm bg-white text-black font-bold py-4 rounded-2xl mt-4 hover:bg-zinc-200 transition text-center"
-            >
-              View Collections
-            </Link>
-
-            {isOwnProfile && !editMode && (
-              <div className="mt-8 flex flex-wrap gap-2 justify-center">
-                <button onClick={() => setShowAddItem(true)} className="bg-zinc-900 border border-zinc-800 px-5 py-2 rounded-lg text-sm hover:bg-zinc-800">+ Item</button>
-                <button onClick={() => setEditMode(true)} className="bg-zinc-900 border border-zinc-800 px-5 py-2 rounded-lg text-sm hover:bg-zinc-800">Edit Profile</button>
-                <button onClick={() => setIsImportOpen(true)} className="bg-pink-600/10 text-pink-500 border border-pink-500/20 px-5 py-2 rounded-lg text-sm hover:bg-pink-600 hover:text-white transition">Import Instagram</button>
+              <div className="w-full flex flex-col items-center">
+                <h1 className="text-4xl font-extrabold mb-2">{displayName}</h1>
+                {profile.username && <p className="text-indigo-400 text-xl font-medium mb-4">@{profile.username}</p>}
+                <p className="text-zinc-400 text-lg mb-8 max-w-md leading-relaxed">{profile.bio || "No bio yet."}</p>
+                
+                {/* THE VITAL LINK: Forced to full width of container for visibility */}
+                <Link 
+                  href={`/collections?user=${userId}`} 
+                  className="w-full max-w-sm bg-white text-black font-black py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all text-center text-xl uppercase tracking-tight"
+                >
+                  View Collections
+                </Link>
               </div>
             )}
 
+            {/* Own Profile Toolbar */}
+            {isOwnProfile && !editMode && (
+              <div className="mt-10 flex flex-wrap gap-3 justify-center">
+                <button onClick={() => setShowAddItem(true)} className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl text-sm font-bold hover:bg-zinc-800 transition">+ ADD ITEM</button>
+                <button onClick={() => setEditMode(true)} className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl text-sm font-bold hover:bg-zinc-800 transition">EDIT PROFILE</button>
+                <button onClick={() => setIsImportOpen(true)} className="bg-pink-600 px-6 py-3 rounded-xl text-sm font-bold hover:bg-pink-500 transition">IMPORT IG</button>
+              </div>
+            )}
+
+            {/* Follow Button */}
             {!isOwnProfile && currentUserId && (
-              <button onClick={toggleFollow} disabled={followLoading} className="mt-6 px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium transition">
-                {isFollowing ? "Unfollow" : "Follow"}
+              <button onClick={toggleFollow} disabled={followLoading} className="mt-8 w-full max-w-sm py-4 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold text-lg transition">
+                {isFollowing ? "UNFOLLOW" : "FOLLOW"}
               </button>
             )}
-          </div>
         </section>
 
         <SuggestedUsers />
 
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div><p className="text-2xl font-bold">{profile.items_count ?? 0}</p><p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Items</p></div>
-            <div><p className="text-2xl font-bold">{profile.collections_count ?? 0}</p><p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Colls</p></div>
-            <div><p className="text-2xl font-bold">£{profile.vault_value ?? 0}</p><p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Vault</p></div>
+        {/* STATS */}
+        <section className="w-full bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
+          <div className="grid grid-cols-3 gap-6 text-center">
+            <div className="flex flex-col">
+                <span className="text-3xl font-black">{profile.items_count ?? 0}</span>
+                <span className="text-zinc-500 text-xs font-bold uppercase mt-1">Items</span>
+            </div>
+            <div className="flex flex-col border-x border-zinc-800">
+                <span className="text-3xl font-black">{profile.collections_count ?? 0}</span>
+                <span className="text-zinc-500 text-xs font-bold uppercase mt-1">Colls</span>
+            </div>
+            <div className="flex flex-col">
+                <span className="text-3xl font-black">£{profile.vault_value ?? 0}</span>
+                <span className="text-zinc-500 text-xs font-bold uppercase mt-1">Vault</span>
+            </div>
           </div>
         </section>
 
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8">
-          <h2 className="text-xl font-bold mb-6">Recent Drops</h2>
-          <div className="grid grid-cols-3 gap-4">
+        {/* FEED */}
+        <section className="w-full bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
+          <h2 className="text-2xl font-black mb-8 uppercase tracking-tight">Recent Drops</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {recentDrops.map((drop) => (
-              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} className="aspect-square rounded-lg overflow-hidden bg-zinc-900 cursor-pointer border border-zinc-800">
+              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} className="aspect-square rounded-2xl overflow-hidden bg-zinc-900 cursor-pointer border border-zinc-800 hover:border-zinc-500 transition">
                 <img src={drop.image_url || "/default-item.png"} className="w-full h-full object-cover" alt="" />
               </div>
             ))}
           </div>
         </section>
 
+        {/* Log Out */}
         {isOwnProfile && (
-          <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} className="w-full py-4 text-zinc-500 text-sm hover:text-red-500 transition">
-            Log Out
+          <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} className="mt-4 text-zinc-600 font-bold hover:text-red-500 transition uppercase text-xs tracking-widest">
+            Logout Account
           </button>
         )}
       </main>
 
+      {/* Modals */}
       {isImportOpen && <ImportInstagramModal onClose={() => setIsImportOpen(false)} />}
       
       {showAddItem && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl w-full max-w-sm">
-            <h2 className="text-xl font-bold mb-4">Add Item</h2>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[999] p-4">
+          <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-[40px] w-full max-w-sm shadow-2xl">
+            <h2 className="text-2xl font-black mb-6 text-center">NEW ITEM</h2>
             {!preview ? (
-              <label className="border-2 border-dashed border-zinc-800 rounded-2xl p-10 flex flex-col items-center cursor-pointer hover:border-indigo-500 transition">
-                <span className="text-zinc-500">Upload Item Image</span>
+              <label className="border-4 border-dashed border-zinc-800 rounded-3xl p-12 flex flex-col items-center cursor-pointer hover:border-indigo-500 transition">
+                <span className="text-zinc-500 font-bold uppercase text-xs">Tap to Upload</span>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                   const f = e.target.files?.[0];
                   if(f) { setFile(f); setPreview(URL.createObjectURL(f)); }
                 }} />
               </label>
             ) : (
-              <img src={preview} className="rounded-xl max-h-48 w-full object-cover mb-4" />
+              <img src={preview} className="rounded-2xl max-h-56 w-full object-cover mb-4 shadow-lg" />
             )}
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => { setShowAddItem(false); setPreview(null); }} className="flex-1 py-3 text-zinc-400">Cancel</button>
-              <button disabled={!file} className="flex-1 bg-white text-black font-bold py-3 rounded-xl disabled:opacity-50">Post</button>
+            <div className="flex gap-4 mt-8">
+              <button onClick={() => { setShowAddItem(false); setPreview(null); }} className="flex-1 py-4 font-bold text-zinc-500">CANCEL</button>
+              <button disabled={!file} className="flex-1 bg-white text-black font-black py-4 rounded-2xl disabled:opacity-30 uppercase">POST</button>
             </div>
           </div>
         </div>

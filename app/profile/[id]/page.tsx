@@ -28,13 +28,17 @@ export default function ProfilePage() {
   const [vaultValue, setVaultValue] = useState(0);
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
 
+  // UI Modals
   const [showAddItem, setShowAddItem] = useState(false);
+  const [showAddCollection, setShowAddCollection] = useState(false);
   const [uploading, setUploading] = useState(false);
   
+  // Form States
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
   const [niche, setNiche] = useState("");
   const [customNiche, setCustomNiche] = useState("");
+  const [newCollName, setNewCollName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -95,6 +99,14 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleCreateCollection() {
+    if (!newCollName || !userId) return;
+    try {
+      await supabase.from("collections").insert({ user_id: userId, name: newCollName });
+      window.location.reload();
+    } catch (err) { alert("Failed to create collection"); }
+  }
+
   if (loading) return <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>SYNCING VAULT...</div>;
 
   return (
@@ -103,7 +115,6 @@ export default function ProfilePage() {
       
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* PROFILE HEADER */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ marginBottom: '24px' }}>
               <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} />
@@ -122,14 +133,14 @@ export default function ProfilePage() {
             </Link>
 
             {isOwnProfile && (
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ITEM</button>
+                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ COLL</button>
                 <button style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EDIT</button>
               </div>
             )}
         </section>
 
-        {/* LIVE STATS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold', margin: 0 }}>ITEMS</p></div>
@@ -138,7 +149,6 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* RECENT DROPS GRID */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', margin: 0 }}>RECENT DROPS</h2>
@@ -156,28 +166,37 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* NEW ITEM MODAL */}
+      {/* MODAL: ADD COLLECTION */}
+      {showAddCollection && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center', color: '#fff' }}>NEW COLLECTION</h2>
+            <input placeholder="Collection Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px', boxSizing: 'border-box' }} />
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
+              <button onClick={handleCreateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer' }}>CREATE</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD ITEM */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center', color: '#fff' }}>NEW ITEM</h2>
-            
             <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }} />
-            
             <select value={niche} onChange={e => setNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }}>
               <option value="" disabled>Select Niche Family</option>
               {PRESET_NICHES.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
-
             {niche === "Other" && (
               <input placeholder="What do you collect?" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }} />
             )}
-
             <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
                 <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ flex: 1, background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', boxSizing: 'border-box' }} />
                 <a href="https://130point.com/sales/" target="_blank" style={{ background: '#27272a', padding: '10px', borderRadius: '12px', color: '#fff', fontSize: '10px', fontWeight: 'bold', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center' }}>CHECK VALUE ↗</a>
             </div>
-
             {!preview ? (
               <label style={{ border: '2px dashed #3f3f46', borderRadius: '12px', padding: '30px', display: 'flex', justifyContent: 'center', cursor: 'pointer', color: '#71717a' }}>
                 Upload Photo
@@ -186,7 +205,6 @@ export default function ProfilePage() {
             ) : (
               <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px', maxHeight: '180px', objectFit: 'cover' }} />
             )}
-            
             <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
               <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
               <button onClick={handlePostItem} disabled={uploading || !file || !niche} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: (uploading || !file || !niche) ? 0.5 : 1, cursor: 'pointer' }}>

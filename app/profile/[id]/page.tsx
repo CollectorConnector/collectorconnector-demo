@@ -73,56 +73,56 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!userId) return;
     
-    async function loadAllData() {
-      try {
-        setLoading(true);
-        
-        // 1. Fetch Profile
-        const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
-        if (prof) {
-          setProfile(prof);
-          setEditedDisplayUrl(prof.display_url || "");
-          setEditedBio(prof.bio || "");
-        }
-
-        // 2. Fetch Live Stats (Items & Value)
-        const { data: items } = await supabase
-          .from("items")
-          .select("estimated_value")
-          .eq("user_id", userId)
-          .eq("status", "active");
-
-        if (items) {
-          setItemCount(items.length);
-          const total = items.reduce((sum, item) => sum + (Number(item.estimated_value) || 0), 0);
-          setVaultValue(total);
-        }
-
-        // 3. Fetch Live Stats (Collections)
-        const { count } = await supabase
-          .from("collections")
-          .select("*", { count: 'exact', head: true })
-          .eq("user_id", userId);
-        
-        setCollectionCount(count || 0);
-
-        // 4. Fetch Recent Drops for the grid
-        const { data: drops } = await supabase
-          .from("items")
-          .select("id, title, image_url, created_at")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(6);
-        
-        setRecentDrops((drops as any) || []);
-
-      } catch (err) {
-        console.error(err);
-        setError("Failed to sync vault data");
-      } finally {
-        setLoading(false);
-      }
+   async function loadAllData() {
+  try {
+    setLoading(true);
+    
+    // 1. Fetch Profile
+    const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
+    if (prof) {
+      setProfile(prof);
+      setEditedDisplayUrl(prof.display_url || "");
+      setEditedBio(prof.bio || "");
     }
+
+    // 2. Fetch Items Safely
+    const { data: items, error: itemError } = await supabase
+      .from("items")
+      .select("estimated_value")
+      .eq("user_id", userId)
+      .eq("status", "active");
+
+    if (items && !itemError) {
+      setItemCount(items.length);
+      const total = items.reduce((sum, item) => sum + (Number(item.estimated_value) || 0), 0);
+      setVaultValue(total);
+    }
+
+    // 3. Fetch Collections Safely
+    const { count } = await supabase
+      .from("collections")
+      .select("*", { count: 'exact', head: true })
+      .eq("user_id", userId);
+    
+    setCollectionCount(count || 0);
+
+    // 4. Fetch Recent Drops Safely
+    const { data: drops } = await supabase
+      .from("items")
+      .select("id, title, image_url, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(6);
+    
+    setRecentDrops(drops || []); // Ensure this is at least an empty array
+
+  } catch (err) {
+    console.error("Sync Error:", err);
+  } finally {
+    setLoading(false);
+  }
+}
+
 
     loadAllData();
   }, [userId]);
@@ -200,6 +200,18 @@ export default function ProfilePage() {
                 <p style={{ color: '#a1a1aa', fontSize: '18px', marginBottom: '32px', maxWidth: '400px' }}>{profile?.bio || "No bio yet."}</p>
               </>
             )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+  {recentDrops && recentDrops.length > 0 ? (
+    recentDrops.map((drop) => (
+      <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+        <img src={drop.image_url || "/default-item.png"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+      </div>
+    ))
+  ) : (
+    <p style={{ color: '#52525b', fontSize: '14px', gridColumn: 'span 3', textAlign: 'center', padding: '20px' }}>No items in the vault yet.</p>
+  )}
+</div>
+
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', width: '100%', maxWidth: '320px', backgroundColor: '#ffffff', color: '#000000', fontWeight: '900', padding: '18px 0', borderRadius: '16px', textAlign: 'center', textDecoration: 'none', fontSize: '18px', marginBottom: '24px' }}>
               VIEW COLLECTIONS

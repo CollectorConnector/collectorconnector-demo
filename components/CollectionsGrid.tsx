@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 
 type Collection = {
   id: string;
-  title: string; // Changed from name to title
-  cover_url: string | null; // Changed from image_url to cover_url
+  title: string;
+  cover_url: string | null;
 };
 
 export default function CollectionsGrid({ userId }: { userId: string }) {
@@ -47,11 +47,21 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(3, 1fr)', 
+          gap: '16px' // Matches the expanded gap
+        }}
+      >
         {[...Array(6)].map((_, i) => (
           <div 
             key={i} 
-            style={{ aspectRatio: '1/1', backgroundColor: '#18181b' }} 
+            style={{ 
+              aspectRatio: '1/1', 
+              backgroundColor: '#18181b',
+              borderRadius: '24px' // SQUIRCLE SHAPE (Loading)
+            }} 
             className="animate-pulse" 
           />
         ))}
@@ -75,7 +85,7 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '2px',
+        gap: '16px', // EXPANDED GAP for professional look
         width: '100%',
         backgroundColor: '#000'
       }}
@@ -89,7 +99,9 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
             aspectRatio: '1 / 1',
             backgroundColor: '#09090b',
             cursor: 'pointer',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            // BRINGING IN THE BRAND IDENTITY (SQUIRCLE SHAPE)
+            borderRadius: '24px' 
           }}
         >
           <img
@@ -108,15 +120,18 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
             inset: 0,
             display: 'flex',
             alignItems: 'flex-end',
-            background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%)',
-            padding: '8px'
+            // Clean gradient for text readability
+            background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 50%)',
+            padding: '16px 12px' // Spaced out for the new shape
           }}>
             <span style={{ 
               color: 'white', 
-              fontSize: '10px', 
+              fontSize: '11px', 
               fontWeight: '900', 
               textTransform: 'uppercase',
-              letterSpacing: '0.5px'
+              letterSpacing: '0.8px',
+              // Subtle drop shadow for premium depth
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)'
             }}>
               {collection.title}
             </span>

@@ -68,7 +68,6 @@ export default function ProfilePage() {
         if (items) {
           setItemCount(items.length);
           setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
-          // Extract unique niches from items
           const uniqueNiches = Array.from(new Set(items.map(i => i.niche_family).filter(Boolean)));
           setUserNiches(uniqueNiches as string[]);
         }
@@ -86,7 +85,7 @@ export default function ProfilePage() {
     loadData();
   }, [userId]);
 
-  // Logic functions (Post Item, Create Coll, Update Profile)
+  // Handle Logic
   async function handlePostItem() {
     if (!file || !userId || !niche) return;
     setUploading(true);
@@ -115,6 +114,17 @@ export default function ProfilePage() {
     if (error) alert(error.message); else window.location.reload();
   }
 
+  // Determine Badge based on membership_tier
+  const getBadgeIcon = () => {
+    const tier = profile?.membership_tier?.toLowerCase();
+    if (tier === 'diamond') return "/diamond.png";
+    if (tier === 'founder') return "/founder.png";
+    if (tier === 'gold') return "/gold.png";
+    if (tier === 'silver') return "/silver.png";
+    if (tier === 'bronze') return "/bronze.png";
+    return null; // Standard users get no badge yet
+  };
+
   if (loading) return <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>SYNCING VAULT...</div>;
 
   return (
@@ -122,18 +132,17 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* HEADER SECTION */}
+        {/* PROFILE CARD */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ marginBottom: '24px' }}>
               <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800', margin: 0 }}>{profile?.display_url || profile?.username}</h1>
-              <img src="/diamond.png" style={{ width: '38px', height: '38px', objectFit: 'contain' }} alt="Diamond Tier" />
+              {getBadgeIcon() && <img src={getBadgeIcon()} style={{ width: '32px', height: '32px', objectFit: 'contain' }} alt="Tier Badge" />}
             </div>
             <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '8px', marginTop: 0 }}>@{profile?.username}</p>
             
-            {/* NICHE BADGES */}
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '16px' }}>
               {userNiches.map(n => (
                 <span key={n} style={{ background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', border: '1px solid rgba(129, 140, 248, 0.3)' }}>{n} Family</span>
@@ -142,20 +151,16 @@ export default function ProfilePage() {
 
             <p style={{ color: '#a1a1aa', fontSize: '16px', marginBottom: '24px', maxWidth: '400px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
-            <Link href={`/collections?user=${userId}`} style={{ display: 'block', width: '100%', maxWidth: '320px', backgroundColor: '#ffffff', color: '#000000', fontWeight: '900', padding: '16px 0', borderRadius: '16px', textAlign: 'center', textDecoration: 'none', fontSize: '16px', marginBottom: '20px' }}>
-              VIEW COLLECTIONS
-            </Link>
-
             {isOwnProfile && (
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ITEM</button>
-                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ COLLECTION</button>
-                <button onClick={() => setShowEditProfile(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EDIT</button>
+                <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ITEM</button>
+                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ COLLECTION</button>
+                <button onClick={() => setShowEditProfile(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EDIT</button>
               </div>
             )}
         </section>
 
-        {/* STATS SECTION */}
+        {/* STATS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold', margin: 0 }}>ITEMS</p></div>
@@ -165,19 +170,21 @@ export default function ProfilePage() {
         </section>
 
         {/* COLLECTIONS LIST */}
-        {collections.length > 0 && (
-          <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {collections.map((c) => (
-                <div key={c.id} style={{ background: '#18181b', padding: '16px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #27272a' }}>
-                  <span style={{ fontWeight: 'bold' }}>{c.title || c.name}</span>
-                  <Link href={`/collections/${c.id}`} style={{ color: '#818cf8', fontSize: '12px', textDecoration: 'none', fontWeight: 'bold' }}>VIEW ↗</Link>
+        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px', color: '#fff' }}>COLLECTIONS</h2>
+            {collections.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {collections.map((c) => (
+                    <div key={c.id} style={{ background: '#18181b', padding: '16px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #27272a' }}>
+                    <span style={{ fontWeight: 'bold' }}>{c.title || c.name}</span>
+                    <Link href={`/collections/${c.id}`} style={{ color: '#818cf8', fontSize: '12px', textDecoration: 'none', fontWeight: 'bold', background: '#27272a', padding: '6px 12px', borderRadius: '8px' }}>VIEW ↗</Link>
+                    </div>
+                ))}
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+            ) : (
+                <p style={{ color: '#52525b', fontSize: '14px', textAlign: 'center', margin: '20px 0' }}>No collections started yet.</p>
+            )}
+        </section>
 
         {/* RECENT DROPS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
@@ -185,19 +192,23 @@ export default function ProfilePage() {
             <h2 style={{ fontSize: '18px', fontWeight: '900', margin: 0 }}>RECENT DROPS</h2>
             <img src="/CC-SML-Logo.png" style={{ width: '18px', height: '18px' }} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            {recentDrops.map((drop) => (
-              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
-                <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            ))}
-          </div>
+          {recentDrops.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                {recentDrops.map((drop) => (
+                <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a' }}>
+                    <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                ))}
+            </div>
+          ) : (
+            <p style={{ color: '#52525b', fontSize: '14px', textAlign: 'center', margin: '20px 0' }}>Vault is currently empty.</p>
+          )}
         </section>
 
         <SuggestedUsers />
       </main>
 
-      {/* MODALS REMAIN THE SAME BUT WITH TEXT UPDATES */}
+      {/* MODALS */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>

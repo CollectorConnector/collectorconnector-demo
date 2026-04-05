@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ImportInstagramModal from "@/components/ImportInstagramModal";
 import Footer from "@/components/Footer";
-import SuggestedUsers from "@/components/SuggestedUsers";
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -20,118 +19,102 @@ export default function ProfilePage() {
     async function fetchProfileData() {
       if (!id) return;
 
-      // 1. Fetch Profile
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", id)
-        .single();
+      // Fetch Profile, Collections, and active Items in parallel for speed
+      const [prof, cols, its] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", id).single(),
+        supabase.from("collections").select("*").eq("user_id", id),
+        supabase.from("items").select("*").eq("user_id", id).neq("status", "imported")
+      ]);
 
-      // 2. Fetch Collections
-      const { data: collectionsData } = await supabase
-        .from("collections")
-        .select("*")
-        .eq("user_id", id);
-
-      // 3. Fetch Items (FILTERING OUT THE 'IMPORTED' STATUS)
-      const { data: itemsData } = await supabase
-        .from("items")
-        .select("*")
-        .eq("user_id", id)
-        .neq("status", "imported"); // This is the magic line for your Inbox
-
-      setProfile(profileData);
-      setCollections(collectionsData || []);
-      setItems(itemsData || []);
+      setProfile(prof.data);
+      setCollections(cols.data || []);
+      setItems(its.data || []);
       setLoading(false);
     }
 
     fetchProfileData();
   }, [id]);
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white font-black italic">LOADING VAULT...</div>;
-  if (!profile) return <div className="min-h-screen bg-black text-white p-20">Profile not found.</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-white font-black italic animate-pulse tracking-widest">LOADING VAULT...</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-white selection:text-black">
-      {/* Header / Nav */}
+    <div className="min-h-screen bg-black text-white font-sans">
+      {/* Header */}
       <nav className="p-6 flex justify-between items-center border-b border-zinc-900/50">
-        <div className="font-black italic text-2xl tracking-tighter">COLLECTOR CONNECTOR</div>
+        <div className="font-black italic text-xl tracking-tighter cursor-pointer" onClick={() => router.push('/')}>
+          COLLECTOR CONNECTOR
+        </div>
         <button 
           onClick={() => router.push('/')}
-          className="text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+          className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-colors"
         >
-          Back to Feed
+          Exit Vault
         </button>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-6 py-12">
-        {/* Profile Info */}
-        <section className="mb-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div>
-              <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-none mb-4 uppercase">
-                {profile.username || "COLLECTOR"}
-              </h1>
-              <p className="text-zinc-500 max-w-md font-medium leading-relaxed">
-                {profile.bio || "No bio yet. Add one in settings."}
-              </p>
-            </div>
-
-            {/* Premium Button Group */}
-            <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={() => setIsImportOpen(true)}
-                className="bg-zinc-900 text-white border border-zinc-800 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all active:scale-95"
-              >
-                Import IG
-              </button>
-              <button 
-                onClick={() => router.push('/curator')}
-                className="bg-white text-black px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:scale-105 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-              >
-                Curator Inbox
-              </button>
-            </div>
+      <main className="max-w-7xl mx-auto px-6 py-16">
+        {/* Profile Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-20">
+          <div>
+            <h1 className="text-7xl md:text-9xl font-black italic tracking-tighter uppercase leading-[0.8]">
+              {profile?.username || "COLLECTOR"}
+            </h1>
+            <p className="mt-6 text-zinc-500 font-bold max-w-md uppercase text-xs tracking-widest leading-loose">
+              {profile?.bio || "ESTABLISHED 2024 • PREMIUM COLLECTOR"}
+            </p>
           </div>
-        </section>
+
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setIsImportOpen(true)}
+              className="px-6 py-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95"
+            >
+              Import IG
+            </button>
+            <button 
+              onClick={() => router.push('/curator')}
+              className="px-6 py-4 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all active:scale-95"
+            >
+              Curator Inbox
+            </button>
+          </div>
+        </div>
 
         {/* Collections Grid */}
-        <section>
-          <h2 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-600 mb-8 flex items-center gap-4">
-            Current Collections <span className="h-[1px] flex-1 bg-zinc-900"></span>
-          </h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {collections.map((col) => (
-              <div 
-                key={col.id} 
-                onClick={() => router.push(`/collection/${col.id}`)}
-                className="group cursor-pointer"
-              >
-                <div className="aspect-square bg-zinc-900 rounded-[32px] overflow-hidden border border-zinc-800 group-hover:border-white/50 transition-all duration-500 relative">
-                  {col.image_url ? (
-                    <img src={col.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-800 font-black text-4xl italic">CC</div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+          {collections.map((col) => (
+            <div 
+              key={col.id} 
+              onClick={() => router.push(`/collection/${col.id}`)}
+              className="group cursor-pointer"
+            >
+              <div className="aspect-[4/5] bg-zinc-900 rounded-[40px] overflow-hidden border border-zinc-800 group-hover:border-zinc-400 transition-all duration-500 relative shadow-2xl">
+                {col.image_url ? (
+                  <img src={col.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-800 font-black text-6xl italic">CC</div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+                <div className="absolute bottom-8 left-8">
+                  <h3 className="text-2xl font-black italic uppercase tracking-tighter">{col.title}</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                    {items.filter(i => i.collection_id === col.id).length} PIECES
+                  </p>
                 </div>
-                <h3 className="mt-4 font-black italic uppercase tracking-tighter text-lg">{col.title}</h3>
-                <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
-                  {items.filter(i => i.collection_id === col.id).length} Items
-                </p>
               </div>
-            ))}
-
-            {/* Empty State / Add Collection */}
-            <div className="aspect-square border-2 border-dashed border-zinc-900 rounded-[32px] flex items-center justify-center hover:border-zinc-700 transition-colors cursor-pointer group">
-               <span className="text-zinc-800 group-hover:text-zinc-500 font-black text-5xl">+</span>
             </div>
-          </div>
-        </section>
+          ))}
 
-        <SuggestedUsers />
+          {/* New Collection Slot */}
+          <div className="aspect-[4/5] border-2 border-dashed border-zinc-800 rounded-[40px] flex flex-col items-center justify-center group hover:border-zinc-500 transition-all cursor-pointer">
+             <span className="text-zinc-800 group-hover:text-zinc-500 font-black text-6xl mb-2">+</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-700 group-hover:text-zinc-500">New Collection</span>
+          </div>
+        </div>
       </main>
 
       <Footer />

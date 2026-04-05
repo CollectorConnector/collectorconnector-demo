@@ -189,149 +189,145 @@ export default function ProfilePage() {
   if (error || !profile) return <div className="min-h-screen bg-black text-white flex items-center justify-center">{error || "Not Found"}</div>;
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white" style={{ background: '#000', color: '#fff' }}>
       <Header />
       
-      {/* 1. Fix: We use pt-24 (96px) to ensure we are well below the 56px header. 
-          2. Fix: Added flex-col to keep the vertical flow predictable.
+      {/* The screenshot shows a total lack of styling. 
+        Adding a massive top margin and center alignment via inline styles 
+        to bypass any CSS loading issues.
       */}
-      <main className="pt-24 pb-20 flex flex-col items-center px-4 max-w-[800px] mx-auto relative z-10">
+      <main style={{ 
+        marginTop: '100px', 
+        paddingBottom: '80px', 
+        maxWidth: '800px', 
+        marginRight: 'auto', 
+        marginLeft: 'auto', 
+        paddingLeft: '16px', 
+        paddingRight: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px'
+      }}>
         
-        {/* PROFILE CARD */}
-        <section className="w-full bg-zinc-950 border border-zinc-800 rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col items-center text-center">
+        {/* PROFILE HEADER SECTION */}
+        <section style={{ 
+          background: '#09090b', 
+          border: '1px solid #27272a', 
+          borderRadius: '24px', 
+          padding: '32px', 
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
             
             {/* Avatar */}
-            <div className="mb-6 relative group">
+            <div style={{ marginBottom: '24px' }}>
               <img
                 src={profile.avatar_url || "/default-avatar.png"}
                 alt="Avatar"
-                className={`w-32 h-32 object-cover rounded-2xl border-4 border-zinc-900 shadow-xl ${uploading ? 'opacity-50' : ''}`}
+                style={{
+                  width: '128px',
+                  height: '128px',
+                  borderRadius: '16px',
+                  objectFit: 'cover',
+                  border: '4px solid #18181b'
+                }}
               />
               {isOwnProfile && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition cursor-pointer rounded-2xl">
-                  <span className="text-sm font-bold text-white">Edit</span>
+                <label style={{ display: 'block', fontSize: '12px', marginTop: '8px', color: '#6366f1', cursor: 'pointer' }}>
+                  Edit Photo
                   <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                 </label>
               )}
             </div>
 
-            {/* Display Info */}
-            {editMode ? (
-              <div className="w-full max-w-sm space-y-4">
-                <input
-                  type="text"
-                  value={editedDisplayUrl}
-                  onChange={(e) => setEditedDisplayUrl(e.target.value)}
-                  placeholder="Display Name"
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-center"
-                />
-                <textarea
-                  value={editedBio}
-                  onChange={(e) => setEditedBio(e.target.value)}
-                  placeholder="Bio"
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 h-24 resize-none"
-                />
-                <div className="flex gap-2">
-                  <button onClick={saveProfileChanges} disabled={saving} className="flex-1 bg-white text-black py-3 rounded-xl font-bold">
-                    {saving ? "Saving..." : "Save"}
-                  </button>
-                  <button onClick={() => setEditMode(false)} className="flex-1 bg-zinc-800 py-3 rounded-xl">Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <div className="w-full flex flex-col items-center">
-                <h1 className="text-4xl font-extrabold mb-2">{displayName}</h1>
-                {profile.username && <p className="text-indigo-400 text-xl font-medium mb-4">@{profile.username}</p>}
-                <p className="text-zinc-400 text-lg mb-8 max-w-md leading-relaxed">{profile.bio || "No bio yet."}</p>
-                
-                {/* THE VITAL LINK: Forced to full width of container for visibility */}
-                <Link 
-                  href={`/collections?user=${userId}`} 
-                  className="w-full max-w-sm bg-white text-black font-black py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all text-center text-xl uppercase tracking-tight"
-                >
-                  View Collections
-                </Link>
-              </div>
-            )}
+            <h1 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '4px' }}>{displayName}</h1>
+            {profile.username && <p style={{ color: '#818cf8', fontSize: '20px', marginBottom: '16px' }}>@{profile.username}</p>}
+            <p style={{ color: '#a1a1aa', fontSize: '18px', marginBottom: '32px', maxWidth: '400px' }}>{profile.bio || "No bio yet."}</p>
 
-            {/* Own Profile Toolbar */}
+            {/* THE VIEW COLLECTIONS BUTTON - Hard-coded visibility */}
+            <Link 
+              href={`/collections?user=${userId}`} 
+              style={{
+                display: 'block',
+                width: '100%',
+                maxWidth: '320px',
+                backgroundColor: '#ffffff',
+                color: '#000000',
+                fontWeight: '900',
+                padding: '18px 0',
+                borderRadius: '16px',
+                textAlign: 'center',
+                textDecoration: 'none',
+                fontSize: '18px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                marginBottom: '24px'
+              }}
+            >
+              VIEW COLLECTIONS
+            </Link>
+
+            {/* TOOLBAR */}
             {isOwnProfile && !editMode && (
-              <div className="mt-10 flex flex-wrap gap-3 justify-center">
-                <button onClick={() => setShowAddItem(true)} className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl text-sm font-bold hover:bg-zinc-800 transition">+ ADD ITEM</button>
-                <button onClick={() => setEditMode(true)} className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl text-sm font-bold hover:bg-zinc-800 transition">EDIT PROFILE</button>
-                <button onClick={() => setIsImportOpen(true)} className="bg-pink-600 px-6 py-3 rounded-xl text-sm font-bold hover:bg-pink-500 transition">IMPORT IG</button>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center' }}>
+                <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px' }}>+ ITEM</button>
+                <button onClick={() => setEditMode(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px' }}>EDIT</button>
+                <button onClick={() => setIsImportOpen(true)} style={{ background: '#db2777', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px', border: 'none' }}>IMPORT IG</button>
               </div>
             )}
+        </section>
 
-            {/* Follow Button */}
-            {!isOwnProfile && currentUserId && (
-              <button onClick={toggleFollow} disabled={followLoading} className="mt-8 w-full max-w-sm py-4 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold text-lg transition">
-                {isFollowing ? "UNFOLLOW" : "FOLLOW"}
-              </button>
-            )}
+        {/* STATS SECTION */}
+        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
+            <div><p style={{ fontSize: '24px', fontWeight: '900' }}>{profile.items_count ?? 0}</p><p style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold' }}>ITEMS</p></div>
+            <div><p style={{ fontSize: '24px', fontWeight: '900' }}>{profile.collections_count ?? 0}</p><p style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold' }}>COLLS</p></div>
+            <div><p style={{ fontSize: '24px', fontWeight: '900' }}>£{profile.vault_value ?? 0}</p><p style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold' }}>VAULT</p></div>
+          </div>
         </section>
 
         <SuggestedUsers />
 
-        {/* STATS */}
-        <section className="w-full bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
-          <div className="grid grid-cols-3 gap-6 text-center">
-            <div className="flex flex-col">
-                <span className="text-3xl font-black">{profile.items_count ?? 0}</span>
-                <span className="text-zinc-500 text-xs font-bold uppercase mt-1">Items</span>
-            </div>
-            <div className="flex flex-col border-x border-zinc-800">
-                <span className="text-3xl font-black">{profile.collections_count ?? 0}</span>
-                <span className="text-zinc-500 text-xs font-bold uppercase mt-1">Colls</span>
-            </div>
-            <div className="flex flex-col">
-                <span className="text-3xl font-black">£{profile.vault_value ?? 0}</span>
-                <span className="text-zinc-500 text-xs font-bold uppercase mt-1">Vault</span>
-            </div>
-          </div>
-        </section>
-
-        {/* FEED */}
-        <section className="w-full bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
-          <h2 className="text-2xl font-black mb-8 uppercase tracking-tight">Recent Drops</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {/* FEED SECTION */}
+        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '24px' }}>RECENT DROPS</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             {recentDrops.map((drop) => (
-              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} className="aspect-square rounded-2xl overflow-hidden bg-zinc-900 cursor-pointer border border-zinc-800 hover:border-zinc-500 transition">
-                <img src={drop.image_url || "/default-item.png"} className="w-full h-full object-cover" alt="" />
+              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                <img src={drop.image_url || "/default-item.png"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
               </div>
             ))}
           </div>
         </section>
 
-        {/* Log Out */}
         {isOwnProfile && (
-          <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} className="mt-4 text-zinc-600 font-bold hover:text-red-500 transition uppercase text-xs tracking-widest">
-            Logout Account
+          <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} style={{ marginTop: '20px', color: '#52525b', background: 'none', border: 'none', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+            LOGOUT ACCOUNT
           </button>
         )}
       </main>
 
-      {/* Modals */}
       {isImportOpen && <ImportInstagramModal onClose={() => setIsImportOpen(false)} />}
       
       {showAddItem && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[999] p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-[40px] w-full max-w-sm shadow-2xl">
-            <h2 className="text-2xl font-black mb-6 text-center">NEW ITEM</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+          <div style={{ background: '#18181b', padding: '32px', borderRadius: '32px', width: '100%', maxWidth: '360px' }}>
+            <h2 style={{ textAlign: 'center', fontWeight: '900', marginBottom: '24px' }}>NEW ITEM</h2>
             {!preview ? (
-              <label className="border-4 border-dashed border-zinc-800 rounded-3xl p-12 flex flex-col items-center cursor-pointer hover:border-indigo-500 transition">
-                <span className="text-zinc-500 font-bold uppercase text-xs">Tap to Upload</span>
+              <label style={{ border: '2px dashed #3f3f46', borderRadius: '16px', padding: '40px', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
+                <span style={{ color: '#71717a', fontSize: '14px' }}>Tap to Upload</span>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                   const f = e.target.files?.[0];
                   if(f) { setFile(f); setPreview(URL.createObjectURL(f)); }
                 }} />
               </label>
             ) : (
-              <img src={preview} className="rounded-2xl max-h-56 w-full object-cover mb-4 shadow-lg" />
+              <img src={preview} style={{ width: '100%', borderRadius: '16px', marginBottom: '16px' }} />
             )}
-            <div className="flex gap-4 mt-8">
-              <button onClick={() => { setShowAddItem(false); setPreview(null); }} className="flex-1 py-4 font-bold text-zinc-500">CANCEL</button>
-              <button disabled={!file} className="flex-1 bg-white text-black font-black py-4 rounded-2xl disabled:opacity-30 uppercase">POST</button>
+            <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+              <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', background: 'none', border: 'none', fontWeight: 'bold' }}>CANCEL</button>
+              <button disabled={!file} style={{ flex: 1, background: '#fff', color: '#000', borderRadius: '12px', padding: '12px', fontWeight: '900' }}>POST</button>
             </div>
           </div>
         </div>

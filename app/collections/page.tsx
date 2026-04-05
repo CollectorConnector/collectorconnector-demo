@@ -1,27 +1,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation"; // Added this
 import { supabase } from "@/lib/supabase";
 import CollectionsGrid from "@/components/CollectionsGrid";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function MyCollectionsPage() {
-  const [userId, setUserId] = useState<string | null>(null);
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const queryUserId = searchParams.get("user"); // Look for ?user=...
 
   useEffect(() => {
     async function getUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      // If there is a user ID in the URL, use that.
+      if (queryUserId) {
+        setTargetUserId(queryUserId);
+        return;
+      }
 
+      // Otherwise, fallback to the logged in user
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        setUserId(user.id);
+        setTargetUserId(user.id);
       }
     }
 
     getUser();
-  }, []);
+  }, [queryUserId]);
 
-  if (!userId) {
+  if (!targetUserId) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         Loading…
@@ -31,9 +40,14 @@ export default function MyCollectionsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <h1 className="text-xl font-semibold px-4 py-4">My Collections</h1>
-      <CollectionsGrid userId={userId} />
+      <Header />
+      <div className="mt-20 px-4 max-w-[720px] mx-auto">
+        <h1 className="text-2xl font-bold mb-6">
+          {queryUserId ? "User Collections" : "My Collections"}
+        </h1>
+        <CollectionsGrid userId={targetUserId} />
+      </div>
+      <Footer />
     </div>
   );
 }
-

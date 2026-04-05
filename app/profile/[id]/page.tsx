@@ -58,7 +58,6 @@ export default function ProfilePage() {
   const [selectedNiche, setSelectedNiche] = useState(""); 
   const [customNiche, setCustomNiche] = useState("");
   const [itemName, setItemName] = useState("");
-  const [itemValue, setItemValue] = useState(""); // Kept for DB integrity, but ignored in UI
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
   const [files, setFiles] = useState<File[]>([]);
 
@@ -133,6 +132,7 @@ export default function ProfilePage() {
           });
         }
       }
+      // REFRESH TO UPDATE STATS
       window.location.reload();
     } catch (err) { alert("Launch failed"); } finally { setUploading(false); }
   }
@@ -160,7 +160,8 @@ export default function ProfilePage() {
 
   const getBadge = () => {
     const user = profile?.username?.toLowerCase();
-    if (["stacypearce", "rich", "ceomum"].includes(user || "")) return "/founder.png";
+    const founderUsernames = ["stacypearce", "rich", "ceomum"];
+    if (founderUsernames.includes(user || "")) return "/founder.png";
     if (profile?.membership_tier?.toLowerCase() === "diamond") return "/diamond.png";
     return null;
   };
@@ -195,7 +196,7 @@ export default function ProfilePage() {
             )}
         </section>
 
-        {/* LIVE STATS - VALUE REMOVED FOR STABILITY */}
+        {/* LIVE STATS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>ITEMS</p></div>
@@ -206,7 +207,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* COLLECTIONS GRID */}
+        {/* COLLECTIONS GRID (SQUIRCLES) */}
         <section style={{ background: '#000', padding: '10px 0' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>

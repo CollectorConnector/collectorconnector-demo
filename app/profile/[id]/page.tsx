@@ -24,6 +24,8 @@ type Profile = {
 type Collection = {
   id: string;
   title: string;
+  niche?: string;
+  cover_url?: string;
 };
 
 type RecentDrop = {
@@ -56,6 +58,7 @@ export default function ProfilePage() {
   
   // INPUTS
   const [newCollName, setNewCollName] = useState("");
+  const [selectedNiche, setSelectedNiche] = useState(""); // NEW FIX 1
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
@@ -84,7 +87,8 @@ export default function ProfilePage() {
           setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
         }
 
-        const { data: colls } = await supabase.from("collections").select("id, title").eq("user_id", userId);
+        // NEW FIX 2: Get more fields for the squircle images
+        const { data: colls } = await supabase.from("collections").select("*").eq("user_id", userId);
         setCollections(colls || []);
 
         const { data: drops } = await supabase.from("items").select("id, title, image_url, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(6);
@@ -130,14 +134,36 @@ export default function ProfilePage() {
     }
   }
 
+  // UPDATED: Create Collection + Optional Batch Upload
   async function handleCreateCollection() {
     if (!newCollName || !userId) return;
     setUploading(true);
     try {
-      await supabase.from("collections").insert({
+      const { data: newColl, error: collError } = await supabase.from("collections").insert({
         user_id: userId,
-        title: newCollName
-      });
+        title: newCollName,
+        niche: selectedNiche
+      }).select().single();
+
+      if (collError) throw collError;
+
+      // Batch drop items immediately if files selected
+      if (files.length > 0) {
+        for (const file of files) {
+          const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+          await supabase.storage.from("item-images").upload(fileName, file);
+          const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
+          
+          await supabase.from("items").insert({
+            user_id: userId,
+            title: itemName || "Untitled",
+            image_url: publicUrl,
+            estimated_value: parseFloat(itemValue) || 0,
+            collection_id: newColl.id,
+            status: "active"
+          });
+        }
+      }
       window.location.reload();
     } catch (err) {
       alert("Failed to create collection");
@@ -199,15 +225,16 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* COLLECTIONS GRID (SQUIRCLES) */}
+        {/* COLLECTIONS GRID (NEW FIX 3: Images in Squircles) */}
         <section style={{ background: '#000', padding: '10px 0' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                 {collections.map((c) => (
                     <Link href={`/collections/${c.id}`} key={c.id} style={{ textDecoration: 'none' }}>
-                        <div style={{ background: '#18181b', aspectRatio: '1/1', borderRadius: '32px', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                            <span style={{ fontWeight: '900', fontSize: '14px', textTransform: 'uppercase', color: '#fff', textAlign: 'center', padding: '0 10px' }}>{c.title}</span>
-                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '10px', fontSize: '10px', color: '#818cf8', fontWeight: '900', border: '1px solid #27272a' }}>VIEW COLLECTION ↗</div>
+                        <div style={{ background: '#18181b', aspectRatio: '1/1', borderRadius: '32px', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                            {c.cover_url && <img src={c.cover_url} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />}
+                            <span style={{ position: 'relative', zIndex: 2, fontWeight: '900', fontSize: '16px', textTransform: 'uppercase', color: '#fff', textAlign: 'center', padding: '0 10px', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{c.title}</span>
+                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(0,0,0,0.6)', padding: '6px 12px', borderRadius: '10px', fontSize: '10px', color: '#fff', fontWeight: '900', border: '1px solid #27272a', zIndex: 2 }}>VIEW ↗</div>
                         </div>
                     </Link>
                 ))}
@@ -233,15 +260,40 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODALS */}
+      {/* MODALS: ADD COLLECTION WITH SUPER-FLOW */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
-            <input placeholder="Collection Title" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px', boxSizing: 'border-box' }} />
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
-              <button onClick={handleCreateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer' }}>CREATE</button>
+            
+            <select value={selectedNiche} onChange={(e) => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }}>
+              <option value="">Select Niche</option>
+              <option value="Pokemon">Pokemon</option>
+              <option value="Basketball">Basketball</option>
+              <option value="Football">Football</option>
+              <option value="Coins">Coins</option>
+              <option value="Comics">Comics</option>
+              <option value="Watches">Watches</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <input placeholder="Collection Title" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px' }} />
+            
+            <p style={{ fontSize: '12px', color: '#52525b', fontWeight: 'bold', marginBottom: '10px' }}>BATCH DROP (MAX 20)</p>
+            <input type="file" multiple accept="image/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} style={{ color: '#71717a', fontSize: '12px', marginBottom: '10px' }} />
+            
+            {files.length > 0 && (
+              <>
+                <input placeholder="Item Names" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '12px', marginBottom: '5px' }} />
+                <input placeholder="Value per item (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '12px', marginBottom: '15px' }} />
+              </>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+              <button onClick={() => { setShowAddCollection(false); setFiles([]); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
+              <button onClick={handleCreateCollection} disabled={uploading} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer', opacity: uploading ? 0.5 : 1 }}>
+                {uploading ? 'LAUNCHING...' : 'CREATE VAULT'}
+              </button>
             </div>
           </div>
         </div>
@@ -252,13 +304,13 @@ export default function ProfilePage() {
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>VAULT DROP</h2>
             
-            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }}>
+            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }}>
               <option value="">No Collection</option>
               {collections.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
 
-            <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }} />
-            <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '15px', boxSizing: 'border-box' }} />
+            <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }} />
+            <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '15px' }} />
             
             <input type="file" multiple accept="image/*" onChange={(e) => setFiles(Array.from(e.target.files || []))} style={{ color: '#71717a', marginBottom: '20px', fontSize: '14px' }} />
             

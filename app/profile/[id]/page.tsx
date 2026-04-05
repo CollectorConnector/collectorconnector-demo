@@ -106,10 +106,24 @@ export default function ProfilePage() {
   async function handleCreateCollection() {
     if (!newCollName || !userId) return;
     setUploading(true);
-    const { error } = await supabase.from("collections").insert({ user_id: userId, name: newCollName });
+    // FIX: Trying 'title' instead of 'name' to match typical schema
+    const { error } = await supabase.from("collections").insert({ 
+        user_id: userId, 
+        title: newCollName 
+    });
+    
     if (error) {
-        alert("Error: " + error.message);
-        setUploading(false);
+        // Fallback check: if 'title' failed, try 'name'
+        const { error: error2 } = await supabase.from("collections").insert({ 
+            user_id: userId, 
+            name: newCollName 
+        });
+        if (error2) {
+            alert("Error: " + error2.message);
+            setUploading(false);
+        } else {
+            window.location.reload();
+        }
     } else {
         window.location.reload();
     }
@@ -126,7 +140,6 @@ export default function ProfilePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'sans-serif' }}>
       <Header />
-      
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

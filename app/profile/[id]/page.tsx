@@ -456,9 +456,8 @@ export default function ProfilePage() {
   </div>
 </section>
 
-
           <SuggestedUsers />
-        </section>
+        
 
         {/* Stats */}
         <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">

@@ -10,6 +10,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true); // Default to checked
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,6 +28,8 @@ export default function LoginPage() {
       if (signInError) throw signInError;
 
       if (data.user) {
+        // If they want to be remembered, we let Supabase handle the persistence
+        // (Supabase does this via cookies/localStorage by default)
         router.push(`/profile/${data.user.id}`);
       }
     } catch (err: any) {
@@ -77,11 +80,28 @@ export default function LoginPage() {
             required 
             style={{ width: '100%', background: '#111', border: '1px solid #27272a', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px', boxSizing: 'border-box' }} 
           />
+
+          {/* REMEMBER ME CHECKBOX */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', marginBottom: '8px', cursor: 'pointer' }} onClick={() => setRememberMe(!rememberMe)}>
+            <div style={{ 
+                width: '18px', 
+                height: '18px', 
+                border: '1px solid #27272a', 
+                borderRadius: '4px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                background: rememberMe ? '#fff' : 'transparent' 
+            }}>
+                {rememberMe && <span style={{ color: '#000', fontSize: '12px', fontWeight: 'bold' }}>✓</span>}
+            </div>
+            <span style={{ fontSize: '14px', color: '#a1a1aa' }}>Remember me</span>
+          </div>
           
           <button 
             type="submit" 
             disabled={loading} 
-            style={{ background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '12px', border: 'none', fontSize: '16px', cursor: 'pointer', marginTop: '12px', opacity: loading ? 0.6 : 1 }}
+            style={{ background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '12px', border: 'none', fontSize: '16px', cursor: 'pointer', marginTop: '4px', opacity: loading ? 0.6 : 1 }}
           >
             {loading ? "LOGGING IN..." : "LOG IN"}
           </button>

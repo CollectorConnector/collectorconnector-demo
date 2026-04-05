@@ -1,4 +1,3 @@
-The breakthrough script 
 
 "use client";
 

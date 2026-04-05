@@ -18,7 +18,7 @@ type Profile = {
   display_url?: string | null;
   username?: string | null;
   bio?: string | null;
-  tier?: string | null; 
+  membership_tier?: string | null; 
 };
 
 type RecentDrop = {
@@ -45,7 +45,6 @@ export default function ProfilePage() {
   // UI STATES
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -102,6 +101,11 @@ export default function ProfilePage() {
     loadAllData();
   }, [userId]);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+  };
+
   async function handlePostItem() {
     if (!file || !userId) return;
     setUploading(true);
@@ -128,10 +132,10 @@ export default function ProfilePage() {
     if (!newCollName || !userId) return;
     setSaving(true);
     try {
+      // Fixed column name to 'title' to match your DB schema
       await supabase.from("collections").insert({
         user_id: userId,
-        name: newCollName,
-        description: ""
+        title: newCollName
       });
       window.location.reload();
     } catch (err) {
@@ -140,6 +144,13 @@ export default function ProfilePage() {
       setSaving(false);
     }
   }
+
+  const getBadge = () => {
+    const user = profile?.username?.toLowerCase();
+    if (user === "stacypearce" || user === "rich" || user === "ceomum") return "/founder.png";
+    if (profile?.membership_tier?.toLowerCase() === "diamond") return "/diamond.png";
+    return null;
+  };
 
   const displayName = profile?.display_url || profile?.username || "Collector";
 
@@ -159,12 +170,13 @@ export default function ProfilePage() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{displayName}</h1>
-              {/* DIAMOND TIER ICON - NOW NEXT TO NAME */}
-              <img 
-                src="/diamond.png" 
-                style={{ width: '38px', height: '38px', objectFit: 'contain' }} 
-                alt="Diamond Tier" 
-              />
+              {getBadge() && (
+                <img 
+                  src={getBadge() || ""} 
+                  style={{ width: '38px', height: '38px', objectFit: 'contain' }} 
+                  alt="Tier Badge" 
+                />
+              )}
             </div>
             
             <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '16px' }}>@{profile?.username}</p>
@@ -177,10 +189,10 @@ export default function ProfilePage() {
 
             {isOwnProfile && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
-                <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>+ ITEM</button>
-                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>+ COLL</button>
-                <button onClick={() => setEditMode(!editMode)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>EDIT</button>
-                <button onClick={() => setIsImportOpen(true)} style={{ background: '#db2777', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '13px' }}>IMPORT IG</button>
+                <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ITEM</button>
+                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ADD COLLECTION</button>
+                <button onClick={() => setEditMode(!editMode)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EDIT</button>
+                <button onClick={handleLogout} style={{ background: '#450a0a', color: '#f87171', border: '1px solid #7f1d1d', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>LOGOUT</button>
               </div>
             )}
         </section>
@@ -213,15 +225,15 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODALS (ADD COLL, ADD ITEM, IMPORT IG) STAY THE SAME AS BEFORE */}
+      {/* MODALS */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
-            <input placeholder="Collection Name (e.g. Steph Curry Rookies)" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px' }} />
+            <input placeholder="Collection Title" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px' }} />
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
-              <button onClick={handleCreateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>CREATE</button>
+              <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
+              <button onClick={handleCreateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer' }}>CREATE</button>
             </div>
           </div>
         </div>
@@ -250,8 +262,8 @@ export default function ProfilePage() {
             )}
             
             <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-              <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
-              <button onClick={handlePostItem} disabled={uploading || !file} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1 }}>
+              <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
+              <button onClick={handlePostItem} disabled={uploading || !file} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1, cursor: 'pointer' }}>
                 {uploading ? 'POSTING...' : 'POST ITEM'}
               </button>
             </div>
@@ -259,7 +271,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {isImportOpen && <ImportInstagramModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} userId={userId} />}
       <Footer />
     </div>
   );

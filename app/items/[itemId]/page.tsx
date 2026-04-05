@@ -608,8 +608,10 @@ export default function ProfilePage() {
           </button>
 
           <ImportInstagramModal
-            onClose={() => setIsImportOpen(false)}
-          />
+  onClose={() => setIsImportOpen(false)}
+  userId={userId} // Add this line here
+/>
+
 
           {/* Add Item Modal */}
           {showAddItem && (

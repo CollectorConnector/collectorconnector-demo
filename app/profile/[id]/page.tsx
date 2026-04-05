@@ -25,6 +25,8 @@ type Collection = {
   title: string;
   niche?: string;
   cover_url?: string;
+  // Added this to handle the automated cover logic
+  items?: { image_url: string }[];
 };
 
 type RecentDrop = {
@@ -77,16 +79,27 @@ export default function ProfilePage() {
         setLoading(true);
         const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
         if (prof) setProfile(prof);
+        
         const { data: items } = await supabase.from("items").select("estimated_value").eq("user_id", userId);
         if (items) {
           setItemCount(items.length);
           setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
         }
-        const { data: colls } = await supabase.from("collections").select("*").eq("user_id", userId);
+
+        // UPDATED: Fetching collections AND the image of the first item for the cover fallback
+        const { data: colls } = await supabase
+          .from("collections")
+          .select(`*, items (image_url)`)
+          .eq("user_id", userId);
         setCollections(colls || []);
+
         const { data: drops } = await supabase.from("items").select("id, title, image_url, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(6);
         setRecentDrops(drops || []);
-      } catch (err) { console.error(err); } finally { setLoading(false); }
+      } catch (err) { 
+        console.error("Data Load Error:", err); 
+      } finally { 
+        setLoading(false); 
+      }
     }
     loadAllData();
   }, [userId]);
@@ -199,19 +212,26 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* COLLECTIONS GRID */}
+        {/* COLLECTIONS GRID - UPDATED FOR DYNAMIC COVERS */}
         <section style={{ background: '#000', padding: '10px 0' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                {collections.map((c) => (
+                {collections.map((c) => {
+                  // Fallback: If no cover_url, use the image from the first item in the collection
+                  const displayCover = c.cover_url || c.items?.[0]?.image_url;
+                  
+                  return (
                     <Link href={`/collections/${c.id}`} key={c.id} style={{ textDecoration: 'none' }}>
                         <div style={{ background: '#18181b', aspectRatio: '1/1', borderRadius: '32px', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                            {c.cover_url && <img src={c.cover_url} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />}
+                            {displayCover && (
+                              <img src={displayCover} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
+                            )}
                             <span style={{ position: 'relative', zIndex: 2, fontWeight: '900', fontSize: '16px', textTransform: 'uppercase', color: '#fff', textAlign: 'center', padding: '0 10px', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{c.title}</span>
                             <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(0,0,0,0.6)', padding: '6px 12px', borderRadius: '10px', fontSize: '10px', color: '#fff', fontWeight: '900', border: '1px solid #27272a', zIndex: 2 }}>VIEW ↗</div>
                         </div>
                     </Link>
-                ))}
+                  );
+                })}
             </div>
         </section>
 
@@ -219,7 +239,7 @@ export default function ProfilePage() {
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            {recentDrops.length > 0 ? (
+            {recentDrops && recentDrops.length > 0 ? (
               recentDrops.map((drop) => (
                 <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #27272a' }}>
                   <img src={drop.image_url || "/default-item.png"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />

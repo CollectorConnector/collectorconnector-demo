@@ -1,136 +1,71 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Footer from "@/components/Footer";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  async function handleEmailLogin() {
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true);
+    setError("");
 
-    // 1. Sign in
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    setLoading(false);
+      if (signInError) throw signInError;
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    const userId = data.user.id;
-
-    // 2. Check if profile exists
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", userId)
-      .maybeSingle();
-
-    // 3. If no profile → onboarding
-    if (!profile) {
-      router.replace("/onboarding");
-      return;
-    }
-
-    // 4. Otherwise → their profile
-    router.replace(`/profile/${userId}`);
-  }
-
-  async function handleOAuth(provider: "google" | "facebook") {
-    setLoading(true);
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      alert(error.message);
+      if (data.user) {
+        // Successful login, redirect to profile
+        router.push(`/profile/${data.user.id}`);
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred.");
+    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="auth-container">
-      <h1 className="auth-title">Welcome back</h1>
-      <p className="auth-subtitle">Log in to continue your journey</p>
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      
+      {/* BRANDING HEADER */}
+      <header style={{ padding: '20px', borderBottom: '1px solid #18181b', width: '100%', maxWidth: '1000px', display: 'flex', justifyContent: 'center' }}>
+        <img src="/CC-main-logo.png" style={{ height: '50px' }} alt="CollectorConnector Logo" />
+      </header>
+      
+      <main style={{ flex: 1, width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0 20px', marginTop: '60px' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: '900', textAlign: 'center', marginBottom: '8px' }}>Welcome back</h1>
+        <p style={{ color: '#a1a1aa', fontSize: '18px', textAlign: 'center', marginBottom: '48px' }}>Log in to continue your journey</p>
+        
+        {error && <p style={{ color: '#ef4444', textAlign: 'center', marginBottom: '20px' }}>{error}</p>}
 
-      {/* SOCIAL LOGIN */}
-      <div className="auth-social">
-        <button
-          onClick={() => handleOAuth("google")}
-          disabled={loading}
-          className="auth-social-btn"
-        >
-          {loading ? <span className="spinner" /> : "Log in with Google"}
-        </button>
-      </div>
+        <form onSubmit={handleLogin} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%', background: '#111', border: '1px solid #18181b', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px' }} />
+          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%', background: '#111', border: '1px solid #18181b', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px' }} />
+          
+          <button type="submit" disabled={loading} style={{ background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '12px', border: 'none', fontSize: '16px', cursor: 'pointer', marginTop: '20px', opacity: loading ? 0.6 : 1 }}>
+            {loading ? "Logging in..." : "Log In"}
+          </button>
+        </form>
 
-      <div className="auth-divider" />
+        <p style={{ marginTop: '32px', color: '#a1a1aa' }}>
+          Don’t have an account? <Link href="/auth/sign-up" style={{ color: '#818cf8', textDecoration: 'none', fontWeight: 'bold' }}>Sign up</Link>
+        </p>
+      </main>
 
-      {/* EMAIL LOGIN */}
-      <div className="auth-form">
-        <input
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="auth-input"
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="auth-input"
-        />
-
-        <label className="auth-remember">
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={() => setRemember(!remember)}
-          />
-          <span>Remember me</span>
-        </label>
-
-        <button
-          onClick={handleEmailLogin}
-          disabled={loading}
-          className="auth-submit"
-        >
-          {loading && <span className="spinner" />}
-          {loading ? "Logging in..." : "Log In"}
-        </button>
-
-        <button
-          onClick={() => router.push("/auth/reset")}
-          className="auth-forgot"
-        >
-          Forgot your password
-        </button>
-      </div>
-
-      <p className="auth-footer">
-        Don’t have an account{" "}
-        <Link href="/auth/signup" className="auth-link">
-          Sign up
-        </Link>
-      </p>
+      <Footer />
     </div>
   );
 }

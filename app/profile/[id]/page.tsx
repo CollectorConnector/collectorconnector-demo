@@ -318,123 +318,144 @@ export default function ProfilePage() {
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
 
-        {/* Profile Header */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg text-center">
-          <div className="flex flex-col items-center">
-            {/* Avatar - 16% squircle */}
-            <div className="relative mb-6">
-              {isOwnProfile ? (
-                <label htmlFor="avatar-upload" className="cursor-pointer">
-               <img
-  src={previewImage || profile.avatar_url || "/default-avatar.png"}
-  alt="Avatar"
-  className="w-28 h-28 object-cover border-2 border-white shadow-md"
-  style={{ borderRadius: "16%" }}
-/>
+ {/* Profile Header */}
+<section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg text-center overflow-visible">
+  <div className="flex flex-col items-center w-full">
 
-                </label>
-              ) : (
-                <img
-                  src={profile.avatar_url || "/default-avatar.png"}
-                  alt="Avatar"
-                  className="w-28 h-28 object-cover border-2 border-white shadow-md"
-                  style={{ borderRadius: "16%" }}
-                />
-              )}
-            </div>
+    {/* Avatar — stable, non-collapsing */}
+    <div className="mb-6 flex items-center justify-center">
+      {isOwnProfile ? (
+        <label htmlFor="avatar-upload" className="cursor-pointer block">
+          <img
+            src={previewImage || profile.avatar_url || "/default-avatar.png"}
+            alt="Avatar"
+            className="w-28 h-28 object-cover border-2 border-white shadow-md"
+            style={{ borderRadius: "16%" }}
+          />
+        </label>
+      ) : (
+        <img
+          src={profile.avatar_url || "/default-avatar.png"}
+          alt="Avatar"
+          className="w-28 h-28 object-cover border-2 border-white shadow-md"
+          style={{ borderRadius: "16%" }}
+        />
+      )}
+    </div>
 
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              className="hidden"
-            />
+    <input
+      id="avatar-upload"
+      type="file"
+      accept="image/*"
+      onChange={handleAvatarChange}
+      className="hidden"
+    />
 
-            {isOwnProfile && editMode ? (
-              <input
-                type="text"
-                value={editedDisplayUrl}
-                onChange={(e) => setEditedDisplayUrl(e.target.value)}
-                className="text-4xl font-bold mb-3 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg"
-              />
-            ) : (
-              <h1 className="text-4xl font-bold mb-1">{displayName}</h1>
-            )}
+    {/* Display Name */}
+    {isOwnProfile && editMode ? (
+      <input
+        type="text"
+        value={editedDisplayUrl}
+        onChange={(e) => setEditedDisplayUrl(e.target.value)}
+        className="text-4xl font-bold mb-3 bg-zinc-900 border border-zinc-700 rounded px-6 py-3 text-center w-full max-w-lg"
+      />
+    ) : (
+      <h1 className="text-4xl font-bold mb-1">{displayName}</h1>
+    )}
 
-            {profile.username && <p className="text-indigo-400 text-xl mb-4">@{profile.username}</p>}
+    {/* Username */}
+    {profile.username && (
+      <p className="text-indigo-400 text-xl mb-4">@{profile.username}</p>
+    )}
 
-            {isOwnProfile && editMode ? (
-              <textarea
-                value={editedBio}
-                onChange={(e) => setEditedBio(e.target.value)}
-                className="text-gray-300 text-lg mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-lg h-32 resize-none"
-              />
-            ) : (
-              <p className="text-gray-300 text-lg mb-4 max-w-lg leading-relaxed">
-                {profile.bio || "This collector hasn’t written a bio yet."}
-              </p>
-            )}
- 
-            {profile.location && <p className="text-gray-400 text-lg mt-6">{profile.location}</p>}
+    {/* View Collections — always visible, always full width */}
+    <Link
+      href="/collections"
+      className="block w-full max-w-md mx-auto text-center bg-white text-black font-semibold py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
+    >
+      View Collections
+    </Link>
 
-            <div className="flex items-center gap-3 mt-6 justify-center">
-              {tierIconSrc && <img src={tierIconSrc} alt={`${profile.tier} tier`} className="w-10 h-10 object-contain" />}
-              {profile.tier && <p className="text-indigo-400 text-xl font-medium">{profile.tier} Tier</p>}
-            </div>
+    {/* Bio */}
+    {isOwnProfile && editMode ? (
+      <textarea
+        value={editedBio}
+        onChange={(e) => setEditedBio(e.target.value)}
+        className="text-gray-300 text-lg mb-4 bg-zinc-900 border border-zinc-700 rounded px-6 py-4 w-full max-w-lg h-32 resize-none"
+      />
+    ) : (
+      <p className="text-gray-300 text-lg mb-4 max-w-lg leading-relaxed">
+        {profile.bio || "This collector hasn’t written a bio yet."}
+      </p>
+    )}
 
-                  {/* View Collections Button - Prominently placed */}
-            <Link
-              href={`/profile/${userId}/collections`}
-              className="block w-full max-w-md mx-auto text-center bg-[#1a1a1a] hover:bg-zinc-800 text-white font-medium py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
-            >
-              View Collections
-            </Link>
+    {/* Location */}
+    {profile.location && (
+      <p className="text-gray-400 text-lg mt-2">{profile.location}</p>
+    )}
 
+    {/* Tier */}
+    <div className="flex items-center gap-3 mt-6 justify-center">
+      {tierIconSrc && (
+        <img
+          src={tierIconSrc}
+          alt={`${profile.tier} tier`}
+          className="w-10 h-10 object-contain"
+        />
+      )}
+      {profile.tier && (
+        <p className="text-indigo-400 text-xl font-medium">
+          {profile.tier} Tier
+        </p>
+      )}
+    </div>
 
-            {/* Action Buttons */}
-            {isOwnProfile && (
-              <div className="mt-10 flex flex-wrap gap-3 justify-center">
-                <button
-                  onClick={() => setShowAddItem(true)}
-                  className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
-                >
-                  + Add Item
-                </button>
+    {/* Action Buttons */}
+    {isOwnProfile && (
+      <div className="mt-10 flex flex-wrap gap-3 justify-center">
+        <button
+          onClick={() => setShowAddItem(true)}
+          className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
+        >
+          + Add Item
+        </button>
 
-                <button
-                  onClick={() => router.push("/collections/create")}
-                  className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
-                >
-                  + Add Collection
-                </button>
+        <button
+          onClick={() => router.push("/collections/create")}
+          className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
+        >
+          + Add Collection
+        </button>
 
-                <button
-                  onClick={() => setIsImportOpen(true)}
-                  className="bg-pink-600 hover:bg-pink-500 px-6 py-3 rounded-xl text-white font-medium transition"
-                >
-                  Import from Instagram
-                </button>
+        <button
+          onClick={() => setIsImportOpen(true)}
+          className="bg-pink-600 hover:bg-pink-500 px-6 py-3 rounded-xl text-white font-medium transition"
+        >
+          Import from Instagram
+        </button>
 
-                <button
-                  onClick={() => setEditMode(!editMode)}
-                  className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
-                >
-                  {editMode ? "Cancel Edit" : "Edit Profile"}
-                </button>
-              </div>
-            )}
+        <button
+          onClick={() => setEditMode(!editMode)}
+          className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition"
+        >
+          {editMode ? "Cancel Edit" : "Edit Profile"}
+        </button>
+      </div>
+    )}
 
-            {!isOwnProfile && currentUserId && (
-              <button
-                onClick={toggleFollow}
-                disabled={followLoading}
-                className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
-              >
-                {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
-              </button>
-            )}
-          </div>
+    {/* Follow Button */}
+    {!isOwnProfile && currentUserId && (
+      <button
+        onClick={toggleFollow}
+        disabled={followLoading}
+        className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50"
+      >
+        {followLoading ? "Loading…" : isFollowing ? "Unfollow" : "Follow"}
+      </button>
+    )}
+  </div>
+</section>
+
 
           <SuggestedUsers />
         </section>

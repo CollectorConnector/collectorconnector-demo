@@ -11,27 +11,51 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
 
-// ... (Types remain the same)
+// --- Types ---
+type Profile = {
+  id: string;
+  avatar_url?: string | null;
+  display_url?: string | null;
+  username?: string | null;
+  location?: string | null;
+  bio?: string | null;
+  tier?: string | null;
+  items_count?: number | null;
+  collections_count?: number | null;
+  followers_count?: number | null;
+  following_count?: number | null;
+  vault_value?: number | null;
+  likes_count?: number | null;
+};
+
+type RecentDrop = {
+  id: string;
+  name: string;
+  image_url: string | null;
+  created_at: string;
+  profiles: { username: string | null } | null;
+};
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
 
+  // Core Data State
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // App State
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // UI & Modals State
   const [showAddItem, setShowAddItem] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
   
-  // Edit/Upload States
+  // Edit & Upload States
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false); // Unified loading state for uploads
+  const [uploading, setUploading] = useState(false);
   const [editedDisplayUrl, setEditedDisplayUrl] = useState("");
   const [editedBio, setEditedBio] = useState("");
   const [editedLocation, setEditedLocation] = useState("");
@@ -40,17 +64,21 @@ export default function ProfilePage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
+  // Social State
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  // 1. Get current user session
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
-  }, []);
-
+  // Determine if viewing own profile
   const isOwnProfile = currentUserId === userId;
 
-  // 2. Load profile data
+  // 1. Get current user session on mount
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
+
+  // 2. Load target profile data
   useEffect(() => {
     if (!userId) return;
     async function loadData() {
@@ -69,22 +97,21 @@ export default function ProfilePage() {
 
         setProfile(data as Profile);
         
-        // Populate edit fields
+        // Pre-fill edit fields
         setEditedDisplayUrl(data.display_url || "");
         setEditedBio(data.bio || "");
         setEditedLocation(data.location || "");
         setEditedTier(data.tier || "");
-        
       } catch (err) {
-        console.error(err);
+        console.error("Error loading profile:", err);
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, [userId]); // Removed isOwnProfile from deps to prevent unnecessary re-runs
+  }, [userId]);
 
-  // 3. Load recent drops
+  // 3. Load community feed
   useEffect(() => {
     async function loadRecentDrops() {
       const { data } = await supabase
@@ -97,7 +124,7 @@ export default function ProfilePage() {
     loadRecentDrops();
   }, []);
 
-  // 4. Follow check
+  // 4. Check follow status
   useEffect(() => {
     if (!currentUserId || !userId || isOwnProfile) return;
     async function checkFollow() {
@@ -112,23 +139,33 @@ export default function ProfilePage() {
     checkFollow();
   }, [currentUserId, userId, isOwnProfile]);
 
-  // --- ACTIONS ---
+  // --- Profile Actions ---
 
-  async function toggleFollow() {
-    if (!currentUserId || isOwnProfile || followLoading) return;
-    setFollowLoading(true);
+  async function saveProfileChanges() {
+    if (!isOwnProfile) return;
+    setSaving(true);
     try {
-      if (isFollowing) {
-        await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
-        setIsFollowing(false);
-      } else {
-        await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
-        setIsFollowing(true);
-      }
+      const updates = {
+        display_url: editedDisplayUrl.trim() || null,
+        bio: editedBio.trim() || null,
+        location: editedLocation.trim() || null,
+        tier: editedTier || null,
+      };
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", currentUserId);
+
+      if (updateError) throw updateError;
+      
+      setProfile((prev) => (prev ? { ...prev, ...updates } : null));
+      setEditMode(false);
+      alert("Profile updated!");
     } catch (err) {
       console.error(err);
+      alert("Failed to save profile");
     } finally {
-      setFollowLoading(false);
+      setSaving(false);
     }
   }
 
@@ -156,48 +193,46 @@ export default function ProfilePage() {
       alert("Avatar updated!");
     } catch (err) {
       console.error(err);
-      alert("Avatar update failed");
+      alert("Upload failed");
     } finally {
       setUploading(false);
     }
   }
 
-  async function saveProfileChanges() {
-    if (!isOwnProfile) return;
-    setSaving(true);
+  async function toggleFollow() {
+    if (!currentUserId || isOwnProfile || followLoading) return;
+    setFollowLoading(true);
     try {
-      const updates = {
-        display_url: editedDisplayUrl.trim() || null,
-        bio: editedBio.trim() || null,
-        location: editedLocation.trim() || null,
-        tier: editedTier || null,
-      };
-      const { error } = await supabase.from("profiles").update(updates).eq("id", currentUserId);
-      if (error) throw error;
-      
-      setProfile((prev) => prev ? { ...prev, ...updates } : null);
-      setEditMode(false);
-      alert("Profile saved!");
+      if (isFollowing) {
+        await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
+        setIsFollowing(false);
+      } else {
+        await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
+        setIsFollowing(true);
+      }
     } catch (err) {
-      alert("Save failed");
+      console.error(err);
     } finally {
-      setSaving(false);
+      setFollowLoading(false);
     }
   }
 
-  // --- HELPERS ---
+  // --- Helpers ---
   const displayName = useMemo(() => profile?.display_url || profile?.username || "Collector", [profile]);
 
   const getTierIcon = (tier?: string | null) => {
     if (!tier) return null;
     const lower = tier.toLowerCase();
-    const tiers = ['bronze', 'silver', 'gold', 'diamond', 'founder'];
-    const matched = tiers.find(t => lower.includes(t));
-    return matched ? `/${matched}.png` : null;
+    if (lower.includes("bronze")) return "/bronze.png";
+    if (lower.includes("silver")) return "/silver.png";
+    if (lower.includes("gold")) return "/gold.png";
+    if (lower.includes("diamond")) return "/diamond.png";
+    if (lower.includes("founder")) return "/founder.png";
+    return null;
   };
 
   if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
-  if (error || !profile) return <div className="min-h-screen bg-black text-white flex items-center justify-center">{error}</div>;
+  if (error || !profile) return <div className="min-h-screen bg-black text-white flex items-center justify-center">{error || "Not Found"}</div>;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -205,10 +240,12 @@ export default function ProfilePage() {
       <div className="h-14" />
 
       <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg text-center">
+        
+        {/* Profile Header */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg text-center overflow-visible">
           <div className="flex flex-col items-center w-full">
             
-            {/* Avatar Section */}
+            {/* Avatar */}
             <div className="mb-6 relative group">
               <img
                 src={profile.avatar_url || "/default-avatar.png"}
@@ -216,38 +253,36 @@ export default function ProfilePage() {
                 className={`w-28 h-28 object-cover rounded-xl border-2 border-white shadow-md ${uploading ? 'opacity-50' : ''}`}
               />
               {isOwnProfile && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition cursor-pointer rounded-xl">
-                  <span className="text-xs font-bold">Change</span>
+                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition cursor-pointer rounded-xl">
+                  <span className="text-xs font-bold">Edit</span>
                   <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                 </label>
               )}
             </div>
 
-            {/* Editable Fields */}
+            {/* Editable Content vs View Content */}
             {editMode ? (
-              <div className="w-full max-w-md space-y-3">
+              <div className="w-full max-w-lg space-y-4">
                 <input
                   type="text"
-                  placeholder="Display Name"
                   value={editedDisplayUrl}
                   onChange={(e) => setEditedDisplayUrl(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 w-full text-center"
+                  placeholder="Display Name"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-center text-xl"
                 />
                 <textarea
-                  placeholder="Bio"
                   value={editedBio}
                   onChange={(e) => setEditedBio(e.target.value)}
-                  className="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 w-full h-24 resize-none"
+                  placeholder="Bio"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 h-24 resize-none"
                 />
                 <div className="flex gap-2">
-                  <button 
-                    onClick={saveProfileChanges} 
-                    disabled={saving}
-                    className="flex-1 bg-indigo-600 py-2 rounded-lg font-bold"
-                  >
-                    {saving ? "Saving..." : "Save Changes"}
+                  <button onClick={saveProfileChanges} disabled={saving} className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold transition">
+                    {saving ? "Saving..." : "Save"}
                   </button>
-                  <button onClick={() => setEditMode(false)} className="flex-1 bg-zinc-800 py-2 rounded-lg">Cancel</button>
+                  <button onClick={() => setEditMode(false)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl transition">
+                    Cancel
+                  </button>
                 </div>
               </div>
             ) : (
@@ -255,26 +290,27 @@ export default function ProfilePage() {
                 <h1 className="text-4xl font-bold mb-1">{displayName}</h1>
                 {profile.username && <p className="text-indigo-400 text-xl mb-4">@{profile.username}</p>}
                 <p className="text-gray-300 text-lg mb-4 max-w-lg leading-relaxed">
-                  {profile.bio || "This collector hasn’t written a bio yet."}
+                  {profile.bio || "No bio set."}
                 </p>
+                {profile.location && <p className="text-gray-400 text-lg mb-4">{profile.location}</p>}
               </>
             )}
 
-            <Link href="/collections" className="block w-full max-w-md mx-auto bg-white text-black font-semibold py-4 rounded-2xl mt-6 border border-zinc-700 transition">
+            <Link href="/collections" className="block w-full max-w-md mx-auto text-center bg-white text-black font-semibold py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg">
               View Collections
             </Link>
 
-            {/* Action Buttons */}
+            {/* Profile Actions */}
             {isOwnProfile && !editMode && (
               <div className="mt-10 flex flex-wrap gap-3 justify-center">
-                <button onClick={() => setShowAddItem(true)} className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition">+ Add Item</button>
+                <button onClick={() => setShowAddItem(true)} className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition">+ Item</button>
                 <button onClick={() => setEditMode(true)} className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition">Edit Profile</button>
-                <button onClick={() => setIsImportOpen(true)} className="bg-pink-600 hover:bg-pink-500 px-6 py-3 rounded-xl text-white font-medium transition">Import Instagram</button>
+                <button onClick={() => setIsImportOpen(true)} className="bg-pink-600 hover:bg-pink-500 px-6 py-3 rounded-xl text-white font-medium transition">Instagram Import</button>
               </div>
             )}
 
             {!isOwnProfile && currentUserId && (
-              <button onClick={toggleFollow} disabled={followLoading} className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition disabled:opacity-50">
+              <button onClick={toggleFollow} disabled={followLoading} className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition">
                 {followLoading ? "..." : isFollowing ? "Unfollow" : "Follow"}
               </button>
             )}
@@ -282,11 +318,56 @@ export default function ProfilePage() {
         </section>
 
         <SuggestedUsers />
-        
-        {/* Stats and Grid remain largely the same... */}
+
+        {/* Stats Section */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
+            <div><p className="text-3xl font-bold">{profile.items_count ?? 0}</p><p className="text-gray-500 text-sm mt-1">Items</p></div>
+            <div><p className="text-3xl font-bold">{profile.collections_count ?? 0}</p><p className="text-gray-500 text-sm mt-1">Collections</p></div>
+            <div onClick={() => router.push("/followers")} className="cursor-pointer group">
+              <p className="text-3xl font-bold group-hover:text-indigo-400">{profile.followers_count ?? 0}</p>
+              <p className="text-gray-500 text-sm mt-1">Followers</p>
+            </div>
+            <div onClick={() => router.push("/following")} className="cursor-pointer group">
+              <p className="text-3xl font-bold group-hover:text-indigo-400">{profile.following_count ?? 0}</p>
+              <p className="text-gray-500 text-sm mt-1">Following</p>
+            </div>
+            <div><p className="text-3xl font-bold">£{profile.vault_value ?? 0}</p><p className="text-gray-500 text-sm mt-1">Vault</p></div>
+            <div><p className="text-3xl font-bold">{profile.likes_count ?? 0}</p><p className="text-gray-500 text-sm mt-1">Likes</p></div>
+          </div>
+        </section>
+
+        {/* Community Feed */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10">
+          <h2 className="text-2xl font-bold mb-8 text-center">Live Community Drops</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+            {recentDrops.map((drop) => (
+              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} className="group relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition cursor-pointer">
+                <img src={drop.image_url || "/default-item.png"} alt={drop.name} className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition p-4 flex flex-col justify-end">
+                  <p className="text-white text-xs font-bold">@{drop.profiles?.username}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Auth Actions */}
+        {isOwnProfile && (
+          <div className="flex flex-col gap-4">
+             <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} className="w-full py-4 bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white rounded-xl font-bold transition">
+              Log Out
+            </button>
+          </div>
+        )}
+
       </main>
 
-      {/* Logout & Modals... */}
+      {/* Modals */}
+      <ImportInstagramModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} />
+      
+      {/* Footer is usually at the bottom of the page container */}
+      <Footer />
     </div>
   );
 }

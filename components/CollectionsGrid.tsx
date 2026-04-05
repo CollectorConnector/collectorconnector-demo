@@ -1,82 +1,124 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
-interface Collection {
+type Collection = {
   id: string;
-  title: string | null;
-  cover_url: string | null;
-}
+  name: string;
+  image_url: string | null;
+};
 
 export default function CollectionsGrid({ userId }: { userId: string }) {
-  const router = useRouter();
-
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchCollections() {
-      const { data, error } = await supabase
-        .from("collections")
-        .select("id, title, cover_url")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+      try {
+        setLoading(true);
+        // Fetching collections belonging to the specific profile user
+        const { data, error } = await supabase
+          .from("collections")
+          .select("id, name, image_url")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false });
 
-      if (!error && data) {
-        setCollections(data);
+        if (error) throw error;
+        setCollections(data || []);
+      } catch (err) {
+        console.error("Error fetching collections:", err);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     }
 
-    fetchCollections();
+    if (userId) fetchCollections();
   }, [userId]);
 
   if (loading) {
     return (
-      <div className="text-center text-white py-10">
-        Loading collections…
+      <div className="grid grid-cols-3 gap-1 md:gap-2">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="aspect-square bg-zinc-900 animate-pulse rounded-sm" />
+        ))}
       </div>
     );
   }
 
   if (collections.length === 0) {
     return (
-      <div className="text-center text-white py-10">
-        No collections yet.
+      <div className="py-20 text-center">
+        <p className="text-zinc-500 font-medium">No collections shared yet.</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2 p-2">
+    <div 
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)', // The "Instagram" 3-across
+        gap: '4px', // Tight spacing like IG
+        width: '100%'
+      }}
+    >
       {collections.map((collection) => (
         <div
           key={collection.id}
           onClick={() => router.push(`/collections/${collection.id}`)}
-          className="relative w-full aspect-square rounded-[22%] overflow-hidden bg-[#111] flex items-center justify-center active:opacity-80 transition"
+          style={{
+            position: 'relative',
+            aspectRatio: '1 / 1', // Forces perfect squares
+            backgroundColor: '#18181b',
+            cursor: 'pointer',
+            overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,0.05)'
+          }}
+          className="group"
         >
-          {collection.cover_url ? (
-            <img
-              src={collection.cover_url}
-              alt={collection.title || "Collection"}
-              className="w-full h-full object-contain"
-            />
-          ) : (
-            <div
-              className="w-full h-full flex items-center justify-center text-white text-xs"
-              style={{
-                background: "linear-gradient(135deg, #111, #1a1a1a)",
-              }}
-            >
-              No image yet
-            </div>
-          )}
+          {/* Collection Image */}
+          <img
+            src={collection.image_url || "/default-collection.png"}
+            alt={collection.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover', // Ensures image fills the square without stretching
+              transition: 'transform 0.3s ease'
+            }}
+            className="group-hover:scale-110"
+          />
+
+          {/* Hover Overlay with Name */}
+          <div 
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0,0,0,0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: 0,
+              transition: 'opacity 0.2s ease'
+            }}
+            className="group-hover:opacity-100"
+          >
+            <span style={{ 
+              color: 'white', 
+              fontSize: '12px', 
+              fontWeight: '900', 
+              textTransform: 'uppercase',
+              textAlign: 'center',
+              padding: '0 4px'
+            }}>
+              {collection.name}
+            </span>
+          </div>
         </div>
       ))}
     </div>
   );
 }
-

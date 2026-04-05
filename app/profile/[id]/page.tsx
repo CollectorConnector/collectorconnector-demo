@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ImportInstagramModal from "@/components/ImportInstagramModal";
-import Footer from "@/components/Footer";
 
 export default function ProfilePage() {
   const { id } = useParams();
@@ -18,113 +17,71 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchProfileData() {
       if (!id) return;
-
-      // Fetch Profile, Collections, and active Items in parallel for speed
       const [prof, cols, its] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", id).single(),
         supabase.from("collections").select("*").eq("user_id", id),
         supabase.from("items").select("*").eq("user_id", id).neq("status", "imported")
       ]);
-
       setProfile(prof.data);
       setCollections(cols.data || []);
       setItems(its.data || []);
       setLoading(false);
     }
-
     fetchProfileData();
   }, [id]);
 
-  if (loading) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="text-white font-black italic animate-pulse tracking-widest">LOADING VAULT...</div>
-    </div>
-  );
+  if (loading) return <div style={{backgroundColor:'#000', minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:'900', fontStyle:'italic'}}>LOADING VAULT...</div>;
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
-      {/* Header */}
-      <nav className="p-6 flex justify-between items-center border-b border-zinc-900/50">
-        <div className="font-black italic text-xl tracking-tighter cursor-pointer" onClick={() => router.push('/')}>
-          COLLECTOR CONNECTOR
+    <div style={{ backgroundColor: '#000', minHeight: '100vh', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif', paddingBottom: '100px' }}>
+      {/* Navigation */}
+      <nav style={{ padding: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #111' }}>
+        <div style={{ fontWeight: '900', fontStyle: 'italic', fontSize: '24px', letterSpacing: '-1.5px', cursor: 'pointer' }} onClick={() => router.push('/')}>COLLECTOR CONNECTOR</div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => setIsImportOpen(true)} style={{ backgroundColor: '#111', color: '#fff', border: '1px solid #222', padding: '12px 20px', borderRadius: '14px', fontSize: '10px', fontWeight: '900', letterSpacing: '1px', cursor: 'pointer' }}>IMPORT IG</button>
+          <button onClick={() => router.push('/curator')} style={{ backgroundColor: '#fff', color: '#000', border: 'none', padding: '12px 20px', borderRadius: '14px', fontSize: '10px', fontWeight: '900', letterSpacing: '1px', cursor: 'pointer' }}>CURATOR INBOX</button>
         </div>
-        <button 
-          onClick={() => router.push('/')}
-          className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-colors"
-        >
-          Exit Vault
-        </button>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 py-16">
-        {/* Profile Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-20">
-          <div>
-            <h1 className="text-7xl md:text-9xl font-black italic tracking-tighter uppercase leading-[0.8]">
-              {profile?.username || "COLLECTOR"}
-            </h1>
-            <p className="mt-6 text-zinc-500 font-bold max-w-md uppercase text-xs tracking-widest leading-loose">
-              {profile?.bio || "ESTABLISHED 2024 • PREMIUM COLLECTOR"}
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <button 
-              onClick={() => setIsImportOpen(true)}
-              className="px-6 py-4 rounded-2xl bg-zinc-900 border border-zinc-800 text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95"
-            >
-              Import IG
-            </button>
-            <button 
-              onClick={() => router.push('/curator')}
-              className="px-6 py-4 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all active:scale-95"
-            >
-              Curator Inbox
-            </button>
-          </div>
-        </div>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 24px' }}>
+        {/* Hero Section */}
+        <header style={{ marginBottom: '80px' }}>
+          <h1 style={{ fontSize: 'min(15vw, 120px)', fontWeight: '900', fontStyle: 'italic', letterSpacing: '-6px', lineHeight: '0.8', margin: '0 0 24px 0', textTransform: 'uppercase' }}>
+            {profile?.username || "COLLECTOR"}
+          </h1>
+          <p style={{ color: '#666', fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px', maxWidth: '500px', lineHeight: '1.6' }}>
+            {profile?.bio || "PREMIUM ARCHIVE • CURATED COLLECTIBLES"}
+          </p>
+        </header>
 
         {/* Collections Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '40px' }}>
           {collections.map((col) => (
-            <div 
-              key={col.id} 
-              onClick={() => router.push(`/collection/${col.id}`)}
-              className="group cursor-pointer"
-            >
-              <div className="aspect-[4/5] bg-zinc-900 rounded-[40px] overflow-hidden border border-zinc-800 group-hover:border-zinc-400 transition-all duration-500 relative shadow-2xl">
+            <div key={col.id} onClick={() => router.push(`/collection/${col.id}`)} style={{ cursor: 'pointer' }}>
+              <div style={{ aspectRatio: '4/5', backgroundColor: '#0a0a0a', borderRadius: '40px', overflow: 'hidden', border: '1px solid #1a1a1a', position: 'relative', transition: '0.3s' }}>
                 {col.image_url ? (
-                  <img src={col.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                  <img src={col.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-800 font-black text-6xl italic">CC</div>
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', fontWeight: '900', color: '#111', fontStyle: 'italic' }}>CC</div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-                <div className="absolute bottom-8 left-8">
-                  <h3 className="text-2xl font-black italic uppercase tracking-tighter">{col.title}</h3>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                    {items.filter(i => i.collection_id === col.id).length} PIECES
-                  </p>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)' }} />
+                <div style={{ position: 'absolute', bottom: '32px', left: '32px' }}>
+                  <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '900', fontStyle: 'italic', textTransform: 'uppercase', letterSpacing: '-1px' }}>{col.title}</h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '10px', fontWeight: '900', color: '#666', letterSpacing: '1px' }}>{items.filter(i => i.collection_id === col.id).length} PIECES</p>
                 </div>
               </div>
             </div>
           ))}
 
-          {/* New Collection Slot */}
-          <div className="aspect-[4/5] border-2 border-dashed border-zinc-800 rounded-[40px] flex flex-col items-center justify-center group hover:border-zinc-500 transition-all cursor-pointer">
-             <span className="text-zinc-800 group-hover:text-zinc-500 font-black text-6xl mb-2">+</span>
-             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-700 group-hover:text-zinc-500">New Collection</span>
+          {/* New Collection Button */}
+          <div style={{ aspectRatio: '4/5', border: '2px dashed #1a1a1a', borderRadius: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <div style={{ fontSize: '40px', color: '#222', fontWeight: '900' }}>+</div>
+            <div style={{ fontSize: '10px', color: '#444', fontWeight: '900', letterSpacing: '1px', marginTop: '8px' }}>NEW COLLECTION</div>
           </div>
         </div>
       </main>
 
-      <Footer />
-
-      {isImportOpen && (
-        <ImportInstagramModal 
-          userId={id as string} 
-          onClose={() => setIsImportOpen(false)} 
-        />
-      )}
+      {isImportOpen && <ImportInstagramModal userId={id as string} onClose={() => setIsImportOpen(false)} />}
     </div>
   );
 }

@@ -24,6 +24,8 @@ export default function ProfilePage() {
   const [collectionCount, setCollectionCount] = useState(0);
   const [vaultValue, setVaultValue] = useState(0);
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
+  const [userNiches, setUserNiches] = useState<string[]>([]);
 
   // UI Modals
   const [showAddItem, setShowAddItem] = useState(false);
@@ -47,9 +49,7 @@ export default function ProfilePage() {
   const isOwnProfile = currentUserId === userId;
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-        setCurrentUserId(data.user?.id || null);
-    });
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
   }, []);
 
   useEffect(() => {
@@ -64,14 +64,18 @@ export default function ProfilePage() {
             setEditName(prof.display_url || prof.username || "");
         }
 
-        const { data: items } = await supabase.from("items").select("estimated_value").eq("user_id", userId);
+        const { data: items } = await supabase.from("items").select("*").eq("user_id", userId);
         if (items) {
           setItemCount(items.length);
           setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
+          // Extract unique niches from items
+          const uniqueNiches = Array.from(new Set(items.map(i => i.niche_family).filter(Boolean)));
+          setUserNiches(uniqueNiches as string[]);
         }
 
-        const { count } = await supabase.from("collections").select("*", { count: 'exact', head: true }).eq("user_id", userId);
+        const { data: colls, count } = await supabase.from("collections").select("*", { count: 'exact' }).eq("user_id", userId);
         setCollectionCount(count || 0);
+        setCollections(colls || []);
 
         const { data: drops } = await supabase.from("items").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(6);
         setRecentDrops(drops || []);
@@ -82,6 +86,7 @@ export default function ProfilePage() {
     loadData();
   }, [userId]);
 
+  // Logic functions (Post Item, Create Coll, Update Profile)
   async function handlePostItem() {
     if (!file || !userId || !niche) return;
     setUploading(true);
@@ -90,15 +95,7 @@ export default function ProfilePage() {
       const fileName = `${userId}/${Date.now()}.jpg`;
       await supabase.storage.from("item-images").upload(fileName, file);
       const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
-      
-      await supabase.from("items").insert({
-        user_id: userId,
-        title: itemName || "Untitled",
-        image_url: publicUrl,
-        estimated_value: parseFloat(itemValue) || 0,
-        niche_family: finalNiche,
-        status: "active"
-      });
+      await supabase.from("items").insert({ user_id: userId, title: itemName || "Untitled", image_url: publicUrl, estimated_value: parseFloat(itemValue) || 0, niche_family: finalNiche, status: "active" });
       window.location.reload();
     } catch (err) { alert("Post failed"); } finally { setUploading(false); }
   }
@@ -106,33 +103,16 @@ export default function ProfilePage() {
   async function handleCreateCollection() {
     if (!newCollName || !userId) return;
     setUploading(true);
-    // FIX: Trying 'title' instead of 'name' to match typical schema
-    const { error } = await supabase.from("collections").insert({ 
-        user_id: userId, 
-        title: newCollName 
-    });
-    
+    const { error } = await supabase.from("collections").insert({ user_id: userId, title: newCollName });
     if (error) {
-        // Fallback check: if 'title' failed, try 'name'
-        const { error: error2 } = await supabase.from("collections").insert({ 
-            user_id: userId, 
-            name: newCollName 
-        });
-        if (error2) {
-            alert("Error: " + error2.message);
-            setUploading(false);
-        } else {
-            window.location.reload();
-        }
-    } else {
-        window.location.reload();
-    }
+        const { error: error2 } = await supabase.from("collections").insert({ user_id: userId, name: newCollName });
+        if (error2) alert(error2.message); else window.location.reload();
+    } else { window.location.reload(); }
   }
 
   async function handleUpdateProfile() {
     const { error } = await supabase.from("profiles").update({ bio: editBio, display_url: editName }).eq("id", userId);
-    if (error) alert(error.message);
-    else window.location.reload();
+    if (error) alert(error.message); else window.location.reload();
   }
 
   if (loading) return <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>SYNCING VAULT...</div>;
@@ -142,17 +122,24 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
+        {/* HEADER SECTION */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ marginBottom: '24px' }}>
               <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} />
             </div>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800', margin: 0 }}>{profile?.display_url || profile?.username}</h1>
               <img src="/diamond.png" style={{ width: '38px', height: '38px', objectFit: 'contain' }} alt="Diamond Tier" />
             </div>
+            <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '8px', marginTop: 0 }}>@{profile?.username}</p>
             
-            <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '16px', marginTop: 0 }}>@{profile?.username}</p>
+            {/* NICHE BADGES */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '16px' }}>
+              {userNiches.map(n => (
+                <span key={n} style={{ background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', border: '1px solid rgba(129, 140, 248, 0.3)' }}>{n} Family</span>
+              ))}
+            </div>
+
             <p style={{ color: '#a1a1aa', fontSize: '16px', marginBottom: '24px', maxWidth: '400px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', width: '100%', maxWidth: '320px', backgroundColor: '#ffffff', color: '#000000', fontWeight: '900', padding: '16px 0', borderRadius: '16px', textAlign: 'center', textDecoration: 'none', fontSize: '16px', marginBottom: '20px' }}>
@@ -162,20 +149,35 @@ export default function ProfilePage() {
             {isOwnProfile && (
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ITEM</button>
-                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ COLL</button>
+                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ COLLECTION</button>
                 <button onClick={() => setShowEditProfile(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EDIT</button>
               </div>
             )}
         </section>
 
-        {/* STATS */}
+        {/* STATS SECTION */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold', margin: 0 }}>ITEMS</p></div>
-            <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{collectionCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold', margin: 0 }}>COLLS</p></div>
+            <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{collectionCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold', margin: 0 }}>COLLECTIONS</p></div>
             <div><p style={{ fontSize: '22px', fontWeight: '900', color: '#4ade80', margin: 0 }}>£{vaultValue.toLocaleString()}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold', margin: 0 }}>VALUE</p></div>
           </div>
         </section>
+
+        {/* COLLECTIONS LIST */}
+        {collections.length > 0 && (
+          <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {collections.map((c) => (
+                <div key={c.id} style={{ background: '#18181b', padding: '16px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #27272a' }}>
+                  <span style={{ fontWeight: 'bold' }}>{c.title || c.name}</span>
+                  <Link href={`/collections/${c.id}`} style={{ color: '#818cf8', fontSize: '12px', textDecoration: 'none', fontWeight: 'bold' }}>VIEW ↗</Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* RECENT DROPS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
@@ -195,7 +197,7 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODAL: EDIT PROFILE */}
+      {/* MODALS REMAIN THE SAME BUT WITH TEXT UPDATES */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -210,7 +212,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: ADD COLLECTION */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -224,7 +225,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: ADD ITEM */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -258,7 +258,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-
       <Footer />
     </div>
   );

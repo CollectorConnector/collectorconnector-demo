@@ -39,7 +39,12 @@ type RecentDrop = {
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const userId = Array.isArray(params?.id) ? params.id[0] : params?.id || "";
+  
+  // Clean up the ID from params (handles both string and array types from Next.js)
+  const userId = useMemo(() => {
+    const id = params?.id;
+    return Array.isArray(id) ? id[0] : id || "";
+  }, [params?.id]);
 
   // Core Data State
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -296,7 +301,11 @@ export default function ProfilePage() {
               </>
             )}
 
-            <Link href="/collections" className="block w-full max-w-md mx-auto text-center bg-white text-black font-semibold py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg">
+            {/* FIXED VIEW COLLECTIONS BUTTON */}
+            <Link 
+              href={`/collections?user=${userId}`} 
+              className="block w-full max-w-md mx-auto text-center bg-white text-black font-semibold py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
+            >
               View Collections
             </Link>
 
@@ -370,7 +379,7 @@ export default function ProfilePage() {
 
       {showAddItem && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl w-full max-w-sm">
+          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl w-full max-w-sm text-center">
             <h2 className="text-xl font-bold mb-4 text-white">Add Item</h2>
 
             {!preview ? (

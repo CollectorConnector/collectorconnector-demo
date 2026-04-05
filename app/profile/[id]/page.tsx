@@ -325,18 +325,19 @@ export default function ProfilePage() {
             <div className="relative mb-6">
               {isOwnProfile ? (
                 <label htmlFor="avatar-upload" className="cursor-pointer">
-                  <img
-                    src={previewImage || profile.avatar_url || "/default-avatar.png"}
-                    alt="Avatar"
-                    className="w-10 h-10 object-cover border-2 border-white shadow-md"
-                    style={{ borderRadius: "16%" }}
-                  />
+               <img
+  src={previewImage || profile.avatar_url || "/default-avatar.png"}
+  alt="Avatar"
+  className="w-28 h-28 object-cover border-2 border-white shadow-md"
+  style={{ borderRadius: "16%" }}
+/>
+
                 </label>
               ) : (
                 <img
                   src={profile.avatar_url || "/default-avatar.png"}
                   alt="Avatar"
-                  className="w-10 h-10 object-cover border-2 border-white shadow-md"
+                  className="w-28 h-28 object-cover border-2 border-white shadow-md"
                   style={{ borderRadius: "16%" }}
                 />
               )}

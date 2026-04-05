@@ -10,17 +10,9 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
 
-// Popular categories to keep data clean, but flexible enough for the obscure stuff!
 const PRESET_NICHES = [
-  "Sports Cards", 
-  "Pokémon", 
-  "Comics", 
-  "Sneakers", 
-  "Watches", 
-  "Vinyl Records", 
-  "Stamps", 
-  "Coins", 
-  "Other"
+  "Sports Cards", "Pokémon", "Comics", "Sneakers", 
+  "Watches", "Vinyl Records", "Stamps", "Coins", "Other"
 ];
 
 export default function ProfilePage() {
@@ -31,17 +23,17 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  
   const [itemCount, setItemCount] = useState(0);
   const [collectionCount, setCollectionCount] = useState(0);
   const [vaultValue, setVaultValue] = useState(0);
+  const [recentDrops, setRecentDrops] = useState<any[]>([]);
 
+  // UI States
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
-  const [recentDrops, setRecentDrops] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   
-  // NEW ITEM STATES
+  // Form States
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
   const [niche, setNiche] = useState("");
@@ -52,15 +44,12 @@ export default function ProfilePage() {
   const isOwnProfile = currentUserId === userId;
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
-    });
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
   }, []);
 
   useEffect(() => {
     if (!userId) return;
-    
-    async function loadAllData() {
+    async function loadData() {
       try {
         setLoading(true);
         const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
@@ -75,16 +64,13 @@ export default function ProfilePage() {
         const { count } = await supabase.from("collections").select("*", { count: 'exact', head: true }).eq("user_id", userId);
         setCollectionCount(count || 0);
 
-        const { data: drops } = await supabase.from("items").select("id, title, image_url, created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(6);
+        const { data: drops } = await supabase.from("items").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(6);
         setRecentDrops(drops || []);
-
-      } catch (err) {
-        console.error("Sync Error:", err);
       } finally {
         setLoading(false);
       }
     }
-    loadAllData();
+    loadData();
   }, [userId]);
 
   async function handlePostItem() {
@@ -93,7 +79,6 @@ export default function ProfilePage() {
     try {
       const finalNiche = niche === "Other" ? customNiche : niche;
       const fileName = `${userId}/${Date.now()}.jpg`;
-      
       await supabase.storage.from("item-images").upload(fileName, file);
       const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
       
@@ -102,7 +87,7 @@ export default function ProfilePage() {
         title: itemName || "Untitled",
         image_url: publicUrl,
         estimated_value: parseFloat(itemValue) || 0,
-        niche_family: finalNiche, // This links them to their "Family"
+        niche_family: finalNiche,
         status: "active"
       });
       window.location.reload();
@@ -113,130 +98,85 @@ export default function ProfilePage() {
     }
   }
 
-  const displayName = profile?.display_url || profile?.username || "Collector";
-
   if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center font-black">SYNCING VAULT...</div>;
 
   return (
-    <div className="min-h-screen bg-black text-white" style={{ background: '#000' }}>
+    <div className="min-h-screen bg-black text-white">
       <Header />
-      
-      <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <main className="mt-24 pb-20 max-w-3xl mx-auto px-4 flex flex-col gap-6">
         
-        {/* PROFILE HEADER */}
-        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ marginBottom: '24px' }}>
-              <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} alt="Avatar" />
+        {/* Profile Info */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-[24px] p-8 text-center flex flex-col items-center">
+          <img src={profile?.avatar_url || "/default-avatar.png"} className="w-28 h-28 rounded-2xl object-cover border-4 border-zinc-900 mb-6" />
+          <div className="flex items-center gap-3 justify-center mb-2">
+            <h1 className="text-3xl font-extrabold">{profile?.display_url || profile?.username}</h1>
+            <img src="/diamond.png" className="w-10 h-10 object-contain" alt="Diamond" />
+          </div>
+          <p className="text-indigo-400 text-lg mb-4">@{profile?.username}</p>
+          <p className="text-zinc-400 mb-6 max-w-sm">{profile?.bio || "Digital Vault Explorer."}</p>
+          <Link href={`/collections?user=${userId}`} className="w-full max-w-xs bg-white text-black font-black py-4 rounded-2xl text-center no-underline mb-6">VIEW COLLECTIONS</Link>
+          {isOwnProfile && (
+            <div className="flex gap-2 justify-center">
+              <button onClick={() => setShowAddItem(true)} className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl font-bold text-sm">+ ITEM</button>
+              <button onClick={() => setShowAddCollection(true)} className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl font-bold text-sm">+ COLL</button>
+              <button className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl font-bold text-sm">EDIT</button>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
-              <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{displayName}</h1>
-              <img src="/diamond.png" style={{ width: '38px', height: '38px', objectFit: 'contain' }} alt="Diamond Tier" />
-            </div>
-            
-            <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '16px' }}>@{profile?.username}</p>
-            <p style={{ color: '#a1a1aa', fontSize: '16px', marginBottom: '24px', maxWidth: '400px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
-
-            <Link href={`/collections?user=${userId}`} style={{ display: 'block', width: '100%', maxWidth: '320px', backgroundColor: '#ffffff', color: '#000000', fontWeight: '900', padding: '16px 0', borderRadius: '16px', textAlign: 'center', textDecoration: 'none', fontSize: '16px', marginBottom: '20px' }}>
-              VIEW COLLECTIONS
-            </Link>
-
-            {isOwnProfile && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
-                <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>+ ITEM</button>
-                <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>+ COLL</button>
-                <button style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>EDIT</button>
-              </div>
-            )}
+          )}
         </section>
 
-        {/* LIVE STATS */}
-        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
-            <div><p style={{ fontSize: '22px', fontWeight: '900' }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>ITEMS</p></div>
-            <div><p style={{ fontSize: '22px', fontWeight: '900' }}>{collectionCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>COLLS</p></div>
-            <div><p style={{ fontSize: '22px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue.toLocaleString()}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold' }}>VALUE</p></div>
+        {/* Stats */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-[24px] p-6">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div><p className="text-2xl font-black">{itemCount}</p><p className="text-zinc-600 text-[10px] font-bold">ITEMS</p></div>
+            <div><p className="text-2xl font-black">{collectionCount}</p><p className="text-zinc-600 text-[10px] font-bold">COLLS</p></div>
+            <div><p className="text-2xl font-black text-green-400">£{vaultValue.toLocaleString()}</p><p className="text-zinc-600 text-[10px] font-bold">VALUE</p></div>
           </div>
         </section>
 
-        {/* RECENT DROPS GRID */}
-        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '900' }}>RECENT DROPS</h2>
-            <img src="/CC-SML-Logo.png" style={{ width: '18px', height: '18px' }} alt="CC Logo" />
+        {/* Recent Drops */}
+        <section className="bg-zinc-950 border border-zinc-800 rounded-[24px] p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <h2 className="text-lg font-black">RECENT DROPS</h2>
+            <img src="/CC-SML-Logo.png" className="w-5 h-5" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            {recentDrops.map((drop: any) => (
-              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
-                <img src={drop.image_url || "/default-item.png"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+          <div className="grid grid-cols-3 gap-3">
+            {recentDrops.map((drop) => (
+              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} className="aspect-square bg-zinc-900 rounded-xl overflow-hidden cursor-pointer">
+                <img src={drop.image_url} className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
         </section>
-
         <SuggestedUsers />
       </main>
 
-      {/* NEW ITEM MODAL WITH NICHE DROPDOWN */}
+      {/* Add Item Modal */}
       {showAddItem && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW ITEM</h2>
-            
-            <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }} />
-            
-            {/* NICHE SELECT */}
-            <select 
-              value={niche} 
-              onChange={(e) => setNiche(e.target.value)}
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', appearance: 'none' }}
-            >
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[2000] p-5">
+          <div className="bg-zinc-900 p-8 rounded-[24px] w-full max-w-sm border border-zinc-800">
+            <h2 className="font-black text-center mb-5">NEW ITEM</h2>
+            <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} className="w-full bg-black border border-zinc-800 p-3 rounded-xl mb-3 text-white" />
+            <select value={niche} onChange={e => setNiche(e.target.value)} className="w-full bg-black border border-zinc-800 p-3 rounded-xl mb-3 text-white appearance-none">
               <option value="" disabled>Select Niche Family</option>
               {PRESET_NICHES.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
-
-            {/* CUSTOM NICHE INPUT */}
-            {niche === "Other" && (
-              <input 
-                placeholder="What do you collect?" 
-                value={customNiche} 
-                onChange={e => setCustomNiche(e.target.value)} 
-                style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }} 
-              />
-            )}
-
-            {/* VALUE & CHECKER */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
-                <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ flex: 1, background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px' }} />
-                <a href={`https://130point.com/sales/`} target="_blank" style={{ background: '#27272a', padding: '12px', borderRadius: '12px', color: '#fff', fontSize: '10px', fontWeight: 'bold', textDecoration: 'none', display: 'flex', alignItems: 'center', textAlign: 'center' }}>
-                    CHECK<br/>VALUE ↗
-                </a>
+            {niche === "Other" && <input placeholder="What do you collect?" value={customNiche} onChange={e => setCustomNiche(e.target.value)} className="w-full bg-black border border-indigo-500 p-3 rounded-xl mb-3 text-white" />}
+            <div className="flex gap-2 mb-4">
+              <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} className="flex-1 bg-black border border-zinc-800 p-3 rounded-xl text-white" />
+              <a href="https://130point.com/sales/" target="_blank" className="bg-zinc-800 p-3 rounded-xl text-[10px] font-bold text-center leading-tight">CHECK<br/>VALUE ↗</a>
             </div>
-
             {!preview ? (
-              <label style={{ border: '2px dashed #3f3f46', borderRadius: '12px', padding: '30px', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
-                <span style={{ color: '#71717a' }}>Upload Photo</span>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if(f) { setFile(f); setPreview(URL.createObjectURL(f)); }
-                }} />
-              </label>
+              <label className="border-2 border-dashed border-zinc-700 rounded-xl p-8 flex justify-center cursor-pointer text-zinc-500">Upload Photo<input type="file" className="hidden" onChange={e => { const f = e.target.files?.[0]; if(f){ setFile(f); setPreview(URL.createObjectURL(f)); }}} /></label>
             ) : (
-              <div style={{ position: 'relative' }}>
-                <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px', maxHeight: '180px', objectFit: 'cover' }} alt="Preview" />
-              </div>
+              <img src={preview} className="w-full rounded-xl mb-4 max-h-40 object-cover" />
             )}
-            
-            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-              <button onClick={() => { setShowAddItem(false); setPreview(null); setNiche(""); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
-              <button onClick={handlePostItem} disabled={uploading || !file || !niche} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: (uploading || !file || !niche) ? 0.5 : 1 }}>
-                {uploading ? 'POSTING...' : 'POST ITEM'}
-              </button>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowAddItem(false)} className="flex-1 font-bold text-zinc-500">CANCEL</button>
+              <button onClick={handlePostItem} disabled={uploading || !file || !niche} className="flex-2 bg-white text-black font-black py-3 px-6 rounded-xl disabled:opacity-50">{uploading ? 'POSTING...' : 'POST ITEM'}</button>
             </div>
           </div>
         </div>
       )}
-
       <Footer />
     </div>
   );

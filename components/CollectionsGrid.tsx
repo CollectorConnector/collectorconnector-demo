@@ -17,32 +17,40 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
 
   useEffect(() => {
     async function fetchCollections() {
+      if (!userId) return;
+      
       try {
         setLoading(true);
-        // Fetching collections belonging to the specific profile user
+        
+        // Change "user_id" below to "owner_id" or "profile_id" if your Supabase 
+        // table uses a different name for the user connection.
         const { data, error } = await supabase
           .from("collections")
           .select("id, name, image_url")
-          .eq("user_id", userId)
+          .eq("user_id", userId) 
           .order("created_at", { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
+        
         setCollections(data || []);
       } catch (err) {
-        console.error("Error fetching collections:", err);
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    if (userId) fetchCollections();
+    fetchCollections();
   }, [userId]);
 
   if (loading) {
     return (
-      <div className="grid grid-cols-3 gap-1 md:gap-2">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="aspect-square bg-zinc-900 animate-pulse rounded-sm" />
+          <div key={i} style={{ aspectRatio: '1/1', background: '#18181b', animate: 'pulse 2s infinite' }} />
         ))}
       </div>
     );
@@ -50,8 +58,11 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
 
   if (collections.length === 0) {
     return (
-      <div className="py-20 text-center">
-        <p className="text-zinc-500 font-medium">No collections shared yet.</p>
+      <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52525b' }}>
+        <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          No Collections Found
+        </p>
+        <p style={{ fontSize: '12px', marginTop: '8px' }}>This user hasn't created any collections yet.</p>
       </div>
     );
   }
@@ -60,9 +71,10 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
     <div 
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)', // The "Instagram" 3-across
-        gap: '4px', // Tight spacing like IG
-        width: '100%'
+        gridTemplateColumns: 'repeat(3, 1fr)', // Strict 3-across
+        gap: '2px', // Thin Instagram-style lines
+        width: '100%',
+        backgroundColor: '#000'
       }}
     >
       {collections.map((collection) => (
@@ -71,48 +83,38 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
           onClick={() => router.push(`/collections/${collection.id}`)}
           style={{
             position: 'relative',
-            aspectRatio: '1 / 1', // Forces perfect squares
+            aspectRatio: '1 / 1',
             backgroundColor: '#18181b',
             cursor: 'pointer',
-            overflow: 'hidden',
-            border: '1px solid rgba(255,255,255,0.05)'
+            overflow: 'hidden'
           }}
-          className="group"
         >
-          {/* Collection Image */}
           <img
             src={collection.image_url || "/default-collection.png"}
             alt={collection.name}
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'cover', // Ensures image fills the square without stretching
-              transition: 'transform 0.3s ease'
+              objectFit: 'cover',
+              display: 'block'
             }}
-            className="group-hover:scale-110"
           />
-
-          {/* Hover Overlay with Name */}
-          <div 
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: 0,
-              transition: 'opacity 0.2s ease'
-            }}
-            className="group-hover:opacity-100"
-          >
+          
+          {/* Subtle label overlay for the name */}
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+            padding: '8px 4px',
+            textAlign: 'center'
+          }}>
             <span style={{ 
               color: 'white', 
-              fontSize: '12px', 
+              fontSize: '10px', 
               fontWeight: '900', 
-              textTransform: 'uppercase',
-              textAlign: 'center',
-              padding: '0 4px'
+              textTransform: 'uppercase' 
             }}>
               {collection.name}
             </span>

@@ -10,11 +10,12 @@ import Footer from "@/components/Footer";
 function CollectionsContent() {
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+  const [itemCount, setItemCount] = useState<number>(0);
   const searchParams = useSearchParams();
   const queryUserId = searchParams.get("user");
 
   useEffect(() => {
-    async function getUser() {
+    async function getUserData() {
       let finalId = queryUserId;
 
       if (!finalId) {
@@ -24,12 +25,17 @@ function CollectionsContent() {
 
       if (finalId) {
         setTargetUserId(finalId);
-        // Fetch the username so the header looks personalized
+        
+        // Fetch username for the header
         const { data: prof } = await supabase.from("profiles").select("username").eq("id", finalId).single();
         if (prof) setUsername(prof.username);
+
+        // Fetch total item count for the subtitle
+        const { data: items } = await supabase.from("items").select("id", { count: 'exact' }).eq("user_id", finalId);
+        if (items) setItemCount(items.length);
       }
     }
-    getUser();
+    getUserData();
   }, [queryUserId]);
 
   if (!targetUserId) {
@@ -41,27 +47,32 @@ function CollectionsContent() {
   }
 
   return (
-    /* MATCHING THE PROFILE SPACING: 100px margin top, 800px max width */
-    <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px' }}>
+    <main style={{ 
+      marginTop: '100px', 
+      paddingBottom: '80px', 
+      maxWidth: '800px', 
+      margin: '100px auto 0', 
+      padding: '0 16px' 
+    }}>
       
-      {/* HEADER SECTION - Styled like the Profile Stats */}
+      {/* HEADER: Personalised and cleaned of "Value" */}
       <header style={{ 
         background: '#09090b', 
         border: '1px solid #27272a', 
         borderRadius: '24px', 
-        padding: '24px', 
+        padding: '32px', 
         marginBottom: '24px',
         textAlign: 'center' 
       }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>
+        <h1 style={{ fontSize: '28px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>
           {username ? `${username}'S VAULT` : "COLLECTIONS"}
         </h1>
-        <p style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold', marginTop: '4px', letterSpacing: '1px' }}>
-          DIGITAL ARCHIVE
+        <p style={{ color: '#818cf8', fontSize: '14px', fontWeight: 'bold', marginTop: '8px', letterSpacing: '1px' }}>
+          {itemCount} ITEMS ARCHIVED
         </p>
       </header>
 
-      {/* THE GRID */}
+      {/* THE GRID: This component will likely need a quick look if it still renders "£0" internally */}
       <div style={{ background: '#000', borderRadius: '24px' }}>
         <CollectionsGrid userId={targetUserId} />
       </div>
@@ -75,7 +86,7 @@ export default function MyCollectionsPage() {
       <Header />
       <Suspense fallback={
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ fontWeight: '900' }}>LOADING...</p>
+          <p style={{ fontWeight: '900' }}>LOADING ARCHIVE...</p>
         </div>
       }>
         <CollectionsContent />

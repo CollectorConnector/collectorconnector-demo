@@ -25,7 +25,7 @@ export default function CollectionDetailPage() {
     loadData();
   }, [params.id]);
 
-  if (loading) return <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>OPENING VAULT...</div>;
+  if (loading) return <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>OPENING VAULT...</div>;
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff' }}>

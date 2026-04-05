@@ -18,7 +18,7 @@ type Profile = {
   display_url?: string | null;
   username?: string | null;
   bio?: string | null;
-  tier?: string | null;
+  tier?: string | null; // e.g., 'diamond', 'gold', 'silver', 'bronze'
 };
 
 type RecentDrop = {
@@ -159,11 +159,22 @@ export default function ProfilePage() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', marginBottom: '4px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{displayName}</h1>
-              {/* CC DIAMOND TIER ICON */}
-              <img src="/CC-main-logo.png" style={{ width: '24px', height: '24px', objectFit: 'contain' }} alt="Tier" />
+              {/* DYNAMIC TIER ICON FROM PUBLIC FOLDER */}
+              {profile?.tier && (
+                <img 
+                  src={`/${profile.tier}.png`} 
+                  style={{ width: '28px', height: '28px', objectFit: 'contain' }} 
+                  alt={profile.tier} 
+                  onError={(e) => (e.currentTarget.style.display = 'none')}
+                />
+              )}
             </div>
             
-            <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '12px' }}>@{profile?.username}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+              <p style={{ color: '#818cf8', fontSize: '18px' }}>@{profile?.username}</p>
+              <img src="/CC-SML-Logo.png" style={{ width: '16px', height: '16px', opacity: 0.8 }} alt="Verified" />
+            </div>
+            
             <p style={{ color: '#a1a1aa', fontSize: '16px', marginBottom: '24px', maxWidth: '400px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', width: '100%', maxWidth: '320px', backgroundColor: '#ffffff', color: '#000000', fontWeight: '900', padding: '16px 0', borderRadius: '16px', textAlign: 'center', textDecoration: 'none', fontSize: '16px', marginBottom: '20px' }}>
@@ -215,7 +226,7 @@ export default function ProfilePage() {
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
             <input placeholder="Collection Name (e.g. Steph Curry Rookies)" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px' }} />
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold' }}>CANCEL</button>
+              <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
               <button onClick={handleCreateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>CREATE</button>
             </div>
           </div>
@@ -239,11 +250,14 @@ export default function ProfilePage() {
                 }} />
               </label>
             ) : (
-              <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px' }} />
+              <div style={{ position: 'relative' }}>
+                <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px' }} />
+                <button onClick={() => setPreview(null)} style={{ position: 'absolute', top: 5, right: 5, background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', color: '#fff', padding: '5px' }}>×</button>
+              </div>
             )}
             
             <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-              <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold' }}>CANCEL</button>
+              <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
               <button onClick={handlePostItem} disabled={uploading || !file} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1 }}>
                 {uploading ? 'POSTING...' : 'POST ITEM'}
               </button>

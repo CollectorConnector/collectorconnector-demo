@@ -10,10 +10,7 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
 
-const PRESET_NICHES = [
-  "Sports Cards", "Pokémon", "Comics", "Sneakers", 
-  "Watches", "Vinyl Records", "Stamps", "Coins", "Other"
-];
+const PRESET_NICHES = ["Sports Cards", "Pokémon", "Comics", "Sneakers", "Watches", "Vinyl Records", "Stamps", "Coins", "Other"];
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -31,6 +28,7 @@ export default function ProfilePage() {
   // UI Modals
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const [uploading, setUploading] = useState(false);
   
   // Form States
@@ -41,11 +39,17 @@ export default function ProfilePage() {
   const [newCollName, setNewCollName] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  
+  // Edit Profile States
+  const [editBio, setEditBio] = useState("");
+  const [editName, setEditName] = useState("");
 
   const isOwnProfile = currentUserId === userId;
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
+    supabase.auth.getUser().then(({ data }) => {
+        setCurrentUserId(data.user?.id || null);
+    });
   }, []);
 
   useEffect(() => {
@@ -54,7 +58,11 @@ export default function ProfilePage() {
       try {
         setLoading(true);
         const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
-        if (prof) setProfile(prof);
+        if (prof) {
+            setProfile(prof);
+            setEditBio(prof.bio || "");
+            setEditName(prof.display_url || prof.username || "");
+        }
 
         const { data: items } = await supabase.from("items").select("estimated_value").eq("user_id", userId);
         if (items) {
@@ -92,19 +100,25 @@ export default function ProfilePage() {
         status: "active"
       });
       window.location.reload();
-    } catch (err) {
-      alert("Post failed");
-    } finally {
-      setUploading(false);
-    }
+    } catch (err) { alert("Post failed"); } finally { setUploading(false); }
   }
 
   async function handleCreateCollection() {
     if (!newCollName || !userId) return;
-    try {
-      await supabase.from("collections").insert({ user_id: userId, name: newCollName });
-      window.location.reload();
-    } catch (err) { alert("Failed to create collection"); }
+    setUploading(true);
+    const { error } = await supabase.from("collections").insert({ user_id: userId, name: newCollName });
+    if (error) {
+        alert("Error: " + error.message);
+        setUploading(false);
+    } else {
+        window.location.reload();
+    }
+  }
+
+  async function handleUpdateProfile() {
+    const { error } = await supabase.from("profiles").update({ bio: editBio, display_url: editName }).eq("id", userId);
+    if (error) alert(error.message);
+    else window.location.reload();
   }
 
   if (loading) return <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900' }}>SYNCING VAULT...</div>;
@@ -136,11 +150,12 @@ export default function ProfilePage() {
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ ITEM</button>
                 <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>+ COLL</button>
-                <button style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EDIT</button>
+                <button onClick={() => setShowEditProfile(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EDIT</button>
               </div>
             )}
         </section>
 
+        {/* STATS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', textAlign: 'center' }}>
             <div><p style={{ fontSize: '22px', fontWeight: '900', margin: 0 }}>{itemCount}</p><p style={{ color: '#52525b', fontSize: '11px', fontWeight: 'bold', margin: 0 }}>ITEMS</p></div>
@@ -149,6 +164,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
+        {/* RECENT DROPS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', margin: 0 }}>RECENT DROPS</h2>
@@ -166,6 +182,21 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
+      {/* MODAL: EDIT PROFILE */}
+      {showEditProfile && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>EDIT PROFILE</h2>
+            <input placeholder="Display Name" value={editName} onChange={e => setEditName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '10px', boxSizing: 'border-box' }} />
+            <textarea placeholder="Bio" value={editBio} onChange={e => setEditBio(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px', boxSizing: 'border-box', minHeight: '100px' }} />
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
+              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer' }}>SAVE</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL: ADD COLLECTION */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
@@ -174,7 +205,7 @@ export default function ProfilePage() {
             <input placeholder="Collection Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px', boxSizing: 'border-box' }} />
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer' }}>CANCEL</button>
-              <button onClick={handleCreateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer' }}>CREATE</button>
+              <button onClick={handleCreateCollection} disabled={uploading} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', cursor: 'pointer', opacity: uploading ? 0.5 : 1 }}>{uploading ? 'SAVING...' : 'CREATE'}</button>
             </div>
           </div>
         </div>

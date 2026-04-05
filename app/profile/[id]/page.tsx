@@ -40,24 +40,18 @@ export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   
-  // Clean up the ID from params (handles both string and array types from Next.js)
   const userId = useMemo(() => {
     const id = params?.id;
     return Array.isArray(id) ? id[0] : id || "";
   }, [params?.id]);
 
-  // Core Data State
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  
-  // UI & Modals State
   const [showAddItem, setShowAddItem] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
-  
-  // Edit & Upload States
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -65,25 +59,19 @@ export default function ProfilePage() {
   const [editedBio, setEditedBio] = useState("");
   const [editedLocation, setEditedLocation] = useState("");
   const [editedTier, setEditedTier] = useState("");
-  
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-
-  // Social State
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
-  // Determine if viewing own profile
   const isOwnProfile = currentUserId === userId;
 
-  // 1. Get current user session on mount
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
   }, []);
 
-  // 2. Load target profile data
   useEffect(() => {
     if (!userId) return;
     async function loadData() {
@@ -101,14 +89,12 @@ export default function ProfilePage() {
         }
 
         setProfile(data as Profile);
-        
-        // Pre-fill edit fields
         setEditedDisplayUrl(data.display_url || "");
         setEditedBio(data.bio || "");
         setEditedLocation(data.location || "");
         setEditedTier(data.tier || "");
       } catch (err) {
-        console.error("Error loading profile:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -116,7 +102,6 @@ export default function ProfilePage() {
     loadData();
   }, [userId]);
 
-  // 3. Load community feed
   useEffect(() => {
     async function loadRecentDrops() {
       const { data } = await supabase
@@ -129,7 +114,6 @@ export default function ProfilePage() {
     loadRecentDrops();
   }, []);
 
-  // 4. Check follow status
   useEffect(() => {
     if (!currentUserId || !userId || isOwnProfile) return;
     async function checkFollow() {
@@ -144,8 +128,6 @@ export default function ProfilePage() {
     checkFollow();
   }, [currentUserId, userId, isOwnProfile]);
 
-  // --- Profile Actions ---
-
   async function saveProfileChanges() {
     if (!isOwnProfile) return;
     setSaving(true);
@@ -156,19 +138,12 @@ export default function ProfilePage() {
         location: editedLocation.trim() || null,
         tier: editedTier || null,
       };
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", currentUserId);
-
-      if (updateError) throw updateError;
-      
+      const { error } = await supabase.from("profiles").update(updates).eq("id", currentUserId);
+      if (error) throw error;
       setProfile((prev) => (prev ? { ...prev, ...updates } : null));
       setEditMode(false);
-      alert("Profile updated!");
     } catch (err) {
-      console.error(err);
-      alert("Failed to save profile");
+      alert("Error saving profile");
     } finally {
       setSaving(false);
     }
@@ -177,27 +152,16 @@ export default function ProfilePage() {
   async function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile || !isOwnProfile) return;
-
     setUploading(true);
     try {
       const timestamp = Date.now();
       const ext = selectedFile.name.split(".").pop() || "jpg";
       const filePath = `${currentUserId}/avatar-${timestamp}.${ext}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, selectedFile, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
+      await supabase.storage.from("avatars").upload(filePath, selectedFile, { upsert: true });
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-
       await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("id", currentUserId);
-
       setProfile((prev) => prev ? { ...prev, avatar_url: urlData.publicUrl } : null);
-      alert("Avatar updated!");
     } catch (err) {
-      console.error(err);
       alert("Upload failed");
     } finally {
       setUploading(false);
@@ -222,105 +186,84 @@ export default function ProfilePage() {
     }
   }
 
-  // --- Helpers ---
   const displayName = useMemo(() => profile?.display_url || profile?.username || "Collector", [profile]);
-
-  const getTierIcon = (tier?: string | null) => {
-    if (!tier) return null;
-    const lower = tier.toLowerCase();
-    if (lower.includes("bronze")) return "/bronze.png";
-    if (lower.includes("silver")) return "/silver.png";
-    if (lower.includes("gold")) return "/gold.png";
-    if (lower.includes("diamond")) return "/diamond.png";
-    if (lower.includes("founder")) return "/founder.png";
-    return null;
-  };
 
   if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
   if (error || !profile) return <div className="min-h-screen bg-black text-white flex items-center justify-center">{error || "Not Found"}</div>;
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white selection:bg-indigo-500">
       <Header />
-      <div className="h-14" />
-
-      <main className="pt-8 pb-20 space-y-10 max-w-[720px] mx-auto px-4">
+      
+      {/* Increased margin to force content below the 56px fixed header */}
+      <main className="mt-20 pb-20 space-y-10 max-w-[720px] mx-auto px-4 relative z-10">
         
-        {/* Profile Header */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg text-center overflow-visible">
-          <div className="flex flex-col items-center w-full">
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-xl text-center">
+          <div className="flex flex-col items-center">
             
-            {/* Avatar */}
             <div className="mb-6 relative group">
               <img
                 src={profile.avatar_url || "/default-avatar.png"}
                 alt="Avatar"
-                className={`w-28 h-28 object-cover rounded-xl border-2 border-white shadow-md ${uploading ? 'opacity-50' : ''}`}
+                className={`w-28 h-28 object-cover rounded-2xl border-2 border-zinc-800 shadow-md ${uploading ? 'opacity-50' : ''}`}
               />
               {isOwnProfile && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition cursor-pointer rounded-xl">
-                  <span className="text-xs font-bold">Edit</span>
+                <label className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition cursor-pointer rounded-2xl">
+                  <span className="text-xs font-bold text-white">Change</span>
                   <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                 </label>
               )}
             </div>
 
-            {/* Editable Content vs View Content */}
             {editMode ? (
-              <div className="w-full max-w-lg space-y-4">
+              <div className="w-full max-w-sm space-y-4">
                 <input
                   type="text"
                   value={editedDisplayUrl}
                   onChange={(e) => setEditedDisplayUrl(e.target.value)}
                   placeholder="Display Name"
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-center text-xl"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-center"
                 />
                 <textarea
                   value={editedBio}
                   onChange={(e) => setEditedBio(e.target.value)}
                   placeholder="Bio"
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 h-24 resize-none"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 h-24 resize-none"
                 />
                 <div className="flex gap-2">
-                  <button onClick={saveProfileChanges} disabled={saving} className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold transition">
-                    {saving ? "Saving..." : "Save"}
+                  <button onClick={saveProfileChanges} disabled={saving} className="flex-1 bg-white text-black py-3 rounded-xl font-bold">
+                    {saving ? "..." : "Save"}
                   </button>
-                  <button onClick={() => setEditMode(false)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl transition">
-                    Cancel
-                  </button>
+                  <button onClick={() => setEditMode(false)} className="flex-1 bg-zinc-800 py-3 rounded-xl">Cancel</button>
                 </div>
               </div>
             ) : (
               <>
-                <h1 className="text-4xl font-bold mb-1">{displayName}</h1>
-                {profile.username && <p className="text-indigo-400 text-xl mb-4">@{profile.username}</p>}
-                <p className="text-gray-300 text-lg mb-4 max-w-lg leading-relaxed">
-                  {profile.bio || "No bio set."}
-                </p>
-                {profile.location && <p className="text-gray-400 text-lg mb-4">{profile.location}</p>}
+                <h1 className="text-3xl font-bold mb-1">{displayName}</h1>
+                {profile.username && <p className="text-indigo-400 text-lg mb-4">@{profile.username}</p>}
+                <p className="text-zinc-400 text-base mb-6 max-w-md">{profile.bio || "No bio yet."}</p>
               </>
             )}
 
-            {/* FIXED VIEW COLLECTIONS BUTTON */}
+            {/* THE COLLECTIONS LINK */}
             <Link 
               href={`/collections?user=${userId}`} 
-              className="block w-full max-w-md mx-auto text-center bg-white text-black font-semibold py-4 rounded-2xl mt-6 border border-zinc-700 active:opacity-80 transition text-lg"
+              className="w-full max-w-sm bg-white text-black font-bold py-4 rounded-2xl mt-4 hover:bg-zinc-200 transition text-center"
             >
               View Collections
             </Link>
 
-            {/* Profile Actions */}
             {isOwnProfile && !editMode && (
-              <div className="mt-10 flex flex-wrap gap-3 justify-center">
-                <button onClick={() => setShowAddItem(true)} className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition">+ Item</button>
-                <button onClick={() => setEditMode(true)} className="border border-zinc-600 hover:bg-zinc-800 px-6 py-3 rounded-xl text-sm font-medium transition">Edit Profile</button>
-                <button onClick={() => setIsImportOpen(true)} className="bg-pink-600 hover:bg-pink-500 px-6 py-3 rounded-xl text-white font-medium transition">Instagram Import</button>
+              <div className="mt-8 flex flex-wrap gap-2 justify-center">
+                <button onClick={() => setShowAddItem(true)} className="bg-zinc-900 border border-zinc-800 px-5 py-2 rounded-lg text-sm hover:bg-zinc-800">+ Item</button>
+                <button onClick={() => setEditMode(true)} className="bg-zinc-900 border border-zinc-800 px-5 py-2 rounded-lg text-sm hover:bg-zinc-800">Edit Profile</button>
+                <button onClick={() => setIsImportOpen(true)} className="bg-pink-600/10 text-pink-500 border border-pink-500/20 px-5 py-2 rounded-lg text-sm hover:bg-pink-600 hover:text-white transition">Import Instagram</button>
               </div>
             )}
 
             {!isOwnProfile && currentUserId && (
-              <button onClick={toggleFollow} disabled={followLoading} className="mt-8 px-10 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-full text-lg font-medium transition">
-                {followLoading ? "..." : isFollowing ? "Unfollow" : "Follow"}
+              <button onClick={toggleFollow} disabled={followLoading} className="mt-6 px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium transition">
+                {isFollowing ? "Unfollow" : "Follow"}
               </button>
             )}
           </div>
@@ -328,105 +271,52 @@ export default function ProfilePage() {
 
         <SuggestedUsers />
 
-        {/* Stats Section */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8">
-            <div><p className="text-3xl font-bold">{profile.items_count ?? 0}</p><p className="text-gray-500 text-sm mt-1">Items</p></div>
-            <div><p className="text-3xl font-bold">{profile.collections_count ?? 0}</p><p className="text-gray-500 text-sm mt-1">Collections</p></div>
-            <div onClick={() => router.push("/followers")} className="cursor-pointer group">
-              <p className="text-3xl font-bold group-hover:text-indigo-400">{profile.followers_count ?? 0}</p>
-              <p className="text-gray-500 text-sm mt-1">Followers</p>
-            </div>
-            <div onClick={() => router.push("/following")} className="cursor-pointer group">
-              <p className="text-3xl font-bold group-hover:text-indigo-400">{profile.following_count ?? 0}</p>
-              <p className="text-gray-500 text-sm mt-1">Following</p>
-            </div>
-            <div><p className="text-3xl font-bold">£{profile.vault_value ?? 0}</p><p className="text-gray-500 text-sm mt-1">Vault</p></div>
-            <div><p className="text-3xl font-bold">{profile.likes_count ?? 0}</p><p className="text-gray-500 text-sm mt-1">Likes</p></div>
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div><p className="text-2xl font-bold">{profile.items_count ?? 0}</p><p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Items</p></div>
+            <div><p className="text-2xl font-bold">{profile.collections_count ?? 0}</p><p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Colls</p></div>
+            <div><p className="text-2xl font-bold">£{profile.vault_value ?? 0}</p><p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Vault</p></div>
           </div>
         </section>
 
-        {/* Community Feed */}
-        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10">
-          <h2 className="text-2xl font-bold mb-8 text-center">Live Community Drops</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+        <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8">
+          <h2 className="text-xl font-bold mb-6">Recent Drops</h2>
+          <div className="grid grid-cols-3 gap-4">
             {recentDrops.map((drop) => (
-              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} className="group relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition cursor-pointer">
-                <img src={drop.image_url || "/default-item.png"} alt={drop.name} className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition p-4 flex flex-col justify-end">
-                  <p className="text-white text-xs font-bold">@{drop.profiles?.username}</p>
-                </div>
+              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} className="aspect-square rounded-lg overflow-hidden bg-zinc-900 cursor-pointer border border-zinc-800">
+                <img src={drop.image_url || "/default-item.png"} className="w-full h-full object-cover" alt="" />
               </div>
             ))}
           </div>
         </section>
 
-        {/* Auth Actions */}
         {isOwnProfile && (
-          <div className="flex flex-col gap-4">
-             <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} className="w-full py-4 bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white rounded-xl font-bold transition">
-              Log Out
-            </button>
-          </div>
+          <button onClick={async () => { await supabase.auth.signOut(); router.push("/auth/login"); }} className="w-full py-4 text-zinc-500 text-sm hover:text-red-500 transition">
+            Log Out
+          </button>
         )}
-
       </main>
 
-      {/* Modals */}
-      {isImportOpen && (
-        <ImportInstagramModal onClose={() => setIsImportOpen(false)} />
-      )}
-
+      {isImportOpen && <ImportInstagramModal onClose={() => setIsImportOpen(false)} />}
+      
       {showAddItem && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl w-full max-w-sm text-center">
-            <h2 className="text-xl font-bold mb-4 text-white">Add Item</h2>
-
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl w-full max-w-sm">
+            <h2 className="text-xl font-bold mb-4">Add Item</h2>
             {!preview ? (
-              <label className="border-2 border-dashed border-zinc-700 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition">
-                <span className="text-zinc-400">Click to upload photo</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const selectedFile = e.target.files?.[0];
-                    if (selectedFile) {
-                      setFile(selectedFile);
-                      setPreview(URL.createObjectURL(selectedFile));
-                    }
-                  }}
-                />
+              <label className="border-2 border-dashed border-zinc-800 rounded-2xl p-10 flex flex-col items-center cursor-pointer hover:border-indigo-500 transition">
+                <span className="text-zinc-500">Upload Item Image</span>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if(f) { setFile(f); setPreview(URL.createObjectURL(f)); }
+                }} />
               </label>
             ) : (
-              <div className="space-y-4">
-                <img
-                  src={preview}
-                  alt="Preview"
-                  className="rounded-lg max-h-60 w-full object-cover"
-                />
-                <button
-                  onClick={() => { setFile(null); setPreview(null); }}
-                  className="text-xs text-red-400 hover:underline"
-                >
-                  Remove photo
-                </button>
-              </div>
+              <img src={preview} className="rounded-xl max-h-48 w-full object-cover mb-4" />
             )}
-
             <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => { setShowAddItem(false); setPreview(null); }}
-                className="flex-1 bg-zinc-800 text-white py-2 rounded-lg font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={!file || uploading}
-                className="flex-1 bg-white text-black py-2 rounded-lg font-bold disabled:opacity-50"
-              >
-                {uploading ? "..." : "Post"}
-              </button>
+              <button onClick={() => { setShowAddItem(false); setPreview(null); }} className="flex-1 py-3 text-zinc-400">Cancel</button>
+              <button disabled={!file} className="flex-1 bg-white text-black font-bold py-3 rounded-xl disabled:opacity-50">Post</button>
             </div>
           </div>
         </div>

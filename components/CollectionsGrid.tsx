@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 
 type Collection = {
   id: string;
-  name: string;
-  image_url: string | null;
+  title: string; // Changed from name to title
+  cover_url: string | null; // Changed from image_url to cover_url
 };
 
 export default function CollectionsGrid({ userId }: { userId: string }) {
@@ -22,10 +22,10 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
       try {
         setLoading(true);
         
-        // Fetching collections for this specific user
+        // Updated to match your Supabase columns: title, cover_url, user_id
         const { data, error } = await supabase
           .from("collections")
-          .select("id, name, image_url")
+          .select("id, title, cover_url")
           .eq("user_id", userId) 
           .order("created_at", { ascending: false });
 
@@ -45,19 +45,14 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
     fetchCollections();
   }, [userId]);
 
-  // Loading state with fixed CSS
   if (loading) {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
         {[...Array(6)].map((_, i) => (
           <div 
             key={i} 
-            style={{ 
-              aspectRatio: '1/1', 
-              backgroundColor: '#18181b',
-              borderRadius: '4px'
-            }} 
-            className="animate-pulse" // Using the Tailwind class here instead of inline style
+            style={{ aspectRatio: '1/1', backgroundColor: '#18181b' }} 
+            className="animate-pulse" 
           />
         ))}
       </div>
@@ -98,8 +93,8 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
           }}
         >
           <img
-            src={collection.image_url || "/default-collection.png"}
-            alt={collection.name}
+            src={collection.cover_url || "/default-collection.png"}
+            alt={collection.title}
             style={{
               width: '100%',
               height: '100%',
@@ -108,7 +103,6 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
             }}
           />
           
-          {/* Instagram-style name overlay */}
           <div style={{
             position: 'absolute',
             inset: 0,
@@ -124,7 +118,7 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
               textTransform: 'uppercase',
               letterSpacing: '0.5px'
             }}>
-              {collection.name}
+              {collection.title}
             </span>
           </div>
         </div>

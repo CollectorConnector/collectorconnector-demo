@@ -132,7 +132,6 @@ export default function ProfilePage() {
           });
         }
       }
-      // REFRESH TO UPDATE STATS
       window.location.reload();
     } catch (err) { alert("Launch failed"); } finally { setUploading(false); }
   }
@@ -160,9 +159,11 @@ export default function ProfilePage() {
 
   const getBadge = () => {
     const user = profile?.username?.toLowerCase();
-    const founderUsernames = ["stacypearce", "rich", "ceomum"];
-    if (founderUsernames.includes(user || "")) return "/founder.png";
-    if (profile?.membership_tier?.toLowerCase() === "diamond") return "/diamond.png";
+    const tier = profile?.membership_tier?.toLowerCase();
+    // Founder Logic
+    if (["stacypearce", "rich", "ceomum"].includes(user || "")) return "/founder.png";
+    // Your 1/1 Diamond Logic
+    if (tier === "diamond") return "/diamond.png";
     return null;
   };
 
@@ -182,7 +183,7 @@ export default function ProfilePage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800', margin: 0 }}>{displayName}</h1>
-              {getBadge() && <img src={getBadge() || ""} style={{ width: '38px', height: '38px', objectFit: 'contain' }} alt="Badge" />}
+              {getBadge() && <img src={getBadge()} style={{ width: '38px', height: '38px', objectFit: 'contain' }} alt="Badge" />}
             </div>
             <p style={{ color: '#818cf8', fontSize: '18px', marginBottom: '16px' }}>@{profile?.username}</p>
             <p style={{ color: '#a1a1aa', fontSize: '16px', marginBottom: '24px', maxWidth: '400px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
@@ -207,7 +208,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* COLLECTIONS GRID (SQUIRCLES) */}
+        {/* COLLECTIONS GRID (THE SQUIRCLES) */}
         <section style={{ background: '#000', padding: '10px 0' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '16px' }}>COLLECTIONS</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
@@ -226,7 +227,7 @@ export default function ProfilePage() {
             </div>
         </section>
 
-        {/* RECENT DROPS GRID */}
+        {/* RECENT DROPS GRID (REDIRECT FIXED) */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>

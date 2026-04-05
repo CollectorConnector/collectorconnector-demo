@@ -1,66 +1,41 @@
-// app/api/import-instagram/fetch/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { username } = await req.json();
+    const { igHandle, userId } = await req.json();
 
-    if (!username || typeof username !== "string" || username.trim() === "") {
-      return NextResponse.json({ error: "Valid Instagram username is required" }, { status: 400 });
+    if (!igHandle) {
+      return NextResponse.json({ error: 'Instagram handle is required' }, { status: 400 });
     }
 
-    const APIFY_TOKEN = process.env.APIFY_TOKEN;
-    if (!APIFY_TOKEN) {
-      return NextResponse.json({ error: "Apify token not configured in .env.local" }, { status: 500 });
-    }
-
-    const cleanUsername = username.trim().replace("@", "");
-
-    const response = await fetch(
-      `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          directUrls: [`https://www.instagram.com/${cleanUsername}/`],
-          resultsLimit: 24,           // Start with 24 for speed
-          resultsType: "posts",
-          onlyPosts: true,
-          scrapeComments: false,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Apify error:", errorText);
-      return NextResponse.json({ 
-        error: "Failed to fetch Instagram data. Profile may be private or temporarily unavailable." 
-      }, { status: 500 });
-    }
-
-    const rawPosts = await response.json();
-
-    const formattedPosts = rawPosts
-      .filter((p: any) => p.displayUrl || p.imageUrl)
-      .map((p: any) => ({
-        id: p.id || `post-${Date.now()}`,
-        imageUrl: p.displayUrl || p.imageUrl || p.thumbnailUrl,
-        caption: p.caption || p.text || "",
-        timestamp: p.timestamp || null,
-        likes: p.likesCount || 0,
-      }));
-
-    return NextResponse.json({ 
-      success: true, 
-      posts: formattedPosts,
-      count: formattedPosts.length 
+    // 1. Trigger the Apify Instagram Scraper
+    // We use the 'instagram-scrapers/instagram-profile-scrapper' actor
+    const apifyResponse = await fetch(`https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${process.env.APIFY_API_TOKEN}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "usernames": [igHandle],
+        "resultsLimit": 12, // Limit to recent 12 posts to save credits
+        "shouldDownloadImages": false,
+        "shouldDownloadVideos": false,
+      })
     });
 
-  } catch (error: any) {
-    console.error("Instagram fetch error:", error);
-    return NextResponse.json({ 
-      error: error.message || "Something went wrong while fetching posts" 
-    }, { status: 500 });
+    const items = await apifyResponse.json();
+
+    // 2. Format the data for your 'items' table
+    // We map Apify's data to your database columns: title, image_url, user_id
+    const formattedItems = items.map((post: any) => ({
+      user_id: userId,
+      title: post.caption?.split('\n')[0].substring(0, 50) || 'Instagram Import',
+      description: post.caption || '',
+      image_url: post.displayUrl,
+      created_at: post.timestamp,
+    }));
+
+    return NextResponse.json({ success: true, data: formattedItems });
+  } catch (error) {
+    console.error('Import Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch from Instagram' }, { status: 500 });
   }
 }

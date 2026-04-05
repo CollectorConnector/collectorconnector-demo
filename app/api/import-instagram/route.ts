@@ -1,78 +1,53 @@
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
+  const supabase = createRouteHandlerClient({ cookies });
+  const { igHandle, userId } = await req.json();
+
   try {
-    const { igHandle, userId } = await req.json();
-    
-    // Clean up handle
-    const cleanHandle = igHandle.trim().replace('@', '');
-    
-    console.log(`🚀 Starting import for: ${cleanHandle} (User: ${userId})`);
+    // 1. Fetch from Instagram (using your existing scraper logic)
+    // For this example, I'm assuming 'posts' is your array of IG data
+    const posts = await scrapeInstagram(igHandle); 
 
-    if (!process.env.APIFY_API_TOKEN) {
-      console.error("❌ Missing APIFY_API_TOKEN");
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-    }
+    for (const post of posts) {
+      const imageUrl = post.display_url;
 
-    // 1. Trigger the Apify Instagram Scraper
-    const apifyResponse = await fetch(
-      `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${process.env.APIFY_API_TOKEN}`, 
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          "usernames": [cleanHandle],
-          "resultsLimit": 20, // Increased to 20 so you have more to sort!
-          "shouldDownloadImages": false,
-          "shouldDownloadVideos": false,
-        })
-      }
-    );
+      // 2. Download the image from Instagram
+      const imageRes = await fetch(imageUrl);
+      const arrayBuffer = await imageRes.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-    if (!apifyResponse.ok) {
-      const errorData = await apifyResponse.text();
-      console.error("❌ Apify API Error:", errorData);
-      return NextResponse.json({ error: 'Instagram scraper failed' }, { status: 502 });
-    }
+      // 3. Create a unique filename
+      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
 
-    const items = await apifyResponse.json();
+      // 4. Upload to your 'item-images' bucket
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('item-images')
+        .upload(fileName, buffer, {
+          contentType: 'image/jpeg',
+          upsert: true
+        });
 
-    if (!items || items.length === 0) {
-      return NextResponse.json({ error: 'No public posts found.' }, { status: 404 });
-    }
+      if (uploadError) continue;
 
-    // 2. Format data for your Supabase 'items' table
-    const formattedItems = items.map((post: any) => {
-      // Robust Date Handling
-      let finalDate = new Date().toISOString();
-      try {
-        if (post.timestamp) {
-          const parsedDate = new Date(post.timestamp);
-          if (!isNaN(parsedDate.getTime())) finalDate = parsedDate.toISOString();
-        }
-      } catch (e) {}
+      // 5. Get the permanent Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('item-images')
+        .getPublicUrl(fileName);
 
-      return {
+      // 6. Save to your 'items' table with the NEW URL
+      await supabase.from('items').insert({
         user_id: userId,
-        title: post.caption ? post.caption.split('\n')[0].substring(0, 60) : 'Instagram Post',
-        description: post.caption || '',
-        image_url: post.displayUrl || post.url,
-        created_at: finalDate,
-        // --- NEW SORTING LOGIC ---
-        status: 'imported',     // This keeps them in the "Inbox"
-        collection_id: null     // They start with no collection assigned
-      };
-    });
+        image_url: publicUrl,
+        title: post.caption?.split('\n')[0] || 'Instagram Import',
+        status: 'imported'
+      });
+    }
 
-    console.log(`✅ Prepared ${formattedItems.length} items for the Curator Inbox.`);
-
-    return NextResponse.json({ 
-      success: true, 
-      data: formattedItems 
-    });
-
-  } catch (error: any) {
-    console.error('❌ Server Error:', error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: 'Import failed' }, { status: 500 });
   }
 }

@@ -10,28 +10,25 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
 
-type Profile = {
-  id: string;
-  avatar_url?: string | null;
-  display_url?: string | null;
-  username?: string | null;
-  bio?: string | null;
-  tier?: string | null; 
-};
-
-type RecentDrop = {
-  id: string;
-  title: string;
-  image_url: string | null;
-  created_at: string;
-};
+// Popular categories to keep data clean, but flexible enough for the obscure stuff!
+const PRESET_NICHES = [
+  "Sports Cards", 
+  "Pokémon", 
+  "Comics", 
+  "Sneakers", 
+  "Watches", 
+  "Vinyl Records", 
+  "Stamps", 
+  "Coins", 
+  "Other"
+];
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const userId = params?.id || "";
 
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
@@ -41,12 +38,14 @@ export default function ProfilePage() {
 
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
-  const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
+  const [recentDrops, setRecentDrops] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   
-  const [newCollName, setNewCollName] = useState("");
+  // NEW ITEM STATES
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
+  const [niche, setNiche] = useState("");
+  const [customNiche, setCustomNiche] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -89,17 +88,21 @@ export default function ProfilePage() {
   }, [userId]);
 
   async function handlePostItem() {
-    if (!file || !userId) return;
+    if (!file || !userId || !niche) return;
     setUploading(true);
     try {
+      const finalNiche = niche === "Other" ? customNiche : niche;
       const fileName = `${userId}/${Date.now()}.jpg`;
+      
       await supabase.storage.from("item-images").upload(fileName, file);
       const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
+      
       await supabase.from("items").insert({
         user_id: userId,
         title: itemName || "Untitled",
         image_url: publicUrl,
         estimated_value: parseFloat(itemValue) || 0,
+        niche_family: finalNiche, // This links them to their "Family"
         status: "active"
       });
       window.location.reload();
@@ -108,14 +111,6 @@ export default function ProfilePage() {
     } finally {
       setUploading(false);
     }
-  }
-
-  async function handleCreateCollection() {
-    if (!newCollName || !userId) return;
-    try {
-      await supabase.from("collections").insert({ user_id: userId, name: newCollName });
-      window.location.reload();
-    } catch (err) { alert("Failed to create collection"); }
   }
 
   const displayName = profile?.display_url || profile?.username || "Collector";
@@ -131,7 +126,7 @@ export default function ProfilePage() {
         {/* PROFILE HEADER */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ marginBottom: '24px' }}>
-              <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} />
+              <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', objectFit: 'cover', border: '4px solid #18181b' }} alt="Avatar" />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', marginBottom: '8px' }}>
@@ -151,7 +146,6 @@ export default function ProfilePage() {
                 <button onClick={() => setShowAddItem(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>+ ITEM</button>
                 <button onClick={() => setShowAddCollection(true)} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>+ COLL</button>
                 <button style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px' }}>EDIT</button>
-                {/* IG IMPORT REMOVED AS REQUESTED */}
               </div>
             )}
         </section>
@@ -165,48 +159,60 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* RECENT DROPS GRID WITH SML LOGO */}
+        {/* RECENT DROPS GRID */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900' }}>RECENT DROPS</h2>
             <img src="/CC-SML-Logo.png" style={{ width: '18px', height: '18px' }} alt="CC Logo" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            {recentDrops.length > 0 ? (
-              recentDrops.map((drop) => (
-                <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
-                  <img src={drop.image_url || "/default-item.png"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                </div>
-              ))
-            ) : (
-              <p style={{ gridColumn: 'span 3', textAlign: 'center', color: '#52525b', padding: '20px' }}>Vault is empty.</p>
-            )}
+            {recentDrops.map((drop: any) => (
+              <div key={drop.id} onClick={() => router.push(`/items/${drop.id}`)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
+                <img src={drop.image_url || "/default-item.png"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+              </div>
+            ))}
           </div>
         </section>
 
         <SuggestedUsers />
       </main>
 
-      {/* MODALS REMAIN THE SAME FOR ADDING ITEMS/COLLECTIONS */}
-      {showAddCollection && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
-            <input placeholder="Collection Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px' }} />
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
-              <button onClick={handleCreateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>CREATE</button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* NEW ITEM MODAL WITH NICHE DROPDOWN */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW ITEM</h2>
+            
             <input placeholder="Item Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }} />
-            <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '15px' }} />
+            
+            {/* NICHE SELECT */}
+            <select 
+              value={niche} 
+              onChange={(e) => setNiche(e.target.value)}
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px', appearance: 'none' }}
+            >
+              <option value="" disabled>Select Niche Family</option>
+              {PRESET_NICHES.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+
+            {/* CUSTOM NICHE INPUT */}
+            {niche === "Other" && (
+              <input 
+                placeholder="What do you collect?" 
+                value={customNiche} 
+                onChange={e => setCustomNiche(e.target.value)} 
+                style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }} 
+              />
+            )}
+
+            {/* VALUE & CHECKER */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
+                <input placeholder="Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ flex: 1, background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px' }} />
+                <a href={`https://130point.com/sales/`} target="_blank" style={{ background: '#27272a', padding: '12px', borderRadius: '12px', color: '#fff', fontSize: '10px', fontWeight: 'bold', textDecoration: 'none', display: 'flex', alignItems: 'center', textAlign: 'center' }}>
+                    CHECK<br/>VALUE ↗
+                </a>
+            </div>
+
             {!preview ? (
               <label style={{ border: '2px dashed #3f3f46', borderRadius: '12px', padding: '30px', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
                 <span style={{ color: '#71717a' }}>Upload Photo</span>
@@ -217,12 +223,13 @@ export default function ProfilePage() {
               </label>
             ) : (
               <div style={{ position: 'relative' }}>
-                <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px' }} />
+                <img src={preview} style={{ width: '100%', borderRadius: '12px', marginBottom: '15px', maxHeight: '180px', objectFit: 'cover' }} alt="Preview" />
               </div>
             )}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-              <button onClick={() => { setShowAddItem(false); setPreview(null); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
-              <button onClick={handlePostItem} disabled={uploading || !file} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1 }}>
+            
+            <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+              <button onClick={() => { setShowAddItem(false); setPreview(null); setNiche(""); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
+              <button onClick={handlePostItem} disabled={uploading || !file || !niche} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: (uploading || !file || !niche) ? 0.5 : 1 }}>
                 {uploading ? 'POSTING...' : 'POST ITEM'}
               </button>
             </div>

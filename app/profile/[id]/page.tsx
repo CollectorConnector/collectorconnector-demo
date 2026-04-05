@@ -322,34 +322,32 @@ export default function ProfilePage() {
 <section className="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 shadow-lg text-center overflow-visible">
   <div className="flex flex-col items-center w-full">
 
-    {/* Avatar — stable, non-collapsing */}
-    <div className="mb-6 flex items-center justify-center">
-      {isOwnProfile ? (
-        <label htmlFor="avatar-upload" className="cursor-pointer block">
-          <img
-            src={previewImage || profile.avatar_url || "/default-avatar.png"}
-            alt="Avatar"
-            className="w-28 h-28 object-cover border-2 border-white shadow-md"
-            style={{ borderRadius: "16%" }}
-          />
-        </label>
-      ) : (
-        <img
-          src={profile.avatar_url || "/default-avatar.png"}
-          alt="Avatar"
-          className="w-28 h-28 object-cover border-2 border-white shadow-md"
-          style={{ borderRadius: "16%" }}
-        />
-      )}
-    </div>
-
-    <input
-      id="avatar-upload"
-      type="file"
-      accept="image/*"
-      onChange={handleAvatarChange}
-      className="hidden"
+   {/* Avatar */}
+<div className="mb-6 flex items-center justify-center">
+  {isOwnProfile ? (
+    <label htmlFor="avatar-upload" className="cursor-pointer block">
+      <img
+        src={previewImage || profile.avatar_url || "/default-avatar.png"}
+        alt="Avatar"
+        className="w-28 h-28 object-cover rounded-xl border-2 border-white shadow-md"
+      />
+    </label>
+  ) : (
+    <img
+      src={profile.avatar_url || "/default-avatar.png"}
+      alt="Avatar"
+      className="w-28 h-28 object-cover rounded-xl border-2 border-white shadow-md"
     />
+  )}
+</div>
+
+<input
+  id="avatar-upload"
+  type="file"
+  accept="image/*"
+  onChange={handleAvatarChange}
+  className="hidden"
+/>
 
     {/* Display Name */}
     {isOwnProfile && editMode ? (
@@ -394,21 +392,21 @@ export default function ProfilePage() {
       <p className="text-gray-400 text-lg mt-2">{profile.location}</p>
     )}
 
-    {/* Tier */}
-    <div className="flex items-center gap-3 mt-6 justify-center">
-      {tierIconSrc && (
-        <img
-          src={tierIconSrc}
-          alt={`${profile.tier} tier`}
-          className="w-10 h-10 object-contain"
-        />
-      )}
-      {profile.tier && (
-        <p className="text-indigo-400 text-xl font-medium">
-          {profile.tier} Tier
-        </p>
-      )}
-    </div>
+   {/* Tier */}
+<div className="flex items-center gap-3 mt-6 justify-center">
+  {tierIconSrc && (
+    <img
+      src={tierIconSrc}
+      alt={`${profile.tier} tier`}
+      className="w-10 h-10 object-contain"
+    />
+  )}
+  {profile.tier && (
+    <p className="text-indigo-400 text-xl font-medium">
+      {profile.tier} Tier
+    </p>
+  )}
+</div>
 
     {/* Action Buttons */}
     {isOwnProfile && (

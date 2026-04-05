@@ -364,9 +364,65 @@ export default function ProfilePage() {
       </main>
 
       {/* Modals */}
-      <ImportInstagramModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} />
-      
-      {/* Footer is usually at the bottom of the page container */}
+      {isImportOpen && (
+        <ImportInstagramModal onClose={() => setIsImportOpen(false)} />
+      )}
+
+      {showAddItem && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl w-full max-w-sm">
+            <h2 className="text-xl font-bold mb-4 text-white">Add Item</h2>
+
+            {!preview ? (
+              <label className="border-2 border-dashed border-zinc-700 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition">
+                <span className="text-zinc-400">Click to upload photo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const selectedFile = e.target.files?.[0];
+                    if (selectedFile) {
+                      setFile(selectedFile);
+                      setPreview(URL.createObjectURL(selectedFile));
+                    }
+                  }}
+                />
+              </label>
+            ) : (
+              <div className="space-y-4">
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="rounded-lg max-h-60 w-full object-cover"
+                />
+                <button
+                  onClick={() => { setFile(null); setPreview(null); }}
+                  className="text-xs text-red-400 hover:underline"
+                >
+                  Remove photo
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => { setShowAddItem(false); setPreview(null); }}
+                className="flex-1 bg-zinc-800 text-white py-2 rounded-lg font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!file || uploading}
+                className="flex-1 bg-white text-black py-2 rounded-lg font-bold disabled:opacity-50"
+              >
+                {uploading ? "..." : "Post"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );

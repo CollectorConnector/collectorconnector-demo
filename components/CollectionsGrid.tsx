@@ -22,8 +22,7 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
       try {
         setLoading(true);
         
-        // Change "user_id" below to "owner_id" or "profile_id" if your Supabase 
-        // table uses a different name for the user connection.
+        // Fetching collections for this specific user
         const { data, error } = await supabase
           .from("collections")
           .select("id, name, image_url")
@@ -46,11 +45,20 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
     fetchCollections();
   }, [userId]);
 
+  // Loading state with fixed CSS
   if (loading) {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
         {[...Array(6)].map((_, i) => (
-          <div key={i} style={{ aspectRatio: '1/1', background: '#18181b', animate: 'pulse 2s infinite' }} />
+          <div 
+            key={i} 
+            style={{ 
+              aspectRatio: '1/1', 
+              backgroundColor: '#18181b',
+              borderRadius: '4px'
+            }} 
+            className="animate-pulse" // Using the Tailwind class here instead of inline style
+          />
         ))}
       </div>
     );
@@ -58,11 +66,11 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
 
   if (collections.length === 0) {
     return (
-      <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52525b' }}>
-        <p style={{ fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          No Collections Found
+      <div style={{ padding: '80px 20px', textAlign: 'center', color: '#52525b' }}>
+        <p style={{ fontWeight: '900', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px', color: '#fff' }}>
+          EMPTY VAULT
         </p>
-        <p style={{ fontSize: '12px', marginTop: '8px' }}>This user hasn't created any collections yet.</p>
+        <p style={{ fontSize: '13px', marginTop: '8px', opacity: 0.6 }}>This collector hasn't curated any collections yet.</p>
       </div>
     );
   }
@@ -71,8 +79,8 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
     <div 
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)', // Strict 3-across
-        gap: '2px', // Thin Instagram-style lines
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '2px',
         width: '100%',
         backgroundColor: '#000'
       }}
@@ -84,7 +92,7 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
           style={{
             position: 'relative',
             aspectRatio: '1 / 1',
-            backgroundColor: '#18181b',
+            backgroundColor: '#09090b',
             cursor: 'pointer',
             overflow: 'hidden'
           }}
@@ -100,21 +108,21 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
             }}
           />
           
-          {/* Subtle label overlay for the name */}
+          {/* Instagram-style name overlay */}
           <div style={{
             position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
-            padding: '8px 4px',
-            textAlign: 'center'
+            inset: 0,
+            display: 'flex',
+            alignItems: 'flex-end',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%)',
+            padding: '8px'
           }}>
             <span style={{ 
               color: 'white', 
               fontSize: '10px', 
               fontWeight: '900', 
-              textTransform: 'uppercase' 
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
             }}>
               {collection.name}
             </span>

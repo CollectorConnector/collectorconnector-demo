@@ -31,7 +31,7 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   
   const [newCollName, setNewCollName] = useState("");
-  const [selectedNiche, setSelectedNiche] = useState("Cards");
+  const [selectedNiche, setSelectedNiche] = useState(""); // Default empty for validation
   const [customNiche, setCustomNiche] = useState("");
   const [collectionsList, setCollectionsList] = useState<any[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
@@ -39,7 +39,6 @@ export default function ProfilePage() {
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
   
-  // BATCH UPLOAD STATES
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
 
@@ -82,20 +81,25 @@ export default function ProfilePage() {
     loadAllData();
   }, [userId]);
 
-  // REUSABLE BATCH UPLOAD FUNCTION
+  // IMPROVED UPLOAD ENGINE
   async function uploadFiles(targetCollectionId: string, baseTitle: string, totalValue: number) {
-    if (files.length === 0 || !userId) return;
+    if (files.length === 0 || !userId || !targetCollectionId) return;
     
+    const valuePerItem = totalValue / files.length || 0;
+
     for (const f of files) {
       const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-      await supabase.storage.from("item-images").upload(fileName, f);
+      const { error: storageError } = await supabase.storage.from("item-images").upload(fileName, f);
+      
+      if (storageError) throw storageError;
+
       const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
       
       await supabase.from("items").insert({
         user_id: userId,
         title: baseTitle || "Untitled Drop",
         image_url: publicUrl,
-        estimated_value: totalValue / files.length || 0,
+        estimated_value: valuePerItem,
         collection: targetCollectionId,
         status: "active"
       });
@@ -103,55 +107,51 @@ export default function ProfilePage() {
   }
 
   async function handleBatchUploadItems() {
+    if (!selectedCollectionId) return alert("Please select a collection first");
     setUploading(true);
     try {
       await uploadFiles(selectedCollectionId, itemName, parseFloat(itemValue));
       window.location.reload();
     } catch (err) {
-      alert("Batch upload failed");
+      alert("Batch upload failed. Check connection.");
     } finally {
       setUploading(false);
     }
   }
 
   async function handleCreateCollectionBatch() {
-    if (!newCollName || !userId) return;
-    setUploading(true);
     const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
-
+    if (!newCollName || !finalNiche || !userId) return;
+    
+    setUploading(true);
     try {
-      // 1. Create the collection first
       const { data: coll, error: collErr } = await supabase
         .from("collections")
         .insert({ 
           user_id: userId, 
           name: newCollName, 
-          niche: finalNiche || "Collector" 
+          niche: finalNiche 
         })
         .select()
         .single();
 
       if (collErr) throw collErr;
 
-      // 2. If files are selected, upload them to this new collection
-      if (files.length > 0) {
-        await uploadFiles(coll.id, newCollName, 0); // Value defaults to 0 for initial batch
+      if (files.length > 0 && coll) {
+        await uploadFiles(coll.id, newCollName, 0);
       }
 
       window.location.reload();
     } catch (err) { 
-      alert("Failed to create collection batch"); 
+      console.error(err);
+      alert("Error: Make sure all fields are filled and try again."); 
     } finally { 
       setUploading(false); 
     }
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-  }
-
-  if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center font-black">SYNCING VAULT...</div>;
+  // VALIDATION HELPER
+  const isCollectionValid = newCollName.length > 0 && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.length > 0));
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -179,10 +179,7 @@ export default function ProfilePage() {
             )}
         </section>
 
-        {/* STATS & RECENT DROPS GRID (Keep your existing styles here) */}
-        {/* ... [Stats Section] ... */}
-
-        {/* RECENT DROPS (Quick View) */}
+        {/* RECENT DROPS GRID */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900' }}>RECENT DROPS</h2>
@@ -198,31 +195,31 @@ export default function ProfilePage() {
         </section>
 
         <SuggestedUsers />
-
-        {isOwnProfile && (
-          <button onClick={handleLogout} style={{ padding: '16px', color: '#ef4444', border: '1px solid #450a0a', borderRadius: '16px', fontWeight: 'bold', width: '100%', background: 'transparent', cursor: 'pointer', marginTop: '20px' }}>LOGOUT ACCOUNT</button>
-        )}
       </main>
 
-      {/* MODAL: NEW COLLECTION (Now with Batch Upload) */}
+      {/* MODAL: NEW COLLECTION (Validated & Niche Polish) */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
+            
             <input placeholder="Collection Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
-            <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }}>
+            
+            <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: selectedNiche === "" ? "#52525b" : "#fff", padding: '14px', borderRadius: '12px', marginBottom: '12px' }}>
+              <option value="">Select Niche...</option>
               <option value="Cards">Cards</option>
               <option value="Sneakers">Sneakers</option>
               <option value="Watches">Watches</option>
+              <option value="Lego">Lego</option>
               <option value="Other">Other...</option>
             </select>
+            
             {selectedNiche === "Other" && (
               <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
             )}
 
-            {/* BATCH UPLOAD FOR NEW COLLECTION */}
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
-               {files.length > 0 ? `${files.length} Photos for Collection` : "+ Add Up to 20 Starting Items"}
+               {files.length > 0 ? `${files.length} Photos Added` : "+ Add Items (Max 20)"}
                <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => {
                  const selectedFiles = Array.from(e.target.files || []).slice(0, 20);
                  setFiles(selectedFiles);
@@ -235,19 +232,57 @@ export default function ProfilePage() {
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => { setShowAddCollection(false); setFiles([]); setPreviews([]); }} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
-              <button onClick={handleCreateCollectionBatch} disabled={uploading || !newCollName} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1 }}>
-                {uploading ? 'CREATING...' : 'CREATE COLLECTION'}
+              <button onClick={() => { setShowAddCollection(false); setFiles([]); setPreviews([]); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold' }}>CANCEL</button>
+              <button 
+                onClick={handleCreateCollectionBatch} 
+                disabled={uploading || !isCollectionValid} 
+                style={{ flex: 2, background: isCollectionValid ? '#fff' : '#27272a', color: isCollectionValid ? '#000' : '#52525b', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1, cursor: isCollectionValid ? 'pointer' : 'not-allowed' }}
+              >
+                {uploading ? 'DROPPING...' : 'CREATE COLLECTION'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL: BATCH ADD ITEMS (Keep your existing Item Modal logic here) */}
-      {/* ... [Existing Item Modal] ... */}
+      {/* MODAL: BATCH ADD ITEMS (For Existing Collections) */}
+      {showAddItem && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '10px' }}>BATCH DROP</h2>
+            <a href="https://130point.com/sales/" target="_blank" style={{ color: '#818cf8', fontSize: '12px', fontWeight: '900', textDecoration: 'none', display: 'block', marginBottom: '20px' }}>CHECK MARKET VALUES →</a>
+            
+            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
+              <option value="">Select Target Collection</option>
+              {collectionsList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
 
-      {/* QUICK VIEW POPUP */}
+            <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
+            <input placeholder="Total Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} />
+            
+            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
+               {files.length > 0 ? `${files.length} Photos Selected` : "Upload Batch (Max 20)"}
+               <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => {
+                 const selectedFiles = Array.from(e.target.files || []).slice(0, 20);
+                 setFiles(selectedFiles);
+                 setPreviews(selectedFiles.map(f => URL.createObjectURL(f)));
+               }} />
+            </label>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px', marginTop: '10px' }}>
+              {previews.map((p, i) => <img key={i} src={p} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '4px' }} />)}
+            </div>
+            
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => { setShowAddItem(false); setFiles([]); setPreviews([]); }} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
+              <button onClick={handleBatchUploadItems} disabled={uploading || files.length === 0 || !selectedCollectionId} style={{ flex: 2, background: (files.length > 0 && selectedCollectionId) ? '#fff' : '#27272a', color: (files.length > 0 && selectedCollectionId) ? '#000' : '#52525b', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1 }}>
+                {uploading ? 'DROPPING...' : 'DROP BATCH'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedImage && (
         <div onClick={() => setSelectedImage(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
           <img src={selectedImage} style={{ maxWidth: '90%', maxHeight: '80%', borderRadius: '12px', border: '1px solid #27272a' }} />

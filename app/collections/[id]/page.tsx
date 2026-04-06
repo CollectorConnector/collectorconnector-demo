@@ -23,93 +23,129 @@ export default function CollectionDetails() {
   async function loadCollectionData() {
     try {
       setLoading(true);
-      const { data: coll } = await supabase.from("collections").select("*").eq("id", collectionId).single();
+      // Fetch collection details
+      const { data: coll } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("id", collectionId)
+        .single();
       if (coll) setCollection(coll);
 
-      const { data: itemList } = await supabase.from("items").select("*").eq("collection", collectionId);
+      // Fetch items linked to this collection
+      const { data: itemList } = await supabase
+        .from("items")
+        .select("*")
+        .eq("collection", collectionId);
       setItems(itemList || []);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading collection vault:", err);
     } finally {
       setLoading(false);
     }
   }
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white font-bold">LOADING VAULT...</div>;
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100 screen', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>
+        LOADING VAULT...
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'sans-serif' }}>
       <Header />
       
-      <main className="max-w-4xl mx-auto pt-28 px-6 pb-20">
-        {/* Header Section */}
-        <div className="flex flex-col items-center mb-10 text-center">
+      <main style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '110px', paddingLeft: '16px', paddingRight: '16px', paddingBottom: '100px' }}>
+        
+        {/* HEADER SECTION */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <button 
-            onClick={() => router.back()}
-            className="mb-4 text-zinc-500 text-xs font-bold hover:text-white transition-colors"
+            onClick={() => router.back()} 
+            style={{ color: '#71717a', fontSize: '11px', fontWeight: '900', marginBottom: '16px', border: '1px solid #27272a', background: '#09090b', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', textTransform: 'uppercase' }}
           >
-            ← BACK TO COLLECTIONS
+            ← Back
           </button>
-          <h1 className="text-3xl font-black uppercase tracking-tight mb-1">
-            {collection?.title}
+          
+          <h1 style={{ fontSize: '28px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-1px', marginBottom: '8px' }}>
+            {collection?.title || "Collection Vault"}
           </h1>
-          <div className="bg-zinc-900 px-4 py-1 rounded-full border border-zinc-800">
-            <p className="text-indigo-400 font-black text-xs uppercase tracking-widest">
+          
+          <div style={{ display: 'inline-block', background: '#18181b', padding: '6px 16px', borderRadius: '20px', border: '1px solid #27272a' }}>
+            <p style={{ color: '#818cf8', fontWeight: '900', fontSize: '12px', letterSpacing: '1px', margin: 0 }}>
               {items.length} ITEMS — £{items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0)}
             </p>
           </div>
         </div>
 
-        {/* The Grid: Squircles */}
+        {/* THE SQUIRCLE GRID */}
         {items.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-zinc-900 rounded-3xl">
-            <p className="text-zinc-600 font-bold uppercase text-sm">Vault is empty</p>
+          <div style={{ textAlign: 'center', padding: '80px 0', border: '2px dashed #18181b', borderRadius: '32px' }}>
+            <p style={{ color: '#52525b', fontWeight: 'bold', fontSize: '14px' }}>THIS VAULT IS CURRENTLY EMPTY</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', 
+            gap: '14px',
+            justifyContent: 'center'
+          }}>
             {items.map((item) => (
               <div 
                 key={item.id} 
                 onClick={() => setSelectedImage(item.image_url)}
-                className="relative aspect-square cursor-pointer group"
+                style={{ 
+                  aspectRatio: '1/1', 
+                  cursor: 'pointer', 
+                  position: 'relative',
+                  overflow: 'hidden',
+                  borderRadius: '24%', // Squircle
+                  border: '1px solid #27272a',
+                  background: '#09090b',
+                  transition: 'transform 0.2s ease'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <div className="w-full h-full overflow-hidden rounded-[24%] border border-zinc-800 bg-zinc-900 transition-all duration-300 group-hover:scale-95 group-hover:border-indigo-500">
-                  <img 
-                    src={item.image_url} 
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                {/* Optional Mini-Label on Hover */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                   <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold border border-white/10">
-                     VIEW
-                   </div>
-                </div>
+                <img 
+                  src={item.image_url} 
+                  alt={item.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               </div>
             ))}
           </div>
         )}
       </main>
 
-      {/* ZOOM PREVIEW MODAL */}
+      {/* FULL SCREEN ZOOM PREVIEW */}
       {selectedImage && (
         <div 
-          className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setSelectedImage(null)}
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0,0,0,0.95)', 
+            zIndex: 9999, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '20px',
+            cursor: 'zoom-out'
+          }}
         >
-          <div className="relative max-w-4xl w-full h-full flex items-center justify-center">
-            <img 
-              src={selectedImage} 
-              className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"
-              onClick={(e) => e.stopPropagation()} 
-            />
-            <button 
-              className="absolute top-0 right-0 m-4 bg-zinc-800 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold hover:bg-white hover:text-black transition-colors"
-              onClick={() => setSelectedImage(null)}
-            >
-              ✕
-            </button>
+          <img 
+            src={selectedImage} 
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '85vh', 
+              borderRadius: '16px', 
+              boxShadow: '0 0 40px rgba(0,0,0,0.5)',
+              border: '1px solid #333'
+            }} 
+          />
+          <div style={{ position: 'absolute', top: '30px', right: '30px', color: '#fff', fontSize: '20px', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+            ✕
           </div>
         </div>
       )}

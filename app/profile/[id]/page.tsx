@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
 
   const [editingColl, setEditingColl] = useState<any>(null);
+  const [collItems, setCollItems] = useState<any[]>([]); // For managing items within a collection
 
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
@@ -82,6 +83,21 @@ export default function ProfilePage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Load items for a specific collection when editing
+  async function loadCollectionItems(collId: string) {
+    const { data } = await supabase.from("items").select("*").eq("collection", collId);
+    setCollItems(data || []);
+  }
+
+  async function deleteItem(itemId: string) {
+    if (!confirm("Are you sure you want to remove this item?")) return;
+    const { error } = await supabase.from("items").delete().eq("id", itemId);
+    if (!error) {
+      setCollItems(prev => prev.filter(i => i.id !== itemId));
+      loadAllData(); // Refresh stats
     }
   }
 
@@ -162,7 +178,7 @@ export default function ProfilePage() {
       
       if (error) throw error;
       alert("Collection Updated!");
-      setShowEditCollection(false);
+      setEditingColl(null);
       loadAllData();
     } catch (err: any) {
       alert(err.message);
@@ -207,7 +223,7 @@ export default function ProfilePage() {
             <p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p>
             <p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p>
           </div>
-          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }} onClick={() => setShowEditCollection(true)} className="cursor-pointer">
+          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setShowEditCollection(true)}>
             <p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS ⚙️</p>
             <p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p>
           </div>
@@ -217,7 +233,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RECENT DROPS */}
+        {/* RECENT DROPS GRID (Uses setSelectedImage for preview) */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900' }}>RECENT DROPS</h2>
@@ -298,16 +314,16 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: EDIT COLLECTIONS */}
+      {/* MODAL: COLLECTION MANAGER (LIST) */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDIT COLLECTIONS</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>MANAGE COLLECTIONS</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto' }}>
               {collectionsList.map(c => (
                 <div key={c.id} style={{ background: '#000', padding: '12px', borderRadius: '12px', border: '1px solid #27272a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>{c.title}</span>
-                  <button onClick={() => { setEditingColl(c); setShowEditCollection(false); }} style={{ color: '#818cf8', fontWeight: 'bold' }}>EDIT</button>
+                  <button onClick={() => { setEditingColl(c); loadCollectionItems(c.id); setShowEditCollection(false); }} style={{ color: '#818cf8', fontWeight: 'bold' }}>EDIT</button>
                 </div>
               ))}
             </div>
@@ -316,21 +332,40 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: EDITING SPECIFIC COLLECTION */}
+      {/* MODAL: EDIT SPECIFIC COLLECTION & DELETE ITEMS */}
       {editingColl && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>RENAME COLLECTION</h2>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDIT: {editingColl.title}</h2>
+            
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '4px' }}>NAME</p>
             <input value={editingColl.title} onChange={e => setEditingColl({...editingColl, title: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
+            
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '4px' }}>NICHE</p>
             <input value={editingColl.niche} onChange={e => setEditingColl({...editingColl, niche: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} />
+            
+            <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>COLLECTION ITEMS</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '20px' }}>
+              {collItems.map(item => (
+                <div key={item.id} style={{ position: 'relative', aspectRatio: '1/1' }}>
+                  <img src={item.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                  <button 
+                    onClick={() => deleteItem(item.id)}
+                    style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                  >X</button>
+                </div>
+              ))}
+            </div>
+
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setEditingColl(null)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
-              <button onClick={handleUpdateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>SAVE</button>
+              <button onClick={handleUpdateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>SAVE CHANGES</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* IMAGE PREVIEW ZOOM */}
       {selectedImage && (
         <div onClick={() => setSelectedImage(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
           <img src={selectedImage} style={{ maxWidth: '90%', maxHeight: '80%', borderRadius: '12px', border: '1px solid #27272a' }} />

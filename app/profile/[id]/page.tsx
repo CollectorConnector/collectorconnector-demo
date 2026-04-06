@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
-  const [showEditProfile, setShowEditProfile] = useState(false); // NEW pop-up state
+  const [showEditProfile, setShowEditProfile] = useState(false); 
   const [selectedImage, setSelectedImage] = useState<string | null>(null); 
   
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
@@ -66,26 +66,32 @@ export default function ProfilePage() {
   }, [userId]);
 
   async function determineRank() {
-    // 1. Check for Diamond (You) - Paste your UID here
-    const myId = "YOUR_ACTUAL_SUPABASE_UID"; 
-    if (userId === myId) {
+    // 1. Check for Diamond (Stacy)
+    const stacyId = "8b594b57-fc82-477a-a709-45aec99a228f"; 
+    if (userId === stacyId) {
       setUserRank("diamond");
       return;
     }
 
     // 2. Check for Founders (Mum & Rich)
-    const founders = ["mum", "rich"];
-    const { data: prof } = await supabase.from("profiles").select("username").eq("id", userId).single();
-    if (prof && founders.includes(prof.username?.toLowerCase())) {
+    const foundersIds = [
+      "e0759f79-d113-4af6-a575-cee076037092", // Mum
+      "bb088a77-ba12-4fe3-a357-03d13dc0d019"  // Rich
+    ];
+    if (foundersIds.includes(userId)) {
       setUserRank("founder");
       return;
     }
 
     // 3. Tiered Ranks based on signup order (Excluding top 3)
-    const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
+    const { data: allUsers } = await supabase
+      .from("profiles")
+      .select("id")
+      .order("created_at", { ascending: true });
+
     if (allUsers) {
       const index = allUsers.findIndex(u => u.id === userId);
-      // index 0,1,2 are Diamond/Founders. Gold starts at index 3 (User 4)
+      // index 0,1,2 are Stacy, Mum, Rich. Gold starts at index 3 (User 4)
       if (index >= 3 && index < 13) setUserRank("gold");
       else if (index >= 13 && index < 23) setUserRank("silver");
       else if (index >= 23 && index < 33) setUserRank("bronze");
@@ -119,12 +125,6 @@ export default function ProfilePage() {
     }
   }
 
-  async function loadCollectionItems(collId: string) {
-    const { data } = await supabase.from("items").select("*").eq("collection", collId);
-    setCollItems(data || []);
-  }
-
-  // UPDATE PROFILE LOGIC
   async function handleUpdateProfile() {
     setUploading(true);
     const { error } = await supabase
@@ -143,7 +143,6 @@ export default function ProfilePage() {
     setUploading(false);
   }
 
-  // CLICKABLE AVATAR LOGIC
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -170,8 +169,6 @@ export default function ProfilePage() {
     if (error) {
       alert("Error deleting: " + error.message);
     } else {
-      setCollItems(prev => prev.filter(i => i.id !== itemId));
-      setRecentDrops(prev => prev.filter(i => i.id !== itemId));
       loadAllData();
     }
   }
@@ -361,7 +358,15 @@ export default function ProfilePage() {
               {collectionsList.map(c => (
                 <div key={c.id} style={{ background: '#000', padding: '12px', borderRadius: '12px', border: '1px solid #27272a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>{c.title}</span>
-                  <button onClick={() => { setEditingColl(c); loadCollectionItems(c.id); setShowEditCollection(false); }} style={{ color: '#818cf8', fontWeight: 'bold' }}>EDIT / VIEW</button>
+                  <button onClick={() => { 
+                    setEditingColl(c); 
+                    const fetchCollItems = async () => {
+                      const { data } = await supabase.from("items").select("*").eq("collection", c.id);
+                      setCollItems(data || []);
+                    };
+                    fetchCollItems();
+                    setShowEditCollection(false); 
+                  }} style={{ color: '#818cf8', fontWeight: 'bold' }}>EDIT / VIEW</button>
                 </div>
               ))}
             </div>
@@ -381,7 +386,13 @@ export default function ProfilePage() {
               {collItems.map(item => (
                 <div key={item.id} style={{ position: 'relative', aspectRatio: '1/1' }}>
                   <img src={item.image_url} onClick={() => setSelectedImage(item.image_url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', cursor: 'zoom-in' }} />
-                  <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
+                  <button onClick={async (e) => { 
+                    e.stopPropagation(); 
+                    if (!confirm("Delete item?")) return;
+                    await supabase.from("items").delete().eq("id", item.id);
+                    setCollItems(prev => prev.filter(i => i.id !== item.id));
+                    loadAllData();
+                  }} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
                 </div>
               ))}
             </div>

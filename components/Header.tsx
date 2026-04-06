@@ -25,7 +25,7 @@ export default function Header() {
           zIndex: 50,
           background: "#000",
           borderBottom: "1px solid #1f1f1f",
-          height: 64, // Slightly taller for better touch targets on mobile
+          height: 64,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -51,9 +51,9 @@ export default function Header() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "12px", // Tightened gap for mobile portrait support
+            gap: "14px", 
             color: "white",
-            overflowX: "auto", // Allows scrolling if screen is extremely narrow
+            overflowX: "auto",
             paddingLeft: "10px"
           }}
         >
@@ -68,22 +68,22 @@ export default function Header() {
             </svg>
           </button>
 
-          {/* INSTAGRAM */}
+          {/* UPDATED INSTAGRAM LOGO */}
           <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
             <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 7.172a4.828 4.828 0 100 9.656 4.828 4.828 0 000-9.656zm0 7.978a3.15 3.15 0 110-6.3 3.15 3.15 0 010 6.3zm5.016-8.175a1.125 1.125 0 11-2.25 0 1.125 1.125 0 012.25 0z" />
             </svg>
           </a>
 
-          {/* EBAY - Text link */}
-          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#fff', fontSize: '13px', fontWeight: '900' }}>
+          {/* EBAY */}
+          <a href="https://ebay.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#fff', fontSize: '14px', fontWeight: 'bold', lineHeight: 1 }}>
             eBay
           </a>
 
-          {/* WHATNOT — CORRECTED LOGO */}
-          <a href="https://whatnot.com" target="_blank" rel="noopener noreferrer">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19.03 2.97c-1.35-1.35-3.55-1.35-4.9 0L12 5.1 9.87 2.97c-1.35-1.35-3.55-1.35-4.9 0-1.35 1.35-1.35 3.55 0 4.9L7.1 10l-4.13 4.13c-1.35 1.35-1.35 3.55 0 4.9 1.35 1.35 3.55 1.35 4.9 0L12 14.9l4.13 4.13c1.35 1.35 3.55 1.35 4.9 0 1.35-1.35 1.35-3.55 0-4.9L16.9 10l2.13-2.13c1.35-1.35 1.35-3.55 0-4.9z" />
+          {/* REPLACED WHATNOT WITH TIKTOK */}
+          <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.6-4.06-1.4-.06 3.76-.05 7.53-.07 11.29-.05 2.22-.74 4.54-2.43 6.01-1.74 1.57-4.28 2.12-6.55 1.83-2.31-.28-4.52-1.65-5.65-3.69-1.29-2.31-1.12-5.41.48-7.53 1.17-1.57 3.05-2.54 4.99-2.67v4.04c-1.18.06-2.42.59-3.08 1.59-.75 1.1-.64 2.65.23 3.63.85.98 2.26 1.34 3.49 1.05 1.15-.28 2.08-1.27 2.29-2.43.04-2.58.02-5.17.03-7.75 0-4.04-.01-8.08-.01-12.12z" />
             </svg>
           </a>
 

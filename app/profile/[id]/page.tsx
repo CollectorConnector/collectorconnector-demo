@@ -38,7 +38,7 @@ export default function ProfilePage() {
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
 
   const [editingColl, setEditingColl] = useState<any>(null);
-  const [collItems, setCollItems] = useState<any[]>([]); // For managing items within a collection
+  const [collItems, setCollItems] = useState<any[]>([]); 
 
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
@@ -86,18 +86,20 @@ export default function ProfilePage() {
     }
   }
 
-  // Load items for a specific collection when editing
   async function loadCollectionItems(collId: string) {
-    const { data } = await supabase.from("items").select("*").eq("collection", collId);
+    const { data, error } = await supabase.from("items").select("*").eq("collection", collId);
+    if (error) console.error("Error loading items:", error);
     setCollItems(data || []);
   }
 
   async function deleteItem(itemId: string) {
-    if (!confirm("Are you sure you want to remove this item?")) return;
+    if (!confirm("Remove this item?")) return;
     const { error } = await supabase.from("items").delete().eq("id", itemId);
     if (!error) {
       setCollItems(prev => prev.filter(i => i.id !== itemId));
-      loadAllData(); // Refresh stats
+      loadAllData();
+    } else {
+      alert("Delete failed: " + error.message);
     }
   }
 
@@ -112,7 +114,7 @@ export default function ProfilePage() {
 
       const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
       
-      await supabase.from("items").insert({
+      const { error: insertError } = await supabase.from("items").insert({
         user_id: userId,
         title: baseTitle || "New Item",
         image_url: publicUrl,
@@ -120,6 +122,7 @@ export default function ProfilePage() {
         collection: targetCollectionId,
         status: "active"
       });
+      if (insertError) throw insertError;
     }
   }
 
@@ -131,8 +134,8 @@ export default function ProfilePage() {
       alert("Drop Successful!");
       setShowAddItem(false);
       loadAllData();
-    } catch (err) {
-      alert("Upload failed.");
+    } catch (err: any) {
+      alert("Upload failed: " + err.message);
     } finally {
       setUploading(false);
       setFiles([]);
@@ -142,8 +145,11 @@ export default function ProfilePage() {
 
   async function handleCreateCollectionBatch() {
     const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
+    if (!newCollName || !finalNiche) return alert("Fill in Name and Niche!");
+    
     setUploading(true);
     try {
+      // Using correct column names: title and niche
       const { data: coll, error: collErr } = await supabase
         .from("collections")
         .insert([{ user_id: userId, title: newCollName.trim(), niche: finalNiche.trim() }])
@@ -155,7 +161,7 @@ export default function ProfilePage() {
         await uploadFiles(coll.id, newCollName, 0);
       }
 
-      alert("Collection Dropped!");
+      alert("Collection and Items created!");
       setShowAddCollection(false);
       loadAllData();
     } catch (err: any) { 
@@ -177,7 +183,7 @@ export default function ProfilePage() {
         .eq("id", editingColl.id);
       
       if (error) throw error;
-      alert("Collection Updated!");
+      alert("Updated!");
       setEditingColl(null);
       loadAllData();
     } catch (err: any) {
@@ -233,7 +239,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RECENT DROPS GRID (Uses setSelectedImage for preview) */}
+        {/* RECENT DROPS GRID */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900' }}>RECENT DROPS</h2>
@@ -336,7 +342,7 @@ export default function ProfilePage() {
       {editingColl && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDIT: {editingColl.title}</h2>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDITING: {editingColl.title}</h2>
             
             <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '4px' }}>NAME</p>
             <input value={editingColl.title} onChange={e => setEditingColl({...editingColl, title: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
@@ -344,14 +350,14 @@ export default function ProfilePage() {
             <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '4px' }}>NICHE</p>
             <input value={editingColl.niche} onChange={e => setEditingColl({...editingColl, niche: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} />
             
-            <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>COLLECTION ITEMS</h3>
+            <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ITEMS IN THIS COLLECTION</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '20px' }}>
               {collItems.map(item => (
                 <div key={item.id} style={{ position: 'relative', aspectRatio: '1/1' }}>
                   <img src={item.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
                   <button 
                     onClick={() => deleteItem(item.id)}
-                    style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}
+                    style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '22px', height: '22px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                   >X</button>
                 </div>
               ))}

@@ -45,6 +45,9 @@ export default function ProfilePage() {
   
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  
+  // NEW RANK STATE
+  const [userRank, setUserRank] = useState<string | null>(null);
 
   const isOwnProfile = currentUserId === userId;
 
@@ -57,7 +60,35 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!userId) return;
     loadAllData();
+    determineRank();
   }, [userId]);
+
+  // NEW RANK LOGIC
+  async function determineRank() {
+    // YOUR DIAMOND RANK (Replace with your UID from Supabase Auth)
+    const myId = "PASTE_YOUR_UID_HERE"; 
+    if (userId === myId) {
+      setUserRank("diamond");
+      return;
+    }
+
+    // FOUNDERS
+    const founders = ["mum", "rich"];
+    const { data: prof } = await supabase.from("profiles").select("username").eq("id", userId).single();
+    if (prof && founders.includes(prof.username?.toLowerCase())) {
+      setUserRank("founder");
+      return;
+    }
+
+    // MEDAL TIERS
+    const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
+    if (allUsers) {
+      const index = allUsers.findIndex(u => u.id === userId);
+      if (index >= 0 && index < 10) setUserRank("gold");
+      else if (index >= 10 && index < 20) setUserRank("silver");
+      else if (index >= 20 && index < 30) setUserRank("bronze");
+    }
+  }
 
   async function loadAllData() {
     try {
@@ -103,24 +134,21 @@ export default function ProfilePage() {
     if (error) {
       alert("Error deleting: " + error.message);
     } else {
-      // Update local UI immediately
       setCollItems(prev => prev.filter(i => i.id !== itemId));
       setRecentDrops(prev => prev.filter(i => i.id !== itemId));
-      loadAllData(); // Refresh counts and value
+      loadAllData();
     }
   }
 
+  // ... (uploadFiles, handleBatchUploadItems, handleCreateCollectionBatch, handleUpdateCollection remain identical to your source)
   async function uploadFiles(targetCollectionId: string, baseTitle: string, totalValue: number) {
     if (files.length === 0 || !userId || !targetCollectionId) return;
     const valuePerItem = totalValue / files.length || 0;
-
     for (const f of files) {
       const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
       const { error: storageError } = await supabase.storage.from("item-images").upload(fileName, f);
       if (storageError) throw storageError;
-
       const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
-      
       await supabase.from("items").insert({
         user_id: userId,
         title: baseTitle || "New Item",
@@ -157,13 +185,10 @@ export default function ProfilePage() {
         .from("collections")
         .insert([{ user_id: userId, title: newCollName.trim(), niche: finalNiche.trim() }])
         .select().single();
-
       if (collErr) throw collErr;
-
       if (files.length > 0 && coll) {
         await uploadFiles(coll.id, newCollName, 0);
       }
-
       alert("Collection Dropped!");
       setShowAddCollection(false);
       loadAllData();
@@ -184,7 +209,6 @@ export default function ProfilePage() {
         .from("collections")
         .update({ title: editingColl.title, niche: editingColl.niche })
         .eq("id", editingColl.id);
-      
       if (error) throw error;
       alert("Collection Updated!");
       setEditingColl(null);
@@ -197,6 +221,16 @@ export default function ProfilePage() {
   }
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
+
+  // NEW ICON RENDERER (Using your PNGs)
+  const renderRankIcon = () => {
+    if (userRank === "diamond") return <img src="/Diamond.png" style={{ width: '30px' }} />;
+    if (userRank === "founder") return <img src="/Founder.png" style={{ width: '30px' }} />;
+    if (userRank === "gold") return <img src="/Gold.png" style={{ width: '30px' }} />;
+    if (userRank === "silver") return <img src="/Silver.png" style={{ width: '30px' }} />;
+    if (userRank === "bronze") return <img src="/Bronze.png" style={{ width: '30px' }} />;
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -211,7 +245,7 @@ export default function ProfilePage() {
             <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', margin: '0 auto 24px', border: '4px solid #18181b', objectFit: 'cover' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{profile?.display_url || profile?.username}</h1>
-              <img src="/diamond.png" style={{ width: '30px' }} />
+              {renderRankIcon()}
             </div>
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
             <p style={{ color: '#a1a1aa', margin: '16px 0 24px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
@@ -260,10 +294,7 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* ALL MODALS (ADD, EDIT, PREVIEW) REMAIN UNCHANGED BUT WITH FIXED LOGIC AS ABOVE */}
-      {/* ... keeping the same modal structures but with the delete/zoom fixes ... */}
-
-      {/* MODAL: COLLECTION LIST */}
+      {/* ALL MODALS (UNCHANGED MODAL STRUCTURES) */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -281,32 +312,21 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: EDIT SPECIFIC COLLECTION & DELETE ITEMS */}
       {editingColl && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>MANAGE: {editingColl.title}</h2>
-            
             <input value={editingColl.title} onChange={e => setEditingColl({...editingColl, title: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             <input value={editingColl.niche} onChange={e => setEditingColl({...editingColl, niche: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} />
-            
             <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ITEMS (Click to Zoom / X to Delete)</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '20px' }}>
               {collItems.map(item => (
                 <div key={item.id} style={{ position: 'relative', aspectRatio: '1/1' }}>
-                  <img 
-                    src={item.image_url} 
-                    onClick={() => setSelectedImage(item.image_url)}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', cursor: 'zoom-in' }} 
-                  />
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}
-                    style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 }}
-                  >×</button>
+                  <img src={item.image_url} onClick={() => setSelectedImage(item.image_url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', cursor: 'zoom-in' }} />
+                  <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 }}>×</button>
                 </div>
               ))}
             </div>
-
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setEditingColl(null)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
               <button onClick={handleUpdateCollection} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>SAVE CHANGES</button>
@@ -315,7 +335,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* NEW COLLECTION MODAL */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -347,7 +366,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* BATCH ITEM ADD MODAL */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -373,7 +391,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ZOOM PREVIEW */}
       {selectedImage && (
         <div onClick={() => setSelectedImage(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
           <img src={selectedImage} style={{ maxWidth: '90%', maxHeight: '80%', borderRadius: '12px', border: '1px solid #27272a' }} />
@@ -383,3 +400,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

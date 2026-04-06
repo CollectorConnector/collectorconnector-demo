@@ -31,7 +31,7 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   
   const [newCollName, setNewCollName] = useState("");
-  const [selectedNiche, setSelectedNiche] = useState(""); // Default empty for validation
+  const [selectedNiche, setSelectedNiche] = useState(""); 
   const [customNiche, setCustomNiche] = useState("");
   const [collectionsList, setCollectionsList] = useState<any[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
@@ -81,7 +81,7 @@ export default function ProfilePage() {
     loadAllData();
   }, [userId]);
 
-  // IMPROVED UPLOAD ENGINE
+  // STABLE UPLOAD ENGINE
   async function uploadFiles(targetCollectionId: string, baseTitle: string, totalValue: number) {
     if (files.length === 0 || !userId || !targetCollectionId) return;
     
@@ -113,7 +113,7 @@ export default function ProfilePage() {
       await uploadFiles(selectedCollectionId, itemName, parseFloat(itemValue));
       window.location.reload();
     } catch (err) {
-      alert("Batch upload failed. Check connection.");
+      alert("Batch upload failed.");
     } finally {
       setUploading(false);
     }
@@ -127,31 +127,29 @@ export default function ProfilePage() {
     try {
       const { data: coll, error: collErr } = await supabase
         .from("collections")
-        .insert({ 
-          user_id: userId, 
-          name: newCollName, 
-          niche: finalNiche 
-        })
+        .insert({ user_id: userId, name: newCollName, niche: finalNiche })
         .select()
         .single();
 
       if (collErr) throw collErr;
 
+      // Small delay to ensure Supabase indexing is ready
       if (files.length > 0 && coll) {
+        await new Promise(r => setTimeout(r, 800));
         await uploadFiles(coll.id, newCollName, 0);
       }
 
       window.location.reload();
     } catch (err) { 
       console.error(err);
-      alert("Error: Make sure all fields are filled and try again."); 
+      alert("Error: Make sure all fields (Name & Niche) are filled and try again."); 
     } finally { 
       setUploading(false); 
     }
   }
 
-  // VALIDATION HELPER
-  const isCollectionValid = newCollName.length > 0 && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.length > 0));
+  // VALIDATION LOGIC
+  const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -197,7 +195,7 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODAL: NEW COLLECTION (Validated & Niche Polish) */}
+      {/* MODAL: NEW COLLECTION (Validated & Polished) */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -245,7 +243,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: BATCH ADD ITEMS (For Existing Collections) */}
+      {/* MODAL: BATCH ADD ITEMS (Existing Collections) */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>

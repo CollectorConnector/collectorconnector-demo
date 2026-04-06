@@ -23,9 +23,11 @@ export default function ProfilePage() {
   const [collectionCount, setCollectionCount] = useState(0);
   const [vaultValue, setVaultValue] = useState(0);
 
+  // MODAL STATES
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false); // NEW pop-up state
   const [selectedImage, setSelectedImage] = useState<string | null>(null); 
   
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
@@ -46,6 +48,7 @@ export default function ProfilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   
+  // RANK STATE
   const [userRank, setUserRank] = useState<string | null>(null);
 
   const isOwnProfile = currentUserId === userId;
@@ -63,13 +66,14 @@ export default function ProfilePage() {
   }, [userId]);
 
   async function determineRank() {
-    // YOUR DIAMOND RANK UID
-    const myId = "YOUR_SUPABASE_UID"; 
+    // 1. Check for Diamond (You) - Paste your UID here
+    const myId = "YOUR_ACTUAL_SUPABASE_UID"; 
     if (userId === myId) {
       setUserRank("diamond");
       return;
     }
 
+    // 2. Check for Founders (Mum & Rich)
     const founders = ["mum", "rich"];
     const { data: prof } = await supabase.from("profiles").select("username").eq("id", userId).single();
     if (prof && founders.includes(prof.username?.toLowerCase())) {
@@ -77,12 +81,14 @@ export default function ProfilePage() {
       return;
     }
 
+    // 3. Tiered Ranks based on signup order (Excluding top 3)
     const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
     if (allUsers) {
       const index = allUsers.findIndex(u => u.id === userId);
-      if (index >= 0 && index < 10) setUserRank("gold");
-      else if (index >= 10 && index < 20) setUserRank("silver");
-      else if (index >= 20 && index < 30) setUserRank("bronze");
+      // index 0,1,2 are Diamond/Founders. Gold starts at index 3 (User 4)
+      if (index >= 3 && index < 13) setUserRank("gold");
+      else if (index >= 13 && index < 23) setUserRank("silver");
+      else if (index >= 23 && index < 33) setUserRank("bronze");
     }
   }
 
@@ -116,6 +122,46 @@ export default function ProfilePage() {
   async function loadCollectionItems(collId: string) {
     const { data } = await supabase.from("items").select("*").eq("collection", collId);
     setCollItems(data || []);
+  }
+
+  // UPDATE PROFILE LOGIC
+  async function handleUpdateProfile() {
+    setUploading(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ 
+        display_url: profile.display_url, 
+        bio: profile.bio 
+      })
+      .eq("id", userId);
+
+    if (error) alert(error.message);
+    else {
+      alert("Profile updated!");
+      setShowEditProfile(false);
+    }
+    setUploading(false);
+  }
+
+  // CLICKABLE AVATAR LOGIC
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fileName = `${userId}/avatar-${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage.from("item-images").upload(fileName, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
+      await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
+      setProfile({ ...profile, avatar_url: publicUrl });
+      alert("Avatar Updated!");
+    } catch (err) {
+      alert("Upload failed");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function deleteItem(itemId: string) {
@@ -211,15 +257,9 @@ export default function ProfilePage() {
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
-  // FIXED FILENAMES: Swapped to lowercase to match your folder
   const renderRankIcon = () => {
-    const iconStyle = { width: '30px' };
-    if (userRank === "diamond") return <img src="/diamond.png" style={iconStyle} />;
-    if (userRank === "founder") return <img src="/founder.png" style={iconStyle} />;
-    if (userRank === "gold") return <img src="/gold.png" style={iconStyle} />;
-    if (userRank === "silver") return <img src="/silver.png" style={iconStyle} />;
-    if (userRank === "bronze") return <img src="/bronze.png" style={iconStyle} />;
-    return null;
+    if (!userRank) return null;
+    return <img src={`/${userRank}.png`} style={{ width: '30px' }} alt="rank icon" />;
   };
 
   return (
@@ -227,11 +267,21 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
+        {/* PROFILE HEADER */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', position: 'relative' }}>
             {isOwnProfile && (
-              <Link href="/settings" style={{ position: 'absolute', top: '20px', right: '20px', background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}>EDIT PROFILE</Link>
+              <button onClick={() => setShowEditProfile(true)} style={{ position: 'absolute', top: '20px', right: '20px', background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold' }}>EDIT PROFILE</button>
             )}
-            <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', margin: '0 auto 24px', border: '4px solid #18181b', objectFit: 'cover' }} />
+            
+            <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
+              <img 
+                src={profile?.avatar_url || "/default-avatar.png"} 
+                style={{ width: '100%', height: '100%', borderRadius: '20px', border: '4px solid #18181b', objectFit: 'cover', cursor: isOwnProfile ? 'pointer' : 'default' }} 
+                onClick={() => isOwnProfile && document.getElementById('avatarInput')?.click()} 
+              />
+              {isOwnProfile && <input type="file" id="avatarInput" hidden onChange={handleAvatarUpload} accept="image/*" />}
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{profile?.display_url || profile?.username}</h1>
               {renderRankIcon()}
@@ -283,7 +333,26 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODALS START HERE */}
+      {/* POP-UP: EDIT PROFILE */}
+      {showEditProfile && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDIT BIO & NAME</h2>
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>DISPLAY NAME</p>
+            <input value={profile?.display_url || ""} onChange={e => setProfile({...profile, display_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
+            
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>BIO</p>
+            <textarea value={profile?.bio || ""} onChange={e => setProfile({...profile, bio: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '100px', resize: 'none' }} />
+            
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
+              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>SAVE</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POP-UP: COLLECTION LIST */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -301,18 +370,18 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* POP-UP: EDIT SPECIFIC COLLECTION */}
       {editingColl && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>MANAGE: {editingColl.title}</h2>
             <input value={editingColl.title} onChange={e => setEditingColl({...editingColl, title: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             <input value={editingColl.niche} onChange={e => setEditingColl({...editingColl, niche: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} />
-            <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ITEMS (Click to Zoom / X to Delete)</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '20px' }}>
               {collItems.map(item => (
                 <div key={item.id} style={{ position: 'relative', aspectRatio: '1/1' }}>
                   <img src={item.image_url} onClick={() => setSelectedImage(item.image_url)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', cursor: 'zoom-in' }} />
-                  <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 }}>×</button>
+                  <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
                 </div>
               ))}
             </div>
@@ -324,6 +393,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* POP-UP: NEW COLLECTION */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -336,9 +406,6 @@ export default function ProfilePage() {
               <option value="Watches">Watches</option>
               <option value="Other">Other...</option>
             </select>
-            {selectedNiche === "Other" && (
-              <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
-            )}
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
                {files.length > 0 ? `${files.length} Photos Added` : "+ Add Items (Max 20)"}
                <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => {
@@ -355,6 +422,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* POP-UP: BATCH DROP */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -380,6 +448,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* ZOOM PREVIEW */}
       {selectedImage && (
         <div onClick={() => setSelectedImage(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}>
           <img src={selectedImage} style={{ maxWidth: '90%', maxHeight: '80%', borderRadius: '12px', border: '1px solid #27272a' }} />

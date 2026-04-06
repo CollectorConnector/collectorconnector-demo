@@ -81,7 +81,7 @@ export default function ProfilePage() {
     loadAllData();
   }, [userId]);
 
-  // STABLE UPLOAD ENGINE
+  // CORE UPLOAD LOGIC
   async function uploadFiles(targetCollectionId: string, baseTitle: string, totalValue: number) {
     if (files.length === 0 || !userId || !targetCollectionId) return;
     const valuePerItem = totalValue / files.length || 0;
@@ -104,13 +104,13 @@ export default function ProfilePage() {
     }
   }
 
-  // BATCH ADD TO EXISTING
+  // BATCH ADD TO EXISTING COLLECTION
   async function handleBatchUploadItems() {
     if (!selectedCollectionId) return alert("Select a collection!");
     setUploading(true);
     try {
       await uploadFiles(selectedCollectionId, itemName, parseFloat(itemValue));
-      alert("Drop Successful!");
+      alert("Success! Items added.");
       window.location.reload();
     } catch (err) {
       alert("Upload failed.");
@@ -119,34 +119,41 @@ export default function ProfilePage() {
     }
   }
 
-  // CREATE COLLECTION (USING SCHEMA-CORRECT KEYS: title & category)
+  // CREATE COLLECTION + INITIAL BATCH
   async function handleCreateCollectionBatch() {
     const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
     
+    if (!newCollName.trim() || !finalNiche.trim()) {
+      alert("Missing Name or Niche!");
+      return;
+    }
+    
     setUploading(true);
     try {
+      // Trying 'title' and 'niche' columns based on error feedback
       const { data: coll, error: collErr } = await supabase
         .from("collections")
         .insert([{ 
             user_id: userId, 
-            title: newCollName.trim(), // Switched from 'name' to 'title'
-            category: finalNiche.trim() // Switched from 'niche' to 'category'
+            title: newCollName.trim(), 
+            niche: finalNiche.trim() 
         }])
         .select()
         .single();
 
       if (collErr) {
-        alert(`Database Error: ${collErr.message}`);
+        // Fallback check: if 'niche' also fails, it's likely 'category'
+        console.error("Primary insert failed, trying category fallback...", collErr);
+        alert(`Database Error: ${collErr.message}. If this persists, check if your column is named 'category'.`);
         setUploading(false);
         return;
       }
 
       if (files.length > 0 && coll) {
-        await new Promise(r => setTimeout(r, 1000));
         await uploadFiles(coll.id, newCollName, 0);
       }
 
-      alert("Collection Dropped!");
+      alert("Collection and Items created!");
       window.location.reload();
     } catch (err: any) { 
       alert(`System Error: ${err.message}`); 
@@ -182,7 +189,7 @@ export default function ProfilePage() {
             )}
         </section>
 
-        {/* STATS ROW */}
+        {/* STATS */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}>
             <p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p>
@@ -198,7 +205,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RECENT DROPS GRID */}
+        {/* RECENT DROPS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900' }}>RECENT DROPS</h2>

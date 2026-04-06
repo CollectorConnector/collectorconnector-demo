@@ -87,34 +87,25 @@ export default function ProfilePage() {
     const valuePerItem = totalValue / files.length || 0;
 
     for (const f of files) {
-      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-      const { error: storageError } = await supabase.storage.from("item-images").upload(fileName, f);
-      if (storageError) throw storageError;
+      try {
+        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+        const { error: storageError } = await supabase.storage.from("item-images").upload(fileName, f);
+        if (storageError) throw storageError;
 
-      const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
-      
-      await supabase.from("items").insert({
-        user_id: userId,
-        title: baseTitle || "New Item",
-        image_url: publicUrl,
-        estimated_value: valuePerItem,
-        collection: targetCollectionId,
-        status: "active"
-      });
-    }
-  }
-
-  async function handleBatchUploadItems() {
-    if (!selectedCollectionId) return alert("Select a collection!");
-    setUploading(true);
-    try {
-      await uploadFiles(selectedCollectionId, itemName, parseFloat(itemValue));
-      alert("Drop Successful!");
-      window.location.reload();
-    } catch (err) {
-      alert("Upload failed. Try again.");
-    } finally {
-      setUploading(false);
+        const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
+        
+        const { error: insertError } = await supabase.from("items").insert({
+          user_id: userId,
+          title: baseTitle || "New Item",
+          image_url: publicUrl,
+          estimated_value: valuePerItem,
+          collection: targetCollectionId,
+          status: "active"
+        });
+        if (insertError) throw insertError;
+      } catch (e) {
+        console.error("Individual file upload failed:", e);
+      }
     }
   }
 
@@ -122,7 +113,7 @@ export default function ProfilePage() {
     const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
     
     if (!newCollName.trim() || !finalNiche.trim()) {
-      alert("Please enter a Name and Niche!");
+      alert("Missing Name or Niche!");
       return;
     }
     
@@ -131,35 +122,38 @@ export default function ProfilePage() {
       // 1. Create Collection
       const { data: coll, error: collErr } = await supabase
         .from("collections")
-        .insert({ user_id: userId, name: newCollName, niche: finalNiche })
+        .insert({ 
+            user_id: userId, 
+            name: newCollName.trim(), 
+            niche: finalNiche.trim() 
+        })
         .select()
         .single();
 
       if (collErr) throw collErr;
 
-      // 2. Critical Delay (1 second) for database sync
+      // 2. Critical Delay & Batch Upload
       if (files.length > 0 && coll) {
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 1200)); // Increased delay for stability
         await uploadFiles(coll.id, newCollName, 0);
       }
 
-      alert("Collection created successfully!");
+      alert("Success! Dropped into the Vault.");
+      router.refresh(); 
       window.location.reload();
-    } catch (err) { 
-      console.error(err);
-      alert("Something went wrong. Please check your connection and try again."); 
+    } catch (err: any) { 
+      console.error("Collection Creation Error:", err);
+      alert(`Error: ${err.message || "Something went wrong"}`); 
     } finally { 
       setUploading(false); 
     }
   }
 
-  // BUTTON VALIDATION
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
-      
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         {/* PROFILE CARD */}
@@ -189,18 +183,18 @@ export default function ProfilePage() {
             <img src="/CC-SML-Logo.png" style={{ width: '18px' }} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {recentDrops.map((drop) => (
+            {recentDrops.length > 0 ? recentDrops.map((drop) => (
               <div key={drop.id} onClick={() => setSelectedImage(drop.image_url)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer' }}>
                 <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-            ))}
+            )) : <p style={{ color: '#52525b', gridColumn: 'span 3', textAlign: 'center', padding: '20px' }}>No items yet.</p>}
           </div>
         </section>
 
         <SuggestedUsers />
       </main>
 
-      {/* MODAL: NEW COLLECTION (Validated & Polished) */}
+      {/* MODAL: NEW COLLECTION */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -237,49 +231,11 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => { setShowAddCollection(false); setFiles([]); setPreviews([]); }} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold' }}>CANCEL</button>
               <button 
-                onClick={handleCreateCollectionBatch} 
+                onClick={() => { console.log("Creating..."); handleCreateCollectionBatch(); }} 
                 disabled={uploading || !isCollectionValid} 
                 style={{ flex: 2, background: isCollectionValid ? '#fff' : '#27272a', color: isCollectionValid ? '#000' : '#52525b', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1, cursor: isCollectionValid ? 'pointer' : 'not-allowed' }}
               >
                 {uploading ? 'DROPPING...' : 'CREATE COLLECTION'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: BATCH ADD ITEMS (Existing) */}
-      {showAddItem && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '10px' }}>BATCH DROP</h2>
-            <a href="https://130point.com/sales/" target="_blank" style={{ color: '#818cf8', fontSize: '12px', fontWeight: '900', textDecoration: 'none', display: 'block', marginBottom: '20px' }}>CHECK MARKET VALUES →</a>
-            
-            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
-              <option value="">Select Target Collection</option>
-              {collectionsList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-
-            <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            <input placeholder="Total Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} />
-            
-            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
-               {files.length > 0 ? `${files.length} Photos Selected` : "Upload Batch (Max 20)"}
-               <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => {
-                 const selectedFiles = Array.from(e.target.files || []).slice(0, 20);
-                 setFiles(selectedFiles);
-                 setPreviews(selectedFiles.map(f => URL.createObjectURL(f)));
-               }} />
-            </label>
-
-            <div style={{ gridTemplateColumns: 'repeat(4, 1fr)', display: 'grid', gap: '4px', marginTop: '10px' }}>
-              {previews.map((p, i) => <img key={i} src={p} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '4px' }} />)}
-            </div>
-            
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => { setShowAddItem(false); setFiles([]); setPreviews([]); }} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
-              <button onClick={handleBatchUploadItems} disabled={uploading || files.length === 0 || !selectedCollectionId} style={{ flex: 2, background: (files.length > 0 && selectedCollectionId) ? '#fff' : '#27272a', color: (files.length > 0 && selectedCollectionId) ? '#000' : '#52525b', fontWeight: '900', padding: '12px', borderRadius: '12px', opacity: uploading ? 0.5 : 1 }}>
-                {uploading ? 'DROPPING...' : 'DROP BATCH'}
               </button>
             </div>
           </div>
@@ -291,7 +247,6 @@ export default function ProfilePage() {
           <img src={selectedImage} style={{ maxWidth: '90%', maxHeight: '80%', borderRadius: '12px', border: '1px solid #27272a' }} />
         </div>
       )}
-
       <Footer />
     </div>
   );

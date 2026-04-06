@@ -1,54 +1,98 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-export default function CollectionDetailPage() {
+export default function CollectionDetails() {
   const params = useParams();
-  const router = useRouter();
+  const collectionId = params?.id as string;
+
   const [collection, setCollection] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      if (!params.id) return;
-      const { data: coll } = await supabase.from("collections").select("*").eq("id", params.id).single();
-      const { data: collItems } = await supabase.from("items").select("*").eq("collection_id", params.id).order("created_at", { ascending: false });
+    if (collectionId) {
+      loadCollectionData();
+    }
+  }, [collectionId]);
+
+  async function loadCollectionData() {
+    try {
+      setLoading(true);
+
+      // 1. Fetch Collection Info (Using 'title' instead of 'name')
+      const { data: coll, error: collError } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("id", collectionId)
+        .single();
+
+      if (collError) throw collError;
       setCollection(coll);
-      setItems(collItems || []);
+
+      // 2. Fetch Items tied to this Collection
+      // We check the 'collection' column in the 'items' table
+      const { data: itemList, error: itemError } = await supabase
+        .from("items")
+        .select("*")
+        .eq("collection", collectionId);
+
+      if (itemError) throw itemError;
+      setItems(itemList || []);
+
+    } catch (err: any) {
+      console.error("Error loading collection:", err.message);
+    } finally {
       setLoading(false);
     }
-    loadData();
-  }, [params.id]);
+  }
 
-  if (loading) return <div style={{ minHeight: '100vh', background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>OPENING VAULT...</div>;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#000', color: '#fff' }}>
+    <div className="min-h-screen bg-black text-white">
       <Header />
-      <main style={{ maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', paddingBottom: '100px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <h1 style={{ fontSize: '36px', fontWeight: '900', textTransform: 'uppercase' }}>{collection?.title}</h1>
-            <p style={{ color: '#818cf8', fontWeight: 'bold' }}>{items.length} ITEMS | £{items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0).toLocaleString()}</p>
+      
+      <main className="max-w-4xl mx-auto pt-24 px-4 pb-20">
+        <div className="text-center mb-12">
+          {/* Using collection.title here */}
+          <h1 className="text-4xl font-black uppercase tracking-tighter mb-2">
+            {collection?.title || "Unnamed Collection"}
+          </h1>
+          <p className="text-indigo-400 font-bold uppercase text-sm">
+            {items.length} ITEMS | £{items.reduce((sum, item) => sum + (Number(item.estimated_value) || 0), 0)}
+          </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-          {items.map((item) => (
-            <div key={item.id} onClick={() => router.push(`/items/${item.id}`)} style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '40px', overflow: 'hidden', cursor: 'pointer' }}>
-                <div style={{ aspectRatio: '1/1', background: '#18181b' }}>
-                    <img src={item.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+        {items.length === 0 ? (
+          <div className="text-center py-20 border-2 border-dashed border-zinc-800 rounded-3xl">
+            <p className="text-zinc-500 font-bold">THIS COLLECTION IS CURRENTLY EMPTY</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {items.map((item) => (
+              <div key={item.id} className="group relative bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
+                <div className="aspect-square">
+                  <img 
+                    src={item.image_url} 
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
                 </div>
-                <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <p style={{ fontWeight: '900', margin: '0 0 4px 0' }}>{item.title}</p>
-                    <p style={{ color: '#4ade80', fontWeight: 'bold' }}>£{Number(item.estimated_value).toLocaleString()}</p>
+                <div className="p-4 border-t border-zinc-800">
+                  <h3 className="font-bold text-sm truncate uppercase">{item.title}</h3>
+                  <p className="text-green-400 text-xs font-black">£{item.estimated_value || 0}</p>
                 </div>
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
+
       <Footer />
     </div>
   );

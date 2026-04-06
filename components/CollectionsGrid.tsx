@@ -5,34 +5,47 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 export default function CollectionsGrid({ userId }: { userId: string }) {
-  const [items, setItems] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    async function loadItems() {
-      const { data } = await supabase.from("items").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-      setItems(data || []);
+    async function loadCollections() {
+      // Query collections and include the image of the first item as the cover
+      const { data } = await supabase
+        .from("collections")
+        .select(`*, items (image_url)`)
+        .eq("user_id", userId);
+      
+      setCollections(data || []);
       setLoading(false);
     }
-    loadItems();
+    loadCollections();
   }, [userId]);
 
-  if (loading) return <div className="text-center py-10 font-bold">LOADING...</div>;
+  if (loading) return <div className="text-center py-10 font-bold text-[#52525b]">SYNCING VAULTS...</div>;
 
   return (
     <div className="grid grid-cols-2 gap-4 p-2">
-      {items.map((item) => (
+      {collections.map((col) => (
         <div 
-          key={item.id} 
-          onClick={() => router.push(`/items/${item.id}`)} // Sends the ID to the unified page
-          className="bg-[#18181b] rounded-[24px] border border-[#27272a] overflow-hidden cursor-pointer"
+          key={col.id} 
+          onClick={() => router.push(`/collections/${col.id}`)} 
+          className="bg-[#18181b] rounded-[32px] border border-[#27272a] overflow-hidden cursor-pointer relative aspect-square flex flex-col items-center justify-center group"
         >
-          <div className="aspect-square relative">
-            <img src={item.image_url} className="absolute inset-0 w-full h-full object-cover" />
-          </div>
-          <div className="p-3">
-            <div className="w-full bg-black/40 py-2 rounded-xl text-[10px] font-black text-center uppercase tracking-widest border border-[#27272a]">VIEW ITEM ↗</div>
+          {col.items?.[0] && (
+            <img 
+              src={col.items[0].image_url} 
+              className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity" 
+            />
+          )}
+          <div className="relative z-10 text-center px-4">
+            <p className="text-[14px] font-black uppercase tracking-tighter leading-none mb-1 text-white">
+              {col.name || "Untitled Vault"}
+            </p>
+            <p className="text-[9px] text-[#818cf8] font-black uppercase tracking-widest bg-black/60 px-2 py-1 rounded-full border border-[#27272a] inline-block">
+              {col.niche || "COLLECTOR"}
+            </p>
           </div>
         </div>
       ))}

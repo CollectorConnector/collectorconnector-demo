@@ -81,7 +81,7 @@ export default function ProfilePage() {
     loadAllData();
   }, [userId]);
 
-  // UPLOAD ENGINE
+  // STABLE UPLOAD ENGINE
   async function uploadFiles(targetCollectionId: string, baseTitle: string, totalValue: number) {
     if (files.length === 0 || !userId || !targetCollectionId) return;
     const valuePerItem = totalValue / files.length || 0;
@@ -104,13 +104,13 @@ export default function ProfilePage() {
     }
   }
 
-  // BATCH ADD TO EXISTING COLLECTION
+  // BATCH ADD TO EXISTING
   async function handleBatchUploadItems() {
     if (!selectedCollectionId) return alert("Select a collection!");
     setUploading(true);
     try {
       await uploadFiles(selectedCollectionId, itemName, parseFloat(itemValue));
-      alert("Success! Batch Dropped.");
+      alert("Drop Successful!");
       window.location.reload();
     } catch (err) {
       alert("Upload failed.");
@@ -119,40 +119,36 @@ export default function ProfilePage() {
     }
   }
 
-  // NEW COLLECTION + INITIAL BATCH
+  // CREATE COLLECTION (USING SCHEMA-CORRECT KEYS: title & category)
   async function handleCreateCollectionBatch() {
     const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
-    
-    // DEBUG ALERT
-    alert("Starting creation process...");
-
-    if (!newCollName.trim() || !finalNiche.trim()) {
-      alert("Missing Name or Niche!");
-      setUploading(false);
-      return;
-    }
     
     setUploading(true);
     try {
       const { data: coll, error: collErr } = await supabase
         .from("collections")
-        .insert([{ user_id: userId, name: newCollName.trim(), niche: finalNiche.trim() }])
+        .insert([{ 
+            user_id: userId, 
+            title: newCollName.trim(), // Switched from 'name' to 'title'
+            category: finalNiche.trim() // Switched from 'niche' to 'category'
+        }])
         .select()
         .single();
 
       if (collErr) {
         alert(`Database Error: ${collErr.message}`);
-        throw collErr;
+        setUploading(false);
+        return;
       }
 
       if (files.length > 0 && coll) {
+        await new Promise(r => setTimeout(r, 1000));
         await uploadFiles(coll.id, newCollName, 0);
       }
 
-      alert("Collection & Items Created!");
+      alert("Collection Dropped!");
       window.location.reload();
     } catch (err: any) { 
-      console.error(err);
       alert(`System Error: ${err.message}`); 
     } finally { 
       setUploading(false); 
@@ -166,7 +162,7 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* PROFILE HEADER */}
+        {/* PROFILE CARD */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center' }}>
             <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '120px', height: '120px', borderRadius: '20px', margin: '0 auto 24px', border: '4px solid #18181b', objectFit: 'cover' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
@@ -174,7 +170,7 @@ export default function ProfilePage() {
               <img src="/diamond.png" style={{ width: '30px' }} />
             </div>
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
-            <p style={{ color: '#a1a1aa', margin: '16px 0 24px' }}>{profile?.bio || "Vault Explorer."}</p>
+            <p style={{ color: '#a1a1aa', margin: '16px 0 24px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
 
@@ -186,23 +182,23 @@ export default function ProfilePage() {
             )}
         </section>
 
-        {/* STATS */}
+        {/* STATS ROW */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}>
             <p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p>
-            <p style={{ fontSize: '20px', fontWeight: 'black' }}>{itemCount}</p>
+            <p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p>
           </div>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}>
             <p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS</p>
-            <p style={{ fontSize: '20px', fontWeight: 'black' }}>{collectionCount}</p>
+            <p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p>
           </div>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}>
             <p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p>
-            <p style={{ fontSize: '20px', fontWeight: 'black', color: '#4ade80' }}>£{vaultValue}</p>
+            <p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p>
           </div>
         </div>
 
-        {/* RECENT DROPS */}
+        {/* RECENT DROPS GRID */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900' }}>RECENT DROPS</h2>
@@ -264,7 +260,7 @@ export default function ProfilePage() {
             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>BATCH DROP</h2>
             <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
               <option value="">Select Target Collection</option>
-              {collectionsList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title || c.name}</option>)}
             </select>
             <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             <input placeholder="Total Value (£)" type="number" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} />

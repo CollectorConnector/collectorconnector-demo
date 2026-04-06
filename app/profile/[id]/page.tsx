@@ -46,7 +46,6 @@ export default function ProfilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   
-  // NEW RANK STATE
   const [userRank, setUserRank] = useState<string | null>(null);
 
   const isOwnProfile = currentUserId === userId;
@@ -63,16 +62,14 @@ export default function ProfilePage() {
     determineRank();
   }, [userId]);
 
-  // NEW RANK LOGIC
   async function determineRank() {
-    // YOUR DIAMOND RANK (Replace with your UID from Supabase Auth)
-    const myId = "PASTE_YOUR_UID_HERE"; 
+    // YOUR DIAMOND RANK UID
+    const myId = "YOUR_SUPABASE_UID"; 
     if (userId === myId) {
       setUserRank("diamond");
       return;
     }
 
-    // FOUNDERS
     const founders = ["mum", "rich"];
     const { data: prof } = await supabase.from("profiles").select("username").eq("id", userId).single();
     if (prof && founders.includes(prof.username?.toLowerCase())) {
@@ -80,7 +77,6 @@ export default function ProfilePage() {
       return;
     }
 
-    // MEDAL TIERS
     const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
     if (allUsers) {
       const index = allUsers.findIndex(u => u.id === userId);
@@ -122,15 +118,9 @@ export default function ProfilePage() {
     setCollItems(data || []);
   }
 
-  // FIXED DELETE FUNCTION
   async function deleteItem(itemId: string) {
     if (!confirm("Are you sure you want to delete this item forever?")) return;
-    
-    const { error } = await supabase
-      .from("items")
-      .delete()
-      .eq("id", itemId);
-
+    const { error } = await supabase.from("items").delete().eq("id", itemId);
     if (error) {
       alert("Error deleting: " + error.message);
     } else {
@@ -140,7 +130,6 @@ export default function ProfilePage() {
     }
   }
 
-  // ... (uploadFiles, handleBatchUploadItems, handleCreateCollectionBatch, handleUpdateCollection remain identical to your source)
   async function uploadFiles(targetCollectionId: string, baseTitle: string, totalValue: number) {
     if (files.length === 0 || !userId || !targetCollectionId) return;
     const valuePerItem = totalValue / files.length || 0;
@@ -222,13 +211,14 @@ export default function ProfilePage() {
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
-  // NEW ICON RENDERER (Using your PNGs)
+  // FIXED FILENAMES: Swapped to lowercase to match your folder
   const renderRankIcon = () => {
-    if (userRank === "diamond") return <img src="/Diamond.png" style={{ width: '30px' }} />;
-    if (userRank === "founder") return <img src="/Founder.png" style={{ width: '30px' }} />;
-    if (userRank === "gold") return <img src="/Gold.png" style={{ width: '30px' }} />;
-    if (userRank === "silver") return <img src="/Silver.png" style={{ width: '30px' }} />;
-    if (userRank === "bronze") return <img src="/Bronze.png" style={{ width: '30px' }} />;
+    const iconStyle = { width: '30px' };
+    if (userRank === "diamond") return <img src="/diamond.png" style={iconStyle} />;
+    if (userRank === "founder") return <img src="/founder.png" style={iconStyle} />;
+    if (userRank === "gold") return <img src="/gold.png" style={iconStyle} />;
+    if (userRank === "silver") return <img src="/silver.png" style={iconStyle} />;
+    if (userRank === "bronze") return <img src="/bronze.png" style={iconStyle} />;
     return null;
   };
 
@@ -237,7 +227,6 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* PROFILE HEADER */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', position: 'relative' }}>
             {isOwnProfile && (
               <Link href="/settings" style={{ position: 'absolute', top: '20px', right: '20px', background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}>EDIT PROFILE</Link>
@@ -276,7 +265,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RECENT DROPS GRID - PREVIEW MODE */}
+        {/* RECENT DROPS GRID */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '900' }}>RECENT DROPS</h2>
@@ -294,7 +283,7 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* ALL MODALS (UNCHANGED MODAL STRUCTURES) */}
+      {/* MODALS START HERE */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -400,4 +389,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

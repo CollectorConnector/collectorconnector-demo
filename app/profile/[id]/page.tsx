@@ -44,9 +44,10 @@ export default function ProfilePage() {
   const [recentDrops, setRecentDrops] = useState<RecentDrop[]>([]);
   const [uploading, setUploading] = useState(false);
   
-  // NEW STATES FOR THE "CLIFF RICHARD" LOGIC
+  // NEW STATES FOR NICHE & VAULT SELECTION
   const [newCollName, setNewCollName] = useState("");
-  const [selectedNiche, setSelectedNiche] = useState("General");
+  const [selectedNiche, setSelectedNiche] = useState("Cards");
+  const [customNiche, setCustomNiche] = useState("");
   const [collectionsList, setCollectionsList] = useState<any[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
 
@@ -78,6 +79,7 @@ export default function ProfilePage() {
           setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
         }
 
+        // Load Collections for the dropdown and the count
         const { data: colls, count } = await supabase.from("collections").select("*", { count: 'exact' }).eq("user_id", userId);
         setCollectionCount(count || 0);
         if (colls) setCollectionsList(colls);
@@ -107,7 +109,7 @@ export default function ProfilePage() {
         title: itemName || "Untitled",
         image_url: publicUrl,
         estimated_value: parseFloat(itemValue) || 0,
-        collection: selectedCollectionId || null, // MAPS TO YOUR DB COLUMN
+        collection: selectedCollectionId || null, // Maps to your DB column
         status: "active"
       });
       window.location.reload();
@@ -120,16 +122,23 @@ export default function ProfilePage() {
 
   async function handleCreateCollection() {
     if (!newCollName || !userId) return;
+    const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
+
     try {
       await supabase.from("collections").insert({ 
         user_id: userId, 
         name: newCollName,
-        niche: selectedNiche // SAVES THE NICHE
+        niche: finalNiche || "Collector" 
       });
       window.location.reload();
     } catch (err) { 
       alert("Failed to create collection"); 
     }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/auth/login");
   }
 
   const displayName = profile?.display_url || profile?.username || "Collector";
@@ -198,22 +207,37 @@ export default function ProfilePage() {
         </section>
 
         <SuggestedUsers />
+
+        {/* LOGOUT BUTTON - POSITIONED BELOW SUGGESTED COLLECTORS */}
+        {isOwnProfile && (
+          <button 
+            onClick={handleLogout}
+            style={{ marginTop: '20px', padding: '16px', background: 'transparent', color: '#ef4444', border: '1px solid #450a0a', borderRadius: '16px', fontWeight: 'bold', fontSize: '14px', width: '100%' }}
+          >
+            LOGOUT ACCOUNT
+          </button>
+        )}
       </main>
 
-      {/* NEW COLLECTION MODAL WITH NICHE */}
+      {/* NEW COLLECTION MODAL */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
-            <input placeholder="Vault Name (e.g. Cliff Richard Shells)" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '10px' }} />
+            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center', textTransform: 'uppercase' }}>NEW VAULT</h2>
+            <input placeholder="Vault Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
             
-            <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px' }}>
+            <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }}>
               <option value="Cards">Cards</option>
               <option value="Sneakers">Sneakers</option>
               <option value="Watches">Watches</option>
               <option value="Lego">Lego</option>
-              <option value="Other">Other</option>
+              <option value="Art">Art</option>
+              <option value="Other">Other...</option>
             </select>
+
+            {selectedNiche === "Other" && (
+              <input placeholder="What are you collecting?" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '20px' }} />
+            )}
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', background: 'none', border: 'none' }}>CANCEL</button>
@@ -223,13 +247,12 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* NEW ITEM MODAL WITH VAULT SELECTOR */}
+      {/* NEW ITEM MODAL */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW ITEM</h2>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center', textTransform: 'uppercase' }}>NEW ITEM</h2>
             
-            {/* SELECT WHICH VAULT IT GOES IN */}
             <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '10px' }}>
               <option value="">Select Vault (Optional)</option>
               {collectionsList.map(c => (

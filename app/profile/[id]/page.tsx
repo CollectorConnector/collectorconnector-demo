@@ -84,20 +84,18 @@ export default function ProfilePage() {
   // STABLE UPLOAD ENGINE
   async function uploadFiles(targetCollectionId: string, baseTitle: string, totalValue: number) {
     if (files.length === 0 || !userId || !targetCollectionId) return;
-    
     const valuePerItem = totalValue / files.length || 0;
 
     for (const f of files) {
       const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
       const { error: storageError } = await supabase.storage.from("item-images").upload(fileName, f);
-      
       if (storageError) throw storageError;
 
       const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
       
       await supabase.from("items").insert({
         user_id: userId,
-        title: baseTitle || "Untitled Drop",
+        title: baseTitle || "New Item",
         image_url: publicUrl,
         estimated_value: valuePerItem,
         collection: targetCollectionId,
@@ -107,13 +105,14 @@ export default function ProfilePage() {
   }
 
   async function handleBatchUploadItems() {
-    if (!selectedCollectionId) return alert("Please select a collection first");
+    if (!selectedCollectionId) return alert("Select a collection!");
     setUploading(true);
     try {
       await uploadFiles(selectedCollectionId, itemName, parseFloat(itemValue));
+      alert("Drop Successful!");
       window.location.reload();
     } catch (err) {
-      alert("Batch upload failed.");
+      alert("Upload failed. Try again.");
     } finally {
       setUploading(false);
     }
@@ -121,10 +120,15 @@ export default function ProfilePage() {
 
   async function handleCreateCollectionBatch() {
     const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
-    if (!newCollName || !finalNiche || !userId) return;
+    
+    if (!newCollName.trim() || !finalNiche.trim()) {
+      alert("Please enter a Name and Niche!");
+      return;
+    }
     
     setUploading(true);
     try {
+      // 1. Create Collection
       const { data: coll, error: collErr } = await supabase
         .from("collections")
         .insert({ user_id: userId, name: newCollName, niche: finalNiche })
@@ -133,22 +137,23 @@ export default function ProfilePage() {
 
       if (collErr) throw collErr;
 
-      // Small delay to ensure Supabase indexing is ready
+      // 2. Critical Delay (1 second) for database sync
       if (files.length > 0 && coll) {
-        await new Promise(r => setTimeout(r, 800));
+        await new Promise(r => setTimeout(r, 1000));
         await uploadFiles(coll.id, newCollName, 0);
       }
 
+      alert("Collection created successfully!");
       window.location.reload();
     } catch (err) { 
       console.error(err);
-      alert("Error: Make sure all fields (Name & Niche) are filled and try again."); 
+      alert("Something went wrong. Please check your connection and try again."); 
     } finally { 
       setUploading(false); 
     }
   }
 
-  // VALIDATION LOGIC
+  // BUTTON VALIDATION
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
   return (
@@ -213,11 +218,11 @@ export default function ProfilePage() {
             </select>
             
             {selectedNiche === "Other" && (
-              <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
+              <input placeholder="Specify Niche (e.g. Beanie Babies)" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #818cf8', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
             )}
 
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
-               {files.length > 0 ? `${files.length} Photos Added` : "+ Add Items (Max 20)"}
+               {files.length > 0 ? `${files.length} Photos Ready` : "+ Add Items (Max 20)"}
                <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => {
                  const selectedFiles = Array.from(e.target.files || []).slice(0, 20);
                  setFiles(selectedFiles);
@@ -243,7 +248,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODAL: BATCH ADD ITEMS (Existing Collections) */}
+      {/* MODAL: BATCH ADD ITEMS (Existing) */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -267,7 +272,7 @@ export default function ProfilePage() {
                }} />
             </label>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px', marginTop: '10px' }}>
+            <div style={{ gridTemplateColumns: 'repeat(4, 1fr)', display: 'grid', gap: '4px', marginTop: '10px' }}>
               {previews.map((p, i) => <img key={i} src={p} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '4px' }} />)}
             </div>
             

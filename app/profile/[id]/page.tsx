@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
-import Link from "next/link";
+import Link from "link";
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -144,6 +144,7 @@ export default function ProfilePage() {
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
+      // FETCH FIX: Ensuring null or everyone audience are captured
       const { data: globalDrops } = await supabase
         .from("items")
         .select(`*, profiles:user_id (username), collections:collection (niche)`)
@@ -278,6 +279,7 @@ export default function ProfilePage() {
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
+  // VISIBILITY FIX: Always show drops if search is empty
   const filteredDrops = recentDrops.filter(drop => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();

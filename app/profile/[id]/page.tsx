@@ -54,6 +54,9 @@ export default function ProfilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
 
+  // NEW: Audience State
+  const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
+
   const isOwnProfile = currentUserId === userId;
 
   useEffect(() => {
@@ -134,14 +137,24 @@ export default function ProfilePage() {
       setLoading(true);
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
       if (prof) setProfile(prof);
-      const { data: items } = await supabase.from("items").select("*").eq("user_id", userId);
-      if (items) {
-        setItemCount(items.length);
-        setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
-        setRecentDrops(items.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20));
-      }
       
-      // MODIFIED: Fetch collections ordered by newest first
+      // USER STATS (Keep this local to the profile)
+      const { data: localItems } = await supabase.from("items").select("*").eq("user_id", userId);
+      if (localItems) {
+        setItemCount(localItems.length);
+        setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
+      }
+
+      // GLOBAL RECENT DROPS (Showing newest 'everyone' items from all users)
+      const { data: globalDrops } = await supabase
+        .from("items")
+        .select("*, profiles(username)")
+        .eq("audience", "everyone")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      
+      if (globalDrops) setRecentDrops(globalDrops);
+      
       const { data: colls } = await supabase
         .from("collections")
         .select("*")
@@ -209,7 +222,8 @@ export default function ProfilePage() {
           const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
           await supabase.from("items").insert({
             user_id: userId, title: itemName || newCollName, image_url: publicUrl,
-            estimated_value: valuePerItem, collection: coll.id, status: "active"
+            estimated_value: valuePerItem, collection: coll.id, status: "active",
+            audience: selectedAudience // Saving Privacy Setting
           });
         }
       }
@@ -220,6 +234,7 @@ export default function ProfilePage() {
       setNewCollName("");
       setSelectedNiche("");
       setCustomNiche("");
+      setSelectedAudience("everyone");
       loadAllData();
     } catch (err: any) { alert(err.message); } finally { setUploading(false); }
   }
@@ -236,12 +251,14 @@ export default function ProfilePage() {
         const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
         await supabase.from("items").insert({
           user_id: userId, title: itemName || "New Item", image_url: publicUrl,
-          estimated_value: valuePerItem, collection: selectedCollectionId, status: "active"
+          estimated_value: valuePerItem, collection: selectedCollectionId, status: "active",
+          audience: selectedAudience // Saving Privacy Setting
         });
       }
       alert("Drop Successful!");
       setShowAddItem(false);
       setFiles([]);
+      setSelectedAudience("everyone");
       loadAllData();
     } catch (err) { alert("Upload failed."); } finally { setUploading(false); }
   }
@@ -326,13 +343,16 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RECENT DROPS */}
+        {/* GLOBAL RECENT DROPS */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>RECENT DROPS</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
             {recentDrops.map((drop) => (
               <div key={drop.id} onClick={() => setSelectedItem(drop)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
                 <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ position: 'absolute', top: '5px', left: '5px', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}>
+                  @{drop.profiles?.username}
+                </div>
                 {likedItems.has(drop.id) && <div style={{ position: 'absolute', bottom: '5px', right: '5px', fontSize: '14px' }}>⭐</div>}
               </div>
             ))}
@@ -416,6 +436,13 @@ export default function ProfilePage() {
             )}
 
             <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '20px 0' }} />
+            
+            <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}>AUDIENCE</p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
+                <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
+            </div>
+
             <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '10px', fontWeight: 'bold' }}>OPTIONAL: START WITH PHOTOS</p>
             <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             
@@ -451,6 +478,12 @@ export default function ProfilePage() {
             <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             <input type="number" placeholder="Total Estimated Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             
+            <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}>AUDIENCE</p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
+                <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
+            </div>
+
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
                <span style={{ fontSize: '24px' }}>📸</span><br/>
                {files.length > 0 ? `${files.length} Photos Ready` : "TAP TO ADD PHOTOS (UP TO 20)"}

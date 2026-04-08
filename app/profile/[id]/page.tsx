@@ -75,7 +75,6 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
-  // LOGOUT HANDLER
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/");
@@ -141,7 +140,7 @@ export default function ProfilePage() {
         setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-      // GLOBAL RECENT DROPS FIX: Use profiles!inner but leave collections as a left join (optional)
+      // NO SEARCH BAR BS. JUST FETCH THE DROPS.
       const { data: globalDrops, error: globalErr } = await supabase
         .from("items")
         .select(`
@@ -326,7 +325,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RECENT DROPS GRID */}
+        {/* RECENT DROPS GRID - RESTORED TO FUNCTIONAL STATE */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>

@@ -185,11 +185,9 @@ export default function ProfilePage() {
     if (!finalNiche) return alert("Please specify a niche!");
     setUploading(true);
     try {
-      // 1. Create the Collection
       const { data: coll, error: collErr } = await supabase.from("collections").insert([{ user_id: userId, title: newCollName.trim(), niche: finalNiche.trim() }]).select().single();
       if (collErr) throw collErr;
 
-      // 2. If user added photos, upload them and link to the NEW collection ID
       if (files.length > 0) {
         const valuePerItem = (parseFloat(itemValue) / files.length) || 0;
         for (const f of files) {
@@ -209,8 +207,6 @@ export default function ProfilePage() {
       setNewCollName("");
       setSelectedNiche("");
       setCustomNiche("");
-      setItemName("");
-      setItemValue("");
       loadAllData();
     } catch (err: any) { alert(err.message); } finally { setUploading(false); }
   }
@@ -235,6 +231,13 @@ export default function ProfilePage() {
       setFiles([]);
       loadAllData();
     } catch (err) { alert("Upload failed."); } finally { setUploading(false); }
+  }
+
+  async function deleteItem(id: string) {
+    if(!confirm("Delete this photo?")) return;
+    await supabase.from("items").delete().eq("id", id);
+    setCollItems(prev => prev.filter(i => i.id !== id));
+    loadAllData();
   }
 
   const renderRankIcon = () => {
@@ -326,7 +329,55 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* NEW COLLECTION MODAL (NOW WITH PHOTO UPLOAD) */}
+      {/* EDIT PROFILE MODAL */}
+      {showEditProfile && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDIT BIO & NAME</h2>
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>Display Name</p>
+            <input value={profile?.display_url || ""} onChange={e => setProfile({...profile, display_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>Bio</p>
+            <textarea value={profile?.bio || ""} onChange={e => setProfile({...profile, bio: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '100px', resize: 'none' }} />
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
+              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT COLLECTIONS MODAL (COG) */}
+      {showEditCollection && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
+             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>MANAGE COLLECTIONS</h2>
+             {collectionsList.map(c => (
+               <div key={c.id} style={{ background: '#000', padding: '15px', borderRadius: '15px', marginBottom: '10px', border: '1px solid #27272a' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 'bold' }}>{c.title} ({c.niche})</span>
+                    <button onClick={async () => {
+                      const { data } = await supabase.from("items").select("*").eq("collection", c.id);
+                      setEditingColl(c); setCollItems(data || []);
+                    }} style={{ color: '#818cf8', fontSize: '12px' }}>VIEW ITEMS</button>
+                  </div>
+                  {editingColl?.id === c.id && (
+                    <div style={{ marginTop: '15px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                      {collItems.map(item => (
+                        <div key={item.id} style={{ position: 'relative' }}>
+                          <img src={item.image_url} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
+                          <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: -5, right: -5, background: 'red', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px' }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+               </div>
+             ))}
+             <button onClick={() => setShowEditCollection(false)} style={{ width: '100%', marginTop: '20px', color: '#a1a1aa' }}>CLOSE</button>
+          </div>
+        </div>
+      )}
+
+      {/* NEW COLLECTION MODAL (BATCH UPLOAD INCLUDED) */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -343,8 +394,7 @@ export default function ProfilePage() {
 
             <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '20px 0' }} />
             <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '10px', fontWeight: 'bold' }}>OPTIONAL: START WITH PHOTOS</p>
-            <input placeholder="Batch Item Title (Optional)" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            <input type="number" placeholder="Estimated Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
+            <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
                <span style={{ fontSize: '20px' }}>📸</span><br/>
@@ -366,7 +416,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* BATCH DROP MODAL (EXISTS SEPARATELY) */}
+      {/* BATCH DROP MODAL */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -398,7 +448,26 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ...rest of the script (Footer, Zoom Modal, etc.) kept same... */}
+      {/* ZOOM PREVIEW + SOCIAL */}
+      {selectedItem && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <button onClick={() => setSelectedItem(null)} style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '30px', color: '#fff' }}>×</button>
+          <img src={selectedItem.image_url} style={{ maxWidth: '90%', maxHeight: '60%', borderRadius: '12px', marginBottom: '20px' }} />
+          <div style={{ width: '100%', maxWidth: '400px', background: '#18181b', borderRadius: '20px', padding: '20px', border: '1px solid #27272a' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 'bold' }}>{selectedItem.title}</span>
+              <button onClick={() => toggleLike(selectedItem.id)} style={{ fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer' }}>
+                {likedItems.has(selectedItem.id) ? '⭐' : '☆'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+              <input value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Add a comment..." style={{ flex: 1, background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '14px' }} />
+              <button onClick={() => { alert("Commented!"); setCommentText(""); }} style={{ background: '#fff', color: '#000', padding: '0 15px', borderRadius: '10px', fontWeight: 'bold' }}>SEND</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );

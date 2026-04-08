@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
-import Link from "link";
+import Link from "next/link"; // Fixed this import
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();

@@ -51,7 +51,6 @@ export default function ProfilePage() {
   
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const isOwnProfile = currentUserId === userId;
 
@@ -139,7 +138,7 @@ export default function ProfilePage() {
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-      // Reverted to unfiltered global fetch
+      // Fetch Global Drops without any search/privacy filters
       const { data: globalDrops } = await supabase
         .from("items")
         .select(`*, profiles:user_id (username), collections:collection (niche)`)
@@ -269,16 +268,6 @@ export default function ProfilePage() {
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
-  const filteredDrops = recentDrops.filter(drop => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      drop.title?.toLowerCase().includes(q) || 
-      drop.collections?.niche?.toLowerCase().includes(q) || 
-      drop.profiles?.username?.toLowerCase().includes(q)
-    );
-  });
-
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
@@ -306,7 +295,7 @@ export default function ProfilePage() {
             </div>
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
 
-            {/* DYNAMIC SOCIAL LINKS */}
+            {/* COMMAND CENTRE SOCIAL LINKS */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', margin: '16px 0', alignItems: 'center', flexWrap: 'wrap' }}>
                 {profile?.ebay_url && profile.ebay_url !== "" && (
                   <a href={profile.ebay_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', fontWeight: '900', fontSize: '18px', display: 'flex' }}>
@@ -370,14 +359,11 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RECENT DROPS GRID (GENRE SEARCH INCLUDED) */}
+        {/* RECENT DROPS GRID - SEARCH BAR REMOVED */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '900' }}>GLOBAL RECENT DROPS</h2>
-            <input placeholder="Search genre or user..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ background: '#000', border: '1px solid #27272a', borderRadius: '10px', padding: '8px 12px', fontSize: '12px', width: '180px', color: '#fff' }} />
-          </div>
+          <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {filteredDrops.map((drop) => (
+            {recentDrops.map((drop) => (
               <div key={drop.id} onClick={() => setSelectedItem(drop)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
                 <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', top: '5px', left: '5px', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}>@{drop.profiles?.username}</div>

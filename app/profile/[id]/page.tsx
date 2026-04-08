@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
-import Link from "next/link"; // Fixed this import
+import Link from "next/link";
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -23,11 +23,9 @@ export default function ProfilePage() {
   const [collectionCount, setCollectionCount] = useState(0);
   const [vaultValue, setVaultValue] = useState(0);
 
-  // SOCIAL STATE
   const [isFollowing, setIsFollowing] = useState(false);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
 
-  // MODAL STATES
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
@@ -54,8 +52,7 @@ export default function ProfilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
 
-  // Search & Audience Logic
-  const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
+  // Reverting to simple search
   const [searchQuery, setSearchQuery] = useState("");
 
   const isOwnProfile = currentUserId === userId;
@@ -144,11 +141,10 @@ export default function ProfilePage() {
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-      // FETCH FIX: Ensuring null or everyone audience are captured
+      // BACK TO THE OLD WAY: No complex OR filters
       const { data: globalDrops } = await supabase
         .from("items")
         .select(`*, profiles:user_id (username), collections:collection (niche)`)
-        .or('audience.eq.everyone,audience.is.null')
         .order("created_at", { ascending: false })
         .limit(50);
       
@@ -225,8 +221,7 @@ export default function ProfilePage() {
           const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
           await supabase.from("items").insert({
             user_id: userId, title: itemName || newCollName, image_url: publicUrl,
-            estimated_value: valuePerItem, collection: coll.id, status: "active",
-            audience: selectedAudience
+            estimated_value: valuePerItem, collection: coll.id, status: "active"
           });
         }
       }
@@ -236,7 +231,6 @@ export default function ProfilePage() {
       setNewCollName("");
       setSelectedNiche("");
       setCustomNiche("");
-      setSelectedAudience("everyone");
       loadAllData();
     } catch (err: any) { alert(err.message); } finally { setUploading(false); }
   }
@@ -253,14 +247,12 @@ export default function ProfilePage() {
         const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
         await supabase.from("items").insert({
           user_id: userId, title: itemName || "New Item", image_url: publicUrl,
-          estimated_value: valuePerItem, collection: selectedCollectionId, status: "active",
-          audience: selectedAudience
+          estimated_value: valuePerItem, collection: selectedCollectionId, status: "active"
         });
       }
       alert("Drop Successful!");
       setShowAddItem(false);
       setFiles([]);
-      setSelectedAudience("everyone");
       loadAllData();
     } catch (err) { alert("Upload failed."); } finally { setUploading(false); }
   }
@@ -279,11 +271,15 @@ export default function ProfilePage() {
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
-  // VISIBILITY FIX: Always show drops if search is empty
+  // Simplified search that won't break if items are missing niches/titles
   const filteredDrops = recentDrops.filter(drop => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
-    return drop.title?.toLowerCase().includes(q) || drop.collections?.niche?.toLowerCase().includes(q) || drop.profiles?.username?.toLowerCase().includes(q);
+    return (
+      drop.title?.toLowerCase().includes(q) || 
+      drop.collections?.niche?.toLowerCase().includes(q) || 
+      drop.profiles?.username?.toLowerCase().includes(q)
+    );
   });
 
   return (
@@ -472,14 +468,10 @@ export default function ProfilePage() {
               <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#818cf8', padding: '14px', borderRadius: '12px', marginBottom: '12px', fontWeight: 'bold' }} />
             )}
             <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '20px 0' }} />
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
-                <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
-            </div>
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>📸<br/>{files.length > 0 ? `${files.length} Photos` : "ADD PHOTOS"}<input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} /></label>
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => setShowAddCollection(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
-              <button onClick={handleCreateCollectionBatch} disabled={!isCollectionValid || uploading} style={{ flex: 2, background: isCollectionValid ? '#fff' : '#27272a', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>CREATE</button>
+              <button onClick={handleCreateCollectionBatch} disabled={!isCollectionValid || uploading} style={{ flex: 2, background: isCollectionValid ? '#fff' : '#000', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>CREATE</button>
             </div>
           </div>
         </div>
@@ -495,10 +487,6 @@ export default function ProfilePage() {
             </select>
             <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             <input type="number" placeholder="Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
-                <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
-            </div>
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>📸<br/>{files.length > 0 ? `${files.length} Photos` : "ADD PHOTOS"}<input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} /></label>
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button onClick={() => setShowAddItem(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>

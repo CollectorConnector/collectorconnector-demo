@@ -68,12 +68,13 @@ export default function HomePage() {
           Connect with collectors around the world.
         </p>
 
-        {/* CTA BUTTONS */}
+        {/* CTA SECTION */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "14px",
+            alignItems: "center",
+            gap: "32px", // Increased gap to give the logo breathing room
             maxWidth: "320px",
             margin: "0 auto",
           }}
@@ -81,6 +82,7 @@ export default function HomePage() {
           <Link
             href="/auth/signup"
             style={{
+              width: "100%",
               padding: "14px",
               background: "#ffffff",
               color: "#000",
@@ -93,20 +95,16 @@ export default function HomePage() {
             Create your profile
           </Link>
 
-          <Link
-            href="/explore"
+          {/* SML-LOGO REPLACES EXPLORE BUTTON */}
+          <img
+            src="/sml-logo.png"
+            alt="CC Icon"
             style={{
-              padding: "14px",
-              border: "1px solid #ffffff",
-              color: "#ffffff",
-              borderRadius: "10px",
-              fontWeight: 600,
-              textDecoration: "none",
-              fontSize: "16px",
+              width: "50px", // Adjust size as needed
+              height: "auto",
+              opacity: 0.8,
             }}
-          >
-            Explore collectors
-          </Link>
+          />
         </div>
       </div>
     </div>

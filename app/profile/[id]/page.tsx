@@ -145,8 +145,8 @@ export default function ProfilePage() {
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-                // GLOBAL RECENT DROPS (Bulletproof Version)
-      const { data: globalDrops } = await supabase
+           // GLOBAL RECENT DROPS (Safe Version)
+      const { data: globalDrops, error: dropError } = await supabase
         .from("items")
         .select(`
           *,
@@ -154,13 +154,18 @@ export default function ProfilePage() {
             username
           )
         `)
-        .or('audience.eq.everyone,audience.is.null')
         .order("created_at", { ascending: false })
         .limit(20);
       
-      if (globalDrops) {
+      if (dropError) {
+        console.error("Drop Error:", dropError);
+        // If the fancy version fails, do a basic fetch so images still show
+        const { data: fallback } = await supabase.from("items").select("*").limit(20).order("created_at", { ascending: false });
+        if (fallback) setRecentDrops(fallback);
+      } else if (globalDrops) {
         setRecentDrops(globalDrops);
       }
+
 
 
       const { data: colls } = await supabase

@@ -97,7 +97,7 @@ export default function HomePage() {
 
           {/* SML-LOGO REPLACES EXPLORE BUTTON */}
           <img
-            src="/public/CC-SML-Logo.png"
+            src="/CC-SML-Logo.png"
             alt="CC Icon"
             style={{
               width: "50px", // Adjust size as needed

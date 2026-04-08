@@ -75,9 +75,11 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
+  // FIXED LOGOUT REDIRECT
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/login");
+    router.refresh();
+    router.push("/"); 
   }
 
   async function loadGlobalNiches() {
@@ -141,7 +143,7 @@ export default function ProfilePage() {
         setRecentDrops(items.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20));
       }
 
-      // SORTED: Newest Collections First
+      // STRICT SORTING: Newest collections at top
       const { data: colls } = await supabase
         .from("collections")
         .select("*")
@@ -349,7 +351,7 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* MODALS REMAIN THE SAME - NO CHANGES */}
+      {/* MODALS */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>

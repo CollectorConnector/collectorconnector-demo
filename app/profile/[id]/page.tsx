@@ -140,7 +140,14 @@ export default function ProfilePage() {
         setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
         setRecentDrops(items.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20));
       }
-      const { data: colls } = await supabase.from("collections").select("*").eq("user_id", userId);
+      
+      // MODIFIED: Fetch collections ordered by newest first
+      const { data: colls } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+        
       if (colls) { setCollectionCount(colls.length); setCollectionsList(colls); }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }

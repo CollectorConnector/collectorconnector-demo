@@ -145,16 +145,19 @@ export default function ProfilePage() {
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-      // GLOBAL RECENT DROPS (Showing newest 'everyone' items from all users)
+            // GLOBAL RECENT DROPS (Updated to handle existing items)
       const { data: globalDrops } = await supabase
         .from("items")
         .select("*, profiles(username)")
-        .eq("audience", "everyone")
+        // We look for 'everyone' OR rows where audience hasn't been set yet (null)
+        .or('audience.eq.everyone,audience.is.null') 
         .order("created_at", { ascending: false })
         .limit(20);
       
-      if (globalDrops) setRecentDrops(globalDrops);
-      
+      if (globalDrops) {
+        setRecentDrops(globalDrops);
+      }
+
       const { data: colls } = await supabase
         .from("collections")
         .select("*")

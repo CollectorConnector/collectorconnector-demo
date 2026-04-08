@@ -40,3 +40,16 @@ function List() {
     </main>
   );
 }
+
+// THIS PART WAS LIKELY MISSING AND CAUSED THE ERROR
+export default function CollectionsListPage() {
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <Header />
+      <Suspense fallback={<div className="p-20 text-center">LOADING...</div>}>
+        <List />
+      </Suspense>
+      <Footer />
+    </div>
+  );
+}

@@ -75,10 +75,10 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
-  // FIX: LOGOUT REDIRECT TO HOME/LOGIN
+  // FIX 1: CHANGE REDIRECT TO "/" TO PREVENT 404
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/"); 
+    router.push("/");
   }
 
   async function loadGlobalNiches() {
@@ -140,12 +140,12 @@ export default function ProfilePage() {
         setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
         setRecentDrops(items.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20));
       }
-      // FIX: SORT COLLECTIONS NEWEST FIRST
+      // FIX 2: ADD ORDER BY CREATED_AT DESC TO COLLECTIONS
       const { data: colls } = await supabase
         .from("collections")
         .select("*")
         .eq("user_id", userId)
-        .order('created_at', { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (colls) { setCollectionCount(colls.length); setCollectionsList(colls); }
     } catch (err) { console.error(err); } finally { setLoading(false); }
@@ -338,15 +338,15 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* LOGOUT BUTTON - ADDED BACK */}
+        {/* FIX 3: ADD BACK THE LOGOUT BUTTON IN THE MAIN CONTENT (OWNER ONLY) */}
         {isOwnProfile && (
-          <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: 'bold', marginTop: '10px' }}>LOGOUT</button>
+           <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: 'bold' }}>LOGOUT</button>
         )}
 
         <SuggestedUsers />
       </main>
 
-      {/* MODALS START HERE */}
+      {/* MODALS BELOW HERE UNTOUCHED */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>

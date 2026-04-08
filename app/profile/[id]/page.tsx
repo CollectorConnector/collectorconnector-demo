@@ -75,6 +75,11 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
   async function loadGlobalNiches() {
     const { data } = await supabase.from("collections").select("niche");
     if (data) {
@@ -128,14 +133,25 @@ export default function ProfilePage() {
       setLoading(true);
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
       if (prof) setProfile(prof);
+      
       const { data: items } = await supabase.from("items").select("*").eq("user_id", userId);
       if (items) {
         setItemCount(items.length);
         setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
         setRecentDrops(items.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20));
       }
-      const { data: colls } = await supabase.from("collections").select("*").eq("user_id", userId);
-      if (colls) { setCollectionCount(colls.length); setCollectionsList(colls); }
+
+      // SORTED: Newest Collections First
+      const { data: colls } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("user_id", userId)
+        .order('created_at', { ascending: false });
+
+      if (colls) { 
+        setCollectionCount(colls.length); 
+        setCollectionsList(colls); 
+      }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
 
@@ -326,10 +342,14 @@ export default function ProfilePage() {
           </div>
         </section>
 
+        {isOwnProfile && (
+          <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: 'bold', marginTop: '20px' }}>LOGOUT</button>
+        )}
+
         <SuggestedUsers />
       </main>
 
-      {/* EDIT PROFILE MODAL */}
+      {/* MODALS REMAIN THE SAME - NO CHANGES */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -346,7 +366,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* EDIT COLLECTIONS MODAL (COG) */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -377,7 +396,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* NEW COLLECTION MODAL (BATCH UPLOAD INCLUDED) */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -391,23 +409,14 @@ export default function ProfilePage() {
             {selectedNiche === "Other" && (
               <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#818cf8', padding: '14px', borderRadius: '12px', marginBottom: '12px', fontWeight: 'bold' }} />
             )}
-
             <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '20px 0' }} />
             <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '10px', fontWeight: 'bold' }}>OPTIONAL: START WITH PHOTOS</p>
             <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
                <span style={{ fontSize: '20px' }}>📸</span><br/>
                {files.length > 0 ? `${files.length} Photos Selected` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    hidden 
-                    onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} 
-                />
+               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
             </label>
-
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => { setShowAddCollection(false); setFiles([]); }} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
               <button onClick={handleCreateCollectionBatch} disabled={!isCollectionValid || uploading} style={{ flex: 2, background: isCollectionValid ? '#fff' : '#27272a', color: isCollectionValid ? '#000' : '#555', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'DROPPING...' : 'CREATE'}</button>
@@ -416,7 +425,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* BATCH DROP MODAL */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -427,19 +435,11 @@ export default function ProfilePage() {
             </select>
             <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             <input type="number" placeholder="Total Estimated Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
                <span style={{ fontSize: '24px' }}>📸</span><br/>
                {files.length > 0 ? `${files.length} Photos Ready` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    hidden 
-                    onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} 
-                />
+               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
             </label>
-
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button onClick={() => setShowAddItem(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
               <button onClick={handleBatchUploadItems} disabled={uploading || !selectedCollectionId || files.length === 0} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'DROPPING...' : 'DROP BATCH'}</button>
@@ -448,7 +448,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ZOOM PREVIEW + SOCIAL */}
       {selectedItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <button onClick={() => setSelectedItem(null)} style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '30px', color: '#fff' }}>×</button>

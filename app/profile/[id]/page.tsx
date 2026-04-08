@@ -54,7 +54,7 @@ export default function ProfilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
 
-  // NEW: Search & Audience Logic
+  // Search & Audience Logic
   const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -279,6 +279,7 @@ export default function ProfilePage() {
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
   const filteredDrops = recentDrops.filter(drop => {
+    if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return drop.title?.toLowerCase().includes(q) || drop.collections?.niche?.toLowerCase().includes(q) || drop.profiles?.username?.toLowerCase().includes(q);
   });
@@ -424,7 +425,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* OTHER MODALS (COLLECTIONS/DROPS) REMAIN UNCHANGED FOR STABILITY */}
+      {/* OTHER MODALS */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>

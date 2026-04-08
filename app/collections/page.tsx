@@ -14,7 +14,12 @@ function List() {
 
   useEffect(() => {
     if (userId) {
-      supabase.from("collections").select(`*, items (image_url)`).eq("user_id", userId)
+      // Added .order to ensure newest collections appear first
+      supabase
+        .from("collections")
+        .select(`*, items (image_url)`)
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }) 
         .then(({ data }) => setCollections(data || []));
     }
   }, [userId]);
@@ -27,23 +32,11 @@ function List() {
           <Link href={`/collections/${c.id}`} key={c.id}>
             <div style={{ background: '#18181b', aspectRatio: '1/1', borderRadius: '32px', border: '1px solid #27272a', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {c.items?.[0] && <img src={c.items[0].image_url} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />}
-              <p style={{ position: 'relative', fontWeight: '900', textTransform: 'uppercase' }}>{c.title}</p>
+              <p style={{ position: 'relative', fontWeight: '900', textTransform: 'uppercase', textAlign: 'center', padding: '0 10px' }}>{c.title}</p>
             </div>
           </Link>
         ))}
       </div>
     </main>
-  );
-}
-
-export default function CollectionsListPage() {
-  return (
-    <div className="min-h-screen bg-black text-white">
-      <Header />
-      <Suspense fallback={<div className="p-20 text-center">LOADING...</div>}>
-        <List />
-      </Suspense>
-      <Footer />
-    </div>
   );
 }

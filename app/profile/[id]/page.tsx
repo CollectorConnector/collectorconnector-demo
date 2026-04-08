@@ -75,6 +75,12 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
+  // LOGOUT HANDLER
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/");
+  }
+
   async function loadGlobalNiches() {
     const { data } = await supabase.from("collections").select("niche");
     if (data) {
@@ -112,7 +118,7 @@ export default function ProfilePage() {
   async function determineRank() {
     const stacyId = "8b594b57-fc82-477a-a709-45aec99a228f"; 
     if (userId === stacyId) { setUserRank("diamond"); return; }
-    const foundersIds = ["e0759f79-d113-4af6-a575-cee076037092", "bb088a77-ba12-4fe3-a357-03d13dc0d019"];
+    const foundersIds = ["e0759f79-d113-4af6-a575-cee076037092", "bb088a77-ba12-4fe3-a357-03d13dc0019"];
     if (foundersIds.includes(userId)) { setUserRank("founder"); return; }
     const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
     if (allUsers) {
@@ -325,6 +331,16 @@ export default function ProfilePage() {
             ))}
           </div>
         </section>
+
+        {/* LOGOUT BUTTON (OWNER ONLY) */}
+        {isOwnProfile && (
+           <button 
+             onClick={handleLogout} 
+             style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}
+           >
+             LOGOUT
+           </button>
+        )}
 
         <SuggestedUsers />
       </main>

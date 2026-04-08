@@ -16,6 +16,7 @@ export default function Header() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    setUserId(null);
     router.push("/");
     router.refresh();
   };
@@ -34,7 +35,7 @@ export default function Header() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 24px", // Slightly more padding for a premium feel
+        padding: "0 24px",
       }}
     >
       {/* LEFT: LOGO */}
@@ -71,7 +72,8 @@ export default function Header() {
           </svg>
         </button>
 
-        {if (userId) && (
+        {/* LOGIC GATES FOR LOGGED IN / OUT */}
+        {userId ? (
           <>
             <button 
               onClick={() => router.push(`/profile/${userId}`)}
@@ -87,9 +89,7 @@ export default function Header() {
               LOGOUT
             </button>
           </>
-        )}
-
-        {!userId && (
+        ) : (
           <button 
             onClick={() => router.push("/auth/login")}
             style={{ background: '#fff', color: '#000', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}

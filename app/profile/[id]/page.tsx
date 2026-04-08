@@ -75,12 +75,6 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
-  // FIX 1: CHANGE REDIRECT TO "/" TO PREVENT 404
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push("/");
-  }
-
   async function loadGlobalNiches() {
     const { data } = await supabase.from("collections").select("niche");
     if (data) {
@@ -140,13 +134,7 @@ export default function ProfilePage() {
         setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
         setRecentDrops(items.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20));
       }
-      // FIX 2: ADD ORDER BY CREATED_AT DESC TO COLLECTIONS
-      const { data: colls } = await supabase
-        .from("collections")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
+      const { data: colls } = await supabase.from("collections").select("*").eq("user_id", userId);
       if (colls) { setCollectionCount(colls.length); setCollectionsList(colls); }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
@@ -338,15 +326,10 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* FIX 3: ADD BACK THE LOGOUT BUTTON IN THE MAIN CONTENT (OWNER ONLY) */}
-        {isOwnProfile && (
-           <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: 'bold' }}>LOGOUT</button>
-        )}
-
         <SuggestedUsers />
       </main>
 
-      {/* MODALS BELOW HERE UNTOUCHED */}
+      {/* EDIT PROFILE MODAL */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -363,6 +346,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* EDIT COLLECTIONS MODAL (COG) */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -393,6 +377,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* NEW COLLECTION MODAL (BATCH UPLOAD INCLUDED) */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -431,6 +416,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* BATCH DROP MODAL */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -462,6 +448,7 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* ZOOM PREVIEW + SOCIAL */}
       {selectedItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <button onClick={() => setSelectedItem(null)} style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '30px', color: '#fff' }}>×</button>

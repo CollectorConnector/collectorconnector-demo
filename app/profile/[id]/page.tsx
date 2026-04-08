@@ -23,9 +23,11 @@ export default function ProfilePage() {
   const [collectionCount, setCollectionCount] = useState(0);
   const [vaultValue, setVaultValue] = useState(0);
 
+  // SOCIAL STATE
   const [isFollowing, setIsFollowing] = useState(false);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
 
+  // MODAL STATES
   const [showAddItem, setShowAddItem] = useState(false);
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
@@ -132,13 +134,14 @@ export default function ProfilePage() {
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
       if (prof) setProfile(prof);
       
-      const { data: localItems } = await supabase.from("items").select("*").eq("user_id", userId);
-      if (localItems) {
-        setItemCount(localItems.length);
-        setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
+      const { data: items } = await supabase.from("items").select("*").eq("user_id", userId);
+      if (items) {
+        setItemCount(items.length);
+        setVaultValue(items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-      // THE FIX: We use profiles!inner to ensure the user exists, but collections stays optional.
+      // THE "EARLIER TODAY" FIX: 
+      // We use profiles!inner to ensure the user exists, but collections stays optional (no !inner).
       const { data: globalDrops, error: globalErr } = await supabase
         .from("items")
         .select(`
@@ -152,7 +155,7 @@ export default function ProfilePage() {
           collections (niche)
         `)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(20);
       
       if (globalErr) {
         console.error("Drop Fetch Error:", globalErr);
@@ -160,12 +163,7 @@ export default function ProfilePage() {
         setRecentDrops(globalDrops);
       }
 
-      const { data: colls } = await supabase
-        .from("collections")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-        
+      const { data: colls } = await supabase.from("collections").select("*").eq("user_id", userId);
       if (colls) { setCollectionCount(colls.length); setCollectionsList(colls); }
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }
@@ -178,12 +176,8 @@ export default function ProfilePage() {
             bio: profile.bio,
             ebay_url: profile.ebay_url,
             instagram_url: profile.instagram_url,
-            discord_url: profile.discord_url,
-            whatnot_url: profile.whatnot_url,
-            facebook_url: profile.facebook_url,
             tiktok_url: profile.tiktok_url,
-            youtube_url: profile.youtube_url,
-            twitter_url: profile.twitter_url
+            whatnot_url: profile.whatnot_url
         }).eq("id", userId);
         
         if (error) throw error;
@@ -205,7 +199,7 @@ export default function ProfilePage() {
       await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
       setProfile({ ...profile, avatar_url: publicUrl });
       alert("Avatar Updated!");
-    } catch (err: any) { alert(err.message); } finally { setUploading(false); }
+    } catch (err: any) { alert("Upload failed: " + err.message); } finally { setUploading(false); }
   }
 
   async function handleCreateCollectionBatch() {
@@ -277,10 +271,12 @@ export default function ProfilePage() {
             {isOwnProfile && (
               <button onClick={() => setShowEditProfile(true)} style={{ position: 'absolute', top: '20px', right: '20px', background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', zIndex: 10 }}>EDIT PROFILE</button>
             )}
+            
             <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
               <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '100%', height: '100%', borderRadius: '20px', border: '4px solid #18181b', objectFit: 'cover', cursor: isOwnProfile ? 'pointer' : 'default' }} onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()} />
               {isOwnProfile && <input type="file" id="avatar-input" hidden accept="image/*" onChange={handleAvatarUpload} />}
             </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{profile?.display_url || profile?.username}</h1>
               {renderRankIcon()}
@@ -292,6 +288,7 @@ export default function ProfilePage() {
             </div>
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
 
+            {/* SOCIAL LINKS */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', margin: '16px 0', alignItems: 'center', flexWrap: 'wrap' }}>
                 {profile?.ebay_url && <a href={profile.ebay_url} target="_blank" style={{ textDecoration: 'none', fontWeight: '900', fontSize: '18px', display: 'flex' }}><span style={{ color: '#e53238' }}>e</span><span style={{ color: '#0064d2' }}>b</span><span style={{ color: '#f5af02' }}>a</span><span style={{ color: '#86b817' }}>y</span></a>}
                 {profile?.whatnot_url && <a href={profile.whatnot_url} target="_blank" style={{ textDecoration: 'none', background: '#fffa00', color: '#000', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '900' }}>WHATNOT</a>}
@@ -326,7 +323,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* RECENT DROPS GRID */}
+        {/* RECENT DROPS GRID (NOW FIXED) */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -346,7 +343,7 @@ export default function ProfilePage() {
         <SuggestedUsers />
       </main>
 
-      {/* FULL MODALS LIST RESTORED */}
+      {/* MODALS */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -354,10 +351,10 @@ export default function ProfilePage() {
             <input placeholder="Display Name" value={profile?.display_url || ""} onChange={e => setProfile({...profile, display_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', marginBottom: '8px' }} />
             <textarea placeholder="Bio" value={profile?.bio || ""} onChange={e => setProfile({...profile, bio: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', height: '60px', resize: 'none', marginBottom: '15px' }} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <input placeholder="eBay URL" value={profile?.ebay_url || ""} onChange={e => setProfile({...profile, ebay_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '12px' }} />
-                <input placeholder="Instagram URL" value={profile?.instagram_url || ""} onChange={e => setProfile({...profile, instagram_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '12px' }} />
-                <input placeholder="TikTok URL" value={profile?.tiktok_url || ""} onChange={e => setProfile({...profile, tiktok_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '12px' }} />
-                <input placeholder="Twitter URL" value={profile?.twitter_url || ""} onChange={e => setProfile({...profile, twitter_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '12px' }} />
+                <input placeholder="eBay" value={profile?.ebay_url || ""} onChange={e => setProfile({...profile, ebay_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '12px' }} />
+                <input placeholder="Instagram" value={profile?.instagram_url || ""} onChange={e => setProfile({...profile, instagram_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '12px' }} />
+                <input placeholder="TikTok" value={profile?.tiktok_url || ""} onChange={e => setProfile({...profile, tiktok_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '12px' }} />
+                <input placeholder="Whatnot" value={profile?.whatnot_url || ""} onChange={e => setProfile({...profile, whatnot_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px', fontSize: '12px' }} />
             </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
@@ -377,7 +374,10 @@ export default function ProfilePage() {
               {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
               <option value="Other">Other...</option>
             </select>
-            <button onClick={handleCreateCollectionBatch} style={{ width: '100%', background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>CREATE</button>
+            {selectedNiche === "Other" && (
+              <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#818cf8', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
+            )}
+            <button onClick={handleCreateCollectionBatch} disabled={!isCollectionValid} style={{ width: '100%', background: isCollectionValid ? '#fff' : '#27272a', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>CREATE</button>
             <button onClick={() => setShowAddCollection(false)} style={{ width: '100%', marginTop: '10px', color: '#a1a1aa' }}>CANCEL</button>
           </div>
         </div>
@@ -393,7 +393,7 @@ export default function ProfilePage() {
             </select>
             <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>📸<br/>{files.length > 0 ? `${files.length} Photos Selected` : "ADD PHOTOS"}<input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} /></label>
-            <button onClick={handleBatchUploadItems} style={{ width: '100%', background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>DROP BATCH</button>
+            <button onClick={handleBatchUploadItems} disabled={!selectedCollectionId || files.length === 0} style={{ width: '100%', background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>DROP BATCH</button>
             <button onClick={() => setShowAddItem(false)} style={{ width: '100%', marginTop: '10px', color: '#a1a1aa' }}>CANCEL</button>
           </div>
         </div>
@@ -405,7 +405,7 @@ export default function ProfilePage() {
           <img src={selectedItem.image_url} style={{ maxWidth: '90%', maxHeight: '60%', borderRadius: '12px', marginBottom: '20px' }} />
           <div style={{ width: '100%', maxWidth: '400px', background: '#18181b', borderRadius: '20px', padding: '20px', border: '1px solid #27272a' }}>
             <span style={{ fontWeight: 'bold' }}>{selectedItem.title}</span>
-            <button onClick={() => toggleLike(selectedItem.id)} style={{ float:'right', fontSize: '24px' }}>{likedItems.has(selectedItem.id) ? '⭐' : '☆'}</button>
+            <button onClick={() => toggleLike(selectedItem.id)} style={{ float:'right', fontSize: '24px', background: 'none', border: 'none' }}>{likedItems.has(selectedItem.id) ? '⭐' : '☆'}</button>
           </div>
         </div>
       )}

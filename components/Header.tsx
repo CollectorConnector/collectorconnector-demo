@@ -7,12 +7,44 @@ import { useEffect, useState } from "react";
 export default function Header() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id || null);
     });
   }, []);
+
+  // GLOBAL MESSAGE LISTENER
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel("header-notifications")
+      .on(
+        "postgres_changes",
+        { 
+          event: "INSERT", 
+          schema: "public", 
+          table: "messages", 
+          filter: `receiver_id=eq.${userId}` 
+        },
+        () => {
+          // 1. Show the red dot
+          setHasNewMessage(true);
+          
+          // 2. Vibrate the phone (Double-tap haptic)
+          if ("vibrate" in navigator) {
+            navigator.vibrate([200, 100, 200]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -71,6 +103,47 @@ export default function Header() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 01-14 0 7 7 0 0114 0z" />
           </svg>
         </button>
+
+        {/* MESSAGES ICON WITH NOTIFICATION DOT */}
+        {userId && (
+          <button
+            onClick={() => {
+              setHasNewMessage(false);
+              router.push("/messages");
+            }}
+            style={{ 
+              position: 'relative', 
+              background: 'none', 
+              border: 'none', 
+              color: 'inherit', 
+              cursor: 'pointer', 
+              padding: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              opacity: 0.8 
+            }}
+            aria-label="Messages"
+          >
+            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            
+            {hasNewMessage && (
+              <span 
+                style={{ 
+                  position: 'absolute', 
+                  top: '-2px', 
+                  right: '-4px', 
+                  width: '10px', 
+                  height: '10px', 
+                  background: '#ef4444', 
+                  borderRadius: '50%', 
+                  border: '2px solid #000' 
+                }} 
+              />
+            )}
+          </button>
+        )}
 
         {/* LOGIC GATES FOR LOGGED IN / OUT */}
         {userId ? (

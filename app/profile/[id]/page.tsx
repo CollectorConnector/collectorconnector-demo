@@ -366,6 +366,29 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Only show Message button if viewing SOMEONE ELSE'S profile */}
+{currentUser?.id !== profileUser?.id && (
+  <button
+    onClick={() => setIsChatOpen(true)}
+    style={{
+      padding: "10px 20px",
+      background: "transparent",
+      border: "1px solid #ffffff",
+      color: "#fff",
+      borderRadius: "8px",
+      fontWeight: "600",
+      cursor: "pointer",
+      fontSize: "14px",
+      transition: "all 0.2s"
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+  >
+    Message
+  </button>
+)}
+
+
       {/* MANAGE COLLECTIONS MODAL SECTION */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>

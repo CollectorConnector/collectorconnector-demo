@@ -58,7 +58,7 @@ export default function ProfilePage() {
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
-  const [selectedItem, setSelectedItem] = useState<any>(null); 
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
   const [hasNewMessage, setHasNewMessage] = useState(false);
@@ -382,8 +382,8 @@ export default function ProfilePage() {
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {recentDrops.map((drop) => (
-              <div key={drop.id} onClick={() => setSelectedItem(drop)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
+            {recentDrops.map((drop, index) => (
+              <div key={drop.id} onClick={() => setSelectedItemIndex(index)} style={{ aspectRatio: '1/1', background: '#18181b', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
                 <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', top: '5px', left: '5px', background: 'rgba(0,0,0,0.6)', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold' }}>@{drop.profiles?.username}</div>
                 {likedItems.has(drop.id) && <div style={{ position: 'absolute', bottom: '5px', right: '5px', fontSize: '14px' }}>⭐</div>}
@@ -395,6 +395,33 @@ export default function ProfilePage() {
         {isOwnProfile && <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}>LOGOUT</button>}
         <SuggestedUsers />
       </main>
+
+      {/* PHOTO PREVIEW LIGHTBOX */}
+      {selectedItemIndex !== null && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '40px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '30px', cursor: 'pointer' }}>✕</button>
+            
+            <button 
+              onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))}
+              style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}
+            >
+              ‹
+            </button>
+
+            <div style={{ maxWidth: '90%', maxHeight: '80%', textAlign: 'center' }}>
+                <img src={recentDrops[selectedItemIndex].image_url} style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #27272a' }} />
+                <p style={{ marginTop: '20px', fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</p>
+                <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
+            </div>
+
+            <button 
+              onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))}
+              style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}
+            >
+              ›
+            </button>
+        </div>
+      )}
 
       {/* NEW COLLECTION MODAL (Integrated with Photo Batch & Audience) */}
       {showAddCollection && (

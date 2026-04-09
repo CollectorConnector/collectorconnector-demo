@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
-import ChatDrawer from "@/components/ChatDrawer"; // ADDED
+import ChatDrawer from "@/components/ChatDrawer";
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -34,7 +34,10 @@ export default function ProfilePage() {
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
   const [selectedItem, setSelectedItem] = useState<any>(null); 
-  const [isChatOpen, setIsChatOpen] = useState(false); // ADDED
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  
+  // NEW: Notification State
+  const [hasNewMessage, setHasNewMessage] = useState(false);
   
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -67,6 +70,32 @@ export default function ProfilePage() {
     });
     loadGlobalNiches();
   }, []);
+
+  // GLOBAL NOTIFICATION LISTENER
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel("global-notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${currentUserId}` },
+        (payload) => {
+          // 1. If chat is closed, show red dot
+          if (!isChatOpen) {
+            setHasNewMessage(true);
+            
+            // 2. Vibrate the phone (Pattern: Vibrate 200ms, Pause 100ms, Vibrate 200ms)
+            if ("vibrate" in navigator) {
+              navigator.vibrate([200, 100, 200]);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUserId, isChatOpen]);
 
   useEffect(() => {
     if (!userId) return;
@@ -323,9 +352,16 @@ export default function ProfilePage() {
                   <button onClick={toggleFollow} style={{ background: isFollowing ? 'transparent' : '#fff', color: isFollowing ? '#fff' : '#000', border: isFollowing ? '1px solid #27272a' : 'none', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>
                     {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
                   </button>
-                  {/* MESSAGE BUTTON INSERTED */}
-                  <button onClick={() => setIsChatOpen(true)} style={{ background: 'transparent', color: '#fff', border: '1px solid #fff', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>
+                  
+                  {/* MESSAGE BUTTON WITH NOTIFICATION DOT */}
+                  <button 
+                    onClick={() => { setIsChatOpen(true); setHasNewMessage(false); }} 
+                    style={{ position: 'relative', background: 'transparent', color: '#fff', border: '1px solid #fff', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}
+                  >
                     MESSAGE
+                    {hasNewMessage && (
+                        <span style={{ position: 'absolute', top: '-5px', right: '-5px', width: '12px', height: '12px', background: '#ef4444', borderRadius: '50%', border: '2px solid #000' }} />
+                    )}
                   </button>
                 </div>
               )}

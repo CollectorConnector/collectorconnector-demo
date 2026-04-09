@@ -9,7 +9,19 @@ import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
-import ChatDrawer from "@/components/ChatDrawer";
+
+// --- SVG ICONS ---
+const DiscordIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.196.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+  </svg>
+);
+
+const TwitchIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+  </svg>
+);
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -34,10 +46,6 @@ export default function ProfilePage() {
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
   const [selectedItem, setSelectedItem] = useState<any>(null); 
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  
-  // Notification State
-  const [hasNewMessage, setHasNewMessage] = useState(false);
   
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -59,7 +67,7 @@ export default function ProfilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
 
-  // Audience State
+  // NEW: Audience State
   const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
 
   const isOwnProfile = currentUserId === userId;
@@ -71,43 +79,10 @@ export default function ProfilePage() {
     loadGlobalNiches();
   }, []);
 
-  // GLOBAL NOTIFICATION LISTENER
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    const channel = supabase
-      .channel("global-notifications")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${currentUserId}` },
-        (payload) => {
-          if (!isChatOpen) {
-            setHasNewMessage(true);
-            if ("vibrate" in navigator) {
-              navigator.vibrate([200, 100, 200]);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [currentUserId, isChatOpen]);
-
   useEffect(() => {
     if (!userId) return;
     loadAllData();
     determineRank();
-  }, [userId]);
-
-  // TRIGGER CHAT FROM INBOX
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    if (queryParams.get("openChat") === "true") {
-      setIsChatOpen(true);
-      const newPath = window.location.pathname;
-      window.history.replaceState(null, '', newPath);
-    }
   }, [userId]);
 
   useEffect(() => {
@@ -116,6 +91,7 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
+  // LOGOUT HANDLER
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/");
@@ -175,12 +151,14 @@ export default function ProfilePage() {
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
       if (prof) setProfile(prof);
       
+      // USER STATS (Keep this local to the profile)
       const { data: localItems } = await supabase.from("items").select("*").eq("user_id", userId);
       if (localItems) {
         setItemCount(localItems.length);
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
+           // GLOBAL RECENT DROPS (Safe Version)
       const { data: globalDrops, error: dropError } = await supabase
         .from("items")
         .select(`
@@ -194,11 +172,14 @@ export default function ProfilePage() {
       
       if (dropError) {
         console.error("Drop Error:", dropError);
+        // If the fancy version fails, do a basic fetch so images still show
         const { data: fallback } = await supabase.from("items").select("*").limit(20).order("created_at", { ascending: false });
         if (fallback) setRecentDrops(fallback);
       } else if (globalDrops) {
         setRecentDrops(globalDrops);
       }
+
+
 
       const { data: colls } = await supabase
         .from("collections")
@@ -216,14 +197,8 @@ export default function ProfilePage() {
         const { error } = await supabase.from("profiles").update({ 
             display_url: profile.display_url, 
             bio: profile.bio,
-            instagram_handle: profile.instagram_handle,
-            ebay_handle: profile.ebay_handle,
-            youtube_handle: profile.youtube_handle,
-            whatnot_handle: profile.whatnot_handle,
-            x_handle: profile.x_handle,
-            facebook_handle: profile.facebook_handle,
-            discord_handle: profile.discord_handle,
-            twitch_handle: profile.twitch_handle
+            discord_url: profile.discord_url,
+            twitch_url: profile.twitch_url
         }).eq("id", userId);
         
         if (error) throw error;
@@ -276,7 +251,7 @@ export default function ProfilePage() {
           await supabase.from("items").insert({
             user_id: userId, title: itemName || newCollName, image_url: publicUrl,
             estimated_value: valuePerItem, collection: coll.id, status: "active",
-            audience: selectedAudience
+            audience: selectedAudience // Saving Privacy Setting
           });
         }
       }
@@ -305,7 +280,7 @@ export default function ProfilePage() {
         await supabase.from("items").insert({
           user_id: userId, title: itemName || "New Item", image_url: publicUrl,
           estimated_value: valuePerItem, collection: selectedCollectionId, status: "active",
-          audience: selectedAudience
+          audience: selectedAudience // Saving Privacy Setting
         });
       }
       alert("Drop Successful!");
@@ -329,8 +304,6 @@ export default function ProfilePage() {
   };
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
-
-  const modalInputStyle = { width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -364,84 +337,23 @@ export default function ProfilePage() {
               <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{profile?.display_url || profile?.username}</h1>
               {renderRankIcon()}
               {!isOwnProfile && currentUserId && (
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={toggleFollow} style={{ background: isFollowing ? 'transparent' : '#fff', color: isFollowing ? '#fff' : '#000', border: isFollowing ? '1px solid #27272a' : 'none', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>
-                    {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
-                  </button>
-                  <button 
-                    onClick={() => { setIsChatOpen(true); setHasNewMessage(false); }} 
-                    style={{ position: 'relative', background: 'transparent', color: '#fff', border: '1px solid #fff', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}
-                  >
-                    MESSAGE
-                    {hasNewMessage && (
-                        <span style={{ position: 'absolute', top: '-5px', right: '-5px', width: '12px', height: '12px', background: '#ef4444', borderRadius: '50%', border: '2px solid #000' }} />
-                    )}
-                  </button>
-                </div>
+                <button onClick={toggleFollow} style={{ background: isFollowing ? 'transparent' : '#fff', color: isFollowing ? '#fff' : '#000', border: isFollowing ? '1px solid #27272a' : 'none', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>
+                  {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
+                </button>
               )}
             </div>
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
-            <p style={{ color: '#a1a1aa', margin: '4px 0 12px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
-
-            {/* SOCIAL SVG ICONS */}
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
-              
-              {/* INSTAGRAM */}
-              {profile?.instagram_handle && (
-                <a href={`https://instagram.com/${profile.instagram_handle}`} target="_blank" rel="noopener noreferrer" style={{ color: '#E4405F', opacity: 0.9 }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                </a>
-              )}
-
-              {/* EBAY */}
-              {profile?.ebay_handle && (
-                <a href={`https://www.ebay.co.uk/usr/${profile.ebay_handle}`} target="_blank" rel="noopener noreferrer" style={{ color: '#0064D2', opacity: 0.9 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M4.093 12.338c-.546-.65-.826-1.52-.826-2.454 0-.93.284-1.796.84-2.463.553-.668 1.343-1.144 2.23-1.353v7.625c-.88-.205-1.683-.674-2.244-1.355zm1.531-10.118c-1.385 0-2.668.563-3.61 1.583S.5 6.22 0 7.604c0 1.385.508 2.668 1.514 3.61s2.225 1.514 3.61 1.514c1.385 0 2.668-.51 3.612-1.516s1.514-2.225 1.514-3.608c0-1.385-.506-2.67-1.514-3.612s-2.227-1.514-3.612-1.514zm6.34 10.118h2.1l1.41-5.114H13.41l-1.446 5.114zm1.066-6.14h2.1l.613-2.146h-2.1l-.613 2.146zm10.97 1.258c-.378-.456-.84-.792-1.415-.99-.57-.196-1.187-.294-1.85-.294-1.386 0-2.478.475-3.276 1.425-.798.95-1.197 2.148-1.197 3.593 0 1.445.4 2.643 1.2 3.593.8.95 1.89 1.425 3.274 1.425 1.384 0 2.47-.474 3.26-1.42.79-.946 1.185-2.144 1.185-3.593 0-.756-.16-1.436-.482-2.04-.32-.605-.82-1.19-1.43-1.745z"/></svg>
-                </a>
-              )}
-
-              {/* YOUTUBE */}
-              {profile?.youtube_handle && (
-                <a href={`https://youtube.com/@${profile.youtube_handle}`} target="_blank" rel="noopener noreferrer" style={{ color: '#FF0000', opacity: 0.9 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                </a>
-              )}
-
-              {/* WHATNOT */}
-              {profile?.whatnot_handle && (
-                <a href={`https://whatnot.com/user/${profile.whatnot_handle}`} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', opacity: 0.9 }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
-                </a>
-              )}
-
-              {/* X */}
-              {profile?.x_handle && (
-                <a href={`https://x.com/${profile.x_handle}`} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', opacity: 0.9 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                </a>
-              )}
-
-              {/* FACEBOOK */}
-              {profile?.facebook_handle && (
-                <a href={`https://facebook.com/${profile.facebook_handle}`} target="_blank" rel="noopener noreferrer" style={{ color: '#1877F2', opacity: 0.9 }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                </a>
-              )}
-
-              {/* DISCORD */}
-              {profile?.discord_handle && (
-                <div onClick={() => { navigator.clipboard.writeText(profile.discord_handle); alert("Discord tag copied!"); }} style={{ cursor: 'pointer', color: '#5865F2', opacity: 0.9 }} title="Copy Discord Tag">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.862-1.297 1.197-2.002a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.196.373.291a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z"/></svg>
-                </div>
-              )}
-
-              {/* TWITCH */}
-              {profile?.twitch_handle && (
-                <a href={`https://twitch.tv/${profile.twitch_handle}`} target="_blank" rel="noopener noreferrer" style={{ color: '#9146FF', opacity: 0.9 }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
-                </a>
-              )}
+            
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '12px' }}>
+                {profile?.discord_url && (
+                    <a href={profile.discord_url} target="_blank" style={{ color: '#5865F2' }}><DiscordIcon /></a>
+                )}
+                {profile?.twitch_url && (
+                    <a href={profile.twitch_url} target="_blank" style={{ color: '#9146FF' }}><TwitchIcon /></a>
+                )}
             </div>
+
+            <p style={{ color: '#a1a1aa', margin: '16px 0 24px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
 
@@ -485,6 +397,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
+        {/* LOGOUT BUTTON (OWNER ONLY) */}
         {isOwnProfile && (
            <button 
              onClick={handleLogout} 
@@ -503,33 +416,27 @@ export default function ProfilePage() {
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDIT PROFILE</h2>
             
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold' }}>DISPLAY NAME</p>
-            <input value={profile?.display_url || ""} onChange={e => setProfile({...profile, display_url: e.target.value})} style={modalInputStyle} />
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>Display Name</p>
+            <input value={profile?.display_url || ""} onChange={e => setProfile({...profile, display_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
             
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold' }}>BIO</p>
-            <textarea value={profile?.bio || ""} onChange={e => setProfile({...profile, bio: e.target.value})} style={{ ...modalInputStyle, height: '80px', resize: 'none' }} />
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>Discord Invite URL</p>
+            <input value={profile?.discord_url || ""} placeholder="https://discord.gg/..." onChange={e => setProfile({...profile, discord_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
 
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold' }}>SOCIAL HANDLES</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <input placeholder="Instagram" value={profile?.instagram_handle || ""} onChange={e => setProfile({...profile, instagram_handle: e.target.value})} style={modalInputStyle} />
-              <input placeholder="eBay" value={profile?.ebay_handle || ""} onChange={e => setProfile({...profile, ebay_handle: e.target.value})} style={modalInputStyle} />
-              <input placeholder="YouTube" value={profile?.youtube_handle || ""} onChange={e => setProfile({...profile, youtube_handle: e.target.value})} style={modalInputStyle} />
-              <input placeholder="Whatnot" value={profile?.whatnot_handle || ""} onChange={e => setProfile({...profile, whatnot_handle: e.target.value})} style={modalInputStyle} />
-              <input placeholder="X (Twitter)" value={profile?.x_handle || ""} onChange={e => setProfile({...profile, x_handle: e.target.value})} style={modalInputStyle} />
-              <input placeholder="Facebook" value={profile?.facebook_handle || ""} onChange={e => setProfile({...profile, facebook_handle: e.target.value})} style={modalInputStyle} />
-              <input placeholder="Discord" value={profile?.discord_handle || ""} onChange={e => setProfile({...profile, discord_handle: e.target.value})} style={modalInputStyle} />
-              <input placeholder="Twitch" value={profile?.twitch_handle || ""} onChange={e => setProfile({...profile, twitch_handle: e.target.value})} style={modalInputStyle} />
-            </div>
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>Twitch URL</p>
+            <input value={profile?.twitch_url || ""} placeholder="https://twitch.tv/..." onChange={e => setProfile({...profile, twitch_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
 
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>Bio</p>
+            <textarea value={profile?.bio || ""} onChange={e => setProfile({...profile, bio: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '100px', resize: 'none' }} />
+            
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold' }}>CANCEL</button>
-              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE CHANGES'}</button>
+              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
+              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* EDIT COLLECTIONS MODAL */}
+      {/* EDIT COLLECTIONS MODAL (COG) */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -560,19 +467,19 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* NEW COLLECTION MODAL */}
+      {/* NEW COLLECTION MODAL (BATCH UPLOAD INCLUDED) */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
-            <input placeholder="Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={modalInputStyle} />
-            <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={modalInputStyle}>
+            <input placeholder="Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
+            <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }}>
               <option value="">Select Niche...</option>
               {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
               <option value="Other">Other...</option>
             </select>
             {selectedNiche === "Other" && (
-              <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ ...modalInputStyle, color: '#818cf8', fontWeight: 'bold' }} />
+              <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#818cf8', padding: '14px', borderRadius: '12px', marginBottom: '12px', fontWeight: 'bold' }} />
             )}
 
             <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '20px 0' }} />
@@ -584,12 +491,18 @@ export default function ProfilePage() {
             </div>
 
             <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '10px', fontWeight: 'bold' }}>OPTIONAL: START WITH PHOTOS</p>
-            <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={modalInputStyle} />
+            <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
                <span style={{ fontSize: '20px' }}>📸</span><br/>
                {files.length > 0 ? `${files.length} Photos Selected` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
+               <input 
+                    type="file" 
+                    multiple 
+                    accept="image/*" 
+                    hidden 
+                    onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} 
+                />
             </label>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
@@ -605,12 +518,12 @@ export default function ProfilePage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>BATCH DROP</h2>
-            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={modalInputStyle}>
+            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
               <option value="">Select Target Collection</option>
               {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
-            <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={modalInputStyle} />
-            <input type="number" placeholder="Total Estimated Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={modalInputStyle} />
+            <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
+            <input type="number" placeholder="Total Estimated Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
             
             <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}>AUDIENCE</p>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
@@ -621,7 +534,13 @@ export default function ProfilePage() {
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
                <span style={{ fontSize: '24px' }}>📸</span><br/>
                {files.length > 0 ? `${files.length} Photos Ready` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
+               <input 
+                    type="file" 
+                    multiple 
+                    accept="image/*" 
+                    hidden 
+                    onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} 
+                />
             </label>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -632,7 +551,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ZOOM PREVIEW */}
+      {/* ZOOM PREVIEW + SOCIAL */}
       {selectedItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <button onClick={() => setSelectedItem(null)} style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '30px', color: '#fff' }}>×</button>
@@ -651,14 +570,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-
-      {/* CHAT DRAWER RENDER */}
-      <ChatDrawer 
-        isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)} 
-        receiverId={userId} 
-        receiverName={profile?.display_url || profile?.username || "Collector"} 
-      />
 
       <Footer />
     </div>

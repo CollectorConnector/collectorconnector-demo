@@ -36,7 +36,7 @@ export default function ProfilePage() {
   const [selectedItem, setSelectedItem] = useState<any>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
-  // NEW: Notification State
+  // Notification State
   const [hasNewMessage, setHasNewMessage] = useState(false);
   
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
@@ -59,7 +59,7 @@ export default function ProfilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
 
-  // NEW: Audience State
+  // Audience State
   const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
 
   const isOwnProfile = currentUserId === userId;
@@ -81,11 +81,8 @@ export default function ProfilePage() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${currentUserId}` },
         (payload) => {
-          // 1. If chat is closed, show red dot
           if (!isChatOpen) {
             setHasNewMessage(true);
-            
-            // 2. Vibrate the phone (Pattern: Vibrate 200ms, Pause 100ms, Vibrate 200ms)
             if ("vibrate" in navigator) {
               navigator.vibrate([200, 100, 200]);
             }
@@ -101,6 +98,18 @@ export default function ProfilePage() {
     if (!userId) return;
     loadAllData();
     determineRank();
+  }, [userId]);
+
+  // NEW: TRIGGER CHAT FROM INBOX
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    if (queryParams.get("openChat") === "true") {
+      setIsChatOpen(true);
+      
+      // Clean up the URL so it doesn't stay there
+      const newPath = window.location.pathname;
+      window.history.replaceState(null, '', newPath);
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -352,8 +361,6 @@ export default function ProfilePage() {
                   <button onClick={toggleFollow} style={{ background: isFollowing ? 'transparent' : '#fff', color: isFollowing ? '#fff' : '#000', border: isFollowing ? '1px solid #27272a' : 'none', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>
                     {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
                   </button>
-                  
-                  {/* MESSAGE BUTTON WITH NOTIFICATION DOT */}
                   <button 
                     onClick={() => { setIsChatOpen(true); setHasNewMessage(false); }} 
                     style={{ position: 'relative', background: 'transparent', color: '#fff', border: '1px solid #fff', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}

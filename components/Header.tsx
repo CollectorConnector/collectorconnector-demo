@@ -19,8 +19,22 @@ export default function Header() {
   useEffect(() => {
     if (!userId) return;
 
+    // 1. Initial check: Do we have any unread messages right now?
+    const checkInitialMessages = async () => {
+      const { count } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', userId)
+        .eq('is_read', false);
+      
+      if (count && count > 0) setHasNewMessage(true);
+    };
+    
+    checkInitialMessages();
+
+    // 2. Realtime subscription for incoming messages
     const channel = supabase
-      .channel("header-notifications")
+      .channel("global-message-channel")
       .on(
         "postgres_changes",
         { 
@@ -29,17 +43,18 @@ export default function Header() {
           table: "messages", 
           filter: `receiver_id=eq.${userId}` 
         },
-        () => {
-          // 1. Show the red dot
+        (payload) => {
+          console.log("New message received!", payload);
           setHasNewMessage(true);
           
-          // 2. Vibrate the phone (Double-tap haptic)
           if ("vibrate" in navigator) {
             navigator.vibrate([200, 100, 200]);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Realtime status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

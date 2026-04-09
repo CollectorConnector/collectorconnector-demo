@@ -23,10 +23,22 @@ export default function ChatDrawer({ isOpen, onClose, receiverId, receiverName }
     });
   }, []);
 
+  // NEW: Function to mark messages as read
+  const markAsRead = async () => {
+    if (!currentUserId || !receiverId) return;
+    
+    await supabase
+      .from("messages")
+      .update({ is_read: true })
+      .eq("sender_id", receiverId)
+      .eq("receiver_id", currentUserId)
+      .eq("is_read", false);
+  };
+
   useEffect(() => {
     if (!isOpen || !currentUserId || !receiverId) return;
 
-    // 1. Initial Load of messages between these two users
+    // 1. Initial Load of messages
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from("messages")
@@ -34,7 +46,11 @@ export default function ChatDrawer({ isOpen, onClose, receiverId, receiverName }
         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${currentUserId})`)
         .order("created_at", { ascending: true });
 
-      if (!error && data) setMessages(data);
+      if (!error && data) {
+        setMessages(data);
+        // Mark these as read now that we've loaded them
+        markAsRead();
+      }
     };
 
     fetchMessages();
@@ -52,6 +68,11 @@ export default function ChatDrawer({ isOpen, onClose, receiverId, receiverName }
             (msg.sender_id === receiverId && msg.receiver_id === currentUserId)
           ) {
             setMessages((prev) => [...prev, msg]);
+            
+            // If the chat is open and we receive a message from the other person, mark it read immediately
+            if (msg.sender_id === receiverId) {
+              markAsRead();
+            }
           }
         }
       )

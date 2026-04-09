@@ -34,9 +34,9 @@ const FacebookIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
 );
 
-// --- OPTION A EBAY LOGO ---
-const FixedEbayLogo = ({ width = 60, height = 24 }) => (
-  <svg width={width} height={height} viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+// --- UPDATED OFFICIAL EBAY LOGO ---
+const FixedEbayLogo = () => (
+  <svg width="45" height="18" viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
     <path fill="#e53238" d="M187.3 125.1c-15.6 0-27.1 5.9-33.8 17.2l-.7-.1v-12.7H111v193.3h41.8v-70.1c6.7 11.2 18.2 17.2 33.8 17.2 27.5 0 52-22.3 52-72.4s-23.7-72.4-51.3-72.4zm-7.1 106.3c-15.5 0-24.8-12.5-24.8-33.9s9.3-33.9 24.8-33.9 24.8 12.5 24.8 33.9-9.3 33.9-24.8 33.9z"/>
     <path fill="#0064d2" d="M352.2 205.1c0-23.9-15.4-38.6-39-38.6-23.3 0-40 15.6-40 40 0 24.7 16.7 40.2 41.5 40.2 11.4 0 20.8-3.4 28.3-9.4l-11.5-17.7c-4.4 3.4-10.4 5.3-16.1 5.3-11.8 0-19.4-6.4-20.2-16.7h56.8c.1-.8.2-2.1.2-3.1zm-56.7-10.3c1.3-9.5 8.9-14.1 17.8-14.1 8.6 0 16.1 4.6 17.2 14.1h-35z"/>
     <path fill="#f5af02" d="M518 129.5h-41.2v17.2c-6.8-11.2-18.4-17.2-34.1-17.2-27.7 0-52.5 22.3-52.5 72.4s24.4 72.4 52.1 72.4c15.7 0 27.3-6.1 34.1-17.2v13.5h41.7V129.5zm-55.8 101.9c-15.6 0-25-12.5-25-33.9s9.4-33.9 25-33.9 25.1 12.5 25.1 33.9-9.4 33.9-25.1 33.9z"/>
@@ -423,7 +423,7 @@ export default function ProfilePage() {
                )}
                
                {profile?.ebay_url && (
-                <a href={profile.ebay_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', background: '#fff', padding: '4px 10px', borderRadius: '8px' }}>
+                <a href={profile.ebay_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}>
                   <FixedEbayLogo />
                 </a>
                )}

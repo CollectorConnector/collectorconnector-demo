@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
+import ChatDrawer from "@/components/ChatDrawer";
 
 export default function ProfilePage() {
   const params = useParams<{ id: string }>();
@@ -33,6 +34,10 @@ export default function ProfilePage() {
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
   const [selectedItem, setSelectedItem] = useState<any>(null); 
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  
+  // Notification State
+  const [hasNewMessage, setHasNewMessage] = useState(false);
   
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -54,7 +59,7 @@ export default function ProfilePage() {
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
 
-  // NEW: Audience State
+  // Audience State
   const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
 
   const isOwnProfile = currentUserId === userId;
@@ -66,10 +71,43 @@ export default function ProfilePage() {
     loadGlobalNiches();
   }, []);
 
+  // GLOBAL NOTIFICATION LISTENER
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel("global-notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${currentUserId}` },
+        (payload) => {
+          if (!isChatOpen) {
+            setHasNewMessage(true);
+            if ("vibrate" in navigator) {
+              navigator.vibrate([200, 100, 200]);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUserId, isChatOpen]);
+
   useEffect(() => {
     if (!userId) return;
     loadAllData();
     determineRank();
+  }, [userId]);
+
+  // TRIGGER CHAT FROM INBOX
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    if (queryParams.get("openChat") === "true") {
+      setIsChatOpen(true);
+      const newPath = window.location.pathname;
+      window.history.replaceState(null, '', newPath);
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -78,7 +116,6 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
-  // LOGOUT HANDLER
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/");
@@ -138,14 +175,12 @@ export default function ProfilePage() {
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
       if (prof) setProfile(prof);
       
-      // USER STATS (Keep this local to the profile)
       const { data: localItems } = await supabase.from("items").select("*").eq("user_id", userId);
       if (localItems) {
         setItemCount(localItems.length);
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-           // GLOBAL RECENT DROPS (Safe Version)
       const { data: globalDrops, error: dropError } = await supabase
         .from("items")
         .select(`
@@ -159,14 +194,11 @@ export default function ProfilePage() {
       
       if (dropError) {
         console.error("Drop Error:", dropError);
-        // If the fancy version fails, do a basic fetch so images still show
         const { data: fallback } = await supabase.from("items").select("*").limit(20).order("created_at", { ascending: false });
         if (fallback) setRecentDrops(fallback);
       } else if (globalDrops) {
         setRecentDrops(globalDrops);
       }
-
-
 
       const { data: colls } = await supabase
         .from("collections")
@@ -183,7 +215,9 @@ export default function ProfilePage() {
     try {
         const { error } = await supabase.from("profiles").update({ 
             display_url: profile.display_url, 
-            bio: profile.bio 
+            bio: profile.bio,
+            discord_handle: profile.discord_handle,
+            twitch_handle: profile.twitch_handle
         }).eq("id", userId);
         
         if (error) throw error;
@@ -236,7 +270,7 @@ export default function ProfilePage() {
           await supabase.from("items").insert({
             user_id: userId, title: itemName || newCollName, image_url: publicUrl,
             estimated_value: valuePerItem, collection: coll.id, status: "active",
-            audience: selectedAudience // Saving Privacy Setting
+            audience: selectedAudience
           });
         }
       }
@@ -265,7 +299,7 @@ export default function ProfilePage() {
         await supabase.from("items").insert({
           user_id: userId, title: itemName || "New Item", image_url: publicUrl,
           estimated_value: valuePerItem, collection: selectedCollectionId, status: "active",
-          audience: selectedAudience // Saving Privacy Setting
+          audience: selectedAudience
         });
       }
       alert("Drop Successful!");
@@ -322,13 +356,54 @@ export default function ProfilePage() {
               <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{profile?.display_url || profile?.username}</h1>
               {renderRankIcon()}
               {!isOwnProfile && currentUserId && (
-                <button onClick={toggleFollow} style={{ background: isFollowing ? 'transparent' : '#fff', color: isFollowing ? '#fff' : '#000', border: isFollowing ? '1px solid #27272a' : 'none', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>
-                  {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={toggleFollow} style={{ background: isFollowing ? 'transparent' : '#fff', color: isFollowing ? '#fff' : '#000', border: isFollowing ? '1px solid #27272a' : 'none', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>
+                    {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
+                  </button>
+                  <button 
+                    onClick={() => { setIsChatOpen(true); setHasNewMessage(false); }} 
+                    style={{ position: 'relative', background: 'transparent', color: '#fff', border: '1px solid #fff', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}
+                  >
+                    MESSAGE
+                    {hasNewMessage && (
+                        <span style={{ position: 'absolute', top: '-5px', right: '-5px', width: '12px', height: '12px', background: '#ef4444', borderRadius: '50%', border: '2px solid #000' }} />
+                    )}
+                  </button>
+                </div>
               )}
             </div>
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
-            <p style={{ color: '#a1a1aa', margin: '16px 0 24px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
+            <p style={{ color: '#a1a1aa', margin: '4px 0 12px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
+
+            {/* SOCIAL SVG ICONS */}
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px', alignItems: 'center' }}>
+              {profile?.discord_handle && (
+                <div 
+                  onClick={() => {
+                    navigator.clipboard.writeText(profile.discord_handle);
+                    alert("Discord tag copied!");
+                  }}
+                  style={{ cursor: 'pointer', color: '#5865F2', opacity: 0.9 }}
+                  title="Copy Discord Tag"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.862-1.297 1.197-2.002a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.196.373.291a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z"/>
+                  </svg>
+                </div>
+              )}
+              {profile?.twitch_handle && (
+                <a 
+                  href={`https://twitch.tv/${profile.twitch_handle}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: '#9146FF', opacity: 0.9 }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
+                  </svg>
+                </a>
+              )}
+            </div>
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
 
@@ -372,7 +447,6 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* LOGOUT BUTTON (OWNER ONLY) */}
         {isOwnProfile && (
            <button 
              onClick={handleLogout} 
@@ -388,21 +462,30 @@ export default function ProfilePage() {
       {/* EDIT PROFILE MODAL */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDIT BIO & NAME</h2>
-            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>Display Name</p>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>EDIT PROFILE</h2>
+            
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold' }}>DISPLAY NAME</p>
             <input value={profile?.display_url || ""} onChange={e => setProfile({...profile, display_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
-            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '8px' }}>Bio</p>
-            <textarea value={profile?.bio || ""} onChange={e => setProfile({...profile, bio: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '100px', resize: 'none' }} />
+            
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold' }}>BIO</p>
+            <textarea value={profile?.bio || ""} onChange={e => setProfile({...profile, bio: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '80px', resize: 'none', marginBottom: '16px' }} />
+
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold' }}>DISCORD</p>
+            <input placeholder="Username#0000" value={profile?.discord_handle || ""} onChange={e => setProfile({...profile, discord_handle: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
+
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold' }}>TWITCH</p>
+            <input placeholder="Channel Name" value={profile?.twitch_handle || ""} onChange={e => setProfile({...profile, twitch_handle: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
+
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
-              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE'}</button>
+              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold' }}>CANCEL</button>
+              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE CHANGES'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* EDIT COLLECTIONS MODAL (COG) */}
+      {/* EDIT COLLECTIONS MODAL */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -433,7 +516,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* NEW COLLECTION MODAL (BATCH UPLOAD INCLUDED) */}
+      {/* NEW COLLECTION MODAL */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -462,13 +545,7 @@ export default function ProfilePage() {
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
                <span style={{ fontSize: '20px' }}>📸</span><br/>
                {files.length > 0 ? `${files.length} Photos Selected` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    hidden 
-                    onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} 
-                />
+               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
             </label>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
@@ -500,13 +577,7 @@ export default function ProfilePage() {
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
                <span style={{ fontSize: '24px' }}>📸</span><br/>
                {files.length > 0 ? `${files.length} Photos Ready` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    hidden 
-                    onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} 
-                />
+               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
             </label>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -517,7 +588,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ZOOM PREVIEW + SOCIAL */}
+      {/* ZOOM PREVIEW */}
       {selectedItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 4000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <button onClick={() => setSelectedItem(null)} style={{ position: 'absolute', top: '20px', right: '20px', fontSize: '30px', color: '#fff' }}>×</button>
@@ -536,6 +607,14 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* CHAT DRAWER RENDER */}
+      <ChatDrawer 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        receiverId={userId} 
+        receiverName={profile?.display_url || profile?.username || "Collector"} 
+      />
 
       <Footer />
     </div>

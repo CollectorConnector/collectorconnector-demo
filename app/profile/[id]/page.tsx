@@ -50,6 +50,8 @@ export default function ProfilePage() {
   const [itemCount, setItemCount] = useState(0);
   const [collectionCount, setCollectionCount] = useState(0);
   const [vaultValue, setVaultValue] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
@@ -117,6 +119,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!userId) return;
     loadAllData();
+    loadFollowCounts();
     determineRank();
   }, [userId]);
 
@@ -153,6 +156,23 @@ export default function ProfilePage() {
     setIsFollowing(!!data);
   }
 
+  async function loadFollowCounts() {
+    // Get followers (people following this user)
+    const { count: followers } = await supabase
+      .from("follows")
+      .select("*", { count: 'exact', head: true })
+      .eq("following_id", userId);
+    
+    // Get following (people this user follows)
+    const { count: following } = await supabase
+      .from("follows")
+      .select("*", { count: 'exact', head: true })
+      .eq("follower_id", userId);
+
+    setFollowerCount(followers || 0);
+    setFollowingCount(following || 0);
+  }
+
   async function toggleFollow() {
     if (!currentUserId) return alert("Please log in to follow collectors!");
     if (isFollowing) {
@@ -162,6 +182,7 @@ export default function ProfilePage() {
       await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
       setIsFollowing(true);
     }
+    loadFollowCounts();
   }
 
   async function toggleLike(itemId: string) {
@@ -357,6 +378,18 @@ export default function ProfilePage() {
             </div>
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
             <p style={{ color: '#a1a1aa', margin: '4px 0 12px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
+
+            {/* FOLLOWER COUNTER SECTION */}
+            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', margin: '10px 0 20px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: '18px', fontWeight: '900' }}>{followerCount}</p>
+                  <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWERS</p>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: '18px', fontWeight: '900' }}>{followingCount}</p>
+                  <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWING</p>
+                </div>
+            </div>
 
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px', alignItems: 'center', minHeight: '32px' }}>
                {profile?.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" style={{ color: '#E4405F', display: 'flex', alignItems: 'center' }}><InstagramIcon /></a>}
@@ -568,3 +601,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

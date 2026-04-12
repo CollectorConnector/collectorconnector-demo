@@ -375,7 +375,15 @@ export default function ProfilePage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>
-          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center', cursor: 'pointer' }} onClick={() => setShowEditCollection(true)}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS ⚙️</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p></div>
+          
+          <div 
+            style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center', cursor: isOwnProfile ? 'pointer' : 'default' }} 
+            onClick={() => isOwnProfile && setShowEditCollection(true)}
+          >
+            <p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS {isOwnProfile && '⚙️'}</p>
+            <p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p>
+          </div>
+
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p><p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p></div>
         </div>
 

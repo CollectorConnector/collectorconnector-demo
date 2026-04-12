@@ -16,9 +16,11 @@ export default function SuggestedUsers() {
   const [users, setUsers] = useState<SuggestedUser[]>([]);
   const router = useRouter();
 
+  // Define the path to your default SVG icon
+  const DEFAULT_AVATAR = '/path/to/default-user-icon.svg';
+
   useEffect(() => {
     async function loadUsers() {
-      // Added avatar_url to the select query
       const { data } = await supabase
         .from("profiles")
         .select("id, display_url, username, avatar_url")
@@ -73,7 +75,10 @@ export default function SuggestedUsers() {
           >
             <div style={{ position: 'relative', marginBottom: '12px' }}>
               <img 
-                src={u.avatar_url || "/default-avatar.png"} 
+                src={u.avatar_url || DEFAULT_AVATAR} 
+                onError={(e) => { 
+                  (e.target as HTMLImageElement).src = DEFAULT_AVATAR; 
+                }}
                 style={{ 
                   width: '64px', 
                   height: '64px', 
@@ -81,7 +86,7 @@ export default function SuggestedUsers() {
                   objectFit: 'cover', 
                   border: '2px solid #18181b'
                 }} 
-                alt={u.username || "avatar"}
+                alt={u.username || "Collector Profile"}
               />
             </div>
             

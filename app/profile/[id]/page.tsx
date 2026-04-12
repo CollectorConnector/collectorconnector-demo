@@ -401,6 +401,8 @@ export default function ProfilePage() {
         </section>
 
         {isOwnProfile && <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}>LOGOUT</button>}
+        
+        {/* TIED IN SUGGESTED USERS SECTION */}
         <SuggestedUsers />
       </main>
 

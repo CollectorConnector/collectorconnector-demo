@@ -9,12 +9,19 @@ type SuggestedUser = {
   display_url: string | null;
   username: string | null;
   avatar_url: string | null;
-  tier: string | null; // Added tier
+  tier: string | null;
 };
 
 export default function SuggestedUsers() {
   const [users, setUsers] = useState<SuggestedUser[]>([]);
   const router = useRouter();
+
+  // Update this to match your EXACT folder structure in /public
+  // If your icons are just in /public/collector.svg, remove the "/icons/tiers" part.
+  const getTierIcon = (tier: string | null) => {
+    const tierName = tier?.toLowerCase() || 'collector';
+    return `/icons/tiers/${tierName}.svg`; 
+  };
 
   useEffect(() => {
     async function loadUsers() {
@@ -27,12 +34,6 @@ export default function SuggestedUsers() {
     }
     loadUsers();
   }, []);
-
-  // Helper to get the correct SVG based on the user's tier
-  const getTierIcon = (tier: string | null) => {
-    const tierName = tier?.toLowerCase() || 'collector';
-    return `/icons/tiers/${tierName}.svg`; 
-  };
 
   if (users.length === 0) return null;
 
@@ -80,12 +81,18 @@ export default function SuggestedUsers() {
             >
               <div style={{ position: 'relative', marginBottom: '12px' }}>
                 <img 
-                  // 1. Try avatar, 2. Use Tier SVG, 3. Final fallback
                   src={u.avatar_url || tierIcon} 
                   onError={(e) => { 
                     const target = e.target as HTMLImageElement;
+                    // Log the failure to your browser console (F12) to see the broken path
+                    console.error("Image load failed for path:", target.src);
+                    
+                    // If the avatar failed, try the tier icon
                     if (target.src !== window.location.origin + tierIcon) {
                       target.src = tierIcon;
+                    } else {
+                      // Final safety: if even the tier icon fails, use a generic fallback
+                      target.src = "/default-user-icon.svg"; 
                     }
                   }}
                   style={{ 
@@ -95,7 +102,8 @@ export default function SuggestedUsers() {
                     objectFit: 'cover', 
                     border: '2px solid #18181b',
                     background: '#18181b',
-                    padding: u.avatar_url ? '0' : '12px' // Give SVGs some breathing room
+                    // Logic: If it's a tier icon (no avatar), add padding so the SVG doesn't hit the edges
+                    padding: u.avatar_url ? '0' : '12px'
                   }} 
                   alt={u.username || "Collector"}
                 />

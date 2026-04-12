@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 type SuggestedUser = {
   id: string;
@@ -16,8 +15,8 @@ export default function SuggestedUsers() {
   const [users, setUsers] = useState<SuggestedUser[]>([]);
   const router = useRouter();
 
-  // Define the path to your default SVG icon
-  const DEFAULT_AVATAR = '/path/to/default-user-icon.svg';
+  // 1. Double-check this path exists in your /public folder exactly as named
+  const DEFAULT_AVATAR = '/default-user-icon.svg'; 
 
   useEffect(() => {
     async function loadUsers() {
@@ -28,7 +27,6 @@ export default function SuggestedUsers() {
 
       if (data) setUsers(data as SuggestedUser[]);
     }
-
     loadUsers();
   }, []);
 
@@ -75,16 +73,22 @@ export default function SuggestedUsers() {
           >
             <div style={{ position: 'relative', marginBottom: '12px' }}>
               <img 
-                src={u.avatar_url || DEFAULT_AVATAR} 
+                // Logic: If avatar_url is null/empty, use the SVG immediately.
+                src={u.avatar_url && u.avatar_url !== "" ? u.avatar_url : DEFAULT_AVATAR} 
                 onError={(e) => { 
-                  (e.target as HTMLImageElement).src = DEFAULT_AVATAR; 
+                  const target = e.target as HTMLImageElement;
+                  // Prevents infinite loops if the fallback itself is missing
+                  if (target.src !== window.location.origin + DEFAULT_AVATAR) {
+                    target.src = DEFAULT_AVATAR; 
+                  }
                 }}
                 style={{ 
                   width: '64px', 
                   height: '64px', 
                   borderRadius: '18px', 
                   objectFit: 'cover', 
-                  border: '2px solid #18181b'
+                  border: '2px solid #18181b',
+                  background: '#18181b' // Added a dark bg so it looks cleaner while loading
                 }} 
                 alt={u.username || "Collector Profile"}
               />

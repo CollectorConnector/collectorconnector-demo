@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type SuggestedUser = {
   id: string;
   display_url: string | null;
   username: string | null;
+  avatar_url: string | null;
 };
 
 export default function SuggestedUsers() {
@@ -16,12 +18,13 @@ export default function SuggestedUsers() {
 
   useEffect(() => {
     async function loadUsers() {
+      // Added avatar_url to the select query
       const { data } = await supabase
         .from("profiles")
-        .select("id, display_url, username")
-        .limit(5);
+        .select("id, display_url, username, avatar_url")
+        .limit(10);
 
-      if (data) setUsers(data);
+      if (data) setUsers(data as SuggestedUser[]);
     }
 
     loadUsers();
@@ -30,28 +33,96 @@ export default function SuggestedUsers() {
   if (users.length === 0) return null;
 
   return (
-    <div className="mt-10 p-6 bg-zinc-900 border border-zinc-800 rounded-2xl">
-      <h2 className="text-2xl font-bold mb-4">Suggested Collectors</h2>
+    <section style={{ marginTop: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '14px', fontWeight: '900', letterSpacing: '1px', color: '#a1a1aa' }}>
+          SUGGESTED COLLECTORS
+        </h2>
+        <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: 'bold', cursor: 'pointer' }}>
+          VIEW ALL
+        </span>
+      </div>
 
-      <div className="space-y-3">
+      <div 
+        style={{ 
+          display: 'flex', 
+          gap: '12px', 
+          overflowX: 'auto', 
+          paddingBottom: '15px',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }} 
+        className="hide-scrollbar"
+      >
         {users.map((u) => (
           <div
             key={u.id}
-            className="flex items-center justify-between p-3 bg-zinc-950 border border-zinc-800 rounded-xl cursor-pointer hover:bg-zinc-800 transition"
+            style={{ 
+              minWidth: '160px', 
+              background: '#09090b', 
+              border: '1px solid #27272a', 
+              borderRadius: '24px', 
+              padding: '20px 16px', 
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              cursor: 'pointer'
+            }}
             onClick={() => router.push(`/profile/${u.id}`)}
           >
-            <div>
-              <p className="font-semibold">
-                {u.display_url || u.username}
-              </p>
-              <p className="text-zinc-400 text-sm">
-                @{u.username || "collector"}
-              </p>
+            <div style={{ position: 'relative', marginBottom: '12px' }}>
+              <img 
+                src={u.avatar_url || "/default-avatar.png"} 
+                style={{ 
+                  width: '64px', 
+                  height: '64px', 
+                  borderRadius: '18px', 
+                  objectFit: 'cover', 
+                  border: '2px solid #18181b'
+                }} 
+                alt={u.username || "avatar"}
+              />
             </div>
+            
+            <p style={{ 
+              fontSize: '13px', 
+              fontWeight: '800', 
+              whiteSpace: 'nowrap', 
+              overflow: 'hidden', 
+              textOverflow: 'ellipsis', 
+              width: '100%',
+              marginBottom: '2px'
+            }}>
+              {u.display_url || u.username}
+            </p>
+            
+            <p style={{ fontSize: '11px', color: '#818cf8', fontWeight: '600', marginBottom: '16px' }}>
+              @{u.username || "collector"}
+            </p>
+
+            <button style={{ 
+              width: '100%', 
+              background: '#fff', 
+              color: '#000', 
+              fontSize: '11px', 
+              fontWeight: '900', 
+              padding: '8px 0', 
+              borderRadius: '12px',
+              border: 'none',
+              letterSpacing: '0.5px'
+            }}>
+              FOLLOW
+            </button>
           </div>
         ))}
       </div>
-    </div>
+
+      <style jsx>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </section>
   );
 }
-``

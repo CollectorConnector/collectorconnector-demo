@@ -16,13 +16,6 @@ export default function SuggestedUsers() {
   const [users, setUsers] = useState<SuggestedUser[]>([]);
   const router = useRouter();
 
-  // Update this to match your EXACT folder structure in /public
-  // If your icons are just in /public/collector.svg, remove the "/icons/tiers" part.
-  const getTierIcon = (tier: string | null) => {
-    const tierName = tier?.toLowerCase() || 'collector';
-    return `/icons/tiers/${tierName}.svg`; 
-  };
-
   useEffect(() => {
     async function loadUsers() {
       const { data } = await supabase
@@ -60,8 +53,15 @@ export default function SuggestedUsers() {
         className="hide-scrollbar"
       >
         {users.map((u) => {
-          const tierIcon = getTierIcon(u.tier);
+          // Normalize tier for the SVG path
+          const tierName = u.tier?.toLowerCase() || 'collector';
+          const tierIconPath = `/icons/tiers/${tierName}.svg`;
           
+          // Decide initial source: If avatar_url is null, empty, or undefined, go straight to tier icon
+          const initialSrc = (u.avatar_url && u.avatar_url.trim() !== "") 
+            ? u.avatar_url 
+            : tierIconPath;
+
           return (
             <div
               key={u.id}
@@ -81,18 +81,13 @@ export default function SuggestedUsers() {
             >
               <div style={{ position: 'relative', marginBottom: '12px' }}>
                 <img 
-                  src={u.avatar_url || tierIcon} 
-                  onError={(e) => { 
+                  src={initialSrc} 
+                  alt={u.username || "Collector"}
+                  onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    // Log the failure to your browser console (F12) to see the broken path
-                    console.error("Image load failed for path:", target.src);
-                    
-                    // If the avatar failed, try the tier icon
-                    if (target.src !== window.location.origin + tierIcon) {
-                      target.src = tierIcon;
-                    } else {
-                      // Final safety: if even the tier icon fails, use a generic fallback
-                      target.src = "/default-user-icon.svg"; 
+                    // If the current src is NOT the tier icon, swap to the tier icon
+                    if (!target.src.includes(tierIconPath)) {
+                      target.src = tierIconPath;
                     }
                   }}
                   style={{ 
@@ -102,10 +97,9 @@ export default function SuggestedUsers() {
                     objectFit: 'cover', 
                     border: '2px solid #18181b',
                     background: '#18181b',
-                    // Logic: If it's a tier icon (no avatar), add padding so the SVG doesn't hit the edges
-                    padding: u.avatar_url ? '0' : '12px'
+                    // Visual cue: if we are showing a tier icon (fallback), add padding
+                    padding: (initialSrc === tierIconPath) ? '12px' : '0'
                   }} 
-                  alt={u.username || "Collector"}
                 />
               </div>
               

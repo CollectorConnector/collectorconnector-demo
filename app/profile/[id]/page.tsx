@@ -362,7 +362,12 @@ export default function ProfilePage() {
             )}
             
             <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
-              <img src={profile?.avatar_url || "/default-avatar.png"} style={{ width: '100%', height: '100%', borderRadius: '20px', border: '4px solid #18181b', objectFit: 'cover', cursor: isOwnProfile ? 'pointer' : 'default' }} onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()} />
+              <img 
+                src={profile?.avatar_url || "/default-avatar.png"} 
+                onError={(e) => { (e.target as HTMLImageElement).src = "/default-avatar.png"; }}
+                style={{ width: '100%', height: '100%', borderRadius: '20px', border: '4px solid #18181b', objectFit: 'cover', cursor: isOwnProfile ? 'pointer' : 'default' }} 
+                onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()} 
+              />
               {isOwnProfile && <input type="file" id="avatar-input" hidden accept="image/*" onChange={handleAvatarUpload} />}
             </div>
 
@@ -601,4 +606,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

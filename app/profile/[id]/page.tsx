@@ -60,6 +60,13 @@ export default function ProfilePage() {
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
+  
+  // Follows Modal State
+  const [showFollowsModal, setShowFollowsModal] = useState(false);
+  const [followsModalType, setFollowsModalType] = useState<"followers" | "following">("followers");
+  const [followsList, setFollowsList] = useState<any[]>([]);
+  const [loadingFollows, setLoadingFollows] = useState(false);
+
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
@@ -160,6 +167,34 @@ export default function ProfilePage() {
     const { count: following } = await supabase.from("follows").select("*", { count: 'exact', head: true }).eq("follower_id", userId);
     setFollowerCount(followers || 0);
     setFollowingCount(following || 0);
+  }
+
+  // Fetch Full List for Modal
+  async function openFollowsModal(type: "followers" | "following") {
+    setFollowsModalType(type);
+    setShowFollowsModal(true);
+    setLoadingFollows(true);
+    setFollowsList([]);
+
+    try {
+        if (type === "followers") {
+            const { data } = await supabase
+                .from("follows")
+                .select("follower_id, profiles!follows_follower_id_fkey(id, username, display_url, avatar_url)")
+                .eq("following_id", userId);
+            if (data) setFollowsList(data.map(item => item.profiles));
+        } else {
+            const { data } = await supabase
+                .from("follows")
+                .select("following_id, profiles!follows_following_id_fkey(id, username, display_url, avatar_url)")
+                .eq("follower_id", userId);
+            if (data) setFollowsList(data.map(item => item.profiles));
+        }
+    } catch (err) {
+        console.error("Error loading follows:", err);
+    } finally {
+        setLoadingFollows(false);
+    }
   }
 
   async function toggleFollow() {
@@ -414,12 +449,12 @@ export default function ProfilePage() {
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
             <p style={{ color: '#a1a1aa', margin: '4px 0 12px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
-            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', margin: '10px 0 20px' }}>
-                <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', margin: '16px 0 24px' }}>
+                <div onClick={() => openFollowsModal("followers")} style={{ textAlign: 'center', cursor: 'pointer' }}>
                   <p style={{ fontSize: '18px', fontWeight: '900' }}>{followerCount}</p>
                   <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWERS</p>
                 </div>
-                <div style={{ textAlign: 'center' }}>
+                <div onClick={() => openFollowsModal("following")} style={{ textAlign: 'center', cursor: 'pointer' }}>
                   <p style={{ fontSize: '18px', fontWeight: '900' }}>{followingCount}</p>
                   <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWING</p>
                 </div>
@@ -522,6 +557,41 @@ export default function ProfilePage() {
           <SuggestedUsers />
         </div>
       </main>
+
+      {/* FOLLOWS LIST MODAL */}
+      {showFollowsModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ background: '#18181b', padding: '24px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h2 style={{ fontWeight: '900', fontSize: '16px', textTransform: 'uppercase' }}>{followsModalType}</h2>
+                    <button onClick={() => setShowFollowsModal(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+                </div>
+                
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {loadingFollows ? (
+                        <p style={{ textAlign: 'center', color: '#52525b', fontSize: '14px' }}>Loading...</p>
+                    ) : followsList.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: '#52525b', fontSize: '14px' }}>No users found.</p>
+                    ) : (
+                        followsList.map((user) => (
+                            <Link 
+                                key={user.id} 
+                                href={`/profile/${user.id}`} 
+                                onClick={() => setShowFollowsModal(false)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px', background: '#000', borderRadius: '12px', border: '1px solid #27272a', textDecoration: 'none' }}
+                            >
+                                <img src={user.avatar_url || '/icons/tiers/collector.svg'} style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover' }} />
+                                <div>
+                                    <p style={{ color: '#fff', fontWeight: '900', fontSize: '14px' }}>{user.display_url || user.username}</p>
+                                    <p style={{ color: '#818cf8', fontWeight: 'bold', fontSize: '12px' }}>@{user.username}</p>
+                                </div>
+                            </Link>
+                        ))
+                    )}
+                </div>
+            </div>
+        </div>
+      )}
 
       {/* LIGHTBOX */}
       {selectedItemIndex !== null && (

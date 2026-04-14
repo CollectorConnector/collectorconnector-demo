@@ -269,7 +269,6 @@ export default function ProfilePage() {
     } catch (err: any) { alert("Upload failed: " + err.message); } finally { setUploading(false); }
   }
 
-  // Smart Drop Handler
   async function handleSmartDrop() {
     if (files.length === 0) return alert("Please select at least one photo");
     if (!itemName.trim()) return alert("Please give your item a title");
@@ -278,9 +277,9 @@ export default function ProfilePage() {
     try {
       let targetCollectionId = selectedCollectionId;
 
-      // Create new collection if user typed a name
       if (!targetCollectionId && newCollName.trim()) {
-        const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche || "General";
+        const finalNiche = selectedNiche === "Other" ? customNiche.trim() : selectedNiche || "General";
+
         const { data: newColl, error } = await supabase
           .from("collections")
           .insert([{ 
@@ -320,7 +319,6 @@ export default function ProfilePage() {
       alert("Drop successful!");
       setShowSmartDrop(false);
       
-      // Reset form
       setFiles([]);
       setItemName("");
       setItemValue("");
@@ -521,22 +519,16 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* SMART DROP MODAL */}
+      {/* SMART DROP MODAL - with full niche support */}
       {showSmartDrop && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '420px', border: '1px solid #27272a' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>
             <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>New Drop</h2>
 
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '16px' }}>
               <span style={{ fontSize: '28px' }}>📸</span><br/>
               {files.length > 0 ? `${files.length} photos selected` : "Tap to add photos"}
-              <input 
-                type="file" 
-                multiple 
-                accept="image/*" 
-                hidden 
-                onChange={(e) => setFiles(Array.from(e.target.files || []))} 
-              />
+              <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []))} />
             </label>
 
             <input 
@@ -551,28 +543,46 @@ export default function ProfilePage() {
               placeholder="Estimated total value (£)" 
               value={itemValue} 
               onChange={e => setItemValue(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
             />
 
             <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Collection</p>
             
             <select 
               value={selectedCollectionId} 
-              onChange={(e) => setSelectedCollectionId(e.target.value)} 
+              onChange={e => setSelectedCollectionId(e.target.value)} 
               style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}
             >
-              <option value="">Choose existing...</option>
-              {collectionsList.map(c => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
+              <option value="">Choose existing collection...</option>
+              {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
 
             <input 
               placeholder="Or create new collection name" 
               value={newCollName} 
               onChange={e => setNewCollName(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
             />
+
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Niche</p>
+            <select 
+              value={selectedNiche} 
+              onChange={e => setSelectedNiche(e.target.value)} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '8px' }}
+            >
+              <option value="">Select niche...</option>
+              {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
+              <option value="Other">Other...</option>
+            </select>
+
+            {selectedNiche === "Other" && (
+              <input 
+                placeholder="Specify niche" 
+                value={customNiche} 
+                onChange={e => setCustomNiche(e.target.value)} 
+                style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
+              />
+            )}
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button 
@@ -581,6 +591,8 @@ export default function ProfilePage() {
                   setFiles([]); 
                   setItemName(""); 
                   setNewCollName(""); 
+                  setSelectedNiche(""); 
+                  setCustomNiche(""); 
                 }} 
                 style={{ flex: 1, color: '#a1a1aa', padding: '12px' }}
               >

@@ -539,7 +539,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* EDIT PROFILE MODAL - FULLY UPDATED WITH ALL REQUESTED FIELDS */}
+      {/* EDIT PROFILE MODAL */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -559,7 +559,6 @@ export default function ProfilePage() {
               style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '80px', resize: 'none', marginBottom: '20px' }} 
             />
 
-            {/* Instagram + eBay */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
               <div>
                 <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>INSTAGRAM URL</p>
@@ -581,10 +580,9 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Additional Social Links */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
               <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>X (TWITTER) URL</p>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>X URL</p>
                 <input 
                   placeholder="https://x.com/..." 
                   value={profile?.x_url || ""} 
@@ -622,7 +620,7 @@ export default function ProfilePage() {
               <div>
                 <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>DISCORD HANDLE</p>
                 <input 
-                  placeholder="username#0000 or @username" 
+                  placeholder="username#0000" 
                   value={profile?.discord_handle || ""} 
                   onChange={e => setProfile({...profile, discord_handle: e.target.value})} 
                   style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
@@ -640,18 +638,8 @@ export default function ProfilePage() {
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button 
-                onClick={() => setShowEditProfile(false)} 
-                style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold', padding: '12px', borderRadius: '12px', background: '#27272a' }}
-              >
-                CANCEL
-              </button>
-              <button 
-                onClick={handleUpdateProfile} 
-                style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}
-              >
-                {uploading ? 'SAVING...' : 'SAVE CHANGES'}
-              </button>
+              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa', background: '#27272a', padding: '12px', borderRadius: '12px' }}>CANCEL</button>
+              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE CHANGES'}</button>
             </div>
           </div>
         </div>

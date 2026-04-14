@@ -31,28 +31,10 @@ export default function SuggestedUsers() {
   if (users.length === 0) return null;
 
   return (
-    <section style={{ marginTop: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ fontSize: '14px', fontWeight: '900', letterSpacing: '1px', color: '#a1a1aa' }}>
-          SUGGESTED COLLECTORS
-        </h2>
-        {/* FIX: Added navigation to VIEW ALL */}
-        <span 
-          onClick={() => router.push('/collectors')} 
-          style={{ 
-            fontSize: '11px', 
-            color: '#818cf8', 
-            fontWeight: 'bold', 
-            cursor: 'pointer',
-            transition: 'opacity 0.2s'
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.opacity = '0.7')}
-          onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
-        >
-          VIEW ALL
-        </span>
-      </div>
-
+    <section>
+      {/* FIX: Removed the internal header and "VIEW ALL" span here 
+         to prevent duplication with the Profile Page layout.
+      */}
       <div 
         style={{ 
           display: 'flex', 
@@ -68,7 +50,8 @@ export default function SuggestedUsers() {
           const tierName = u.tier?.toLowerCase() || 'collector';
           const tierIconPath = `/icons/tiers/${tierName}.svg`;
           
-          // Determine if we should attempt to load a profile picture or go straight to the SVG
+          // Logic for the placeholders you love:
+          // If no avatar exists, we use the tier icon as the initial source.
           const hasAvatar = u.avatar_url && u.avatar_url.trim() !== "";
           const initialSrc = hasAvatar ? u.avatar_url : tierIconPath;
 
@@ -95,9 +78,10 @@ export default function SuggestedUsers() {
                   alt={u.username || "Collector"}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    // Prevent infinite loops if the SVG itself is missing
+                    // Fallback to the SVG placeholder if the profile link is broken
                     if (target.src !== window.location.origin + tierIconPath) {
                       target.src = tierIconPath;
+                      target.style.padding = '14px'; // Apply icon padding on fallback
                     }
                   }}
                   style={{ 
@@ -107,7 +91,7 @@ export default function SuggestedUsers() {
                     objectFit: 'cover', 
                     border: '2px solid #18181b',
                     background: '#18181b',
-                    // Use padding for SVGs so they look like icons, no padding for real photos
+                    // Use padding for SVGs to keep them looking like icons, no padding for real photos
                     padding: hasAvatar ? '0' : '14px' 
                   }} 
                 />

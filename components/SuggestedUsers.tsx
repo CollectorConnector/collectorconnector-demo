@@ -56,16 +56,17 @@ export default function SuggestedUsers() {
       {users.filter(u => u.id !== currentUserId).map((user) => {
         const tierIcon = getTierIcon(user.id);
         
-        // CHECK: If avatar_url is null, empty, or contains the old blue question mark placeholder
-        const hasValidAvatar = user.avatar_url && 
-                               user.avatar_url !== "" && 
-                               !user.avatar_url.includes("placeholder") && 
-                               !user.avatar_url.includes("questionmark");
+        // AGGRESSIVE CHECK: 
+        // We only trust the avatar if it's a full URL and NOT the old default path.
+        const isCustomAvatar = user.avatar_url && 
+                               user.avatar_url.startsWith('http') && 
+                               !user.avatar_url.includes('default') &&
+                               !user.avatar_url.includes('ui-avatars');
 
-        const displayImg = hasValidAvatar ? user.avatar_url : tierIcon;
+        const displayImg = isCustomAvatar ? user.avatar_url : tierIcon;
 
         return (
-          <div key={user.id} style={{
+          <div key={`${user.id}-${isCustomAvatar}`} style={{
             minWidth: '160px',
             background: '#09090b',
             border: '1px solid #27272a',
@@ -77,26 +78,32 @@ export default function SuggestedUsers() {
             alignItems: 'center'
           }}>
             <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none' }}>
-              <div style={{ width: '80px', height: '80px', marginBottom: '12px' }}>
+              <div style={{ 
+                width: '80px', 
+                height: '80px', 
+                marginBottom: '12px', 
+                background: '#18181b', 
+                borderRadius: '16px',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
                 <img 
                   src={displayImg} 
                   alt={user.username}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    // If the user's uploaded photo fails, snap back to the tier icon
                     if (target.src !== window.location.origin + tierIcon) {
                       target.src = tierIcon;
-                      target.style.padding = '15px';
+                      target.style.padding = '18px';
                     }
                   }}
                   style={{ 
                     width: '100%', 
                     height: '100%', 
-                    borderRadius: '16px', 
-                    objectFit: 'cover',
-                    background: '#18181b',
-                    // Apply padding only if we are showing the SVG icon
-                    padding: hasValidAvatar ? '0' : '15px'
+                    objectFit: isCustomAvatar ? 'cover' : 'contain',
+                    padding: isCustomAvatar ? '0' : '18px'
                   }} 
                 />
               </div>

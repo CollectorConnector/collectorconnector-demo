@@ -36,7 +36,19 @@ export default function SuggestedUsers() {
         <h2 style={{ fontSize: '14px', fontWeight: '900', letterSpacing: '1px', color: '#a1a1aa' }}>
           SUGGESTED COLLECTORS
         </h2>
-        <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: 'bold', cursor: 'pointer' }}>
+        {/* FIX: Added navigation to VIEW ALL */}
+        <span 
+          onClick={() => router.push('/collectors')} 
+          style={{ 
+            fontSize: '11px', 
+            color: '#818cf8', 
+            fontWeight: 'bold', 
+            cursor: 'pointer',
+            transition: 'opacity 0.2s'
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.opacity = '0.7')}
+          onMouseOut={(e) => (e.currentTarget.style.opacity = '1')}
+        >
           VIEW ALL
         </span>
       </div>
@@ -53,14 +65,12 @@ export default function SuggestedUsers() {
         className="hide-scrollbar"
       >
         {users.map((u) => {
-          // Normalize tier for the SVG path
           const tierName = u.tier?.toLowerCase() || 'collector';
           const tierIconPath = `/icons/tiers/${tierName}.svg`;
           
-          // Decide initial source: If avatar_url is null, empty, or undefined, go straight to tier icon
-          const initialSrc = (u.avatar_url && u.avatar_url.trim() !== "") 
-            ? u.avatar_url 
-            : tierIconPath;
+          // Determine if we should attempt to load a profile picture or go straight to the SVG
+          const hasAvatar = u.avatar_url && u.avatar_url.trim() !== "";
+          const initialSrc = hasAvatar ? u.avatar_url : tierIconPath;
 
           return (
             <div
@@ -81,12 +91,12 @@ export default function SuggestedUsers() {
             >
               <div style={{ position: 'relative', marginBottom: '12px' }}>
                 <img 
-                  src={initialSrc} 
+                  src={initialSrc as string} 
                   alt={u.username || "Collector"}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    // If the current src is NOT the tier icon, swap to the tier icon
-                    if (!target.src.includes(tierIconPath)) {
+                    // Prevent infinite loops if the SVG itself is missing
+                    if (target.src !== window.location.origin + tierIconPath) {
                       target.src = tierIconPath;
                     }
                   }}
@@ -97,8 +107,8 @@ export default function SuggestedUsers() {
                     objectFit: 'cover', 
                     border: '2px solid #18181b',
                     background: '#18181b',
-                    // Visual cue: if we are showing a tier icon (fallback), add padding
-                    padding: (initialSrc === tierIconPath) ? '12px' : '0'
+                    // Use padding for SVGs so they look like icons, no padding for real photos
+                    padding: hasAvatar ? '0' : '14px' 
                   }} 
                 />
               </div>

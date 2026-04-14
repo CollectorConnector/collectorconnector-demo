@@ -39,106 +39,122 @@ export default function SuggestedUsers() {
     if (userId === stacyId) return "/icons/tiers/diamond.svg";
     if (foundersIds.includes(userId)) return "/icons/tiers/founder.svg";
     
-    return "/icons/tiers/collector.svg";
+    return "/icons/tiers/collector.svg";   // Default for normal users
+  };
+
+  const getAvatarSrc = (user: any) => {
+    if (user.avatar_url?.includes("item-images")) {
+      return `${user.avatar_url}?t=${Date.now()}`;
+    }
+    return getTierIcon(user.id);
+  };
+
+  const isUserUpload = (avatarUrl?: string) => {
+    return !!(avatarUrl && avatarUrl.includes("item-images"));
   };
 
   if (loading) return null;
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      overflowX: 'auto', 
-      gap: '12px', 
-      paddingBottom: '10px',
-      scrollbarWidth: 'none',
-    }} className="no-scrollbar">
-      {users.filter(u => u.id !== currentUserId).map((user) => {
-        const tierIcon = getTierIcon(user.id);
-        
-        // --- THE "STRICT POSITIVE" CHECK ---
-        // We ONLY show the avatar if it contains 'item-images' (your upload bucket).
-        // If it's the blue question mark, it won't have this in the URL.
-        const isUserUpload = user.avatar_url && user.avatar_url.includes('item-images');
+    <div 
+      style={{ 
+        display: 'flex', 
+        overflowX: 'auto', 
+        gap: '12px', 
+        paddingBottom: '10px',
+        scrollbarWidth: 'none',
+      }} 
+      className="no-scrollbar"
+    >
+      {users
+        .filter(u => u.id !== currentUserId)
+        .map((user) => {
+          const tierIcon = getTierIcon(user.id);
+          const avatarSrc = getAvatarSrc(user);
+          const isUpload = isUserUpload(user.avatar_url);
 
-        // We add a timestamp to the URL to bypass browser cache
-        const displayImg = isUserUpload ? `${user.avatar_url}?t=${Date.now()}` : tierIcon;
-
-        return (
-          <div key={`${user.id}-${isUserUpload}`} style={{
-            minWidth: '160px',
-            background: '#09090b',
-            border: '1px solid #27272a',
-            borderRadius: '24px',
-            padding: '24px 16px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            flexShrink: 0
-          }}>
-            <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%' }}>
-              <div style={{ 
-                width: '80px', 
-                height: '80px', 
-                margin: '0 auto 12px',
-                background: '#18181b',
-                borderRadius: '20px',
+          return (
+            <div 
+              key={user.id} 
+              style={{
+                minWidth: '160px',
+                background: '#09090b',
+                border: '1px solid #27272a',
+                borderRadius: '24px',
+                padding: '24px 16px',
+                textAlign: 'center',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden'
-              }}>
-                <img 
-                  src={displayImg} 
-                  alt={user.username}
+                flexShrink: 0
+              }}
+            >
+              <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%' }}>
+                <div 
                   style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: isUserUpload ? 'cover' : 'contain',
-                    padding: isUserUpload ? '0' : '20px',
-                    boxSizing: 'border-box'
-                  }} 
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = tierIcon;
-                    target.style.padding = '20px';
+                    width: '80px', 
+                    height: '80px', 
+                    margin: '0 auto 12px',
+                    background: '#18181b',
+                    borderRadius: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden'
                   }}
-                />
-              </div>
-              
-              <p style={{ 
-                color: '#fff', 
-                fontSize: '14px', 
-                fontWeight: '900', 
-                margin: '0',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>
-                {user.display_url || user.username}
-              </p>
-              <p style={{ color: '#818cf8', fontSize: '11px', fontWeight: 'bold', marginBottom: '16px' }}>
-                @{user.username}
-              </p>
-            </Link>
+                >
+                  <img 
+                    src={avatarSrc} 
+                    alt={user.username || "Collector"}
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: isUpload ? 'cover' : 'contain',
+                      padding: isUpload ? '0' : '20px',
+                      boxSizing: 'border-box'
+                    }} 
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = tierIcon;
+                      target.style.padding = '20px';
+                      target.style.objectFit = 'contain';
+                    }}
+                  />
+                </div>
+                
+                <p style={{ 
+                  color: '#fff', 
+                  fontSize: '14px', 
+                  fontWeight: '900', 
+                  margin: '0',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {user.display_url || user.username || "New Collector"}
+                </p>
+                <p style={{ color: '#818cf8', fontSize: '11px', fontWeight: 'bold', marginBottom: '16px' }}>
+                  @{user.username}
+                </p>
+              </Link>
 
-            <button style={{
-              width: '100%',
-              background: '#fff',
-              color: '#000',
-              border: 'none',
-              borderRadius: '12px',
-              padding: '8px 0',
-              fontSize: '11px',
-              fontWeight: '900',
-              cursor: 'pointer',
-              textTransform: 'uppercase'
-            }}>
-              Follow
-            </button>
-          </div>
-        );
-      })}
+              <button style={{
+                width: '100%',
+                background: '#fff',
+                color: '#000',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '8px 0',
+                fontSize: '11px',
+                fontWeight: '900',
+                cursor: 'pointer',
+                textTransform: 'uppercase'
+              }}>
+                Follow
+              </button>
+            </div>
+          );
+        })}
     </div>
   );
 }

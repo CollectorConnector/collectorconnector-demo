@@ -24,14 +24,21 @@ export default function SuggestedUsersPage() {
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
           {users.map((u) => (
-            <Link href={`/profile/${u.username}`} key={u.id} style={{ textDecoration: 'none' }}>
-              <div style={{ background: '#111', padding: '16px', borderRadius: '20px', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            /* FIX: Always link to u.id so the profile page can find the data in Supabase */
+            <Link href={`/profile/${u.id}`} key={u.id} style={{ textDecoration: 'none' }}>
+              <div style={{ background: '#111', padding: '16px', borderRadius: '20px', border: '1px solid #27272a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#222', overflow: 'hidden' }}>
-                    <img src={u.avatar_url || `https://avatar.vercel.sh/${u.username}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img 
+                      src={u.avatar_url || `https://avatar.vercel.sh/${u.username}`} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/icons/tiers/collector.svg' }}
+                    />
                   </div>
                   <div>
-                    <p style={{ fontWeight: '900', color: '#fff', margin: 0 }}>{u.display_name || u.username}</p>
+                    <p style={{ fontWeight: '900', color: '#fff', margin: 0 }}>
+                        {u.display_url || u.username}
+                    </p>
                     <p style={{ fontSize: '12px', color: '#818cf8', margin: 0 }}>@{u.username}</p>
                   </div>
                 </div>

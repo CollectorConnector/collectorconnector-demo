@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { ArrowRight, Search, Loader2 } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -12,6 +13,43 @@ type Profile = {
   avatar_url: string | null;
   tier: string | null;
 };
+
+// --- SLEEK COLLECTOR CARD COMPONENT ---
+const CollectorCard = ({ user }: { user: Profile }) => (
+  <Link
+    href={`/profile/${user.id}`}
+    className="group relative flex flex-col overflow-hidden bg-neutral-900/40 border border-neutral-800 rounded-2xl p-4 transition-all duration-300 hover:border-neutral-500 hover:bg-neutral-900/70 hover:-translate-y-1 active:scale-[0.98]"
+  >
+    {/* Standardized Avatar - ENFORCES SQUARE ASPECT */}
+    <div className="w-full aspect-square rounded-xl overflow-hidden bg-neutral-800 border border-neutral-700 mb-4 flex-shrink-0">
+      <img
+        src={user.avatar_url || "/default-avatar.png"} // Update with your actual placeholder
+        alt={user.display_url || user.username || "Collector"}
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+    </div>
+
+    {/* User Metadata */}
+    <div className="flex-1 min-w-0 mb-3">
+      <div className="flex items-center gap-2 mb-1">
+        <p className="font-extrabold text-[15px] truncate tracking-tight text-white leading-tight">
+          {user.display_url || user.username || "Collector"}
+        </p>
+        {user.tier === "founder" && (
+          <span className="text-[9px] font-black bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20">
+            FOUNDER
+          </span>
+        )}
+      </div>
+      <p className="text-neutral-500 text-xs font-bold">@{user.username || "collector"}</p>
+    </div>
+
+    {/* Subtle Action Icon */}
+    <div className="absolute top-4 right-4 bg-black/60 p-2 rounded-full border border-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <ArrowRight className="w-4 h-4 text-neutral-400" strokeWidth={3} />
+    </div>
+  </Link>
+);
 
 export default function SearchPage() {
   const router = useRouter();
@@ -29,7 +67,7 @@ export default function SearchPage() {
       .from("profiles")
       .select("id, display_url, username, avatar_url, tier")
       .or(`display_url.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`)
-      .limit(12);
+      .limit(16); // Increased limit for grid display
 
     if (!error) setResults(data || []);
     setLoading(false);
@@ -41,84 +79,46 @@ export default function SearchPage() {
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-white/10">
-      <div className="max-w-2xl mx-auto px-6 pt-32">
+    <div className="min-h-screen bg-black text-white selection:bg-indigo-500/30">
+      <div className="max-w-7xl mx-auto px-6 pt-32 pb-24">
         
         {/* TOP SECTION */}
-        <div className="text-center mb-12">
-          <h1 className="text-xs font-black tracking-[0.3em] text-zinc-600 uppercase mb-3">
-            Global Search
+        <div className="text-center mb-16">
+          <h1 className="text-xs font-black tracking-[0.3em] text-neutral-600 uppercase mb-3">
+            DIRECTORY
           </h1>
-          <h2 className="text-3xl font-bold tracking-tighter">Locate Collectors</h2>
+          <h2 className="text-4xl font-extrabold tracking-tighter text-white">Find Collectors</h2>
         </div>
 
-        {/* THE SEARCH INPUT */}
-        <div className="relative mb-16">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-zinc-800 to-zinc-700 rounded-2xl opacity-20 group-focus-within:opacity-100 transition duration-500"></div>
+        {/* MODERN SEARCH BAR */}
+        <div className="relative mb-16 max-w-xl mx-auto">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-600" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Username or display name..."
-            className="relative w-full bg-[#0A0A0A] border border-zinc-800/50 p-5 rounded-2xl text-lg focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-800"
+            className="w-full bg-neutral-900 border border-neutral-800 pl-14 p-5 rounded-2xl text-lg focus:outline-none focus:border-indigo-500/70 transition-all placeholder:text-neutral-700"
           />
           {loading && (
             <div className="absolute right-5 top-1/2 -translate-y-1/2">
-               <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
+              <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
             </div>
           )}
         </div>
 
-        {/* RESULTS GRID - 2 Columns makes it look much more 'Pro' than a long list */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-20">
+        {/* MODERN GRID LAYOUT */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {results.map((user) => (
-            <Link
-              key={user.id}
-              href={`/profile/${user.id}`}
-              className="group relative flex items-center gap-4 p-4 bg-[#0A0A0A] border border-zinc-900 rounded-2xl transition-all duration-300 hover:border-zinc-700 hover:bg-[#111111]"
-            >
-              {/* AVATAR BOX */}
-              <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
-                  <img
-                    src={user.avatar_url || "/icons/tiers/collector.svg"}
-                    alt=""
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                </div>
-              </div>
-
-              {/* USER TEXT */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-bold text-[15px] truncate tracking-tight text-zinc-100">
-                    {user.display_url || user.username}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-zinc-500 text-xs font-medium">@{user.username}</p>
-                  {user.tier === 'founder' && (
-                    <span className="text-[9px] font-black bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20">
-                      FOUNDER
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* ACTION */}
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-300">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14m-7-7 7 7-7 7"/>
-                </svg>
-              </div>
-            </Link>
+            <CollectorCard key={user.id} user={user} />
           ))}
         </div>
 
-        {/* EMPTY STATE */}
+        {/* CLEAN EMPTY STATE */}
         {!loading && query && results.length === 0 && (
-          <div className="text-center py-20 opacity-40">
-            <p className="text-sm tracking-widest uppercase">No Results Found</p>
+          <div className="text-center py-24 bg-neutral-900/20 rounded-3xl border-2 border-dashed border-neutral-800">
+            <Search className="w-12 h-12 text-neutral-700 mx-auto mb-6" strokeWidth={1}/>
+            <p className="text-sm tracking-widest uppercase text-neutral-600 font-bold">No Results Found</p>
           </div>
         )}
       </div>

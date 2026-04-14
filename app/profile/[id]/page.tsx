@@ -335,6 +335,9 @@ export default function ProfilePage() {
 
   if (loading) return <div className="min-h-screen bg-black" />;
 
+  // LOGIC CHECK: Is the avatar actually a valid URL?
+  const hasValidAvatar = profile?.avatar_url && profile.avatar_url.startsWith('http');
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
@@ -348,8 +351,8 @@ export default function ProfilePage() {
             
             <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
               <img 
-                key={profile?.avatar_url || 'default'} 
-                src={profile?.avatar_url || tierIconPath} 
+                key={profile?.avatar_url || 'no-avatar'}
+                src={hasValidAvatar ? profile.avatar_url : tierIconPath} 
                 crossOrigin="anonymous"
                 onError={(e) => { 
                   const target = e.target as HTMLImageElement;
@@ -364,10 +367,10 @@ export default function ProfilePage() {
                   height: '100%', 
                   borderRadius: '24px', 
                   border: '4px solid #18181b', 
-                  objectFit: profile?.avatar_url ? 'cover' : 'contain', 
+                  objectFit: hasValidAvatar ? 'cover' : 'contain', 
                   cursor: isOwnProfile ? 'pointer' : 'default',
                   background: '#18181b',
-                  padding: profile?.avatar_url ? '0' : '28px'
+                  padding: hasValidAvatar ? '0' : '28px'
                 }} 
                 onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()} 
               />

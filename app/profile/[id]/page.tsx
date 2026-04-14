@@ -330,7 +330,7 @@ export default function ProfilePage() {
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
-  // FIXED: Logic to replace blue question marks with correct tier icons
+  // TIER ICON LOGIC (Matches Discovery Page)
   const tierIconPath = `/icons/tiers/${(userRank || 'collector').toLowerCase()}.svg`;
 
   if (loading) return <div className="min-h-screen bg-black" />;
@@ -347,24 +347,22 @@ export default function ProfilePage() {
             )}
             
             <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
-              {/* FIXED: Replaced blue question mark default with tier-based default */}
               <img 
-                src={profile?.avatar_url || tierIconPath} 
+                src={profile?.avatar_url && profile.avatar_url.includes('http') ? profile.avatar_url : tierIconPath} 
                 onError={(e) => { 
                   const target = e.target as HTMLImageElement;
-                  if (target.src !== window.location.origin + tierIconPath) {
-                    target.src = tierIconPath;
-                  }
+                  target.src = tierIconPath;
                 }}
                 style={{ 
                   width: '100%', 
                   height: '100%', 
-                  borderRadius: '20px', 
+                  borderRadius: '24px', 
                   border: '4px solid #18181b', 
-                  objectFit: 'cover', 
+                  objectFit: profile?.avatar_url && profile.avatar_url.includes('http') ? 'cover' : 'contain', 
                   cursor: isOwnProfile ? 'pointer' : 'default',
                   background: '#18181b',
-                  padding: profile?.avatar_url ? '0' : '22px'
+                  padding: profile?.avatar_url && profile.avatar_url.includes('http') ? '0' : '28px',
+                  boxSizing: 'border-box'
                 }} 
                 onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()} 
               />
@@ -435,7 +433,7 @@ export default function ProfilePage() {
 
         {isOwnProfile && <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}>LOGOUT</button>}
         
-        {/* RESTORED: SUGGESTED USERS CAROUSEL SECTION WITH VIEW ALL BUTTON */}
+        {/* REFINED: SUGGESTED USERS SECTION */}
         <div style={{ marginTop: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: '13px', fontWeight: '900', color: '#52525b', textTransform: 'uppercase', letterSpacing: '1px' }}>Suggested Users</h2>
@@ -450,7 +448,7 @@ export default function ProfilePage() {
                 gap: '4px'
               }}>
                 VIEW ALL
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
               </span>
@@ -474,7 +472,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* MODALS REMAIN UNCHANGED BELOW */}
+      {/* MODALS */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>

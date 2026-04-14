@@ -55,15 +55,15 @@ export default function SuggestedUsers() {
       {users.filter(u => u.id !== currentUserId).map((user) => {
         const tierIcon = getTierIcon(user.id);
         
-        // --- THE "FIX-IT" LOGIC ---
-        // This checks if the avatar exists AND isn't that blue question mark placeholder
-        const hasCustomPhoto = 
+        // --- IMPROVED "STRICT" LOGIC ---
+        // We only show the photo if it comes from your Supabase storage bucket.
+        // If it's anything else (like the blue question mark), it will fail this check.
+        const hasUploadedPhoto = 
           user.avatar_url && 
-          user.avatar_url.includes('http') && 
-          !user.avatar_url.toLowerCase().includes('placeholder') && 
-          !user.avatar_url.toLowerCase().includes('question');
+          user.avatar_url.includes('supabase.co') && 
+          user.avatar_url.includes('item-images');
 
-        const displayImg = hasCustomPhoto ? user.avatar_url : tierIcon;
+        const displayImg = hasUploadedPhoto ? user.avatar_url : tierIcon;
 
         return (
           <div key={user.id} style={{
@@ -100,8 +100,8 @@ export default function SuggestedUsers() {
                   style={{ 
                     width: '100%', 
                     height: '100%', 
-                    objectFit: hasCustomPhoto ? 'cover' : 'contain',
-                    padding: hasCustomPhoto ? '0' : '20px',
+                    objectFit: hasUploadedPhoto ? 'cover' : 'contain',
+                    padding: hasUploadedPhoto ? '0' : '20px',
                     boxSizing: 'border-box'
                   }} 
                 />

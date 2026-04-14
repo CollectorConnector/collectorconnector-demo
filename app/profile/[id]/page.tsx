@@ -56,9 +56,10 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
 
-  const [showSmartDrop, setShowSmartDrop] = useState(false);
-  const [showEditProfile, setShowEditProfile] = useState(false); 
+  const [showAddItem, setShowAddItem] = useState(false);
+  const [showAddCollection, setShowAddCollection] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false); 
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
@@ -74,12 +75,16 @@ export default function ProfilePage() {
   const [collectionsList, setCollectionsList] = useState<any[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
 
+  const [editingColl, setEditingColl] = useState<any>(null);
+  const [collItems, setCollItems] = useState<any[]>([]); 
+
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
+  
   const [files, setFiles] = useState<File[]>([]);
-  const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
-
   const [userRank, setUserRank] = useState<string | null>(null);
+
+  const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
 
   const isOwnProfile = currentUserId === userId;
 
@@ -172,8 +177,14 @@ export default function ProfilePage() {
   async function determineRank() {
     const stacyId = "8b594b57-fc82-477a-a709-45aec99a228f"; 
     if (userId === stacyId) { setUserRank("diamond"); return; }
-    const foundersIds = ["e0759f79-d113-4af6-a575-cee076037092", "bb088a77-ba12-4fe3-a357-03d13dc0019"];
+    
+    const foundersIds = [
+        "e0759f79-d113-4af6-a575-cee076037092", 
+        "bb088a77-ba12-4fe3-a357-03d13dc0d019" 
+    ];
+
     if (foundersIds.includes(userId)) { setUserRank("founder"); return; }
+
     const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
     if (allUsers) {
       const index = allUsers.findIndex(u => u.id === userId);
@@ -269,69 +280,72 @@ export default function ProfilePage() {
     } catch (err: any) { alert("Upload failed: " + err.message); } finally { setUploading(false); }
   }
 
-  async function handleSmartDrop() {
-    if (files.length === 0) return alert("Please select at least one photo");
-    if (!itemName.trim()) return alert("Please give your item a title");
-
+  async function handleCreateCollectionBatch() {
+    const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
+    if (!finalNiche) return alert("Please specify a niche!");
     setUploading(true);
     try {
-      let targetCollectionId = selectedCollectionId;
-
-      if (!targetCollectionId && newCollName.trim()) {
-        const finalNiche = selectedNiche === "Other" ? customNiche.trim() : selectedNiche || "General";
-
-        const { data: newColl, error } = await supabase
-          .from("collections")
-          .insert([{ 
-            user_id: userId, 
-            title: newCollName.trim(), 
-            niche: finalNiche 
-          }])
-          .select()
-          .single();
-
-        if (error) throw error;
-        targetCollectionId = newColl.id;
+      const { data: coll, error: collErr } = await supabase.from("collections").insert([{ user_id: userId, title: newCollName.trim(), niche: finalNiche.trim() }]).select().single();
+      if (collErr) throw collErr;
+      if (files.length > 0) {
+        const valuePerItem = (parseFloat(itemValue) / files.length) || 0;
+        for (const f of files) {
+          const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+          await supabase.storage.from("item-images").upload(fileName, f);
+          const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
+          await supabase.from("items").insert({
+            user_id: userId, title: itemName || newCollName, image_url: publicUrl,
+            estimated_value: valuePerItem, collection: coll.id, status: "active",
+            audience: selectedAudience
+          });
+        }
       }
+      loadGlobalNiches(); 
+      setShowAddCollection(false);
+      setFiles([]);
+      setNewCollName("");
+      setSelectedNiche("");
+      setCustomNiche("");
+      setSelectedAudience("everyone");
+      loadAllData();
+    } catch (err: any) { alert(err.message); } finally { setUploading(false); }
+  }
 
-      if (!targetCollectionId) return alert("Please select or create a collection");
-
-      const valuePerItem = (parseFloat(itemValue) || 0) / files.length;
-
-      for (const file of files) {
+  async function handleBatchUploadItems() {
+    if (!selectedCollectionId) return alert("Select a collection!");
+    if (files.length === 0) return alert("Select at least one image!");
+    setUploading(true);
+    try {
+      const valuePerItem = (parseFloat(itemValue) / files.length) || 0;
+      for (const f of files) {
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-        const { error: uploadError } = await supabase.storage.from("item-images").upload(fileName, file);
-        if (uploadError) throw uploadError;
-
+        await supabase.storage.from("item-images").upload(fileName, f);
         const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
-
         await supabase.from("items").insert({
-          user_id: userId,
-          title: itemName.trim(),
-          image_url: publicUrl,
-          estimated_value: valuePerItem,
-          collection: targetCollectionId,
-          status: "active",
+          user_id: userId, title: itemName || "New Item", image_url: publicUrl,
+          estimated_value: valuePerItem, collection: selectedCollectionId, status: "active",
           audience: selectedAudience
         });
       }
-
-      alert("Drop successful!");
-      setShowSmartDrop(false);
-      
+      alert("Drop Successful!");
+      setShowAddItem(false);
       setFiles([]);
-      setItemName("");
-      setItemValue("");
-      setNewCollName("");
-      setSelectedCollectionId("");
-      setSelectedNiche("");
-      setCustomNiche("");
+      setSelectedAudience("everyone");
+      loadAllData();
+    } catch (err) { alert("Upload failed."); } finally { setUploading(false); }
+  }
 
+  async function deleteItem(id: string) {
+    if(!confirm("Delete this photo?")) return;
+    try {
+      const { error } = await supabase.from("items").delete().eq("id", id);
+      if (error) throw error;
+      
+      setCollItems(prev => prev.filter(i => i.id !== id));
+      setRecentDrops(prev => prev.filter(i => i.id !== id));
       loadAllData();
     } catch (err: any) {
-      alert("Upload failed: " + err.message);
-    } finally {
-      setUploading(false);
+      alert("Error deleting item: " + err.message);
     }
   }
 
@@ -339,6 +353,8 @@ export default function ProfilePage() {
     if (!userRank) return null;
     return <img src={`/${userRank}.png`} style={{ width: '30px' }} alt="rank" />;
   };
+
+  const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
   const tierIconPath = `/icons/tiers/${(userRank || 'collector').toLowerCase()}.svg`;
 
@@ -358,30 +374,38 @@ export default function ProfilePage() {
             )}
             
             <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
-              <img 
-                key={profile?.avatar_url || 'no-avatar'}
-                src={hasValidAvatar ? profile.avatar_url : tierIconPath} 
-                crossOrigin="anonymous"
-                onError={(e) => { 
-                  const target = e.target as HTMLImageElement;
-                  if (target.src !== window.location.origin + tierIconPath) {
-                    target.src = tierIconPath;
-                    target.style.padding = '28px';
-                    target.style.objectFit = 'contain';
-                  }
-                }}
+              <div 
                 style={{ 
                   width: '100%', 
                   height: '100%', 
-                  borderRadius: '24px', 
-                  border: '4px solid #18181b', 
-                  objectFit: hasValidAvatar ? 'cover' : 'contain', 
-                  cursor: isOwnProfile ? 'pointer' : 'default',
-                  background: '#18181b',
-                  padding: hasValidAvatar ? '0' : '28px'
-                }} 
-                onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()} 
-              />
+                  backgroundColor: '#18181b',
+                  borderRadius: '38%', 
+                  overflow: 'hidden',
+                  border: '4px solid #18181b',
+                  cursor: isOwnProfile ? 'pointer' : 'default'
+                }}
+                onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()}
+              >
+                <img 
+                  key={profile?.avatar_url || 'no-avatar'}
+                  src={hasValidAvatar ? profile.avatar_url : tierIconPath} 
+                  crossOrigin="anonymous"
+                  onError={(e) => { 
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== window.location.origin + tierIconPath) {
+                      target.src = tierIconPath;
+                      target.style.padding = '28px';
+                      target.style.objectFit = 'contain';
+                    }
+                  }}
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: hasValidAvatar ? 'cover' : 'contain', 
+                    padding: hasValidAvatar ? '0' : '28px'
+                  }} 
+                />
+              </div>
               {isOwnProfile && <input type="file" id="avatar-input" hidden accept="image/*" onChange={handleAvatarUpload} />}
             </div>
 
@@ -419,22 +443,10 @@ export default function ProfilePage() {
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
 
             {isOwnProfile && (
-              <button 
-                onClick={() => setShowSmartDrop(true)} 
-                style={{ 
-                  width: '100%', 
-                  background: '#fff', 
-                  color: '#000', 
-                  border: 'none',
-                  padding: '16px', 
-                  borderRadius: '16px', 
-                  fontWeight: '900', 
-                  fontSize: '16px',
-                  cursor: 'pointer'
-                }}
-              >
-                + DROP
-              </button>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button onClick={() => { setFiles([]); setShowAddItem(true); }} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold' }}>+ ITEM</button>
+                <button onClick={() => { setFiles([]); setShowAddCollection(true); }} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold' }}>+ COLLECTION</button>
+              </div>
             )}
         </section>
 
@@ -519,104 +531,6 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* SMART DROP MODAL - with full niche support */}
-      {showSmartDrop && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>New Drop</h2>
-
-            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '16px' }}>
-              <span style={{ fontSize: '28px' }}>📸</span><br/>
-              {files.length > 0 ? `${files.length} photos selected` : "Tap to add photos"}
-              <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []))} />
-            </label>
-
-            <input 
-              placeholder="Item title" 
-              value={itemName} 
-              onChange={e => setItemName(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
-            />
-
-            <input 
-              type="number" 
-              placeholder="Estimated total value (£)" 
-              value={itemValue} 
-              onChange={e => setItemValue(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
-            />
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Collection</p>
-            
-            <select 
-              value={selectedCollectionId} 
-              onChange={e => setSelectedCollectionId(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}
-            >
-              <option value="">Choose existing collection...</option>
-              {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-            </select>
-
-            <input 
-              placeholder="Or create new collection name" 
-              value={newCollName} 
-              onChange={e => setNewCollName(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
-            />
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Niche</p>
-            <select 
-              value={selectedNiche} 
-              onChange={e => setSelectedNiche(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '8px' }}
-            >
-              <option value="">Select niche...</option>
-              {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
-              <option value="Other">Other...</option>
-            </select>
-
-            {selectedNiche === "Other" && (
-              <input 
-                placeholder="Specify niche" 
-                value={customNiche} 
-                onChange={e => setCustomNiche(e.target.value)} 
-                style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
-              />
-            )}
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => { 
-                  setShowSmartDrop(false); 
-                  setFiles([]); 
-                  setItemName(""); 
-                  setNewCollName(""); 
-                  setSelectedNiche(""); 
-                  setCustomNiche(""); 
-                }} 
-                style={{ flex: 1, color: '#a1a1aa', padding: '12px' }}
-              >
-                CANCEL
-              </button>
-              <button 
-                onClick={handleSmartDrop} 
-                disabled={uploading || files.length === 0 || (!selectedCollectionId && !newCollName.trim())}
-                style={{ 
-                  flex: 2, 
-                  background: (files.length > 0 && (selectedCollectionId || newCollName.trim())) ? '#fff' : '#27272a', 
-                  color: (files.length > 0 && (selectedCollectionId || newCollName.trim())) ? '#000' : '#666', 
-                  fontWeight: '900', 
-                  padding: '12px', 
-                  borderRadius: '12px' 
-                }}
-              >
-                {uploading ? 'DROPPING...' : 'DROP NOW'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* LIGHTBOX */}
       {selectedItemIndex !== null && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -639,8 +553,207 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* EDIT PROFILE MODAL */}
+      {showEditProfile && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '24px', textAlign: 'center' }}>EDIT PROFILE</h2>
+
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>DISPLAY NAME</p>
+            <input 
+              value={profile?.display_url || ""} 
+              onChange={e => setProfile({...profile, display_url: e.target.value})} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} 
+            />
+
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>BIO</p>
+            <textarea 
+              value={profile?.bio || ""} 
+              onChange={e => setProfile({...profile, bio: e.target.value})} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '80px', resize: 'none', marginBottom: '20px' }} 
+            />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>INSTAGRAM URL</p>
+                <input 
+                  placeholder="https://instagram.com/..." 
+                  value={profile?.instagram_url || ""} 
+                  onChange={e => setProfile({...profile, instagram_url: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>EBAY URL</p>
+                <input 
+                  placeholder="https://ebay.com/..." 
+                  value={profile?.ebay_url || ""} 
+                  onChange={e => setProfile({...profile, ebay_url: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>X URL</p>
+                <input 
+                  placeholder="https://x.com/..." 
+                  value={profile?.x_url || ""} 
+                  onChange={e => setProfile({...profile, x_url: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>YOUTUBE URL</p>
+                <input 
+                  placeholder="https://youtube.com/..." 
+                  value={profile?.youtube_url || ""} 
+                  onChange={e => setProfile({...profile, youtube_url: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>WHATNOT URL</p>
+                <input 
+                  placeholder="https://whatnot.com/..." 
+                  value={profile?.whatnot_url || ""} 
+                  onChange={e => setProfile({...profile, whatnot_url: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>FACEBOOK URL</p>
+                <input 
+                  placeholder="https://facebook.com/..." 
+                  value={profile?.facebook_url || ""} 
+                  onChange={e => setProfile({...profile, facebook_url: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>DISCORD HANDLE</p>
+                <input 
+                  placeholder="username#0000" 
+                  value={profile?.discord_handle || ""} 
+                  onChange={e => setProfile({...profile, discord_handle: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>TWITCH USERNAME</p>
+                <input 
+                  placeholder="twitch.tv/username" 
+                  value={profile?.twitch_handle || ""} 
+                  onChange={e => setProfile({...profile, twitch_handle: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa', background: '#27272a', padding: '12px', borderRadius: '12px' }}>CANCEL</button>
+              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE CHANGES'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD ITEM MODAL */}
+      {showAddItem && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>BATCH DROP</h2>
+            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
+              <option value="">Select Target Collection</option>
+              {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+            </select>
+            <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
+            <input type="number" placeholder="Total Estimated Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
+            <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}>AUDIENCE</p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
+                <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
+            </div>
+            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
+               <span style={{ fontSize: '24px' }}>📸</span><br/>{files.length > 0 ? `${files.length} Photos Ready` : "TAP TO ADD PHOTOS (UP TO 20)"}
+               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
+            </label>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button onClick={() => setShowAddItem(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
+              <button onClick={handleBatchUploadItems} disabled={uploading || !selectedCollectionId || files.length === 0} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'DROPPING...' : 'DROP BATCH'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD COLLECTION MODAL */}
+      {showAddCollection && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
+            <input placeholder="Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
+            <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }}>
+              <option value="">Select Niche...</option>
+              {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
+              <option value="Other">Other...</option>
+            </select>
+            {selectedNiche === "Other" && (
+              <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#818cf8', padding: '14px', borderRadius: '12px', marginBottom: '12px', fontWeight: 'bold' }} />
+            )}
+            <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '20px 0' }} />
+            <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}>AUDIENCE</p>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
+                <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
+            </div>
+            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '10px', fontWeight: 'bold' }}>OPTIONAL: START WITH PHOTOS</p>
+            <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
+            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
+               <span style={{ fontSize: '20px' }}>📸</span><br/>{files.length > 0 ? `${files.length} Photos Selected` : "TAP TO ADD PHOTOS (UP TO 20)"}
+               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
+            </label>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={() => { setShowAddCollection(false); setFiles([]); }} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
+              <button onClick={handleCreateCollectionBatch} disabled={!isCollectionValid || uploading} style={{ flex: 2, background: isCollectionValid ? '#fff' : '#27272a', color: isCollectionValid ? '#000' : '#555', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'DROPPING...' : 'CREATE'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditCollection && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
+             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>MANAGE COLLECTIONS</h2>
+             {collectionsList.map(c => (
+               <div key={c.id} style={{ background: '#000', padding: '15px', borderRadius: '15px', marginBottom: '10px', border: '1px solid #27272a' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 'bold' }}>{c.title} ({c.niche})</span>
+                    <button onClick={async () => {
+                      const { data } = await supabase.from("items").select("*").eq("collection", c.id);
+                      setEditingColl(c); setCollItems(data || []);
+                    }} style={{ color: '#818cf8', fontSize: '12px' }}>VIEW ITEMS</button>
+                  </div>
+                  {editingColl?.id === c.id && (
+                    <div style={{ marginTop: '15px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                      {collItems.map(item => (
+                        <div key={item.id} style={{ position: 'relative' }}>
+                          <img src={item.image_url} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
+                          <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: -5, right: -5, background: 'red', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px' }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+               </div>
+             ))}
+             <button onClick={() => setShowEditCollection(false)} style={{ width: '100%', marginTop: '20px', color: '#a1a1aa' }}>CLOSE</button>
+          </div>
+        </div>
+      )}
+
       <ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} receiverId={userId} receiverName={profile?.display_url || profile?.username || "Collector"} />
       <Footer />
     </div>
   );
 }
+

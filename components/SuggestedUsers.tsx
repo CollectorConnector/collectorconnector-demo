@@ -55,14 +55,15 @@ export default function SuggestedUsers() {
       {users.filter(u => u.id !== currentUserId).map((user) => {
         const tierIcon = getTierIcon(user.id);
         
-        // STRICTOR CHECK: 
-        // If it doesn't contain 'supabase' or 'item-images', we assume it's a placeholder.
-        const isActualPhoto = user.avatar_url && 
-                             user.avatar_url.includes('http') && 
-                             !user.avatar_url.includes('placeholder') && 
-                             !user.avatar_url.includes('default');
+        // --- THE "FIX-IT" LOGIC ---
+        // This checks if the avatar exists AND isn't that blue question mark placeholder
+        const hasCustomPhoto = 
+          user.avatar_url && 
+          user.avatar_url.includes('http') && 
+          !user.avatar_url.toLowerCase().includes('placeholder') && 
+          !user.avatar_url.toLowerCase().includes('question');
 
-        const displayImg = isActualPhoto ? user.avatar_url : tierIcon;
+        const displayImg = hasCustomPhoto ? user.avatar_url : tierIcon;
 
         return (
           <div key={user.id} style={{
@@ -99,8 +100,8 @@ export default function SuggestedUsers() {
                   style={{ 
                     width: '100%', 
                     height: '100%', 
-                    objectFit: isActualPhoto ? 'cover' : 'contain',
-                    padding: isActualPhoto ? '0' : '20px',
+                    objectFit: hasCustomPhoto ? 'cover' : 'contain',
+                    padding: hasCustomPhoto ? '0' : '20px',
                     boxSizing: 'border-box'
                   }} 
                 />

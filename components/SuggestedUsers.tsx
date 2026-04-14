@@ -51,26 +51,20 @@ export default function SuggestedUsers() {
       gap: '12px', 
       paddingBottom: '10px',
       scrollbarWidth: 'none',
-      WebkitOverflowScrolling: 'touch' // Ensures smooth scroll on mobile
     }} className="no-scrollbar">
       {users.filter(u => u.id !== currentUserId).map((user) => {
         const tierIcon = getTierIcon(user.id);
         
-        // NUCLEAR CHECK:
-        // 1. Must exist
-        // 2. Must be a long URL (placeholders are usually short paths)
-        // 3. Must NOT be the old "questionmark" or "ui-avatars"
-        const isLegacyPlaceholder = 
-          !user.avatar_url || 
-          user.avatar_url.length < 50 || 
-          user.avatar_url.includes('question') ||
-          user.avatar_url.includes('placeholder') ||
-          user.avatar_url.includes('default');
+        // --- THE "STRICT POSITIVE" CHECK ---
+        // We ONLY show the avatar if it contains 'item-images' (your upload bucket).
+        // If it's the blue question mark, it won't have this in the URL.
+        const isUserUpload = user.avatar_url && user.avatar_url.includes('item-images');
 
-        const displayImg = isLegacyPlaceholder ? tierIcon : user.avatar_url;
+        // We add a timestamp to the URL to bypass browser cache
+        const displayImg = isUserUpload ? `${user.avatar_url}?t=${Date.now()}` : tierIcon;
 
         return (
-          <div key={`${user.id}-${displayImg}`} style={{ // Key change forces re-render
+          <div key={`${user.id}-${isUserUpload}`} style={{
             minWidth: '160px',
             background: '#09090b',
             border: '1px solid #27272a',
@@ -80,7 +74,7 @@ export default function SuggestedUsers() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            flexShrink: 0 // Prevents the carousel from squishing the cards
+            flexShrink: 0
           }}>
             <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%' }}>
               <div style={{ 
@@ -97,19 +91,18 @@ export default function SuggestedUsers() {
                 <img 
                   src={displayImg} 
                   alt={user.username}
-                  key={displayImg} // Forces the image tag to refresh
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: isUserUpload ? 'cover' : 'contain',
+                    padding: isUserUpload ? '0' : '20px',
+                    boxSizing: 'border-box'
+                  }} 
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = tierIcon;
                     target.style.padding = '20px';
                   }}
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: isLegacyPlaceholder ? 'contain' : 'cover',
-                    padding: isLegacyPlaceholder ? '20px' : '0',
-                    boxSizing: 'border-box'
-                  }} 
                 />
               </div>
               

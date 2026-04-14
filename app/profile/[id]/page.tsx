@@ -319,9 +319,19 @@ export default function ProfilePage() {
 
   async function deleteItem(id: string) {
     if(!confirm("Delete this photo?")) return;
-    await supabase.from("items").delete().eq("id", id);
-    setCollItems(prev => prev.filter(i => i.id !== id));
-    loadAllData();
+    try {
+      const { error } = await supabase.from("items").delete().eq("id", id);
+      if (error) throw error;
+      
+      // Update local modal state
+      setCollItems(prev => prev.filter(i => i.id !== id));
+      // Update global drops state if visible
+      setRecentDrops(prev => prev.filter(i => i.id !== id));
+      // Refresh profile stats
+      loadAllData();
+    } catch (err: any) {
+      alert("Error deleting item: " + err.message);
+    }
   }
 
   const renderRankIcon = () => {

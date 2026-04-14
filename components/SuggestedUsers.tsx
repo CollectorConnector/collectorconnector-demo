@@ -32,25 +32,22 @@ export default function SuggestedUsers() {
     }
   }
 
-  const getTierIcon = (userId: string) => {
-    const stacyId = "8b594b57-fc82-477a-a709-45aec99a228f";
-    const foundersIds = ["e0759f79-d113-4af6-a575-cee076037092", "bb088a77-ba12-4fe3-a357-03d13dc0019"];
-    
-    if (userId === stacyId) return "/icons/tiers/diamond.svg";
-    if (foundersIds.includes(userId)) return "/icons/tiers/founder.svg";
-    
-    return "/icons/tiers/collector.svg";   // Default for normal users
+  // Generate nice gradient color based on username
+  const stringToColor = (str: string): string => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 85%, 60%)`;
   };
 
+  // Get avatar source or gradient fallback
   const getAvatarSrc = (user: any) => {
     if (user.avatar_url?.includes("item-images")) {
       return `${user.avatar_url}?t=${Date.now()}`;
     }
-    return getTierIcon(user.id);
-  };
-
-  const isUserUpload = (avatarUrl?: string) => {
-    return !!(avatarUrl && avatarUrl.includes("item-images"));
+    return null; // null means use gradient placeholder
   };
 
   if (loading) return null;
@@ -69,9 +66,10 @@ export default function SuggestedUsers() {
       {users
         .filter(u => u.id !== currentUserId)
         .map((user) => {
-          const tierIcon = getTierIcon(user.id);
           const avatarSrc = getAvatarSrc(user);
-          const isUpload = isUserUpload(user.avatar_url);
+          const isUpload = !!avatarSrc;
+          const gradientColor = stringToColor(user.username || user.id);
+          const initial = (user.username || "N")[0].toUpperCase();
 
           return (
             <div 
@@ -95,31 +93,58 @@ export default function SuggestedUsers() {
                     width: '80px', 
                     height: '80px', 
                     margin: '0 auto 12px',
-                    background: '#18181b',
                     borderRadius: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    position: 'relative',
+                    background: isUpload ? '#18181b' : gradientColor,
                   }}
                 >
-                  <img 
-                    src={avatarSrc} 
-                    alt={user.username || "Collector"}
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: isUpload ? 'cover' : 'contain',
-                      padding: isUpload ? '0' : '20px',
-                      boxSizing: 'border-box'
-                    }} 
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = tierIcon;
-                      target.style.padding = '20px';
-                      target.style.objectFit = 'contain';
-                    }}
-                  />
+                  {isUpload ? (
+                    <img 
+                      src={avatarSrc} 
+                      alt={user.username}
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover'
+                      }} 
+                      onError={(e) => {
+                        // If uploaded image fails, fall back to gradient
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.style.background = gradientColor;
+                          const initialEl = document.createElement('div');
+                          initialEl.style.width = '100%';
+                          initialEl.style.height = '100%';
+                          initialEl.style.display = 'flex';
+                          initialEl.style.alignItems = 'center';
+                          initialEl.style.justifyContent = 'center';
+                          initialEl.style.fontSize = '32px';
+                          initialEl.style.fontWeight = '900';
+                          initialEl.style.color = '#fff';
+                          initialEl.textContent = initial;
+                          parent.appendChild(initialEl);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '32px',
+                        fontWeight: '900',
+                        color: '#fff',
+                      }}
+                    >
+                      {initial}
+                    </div>
+                  )}
                 </div>
                 
                 <p style={{ 

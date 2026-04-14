@@ -51,22 +51,26 @@ export default function SuggestedUsers() {
       gap: '12px', 
       paddingBottom: '10px',
       scrollbarWidth: 'none',
+      WebkitOverflowScrolling: 'touch' // Ensures smooth scroll on mobile
     }} className="no-scrollbar">
       {users.filter(u => u.id !== currentUserId).map((user) => {
         const tierIcon = getTierIcon(user.id);
         
-        // --- IMPROVED "STRICT" LOGIC ---
-        // We only show the photo if it comes from your Supabase storage bucket.
-        // If it's anything else (like the blue question mark), it will fail this check.
-        const hasUploadedPhoto = 
-          user.avatar_url && 
-          user.avatar_url.includes('supabase.co') && 
-          user.avatar_url.includes('item-images');
+        // NUCLEAR CHECK:
+        // 1. Must exist
+        // 2. Must be a long URL (placeholders are usually short paths)
+        // 3. Must NOT be the old "questionmark" or "ui-avatars"
+        const isLegacyPlaceholder = 
+          !user.avatar_url || 
+          user.avatar_url.length < 50 || 
+          user.avatar_url.includes('question') ||
+          user.avatar_url.includes('placeholder') ||
+          user.avatar_url.includes('default');
 
-        const displayImg = hasUploadedPhoto ? user.avatar_url : tierIcon;
+        const displayImg = isLegacyPlaceholder ? tierIcon : user.avatar_url;
 
         return (
-          <div key={user.id} style={{
+          <div key={`${user.id}-${displayImg}`} style={{ // Key change forces re-render
             minWidth: '160px',
             background: '#09090b',
             border: '1px solid #27272a',
@@ -75,7 +79,8 @@ export default function SuggestedUsers() {
             textAlign: 'center',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center'
+            alignItems: 'center',
+            flexShrink: 0 // Prevents the carousel from squishing the cards
           }}>
             <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%' }}>
               <div style={{ 
@@ -92,6 +97,7 @@ export default function SuggestedUsers() {
                 <img 
                   src={displayImg} 
                   alt={user.username}
+                  key={displayImg} // Forces the image tag to refresh
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = tierIcon;
@@ -100,8 +106,8 @@ export default function SuggestedUsers() {
                   style={{ 
                     width: '100%', 
                     height: '100%', 
-                    objectFit: hasUploadedPhoto ? 'cover' : 'contain',
-                    padding: hasUploadedPhoto ? '0' : '20px',
+                    objectFit: isLegacyPlaceholder ? 'contain' : 'cover',
+                    padding: isLegacyPlaceholder ? '20px' : '0',
                     boxSizing: 'border-box'
                   }} 
                 />

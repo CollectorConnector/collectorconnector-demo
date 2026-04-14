@@ -18,12 +18,10 @@ export default function SuggestedUsers() {
 
   async function fetchSuggestedUsers() {
     try {
-      // Fetch users and their creation order to determine rank silently
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, display_url, avatar_url, created_at")
-        .order("created_at", { ascending: true })
-        .limit(15);
+        .select("id, username, display_url, avatar_url")
+        .limit(10);
 
       if (error) throw error;
       setUsers(data || []);
@@ -34,13 +32,22 @@ export default function SuggestedUsers() {
     }
   }
 
-  // Helper to determine rank based on the same logic as ProfilePage
-  const getRank = (userId: string, index: number) => {
-    const stacyId = "8b594b57-fc82-477a-a709-45aec99a228f";
-    if (userId === stacyId) return "diamond";
-    if (index >= 3 && index < 13) return "gold";
-    if (index >= 13 && index < 23) return "silver";
-    return "collector";
+  // Generate nice gradient color based on username
+  const stringToColor = (str: string): string => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 85%, 60%)`;
+  };
+
+  // Get avatar source or gradient fallback
+  const getAvatarSrc = (user: any) => {
+    if (user.avatar_url?.includes("item-images")) {
+      return `${user.avatar_url}?t=${Date.now()}`;
+    }
+    return null; // null means use gradient placeholder
   };
 
   if (loading) return null;
@@ -58,10 +65,11 @@ export default function SuggestedUsers() {
     >
       {users
         .filter(u => u.id !== currentUserId)
-        .map((user, idx) => {
-          const rank = getRank(user.id, idx);
-          const tierIconPath = `/icons/tiers/${rank}.svg`;
-          const hasValidAvatar = user.avatar_url && user.avatar_url !== "null";
+        .map((user) => {
+          const avatarSrc = getAvatarSrc(user);
+          const isUpload = !!avatarSrc;
+          const gradientColor = stringToColor(user.username || user.id);
+          const initial = (user.username || "N")[0].toUpperCase();
 
           return (
             <div 
@@ -88,28 +96,55 @@ export default function SuggestedUsers() {
                     borderRadius: '20px',
                     overflow: 'hidden',
                     position: 'relative',
-                    background: '#18181b',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    background: isUpload ? '#18181b' : gradientColor,
                   }}
                 >
-                  <img 
-                    src={hasValidAvatar ? user.avatar_url : tierIconPath} 
-                    alt={user.username}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = tierIconPath;
-                      target.style.padding = '18px';
-                      target.style.objectFit = 'contain';
-                    }}
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: hasValidAvatar ? 'cover' : 'contain',
-                      padding: hasValidAvatar ? '0' : '18px'
-                    }} 
-                  />
+                  {isUpload ? (
+                    <img 
+                      src={avatarSrc} 
+                      alt={user.username}
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover'
+                      }} 
+                      onError={(e) => {
+                        // If uploaded image fails, fall back to gradient
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.style.background = gradientColor;
+                          const initialEl = document.createElement('div');
+                          initialEl.style.width = '100%';
+                          initialEl.style.height = '100%';
+                          initialEl.style.display = 'flex';
+                          initialEl.style.alignItems = 'center';
+                          initialEl.style.justifyContent = 'center';
+                          initialEl.style.fontSize = '32px';
+                          initialEl.style.fontWeight = '900';
+                          initialEl.style.color = '#fff';
+                          initialEl.textContent = initial;
+                          parent.appendChild(initialEl);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '32px',
+                        fontWeight: '900',
+                        color: '#fff',
+                      }}
+                    >
+                      {initial}
+                    </div>
+                  )}
                 </div>
                 
                 <p style={{ 
@@ -121,7 +156,7 @@ export default function SuggestedUsers() {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
                 }}>
-                  {user.display_url || user.username || "Collector"}
+                  {user.display_url || user.username || "New Collector"}
                 </p>
                 <p style={{ color: '#818cf8', fontSize: '11px', fontWeight: 'bold', marginBottom: '16px' }}>
                   @{user.username}

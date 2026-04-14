@@ -1,8 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 export default function HomePage() {
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setCurrentUserId(session.user.id);
+      }
+      setLoading(false);
+    };
+    checkUser();
+  }, []);
+
   return (
     <div
       style={{
@@ -74,33 +90,35 @@ export default function HomePage() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "32px", // Increased gap to give the logo breathing room
+            gap: "32px",
             maxWidth: "320px",
             margin: "0 auto",
           }}
         >
-          <Link
-            href="/auth/signup"
-            style={{
-              width: "100%",
-              padding: "14px",
-              background: "#ffffff",
-              color: "#000",
-              borderRadius: "10px",
-              fontWeight: 700,
-              textDecoration: "none",
-              fontSize: "16px",
-            }}
-          >
-            Create your profile
-          </Link>
+          {!loading && (
+            <Link
+              href={currentUserId ? `/profile/${currentUserId}` : "/auth/signup"}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: "#ffffff",
+                color: "#000",
+                borderRadius: "10px",
+                fontWeight: 700,
+                textDecoration: "none",
+                fontSize: "16px",
+              }}
+            >
+              {currentUserId ? "Enter your Vault" : "Create your profile"}
+            </Link>
+          )}
 
           {/* SML-LOGO REPLACES EXPLORE BUTTON */}
           <img
             src="/CC-SML-Logo.png"
             alt="CC Icon"
             style={{
-              width: "50px", // Adjust size as needed
+              width: "50px",
               height: "auto",
               opacity: 0.8,
             }}

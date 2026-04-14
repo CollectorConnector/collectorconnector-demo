@@ -659,63 +659,99 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ADD ITEM MODAL */}
-      {showAddItem && (
+     {/* SMART DROP MODAL - with full niche support */}
+      {showSmartDrop && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>BATCH DROP</h2>
-            <select value={selectedCollectionId} onChange={(e) => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
-              <option value="">Select Target Collection</option>
+          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>
+            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>New Drop</h2>
+
+            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '16px' }}>
+              <span style={{ fontSize: '28px' }}>📸</span><br/>
+              {files.length > 0 ? `${files.length} photos selected` : "Tap to add photos"}
+              <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []))} />
+            </label>
+
+            <input 
+              placeholder="Item title" 
+              value={itemName} 
+              onChange={e => setItemName(e.target.value)} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
+            />
+
+            <input 
+              type="number" 
+              placeholder="Estimated total value (£)" 
+              value={itemValue} 
+              onChange={e => setItemValue(e.target.value)} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
+            />
+
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Collection</p>
+            
+            <select 
+              value={selectedCollectionId} 
+              onChange={e => setSelectedCollectionId(e.target.value)} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}
+            >
+              <option value="">Choose existing collection...</option>
               {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
-            <input placeholder="Batch Title" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            <input type="number" placeholder="Total Estimated Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}>AUDIENCE</p>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
-                <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
-            </div>
-            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '10px' }}>
-               <span style={{ fontSize: '24px' }}>📸</span><br/>{files.length > 0 ? `${files.length} Photos Ready` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
-            </label>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-              <button onClick={() => setShowAddItem(false)} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
-              <button onClick={handleBatchUploadItems} disabled={uploading || !selectedCollectionId || files.length === 0} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'DROPPING...' : 'DROP BATCH'}</button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ADD COLLECTION MODAL */}
-      {showAddCollection && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>NEW COLLECTION</h2>
-            <input placeholder="Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }} />
-            <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '12px', marginBottom: '12px' }}>
-              <option value="">Select Niche...</option>
+            <input 
+              placeholder="Or create new collection name" 
+              value={newCollName} 
+              onChange={e => setNewCollName(e.target.value)} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
+            />
+
+            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Niche</p>
+            <select 
+              value={selectedNiche} 
+              onChange={e => setSelectedNiche(e.target.value)} 
+              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '8px' }}
+            >
+              <option value="">Select niche...</option>
               {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
               <option value="Other">Other...</option>
             </select>
+
             {selectedNiche === "Other" && (
-              <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#818cf8', padding: '14px', borderRadius: '12px', marginBottom: '12px', fontWeight: 'bold' }} />
+              <input 
+                placeholder="Specify niche" 
+                value={customNiche} 
+                onChange={e => setCustomNiche(e.target.value)} 
+                style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
+              />
             )}
-            <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '20px 0' }} />
-            <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}>AUDIENCE</p>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
-                <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
-            </div>
-            <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '10px', fontWeight: 'bold' }}>OPTIONAL: START WITH PHOTOS</p>
-            <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
-               <span style={{ fontSize: '20px' }}>📸</span><br/>{files.length > 0 ? `${files.length} Photos Selected` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
-            </label>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => { setShowAddCollection(false); setFiles([]); }} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
-              <button onClick={handleCreateCollectionBatch} disabled={!isCollectionValid || uploading} style={{ flex: 2, background: isCollectionValid ? '#fff' : '#27272a', color: isCollectionValid ? '#000' : '#555', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'DROPPING...' : 'CREATE'}</button>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                onClick={() => { 
+                  setShowSmartDrop(false); 
+                  setFiles([]); 
+                  setItemName(""); 
+                  setNewCollName(""); 
+                  setSelectedNiche(""); 
+                  setCustomNiche(""); 
+                }} 
+                style={{ flex: 1, color: '#a1a1aa', padding: '12px' }}
+              >
+                CANCEL
+              </button>
+              <button 
+                onClick={handleSmartDrop} 
+                disabled={uploading || files.length === 0 || (!selectedCollectionId && !newCollName.trim())}
+                style={{ 
+                  flex: 2, 
+                  background: (files.length > 0 && (selectedCollectionId || newCollName.trim())) ? '#fff' : '#27272a', 
+                  color: (files.length > 0 && (selectedCollectionId || newCollName.trim())) ? '#000' : '#666', 
+                  fontWeight: '900', 
+                  padding: '12px', 
+                  borderRadius: '12px' 
+                }}
+              >
+                {uploading ? 'DROPPING...' : 'DROP NOW'}
+              </button>
             </div>
           </div>
         </div>

@@ -23,7 +23,6 @@ export default function SearchPage() {
       return;
     }
     setLoading(true);
-
     const { data, error } = await supabase
       .from("profiles")
       .select("id, display_url, username, avatar_url, tier")
@@ -40,69 +39,93 @@ export default function SearchPage() {
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 pt-32 pb-20">
-      <div className="max-w-5xl mx-auto">
+    <div style={{ minHeight: '100vh', backgroundColor: '#000', color: '#fff', padding: '120px 24px 80px' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
 
         {/* HEADER */}
-        <div className="mb-14 text-center">
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight uppercase italic">
-            Search Vault
+        <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', fontStyle: 'italic', margin: 0 }}>
+            SEARCH VAULT
           </h1>
-          <div className="h-1 w-20 bg-indigo-500 mx-auto mt-3 rounded-full" />
+          <div style={{ height: '3px', width: '40px', backgroundColor: '#6366f1', margin: '12px auto', borderRadius: '10px' }} />
         </div>
 
         {/* SEARCH INPUT */}
-        <div className="max-w-md mx-auto mb-16">
+        <div style={{ maxWidth: '400px', margin: '0 auto 80px' }}>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search collectors..."
-            className="w-full bg-[#0A0A0A] border border-zinc-800 p-4 rounded-2xl 
-                       text-center font-bold placeholder:text-zinc-600 
-                       focus:outline-none focus:border-indigo-500/50 transition-all"
+            style={{
+              width: '100%',
+              backgroundColor: '#0a0a0a',
+              border: '1px solid #27272a',
+              padding: '16px',
+              borderRadius: '16px',
+              textAlign: 'center',
+              color: '#fff',
+              fontSize: '16px',
+              fontWeight: '600',
+              outline: 'none'
+            }}
           />
         </div>
 
-        {/* RESULTS GRID */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 
-                        gap-x-6 gap-y-12">
+        {/* THE GRID - Forced Layout */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', 
+          gap: '32px' 
+        }}>
           {results.map((user) => (
             <Link
               key={user.id}
               href={`/profile/${user.id}`}
-              className="group flex flex-col items-center"
+              style={{ textDecoration: 'none', color: 'inherit', display: 'block', textAlign: 'center' }}
             >
-              {/* AVATAR */}
-              <div
-                className="relative aspect-square w-full bg-zinc-900 border border-zinc-800 
-                           group-hover:border-zinc-500 transition-all duration-300"
-                style={{ borderRadius: "32%" }}
-              >
-                <div className="w-full h-full overflow-hidden" style={{ borderRadius: "30.5%" }}>
-                  <img
-                    src={user.avatar_url || "/icons/tiers/collector.svg"}
-                    alt=""
-                    className="w-full h-full object-cover transition-transform duration-500 
-                               group-hover:scale-110"
-                  />
-                </div>
+              {/* THE SQUIRCLE IMAGE */}
+              <div style={{ 
+                position: 'relative', 
+                width: '100%', 
+                aspectRatio: '1/1', 
+                backgroundColor: '#18181b',
+                border: '1px solid #27272a',
+                overflow: 'hidden',
+                /* THE SQUIRCLE GEOMETRY */
+                borderRadius: '38%', 
+                transition: 'all 0.3s ease'
+              }}>
+                <img
+                  src={user.avatar_url || "/icons/tiers/collector.svg"}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
 
                 {user.tier === "founder" && (
-                  <div className="absolute -bottom-2 -right-1 bg-white text-black 
-                                  text-[9px] font-black px-2 py-0.5 rounded-md shadow-xl 
-                                  border border-black uppercase tracking-tight">
+                  <div style={{ 
+                    position: 'absolute', 
+                    bottom: '8px', 
+                    right: '8px', 
+                    backgroundColor: '#fff', 
+                    color: '#000', 
+                    fontSize: '9px', 
+                    fontWeight: '900', 
+                    padding: '3px 8px', 
+                    borderRadius: '6px',
+                    textTransform: 'uppercase'
+                  }}>
                     Founder
                   </div>
                 )}
               </div>
 
-              {/* TEXT */}
-              <div className="mt-4 text-center w-full">
-                <p className="font-extrabold text-[15px] truncate leading-none">
+              {/* INFO */}
+              <div style={{ marginTop: '16px' }}>
+                <p style={{ margin: 0, fontWeight: '800', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {user.display_url || user.username}
                 </p>
-                <p className="text-indigo-400 text-[11px] font-black tracking-widest uppercase mt-1">
+                <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#818cf8', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   @{user.username}
                 </p>
               </div>
@@ -110,20 +133,13 @@ export default function SearchPage() {
           ))}
         </div>
 
-        {/* LOADING */}
         {loading && (
-          <div className="flex justify-center mt-20">
-            <div className="w-8 h-8 border-4 border-zinc-800 border-t-indigo-500 
-                            rounded-full animate-spin" />
-          </div>
+          <div style={{ textAlign: 'center', marginTop: '40px', color: '#52525b' }}>Searching...</div>
         )}
 
-        {/* EMPTY STATE */}
         {!loading && query && results.length === 0 && (
-          <div className="mt-20 text-center">
-            <p className="text-zinc-600 font-bold tracking-widest uppercase text-sm">
-              No Collectors Found
-            </p>
+          <div style={{ textAlign: 'center', marginTop: '80px', color: '#52525b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>
+            No Results
           </div>
         )}
       </div>

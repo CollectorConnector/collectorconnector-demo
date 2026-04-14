@@ -56,8 +56,7 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
 
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [showAddCollection, setShowAddCollection] = useState(false);
+  const [showSmartDrop, setShowSmartDrop] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
@@ -280,59 +279,62 @@ export default function ProfilePage() {
     } catch (err: any) { alert("Upload failed: " + err.message); } finally { setUploading(false); }
   }
 
-  async function handleCreateCollectionBatch() {
-    const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
-    if (!finalNiche) return alert("Please specify a niche!");
-    setUploading(true);
-    try {
-      const { data: coll, error: collErr } = await supabase.from("collections").insert([{ user_id: userId, title: newCollName.trim(), niche: finalNiche.trim() }]).select().single();
-      if (collErr) throw collErr;
-      if (files.length > 0) {
-        const valuePerItem = (parseFloat(itemValue) / files.length) || 0;
-        for (const f of files) {
-          const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-          await supabase.storage.from("item-images").upload(fileName, f);
-          const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
-          await supabase.from("items").insert({
-            user_id: userId, title: itemName || newCollName, image_url: publicUrl,
-            estimated_value: valuePerItem, collection: coll.id, status: "active",
-            audience: selectedAudience
-          });
-        }
-      }
-      loadGlobalNiches(); 
-      setShowAddCollection(false);
-      setFiles([]);
-      setNewCollName("");
-      setSelectedNiche("");
-      setCustomNiche("");
-      setSelectedAudience("everyone");
-      loadAllData();
-    } catch (err: any) { alert(err.message); } finally { setUploading(false); }
-  }
-
-  async function handleBatchUploadItems() {
-    if (!selectedCollectionId) return alert("Select a collection!");
+  async function handleSmartDrop() {
     if (files.length === 0) return alert("Select at least one image!");
+    const finalNiche = selectedNiche === "Other" ? customNiche : selectedNiche;
     setUploading(true);
+
     try {
+      let targetCollectionId = selectedCollectionId;
+
+      if (!targetCollectionId && newCollName.trim()) {
+        const { data: newColl, error: collErr } = await supabase
+          .from("collections")
+          .insert([{ 
+            user_id: userId, 
+            title: newCollName.trim(), 
+            niche: finalNiche || "General" 
+          }])
+          .select()
+          .single();
+        
+        if (collErr) throw collErr;
+        targetCollectionId = newColl.id;
+      }
+
+      if (!targetCollectionId) throw new Error("Please select or create a collection.");
+
       const valuePerItem = (parseFloat(itemValue) / files.length) || 0;
+      
       for (const f of files) {
         const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
         await supabase.storage.from("item-images").upload(fileName, f);
         const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
+        
         await supabase.from("items").insert({
-          user_id: userId, title: itemName || "New Item", image_url: publicUrl,
-          estimated_value: valuePerItem, collection: selectedCollectionId, status: "active",
+          user_id: userId,
+          title: itemName || "New Drop",
+          image_url: publicUrl,
+          estimated_value: valuePerItem,
+          collection: targetCollectionId,
+          status: "active",
           audience: selectedAudience
         });
       }
+
       alert("Drop Successful!");
-      setShowAddItem(false);
+      setShowSmartDrop(false);
       setFiles([]);
-      setSelectedAudience("everyone");
+      setItemName("");
+      setItemValue("");
+      setNewCollName("");
+      setSelectedCollectionId("");
       loadAllData();
-    } catch (err) { alert("Upload failed."); } finally { setUploading(false); }
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function deleteItem(id: string) {
@@ -444,8 +446,12 @@ export default function ProfilePage() {
 
             {isOwnProfile && (
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button onClick={() => { setFiles([]); setShowAddItem(true); }} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold' }}>+ ITEM</button>
-                <button onClick={() => { setFiles([]); setShowAddCollection(true); }} style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold' }}>+ COLLECTION</button>
+                <button 
+                  onClick={() => { setFiles([]); setShowSmartDrop(true); }} 
+                  style={{ width: '100%', background: '#fff', color: '#000', padding: '16px', borderRadius: '16px', fontWeight: '900' }}
+                >
+                  + SMART DROP
+                </button>
               </div>
             )}
         </section>
@@ -659,7 +665,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-     {/* SMART DROP MODAL - with full niche support */}
+     {/* SMART DROP MODAL */}
       {showSmartDrop && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>
@@ -792,4 +798,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

@@ -46,6 +46,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   
   const [itemCount, setItemCount] = useState(0);
   const [collectionCount, setCollectionCount] = useState(0);
@@ -85,11 +86,20 @@ export default function ProfilePage() {
 
   const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
 
+  // --- COMMENTS STATE ---
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
   const isOwnProfile = currentUserId === userId;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
+      const uid = data.user?.id || null;
+      setCurrentUserId(uid);
+      if (uid) {
+        supabase.from("profiles").select("*").eq("id", uid).single().then(({ data: p }) => setCurrentUserProfile(p));
+      }
     });
     loadGlobalNiches();
   }, []);
@@ -122,6 +132,12 @@ export default function ProfilePage() {
   }, [userId]);
 
   useEffect(() => {
+    if (selectedItemIndex !== null) {
+      loadComments(recentDrops[selectedItemIndex].id);
+    }
+  }, [selectedItemIndex]);
+
+  useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     if (queryParams.get("openChat") === "true") {
       setIsChatOpen(true);
@@ -135,6 +151,40 @@ export default function ProfilePage() {
       checkFollowStatus();
     }
   }, [userId, currentUserId]);
+
+  async function loadComments(itemId: string) {
+    const { data } = await supabase
+      .from("comments")
+      .select(`
+        *,
+        profiles:user_id (
+          username,
+          display_url,
+          avatar_url
+        )
+      `)
+      .eq("item_id", itemId)
+      .order("created_at", { ascending: true });
+    setComments(data || []);
+  }
+
+  async function handleAddComment() {
+    if (!newComment.trim() || !currentUserId || selectedItemIndex === null) return;
+    setIsSubmittingComment(true);
+    const itemId = recentDrops[selectedItemIndex].id;
+
+    const { error } = await supabase.from("comments").insert({
+      item_id: itemId,
+      user_id: currentUserId,
+      content: newComment.trim()
+    });
+
+    if (!error) {
+      setNewComment("");
+      loadComments(itemId);
+    }
+    setIsSubmittingComment(false);
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -213,7 +263,8 @@ export default function ProfilePage() {
           profiles:user_id (
             id,
             username,
-            display_url
+            display_url,
+            avatar_url
           )
         `)
         .order("created_at", { ascending: false })
@@ -363,8 +414,6 @@ export default function ProfilePage() {
     return <img src={`/${userRank}.png`} style={{ width: '30px' }} alt="rank" />;
   };
 
-  const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
-
   const tierIconPath = `/icons/tiers/${(userRank || 'collector').toLowerCase()}.svg`;
 
   if (loading) return <div className="min-h-screen bg-black" />;
@@ -470,7 +519,7 @@ export default function ProfilePage() {
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p><p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p></div>
         </div>
 
-        {/* GLOBAL RECENT DROPS */}
+        {/* GLOBAL RECENT DROPS (With User Attribution) */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -489,24 +538,28 @@ export default function ProfilePage() {
               >
                 <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 
-                <div style={{ position: 'absolute', top: '5px', left: '5px', display: 'flex', gap: '4px', zIndex: 10 }}>
-                  {drop.profiles?.username && (
-                    <Link 
-                      href={`/profile/${drop.profiles.id}`}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ 
-                        background: 'rgba(0,0,0,0.7)', 
-                        padding: '3px 8px', 
-                        borderRadius: '6px', 
-                        fontSize: '10px', 
-                        fontWeight: 'bold',
-                        color: '#fff',
-                        textDecoration: 'none'
-                      }}
-                    >
-                      @{drop.profiles.username}
-                    </Link>
-                  )}
+                {/* User Attribution Overlay */}
+                <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10 }}>
+                  <Link 
+                    href={`/profile/${drop.profiles?.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px', 
+                      background: 'rgba(0,0,0,0.6)', 
+                      backdropFilter: 'blur(4px)',
+                      padding: '2px 8px 2px 2px', 
+                      borderRadius: '20px',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <img 
+                      src={drop.profiles?.avatar_url || `/icons/tiers/collector.svg`} 
+                      style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} 
+                    />
+                    <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>@{drop.profiles?.username}</span>
+                  </Link>
                 </div>
 
                 <div style={{ position: 'absolute', bottom: '8px', right: '8px', display: 'flex', gap: '8px', zIndex: 10 }}>
@@ -549,49 +602,88 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* LIGHTBOX */}
+      {/* LIGHTBOX WITH COMMENTS */}
       {selectedItemIndex !== null && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '40px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '30px', cursor: 'pointer' }}>✕</button>
-            <button onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}>‹</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '30px', right: '30px', background: '#18181b', border: '1px solid #27272a', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', zIndex: 5001 }}>✕</button>
             
-            <div style={{ width: '100%', maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px' }}>
-                <div style={{ position: 'relative', width: '100%' }}>
-                  <img src={recentDrops[selectedItemIndex].image_url} style={{ width: '100%', borderRadius: '12px', border: '1px solid #27272a', maxHeight: '70vh', objectFit: 'contain' }} />
+            <div style={{ width: '100%', maxWidth: '900px', height: '80vh', display: 'flex', background: '#09090b', borderRadius: '24px', overflow: 'hidden', border: '1px solid #27272a' }}>
+                
+                {/* LEFT: IMAGE */}
+                <div style={{ flex: 1.2, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', borderRight: '1px solid #27272a' }}>
+                   <img src={recentDrops[selectedItemIndex].image_url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                   
+                   <button onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>‹</button>
+                   <button onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>›</button>
+                </div>
+
+                {/* RIGHT: DETAILS & COMMENTS */}
+                <div style={{ flex: 0.8, display: 'flex', flexDirection: 'column', height: '100%' }}>
                   
-                  {/* Overlay Interaction Bar */}
-                  <div style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <button onClick={() => toggleLike(recentDrops[selectedItemIndex].id)} style={{ background: 'rgba(0,0,0,0.6)', border: 'none', width: '45px', height: '45px', borderRadius: '50%', fontSize: '20px', color: likedItems.has(recentDrops[selectedItemIndex].id) ? '#fbbf24' : '#fff' }}>
+                  {/* Header / Attribution */}
+                  <div style={{ padding: '20px', borderBottom: '1px solid #18181b' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                       <img src={recentDrops[selectedItemIndex].profiles?.avatar_url || '/icons/tiers/collector.svg'} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                       <div>
+                         <p style={{ fontWeight: '900', fontSize: '14px' }}>{recentDrops[selectedItemIndex].profiles?.display_url || recentDrops[selectedItemIndex].profiles?.username}</p>
+                         <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
+                       </div>
+                    </div>
+                    <h3 style={{ fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</h3>
+                  </div>
+
+                  {/* Comments List */}
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {comments.length === 0 ? (
+                      <p style={{ color: '#52525b', textAlign: 'center', marginTop: '40px', fontSize: '13px' }}>No comments yet. Be the first!</p>
+                    ) : (
+                      comments.map(cmt => (
+                        <div key={cmt.id} style={{ display: 'flex', gap: '10px' }}>
+                          <img src={cmt.profiles?.avatar_url || '/icons/tiers/collector.svg'} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                          <div style={{ background: '#18181b', padding: '10px 14px', borderRadius: '15px', flex: 1 }}>
+                            <p style={{ fontSize: '12px', fontWeight: '900', color: '#fff', marginBottom: '2px' }}>{cmt.profiles?.username}</p>
+                            <p style={{ fontSize: '13px', color: '#a1a1aa', lineHeight: '1.4' }}>{cmt.content}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Comment Input */}
+                  <div style={{ padding: '20px', borderTop: '1px solid #18181b' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <input 
+                        placeholder="Add a comment..." 
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
+                        style={{ flex: 1, background: '#18181b', border: '1px solid #27272a', padding: '12px 16px', borderRadius: '25px', color: '#fff', fontSize: '14px' }}
+                      />
+                      <button 
+                        onClick={handleAddComment}
+                        disabled={isSubmittingComment || !newComment.trim()}
+                        style={{ background: 'transparent', border: 'none', color: '#818cf8', fontWeight: '900', cursor: 'pointer' }}
+                      >
+                        POST
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Footer Interaction */}
+                  <div style={{ padding: '10px 20px 20px', display: 'flex', gap: '20px' }}>
+                    <button onClick={() => toggleLike(recentDrops[selectedItemIndex].id)} style={{ background: 'none', border: 'none', color: likedItems.has(recentDrops[selectedItemIndex].id) ? '#fbbf24' : '#fff', fontSize: '20px', cursor: 'pointer' }}>
                       {likedItems.has(recentDrops[selectedItemIndex].id) ? '⭐' : '☆'}
                     </button>
-                    <button onClick={() => alert('Comments coming soon!')} style={{ background: 'rgba(0,0,0,0.6)', border: 'none', width: '45px', height: '45px', borderRadius: '50%', fontSize: '20px', color: '#fff' }}>
-                      💬
-                    </button>
+                    <span style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold', alignSelf: 'center' }}>
+                      £{recentDrops[selectedItemIndex].estimated_value} EST. VALUE
+                    </span>
                   </div>
                 </div>
-
-                <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                  <p style={{ fontSize: '22px', fontWeight: '900', marginBottom: '4px' }}>{recentDrops[selectedItemIndex].title}</p>
-                  
-                  {recentDrops[selectedItemIndex].profiles?.id && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                      <span style={{ color: '#a1a1aa', fontSize: '14px' }}>Dropped by</span>
-                      <Link 
-                        href={`/profile/${recentDrops[selectedItemIndex].profiles.id}`}
-                        style={{ color: '#818cf8', fontWeight: 'bold', textDecoration: 'none', fontSize: '16px' }}
-                      >
-                        @{recentDrops[selectedItemIndex].profiles.username}
-                      </Link>
-                    </div>
-                  )}
-                </div>
             </div>
-
-            <button onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}>›</button>
         </div>
       )}
 
-      {/* EDIT PROFILE MODAL (Existing logic remains) */}
+      {/* EDIT PROFILE MODAL (Logic Unchanged) */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -697,7 +789,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-     {/* SMART DROP MODAL */}
+     {/* SMART DROP MODAL (Logic Unchanged) */}
       {showSmartDrop && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>

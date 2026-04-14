@@ -157,18 +157,8 @@ export default function ProfilePage() {
   }
 
   async function loadFollowCounts() {
-    // Get followers (people following this user)
-    const { count: followers } = await supabase
-      .from("follows")
-      .select("*", { count: 'exact', head: true })
-      .eq("following_id", userId);
-    
-    // Get following (people this user follows)
-    const { count: following } = await supabase
-      .from("follows")
-      .select("*", { count: 'exact', head: true })
-      .eq("follower_id", userId);
-
+    const { count: followers } = await supabase.from("follows").select("*", { count: 'exact', head: true }).eq("following_id", userId);
+    const { count: following } = await supabase.from("follows").select("*", { count: 'exact', head: true }).eq("follower_id", userId);
     setFollowerCount(followers || 0);
     setFollowingCount(following || 0);
   }
@@ -351,6 +341,10 @@ export default function ProfilePage() {
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
+  const tierIconPath = `/icons/tiers/${(userRank || 'collector').toLowerCase()}.svg`;
+
+  if (loading) return <div className="min-h-screen bg-black" />;
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
@@ -363,9 +357,23 @@ export default function ProfilePage() {
             
             <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
               <img 
-                src={profile?.avatar_url || "/default-avatar.png"} 
-                onError={(e) => { (e.target as HTMLImageElement).src = "/default-avatar.png"; }}
-                style={{ width: '100%', height: '100%', borderRadius: '20px', border: '4px solid #18181b', objectFit: 'cover', cursor: isOwnProfile ? 'pointer' : 'default' }} 
+                src={profile?.avatar_url || tierIconPath} 
+                onError={(e) => { 
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== window.location.origin + tierIconPath) {
+                    target.src = tierIconPath;
+                  }
+                }}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  borderRadius: '20px', 
+                  border: '4px solid #18181b', 
+                  objectFit: 'cover', 
+                  cursor: isOwnProfile ? 'pointer' : 'default',
+                  background: '#18181b',
+                  padding: profile?.avatar_url ? '0' : '22px'
+                }} 
                 onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()} 
               />
               {isOwnProfile && <input type="file" id="avatar-input" hidden accept="image/*" onChange={handleAvatarUpload} />}
@@ -384,7 +392,6 @@ export default function ProfilePage() {
             <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
             <p style={{ color: '#a1a1aa', margin: '4px 0 12px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
-            {/* FOLLOWER COUNTER SECTION */}
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', margin: '10px 0 20px' }}>
                 <div style={{ textAlign: 'center' }}>
                   <p style={{ fontSize: '18px', fontWeight: '900' }}>{followerCount}</p>
@@ -413,15 +420,7 @@ export default function ProfilePage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>
-          
-          <div 
-            style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center', cursor: isOwnProfile ? 'pointer' : 'default' }} 
-            onClick={() => isOwnProfile && setShowEditCollection(true)}
-          >
-            <p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS {isOwnProfile && '⚙️'}</p>
-            <p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p>
-          </div>
-
+          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center', cursor: isOwnProfile ? 'pointer' : 'default' }} onClick={() => isOwnProfile && setShowEditCollection(true)}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS {isOwnProfile && '⚙️'}</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p></div>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p><p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p></div>
         </div>
 
@@ -440,7 +439,6 @@ export default function ProfilePage() {
 
         {isOwnProfile && <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}>LOGOUT</button>}
         
-        {/* TIED IN SUGGESTED USERS SECTION */}
         <SuggestedUsers />
       </main>
 
@@ -448,30 +446,17 @@ export default function ProfilePage() {
       {selectedItemIndex !== null && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '40px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '30px', cursor: 'pointer' }}>✕</button>
-            
-            <button 
-              onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))}
-              style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}
-            >
-              ‹
-            </button>
-
+            <button onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}>‹</button>
             <div style={{ maxWidth: '90%', maxHeight: '80%', textAlign: 'center' }}>
                 <img src={recentDrops[selectedItemIndex].image_url} style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #27272a' }} />
                 <p style={{ marginTop: '20px', fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</p>
                 <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
             </div>
-
-            <button 
-              onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))}
-              style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}
-            >
-              ›
-            </button>
+            <button onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}>›</button>
         </div>
       )}
 
-      {/* NEW COLLECTION MODAL (Integrated with Photo Batch & Audience) */}
+      {/* NEW COLLECTION MODAL */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -485,30 +470,18 @@ export default function ProfilePage() {
             {selectedNiche === "Other" && (
               <input placeholder="Specify Niche" value={customNiche} onChange={e => setCustomNiche(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#818cf8', padding: '14px', borderRadius: '12px', marginBottom: '12px', fontWeight: 'bold' }} />
             )}
-
             <hr style={{ border: 'none', borderTop: '1px solid #27272a', margin: '20px 0' }} />
-            
             <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '8px', fontWeight: 'bold', letterSpacing: '1px' }}>AUDIENCE</p>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                 <button onClick={() => setSelectedAudience('everyone')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'everyone' ? '#fff' : '#000', color: selectedAudience === 'everyone' ? '#000' : '#fff' }}>EVERYONE</button>
                 <button onClick={() => setSelectedAudience('private')} style={{ flex: 1, padding: '12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', border: '1px solid #27272a', background: selectedAudience === 'private' ? '#fff' : '#000', color: selectedAudience === 'private' ? '#000' : '#fff' }}>PRIVATE</button>
             </div>
-
             <p style={{ fontSize: '12px', color: '#a1a1aa', marginBottom: '10px', fontWeight: 'bold' }}>OPTIONAL: START WITH PHOTOS</p>
             <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} />
-            
             <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '20px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46' }}>
-               <span style={{ fontSize: '20px' }}>📸</span><br/>
-               {files.length > 0 ? `${files.length} Photos Selected` : "TAP TO ADD PHOTOS (UP TO 20)"}
-               <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    hidden 
-                    onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} 
-                />
+               <span style={{ fontSize: '20px' }}>📸</span><br/>{files.length > 0 ? `${files.length} Photos Selected` : "TAP TO ADD PHOTOS (UP TO 20)"}
+               <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 20))} />
             </label>
-
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => { setShowAddCollection(false); setFiles([]); }} style={{ flex: 1, color: '#a1a1aa' }}>CANCEL</button>
               <button onClick={handleCreateCollectionBatch} disabled={!isCollectionValid || uploading} style={{ flex: 2, background: isCollectionValid ? '#fff' : '#27272a', color: isCollectionValid ? '#000' : '#555', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'DROPPING...' : 'CREATE'}</button>
@@ -570,7 +543,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* EDIT COLLECTIONS MODAL (COG) */}
+      {/* EDIT COLLECTIONS MODAL */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>

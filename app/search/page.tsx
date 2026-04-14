@@ -14,7 +14,6 @@ type Profile = {
 };
 
 export default function SearchPage() {
-  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,27 +40,26 @@ export default function SearchPage() {
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 pt-24">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-black text-white p-6 pt-32">
+      <div className="max-w-5xl mx-auto">
         
-        {/* COMPACT SEARCH HEADER */}
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-black tracking-tighter uppercase italic">Search Vault</h1>
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl font-black tracking-tighter uppercase italic mb-2">Search Vault</h1>
+          <div className="h-1 w-20 bg-indigo-500 mx-auto rounded-full"></div>
         </div>
 
-        {/* SEARCH BAR */}
-        <div className="max-w-md mx-auto mb-16">
+        <div className="max-w-md mx-auto mb-20">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search collectors..."
-            className="w-full bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl text-center focus:outline-none focus:border-white/20 transition-all"
+            placeholder="Username or handle..."
+            className="w-full bg-[#0A0A0A] border border-zinc-800 p-4 rounded-2xl text-center focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-zinc-700 font-bold"
           />
         </div>
 
-        {/* THE GRID - This replaces the vertical list */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        {/* THE GRID */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
           {results.map((user) => (
             <Link
               key={user.id}
@@ -70,45 +68,54 @@ export default function SearchPage() {
             >
               {/* THE SQUIRCLE IMAGE CONTAINER */}
               <div 
-                className="relative aspect-square w-full overflow-hidden bg-zinc-900 border border-zinc-800 group-hover:border-zinc-500 transition-all"
+                className="relative aspect-square w-full bg-zinc-900 border border-zinc-800 group-hover:border-zinc-500 transition-all duration-300"
                 style={{ 
-                  borderRadius: '35%', // Enforces the squircle shape
+                  borderRadius: '32%', // The Squircle Sweet Spot
+                  padding: '2px', // Gives a tiny bit of breathing room for the border
                 }}
               >
-                <img
-                  src={user.avatar_url || "/icons/tiers/collector.svg"}
-                  alt=""
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-              </div>
+                <div 
+                  className="w-full h-full overflow-hidden" 
+                  style={{ borderRadius: '30.5%' }}
+                >
+                  <img
+                    src={user.avatar_url || "/icons/tiers/collector.svg"}
+                    alt=""
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
 
-              {/* INFO SECTION */}
-              <div className="mt-3 text-center w-full px-1">
-                <p className="font-bold text-[14px] truncate text-white leading-tight mb-0.5">
-                  {user.display_url || user.username}
-                </p>
-                <p className="text-indigo-400 text-[10px] font-black tracking-widest uppercase opacity-70">
-                  @{user.username}
-                </p>
-                
+                {/* OVERLAY BADGE FOR FOUNDER */}
                 {user.tier === 'founder' && (
-                  <div className="mt-2 inline-block bg-white text-black text-[7px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-tighter">
+                  <div className="absolute -bottom-2 -right-1 bg-white text-black text-[9px] font-black px-2 py-0.5 rounded-md shadow-xl border border-black uppercase tracking-tighter">
                     Founder
                   </div>
                 )}
+              </div>
+
+              {/* TEXT INFO */}
+              <div className="mt-4 text-center w-full px-1">
+                <p className="font-extrabold text-[15px] truncate text-white leading-none mb-1">
+                  {user.display_url || user.username}
+                </p>
+                <p className="text-indigo-400 text-[11px] font-black tracking-widest uppercase opacity-80">
+                  @{user.username}
+                </p>
               </div>
             </Link>
           ))}
         </div>
 
         {loading && (
-          <div className="flex justify-center mt-10">
-            <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <div className="flex justify-center mt-20">
+            <div className="w-8 h-8 border-4 border-zinc-800 border-t-indigo-500 rounded-full animate-spin"></div>
           </div>
         )}
 
         {!loading && query && results.length === 0 && (
-          <p className="text-center text-zinc-600 text-sm mt-20">NO COLLECTORS MATCHING "{query.toUpperCase()}"</p>
+          <div className="mt-20 text-center">
+             <p className="text-zinc-600 font-bold tracking-widest uppercase text-sm">No Collectors Found</p>
+          </div>
         )}
       </div>
     </div>

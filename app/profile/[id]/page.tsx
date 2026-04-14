@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
@@ -25,16 +25,8 @@ const InstagramIcon = () => (
 );
 
 const FixedEbayLogo = () => (
-  <span style={{ 
-    fontSize: '22px', 
-    fontWeight: '900', 
-    letterSpacing: '-1px',
-    fontFamily: 'system-ui, -apple-system, sans-serif'
-  }}>
-    <span style={{ color: '#E53238' }}>e</span>
-    <span style={{ color: '#0064D2' }}>b</span>
-    <span style={{ color: '#F5AF02' }}>a</span>
-    <span style={{ color: '#86B817' }}>y</span>
+  <span style={{ fontSize: '22px', fontWeight: '900', letterSpacing: '-1px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <span style={{ color: '#E53238' }}>e</span><span style={{ color: '#0064D2' }}>b</span><span style={{ color: '#F5AF02' }}>a</span><span style={{ color: '#86B817' }}>y</span>
   </span>
 );
 
@@ -43,50 +35,53 @@ export default function ProfilePage() {
   const router = useRouter();
   const userId = params?.id || "";
 
+  // --- STATE CORE ---
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
+  // --- STATS ---
   const [itemCount, setItemCount] = useState(0);
   const [collectionCount, setCollectionCount] = useState(0);
   const [vaultValue, setVaultValue] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
+  // --- INTERACTION ---
   const [isFollowing, setIsFollowing] = useState(false);
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-
   const [showSmartDrop, setShowSmartDrop] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  
   const [hasNewMessage, setHasNewMessage] = useState(false);
   
+  // --- CONTENT ---
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
-  
   const [newCollName, setNewCollName] = useState("");
   const [selectedNiche, setSelectedNiche] = useState(""); 
   const [customNiche, setCustomNiche] = useState("");
-  const [availableNiches, setAvailableNiches] = useState(["Cards", "Sneakers", "Watches", "Art", "Coins"]);
+  const [availableNiches, setAvailableNiches] = useState([
+    "Cards", "Sneakers", "Watches", "Art", "Coins", "Games", "Comics", 
+    "Lego", "Vinyl", "Handbags", "Antiques", "Models", "Other"
+  ]);
   const [collectionsList, setCollectionsList] = useState<any[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
 
+  // --- EDITING LOGIC ---
   const [editingColl, setEditingColl] = useState<any>(null);
   const [collItems, setCollItems] = useState<any[]>([]); 
-
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
-  
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
-
   const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
 
   const isOwnProfile = currentUserId === userId;
 
+  // --- INITIALIZATION ---
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
@@ -94,6 +89,7 @@ export default function ProfilePage() {
     loadGlobalNiches();
   }, []);
 
+  // --- REALTIME CHAT NOTIFICATIONS ---
   useEffect(() => {
     if (!currentUserId) return;
     const channel = supabase
@@ -104,9 +100,7 @@ export default function ProfilePage() {
         () => {
           if (!isChatOpen) {
             setHasNewMessage(true);
-            if ("vibrate" in navigator) {
-              navigator.vibrate([200, 100, 200]);
-            }
+            if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
           }
         }
       )
@@ -114,6 +108,7 @@ export default function ProfilePage() {
     return () => { supabase.removeChannel(channel); };
   }, [currentUserId, isChatOpen]);
 
+  // --- DATA LOADING TRIGGER ---
   useEffect(() => {
     if (!userId) return;
     loadAllData();
@@ -121,21 +116,21 @@ export default function ProfilePage() {
     determineRank();
   }, [userId]);
 
+  // --- DEEP LINK CHAT ---
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     if (queryParams.get("openChat") === "true") {
       setIsChatOpen(true);
-      const newPath = window.location.pathname;
-      window.history.replaceState(null, '', newPath);
+      window.history.replaceState(null, '', window.location.pathname);
     }
   }, [userId]);
 
+  // --- FOLLOW SYNC ---
   useEffect(() => {
-    if (userId && currentUserId && userId !== currentUserId) {
-      checkFollowStatus();
-    }
+    if (userId && currentUserId && userId !== currentUserId) checkFollowStatus();
   }, [userId, currentUserId]);
 
+  // --- FUNCTIONS ---
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/");
@@ -163,31 +158,30 @@ export default function ProfilePage() {
 
   async function toggleFollow() {
     if (!currentUserId) return alert("Please log in to follow collectors!");
-    if (isFollowing) {
-      await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
-      setIsFollowing(false);
-    } else {
-      await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
-      setIsFollowing(true);
-    }
-    loadFollowCounts();
+    try {
+      if (isFollowing) {
+        await supabase.from("follows").delete().eq("follower_id", currentUserId).eq("following_id", userId);
+        setIsFollowing(false);
+      } else {
+        await supabase.from("follows").insert({ follower_id: currentUserId, following_id: userId });
+        setIsFollowing(true);
+      }
+      loadFollowCounts();
+    } catch (e) { console.error(e); }
   }
 
   async function determineRank() {
     const stacyId = "8b594b57-fc82-477a-a709-45aec99a228f"; 
     if (userId === stacyId) { setUserRank("diamond"); return; }
     
-    const foundersIds = [
-        "e0759f79-d113-4af6-a575-cee076037092", 
-        "bb088a77-ba12-4fe3-a357-03d13dc0d019" 
-    ];
-
+    const foundersIds = ["e0759f79-d113-4af6-a575-cee076037092", "bb088a77-ba12-4fe3-a357-03d13dc0d019"];
     if (foundersIds.includes(userId)) { setUserRank("founder"); return; }
 
     const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
     if (allUsers) {
       const index = allUsers.findIndex(u => u.id === userId);
-      if (index >= 3 && index < 13) setUserRank("gold");
+      if (index >= 0 && index < 3) setUserRank("founder");
+      else if (index >= 3 && index < 13) setUserRank("gold");
       else if (index >= 13 && index < 23) setUserRank("silver");
       else if (index >= 23 && index < 33) setUserRank("bronze");
       else setUserRank("collector");
@@ -210,21 +204,12 @@ export default function ProfilePage() {
         .from("items")
         .select(`
           *,
-          profiles:user_id (
-            id,
-            username,
-            display_url
-          )
+          profiles:user_id (id, username, display_url)
         `)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(24);
       
-      if (dropError) {
-        const { data: fallback } = await supabase.from("items").select("*").limit(20).order("created_at", { ascending: false });
-        if (fallback) setRecentDrops(fallback);
-      } else if (globalDrops) {
-        setRecentDrops(globalDrops);
-      }
+      if (!dropError && globalDrops) setRecentDrops(globalDrops);
 
       const { data: colls } = await supabase
         .from("collections")
@@ -249,18 +234,15 @@ export default function ProfilePage() {
         whatnot_url: profile.whatnot_url,
         youtube_url: profile.youtube_url,
         discord_handle: profile.discord_handle,
-        twitch_handle: profile.twitch_handle
+        twitch_handle: profile.twitch_handle,
+        tiktok_url: profile.tiktok_url
       }).eq("id", userId);
 
       if (error) throw error;
       alert("Profile updated!"); 
       setShowEditProfile(false); 
       loadAllData();
-    } catch (err: any) { 
-      alert(err.message); 
-    } finally { 
-      setUploading(false); 
-    }
+    } catch (err: any) { alert(err.message); } finally { setUploading(false); }
   }
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -269,11 +251,9 @@ export default function ProfilePage() {
     setUploading(true);
     try {
       const fileName = `${userId}/avatar-${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("item-images").upload(fileName, file);
-      if (uploadError) throw uploadError;
+      await supabase.storage.from("item-images").upload(fileName, file);
       const { data: { publicUrl } } = supabase.storage.from("item-images").getPublicUrl(fileName);
-      const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
-      if (updateError) throw updateError;
+      await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
       setProfile({ ...profile, avatar_url: publicUrl });
       alert("Avatar Updated!");
     } catch (err: any) { alert("Upload failed: " + err.message); } finally { setUploading(false); }
@@ -290,20 +270,13 @@ export default function ProfilePage() {
       if (!targetCollectionId && newCollName.trim()) {
         const { data: newColl, error: collErr } = await supabase
           .from("collections")
-          .insert([{ 
-            user_id: userId, 
-            title: newCollName.trim(), 
-            niche: finalNiche || "General" 
-          }])
-          .select()
-          .single();
-        
+          .insert([{ user_id: userId, title: newCollName.trim(), niche: finalNiche || "General" }])
+          .select().single();
         if (collErr) throw collErr;
         targetCollectionId = newColl.id;
       }
 
       if (!targetCollectionId) throw new Error("Please select or create a collection.");
-
       const valuePerItem = (parseFloat(itemValue) / files.length) || 0;
       
       for (const f of files) {
@@ -330,143 +303,146 @@ export default function ProfilePage() {
       setNewCollName("");
       setSelectedCollectionId("");
       loadAllData();
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setUploading(false);
-    }
+    } catch (err: any) { alert(err.message); } finally { setUploading(false); }
   }
 
   async function deleteItem(id: string) {
     if(!confirm("Delete this photo?")) return;
     try {
-      const { error } = await supabase.from("items").delete().eq("id", id);
-      if (error) throw error;
-      
+      await supabase.from("items").delete().eq("id", id);
       setCollItems(prev => prev.filter(i => i.id !== id));
       setRecentDrops(prev => prev.filter(i => i.id !== id));
       loadAllData();
-    } catch (err: any) {
-      alert("Error deleting item: " + err.message);
-    }
+    } catch (err: any) { alert("Error deleting: " + err.message); }
   }
 
-  const renderRankIcon = () => {
-    if (!userRank) return null;
-    return <img src={`/${userRank}.png`} style={{ width: '30px' }} alt="rank" />;
+  const toggleStar = (itemId: string) => {
+    const newLikes = new Set(likedItems);
+    newLikes.has(itemId) ? newLikes.delete(itemId) : newLikes.add(itemId);
+    setLikedItems(newLikes);
   };
 
-  const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
-
   const tierIconPath = `/icons/tiers/${(userRank || 'collector').toLowerCase()}.svg`;
+  const hasValidAvatar = profile?.avatar_url && profile.avatar_url.startsWith('http');
 
   if (loading) return <div className="min-h-screen bg-black" />;
 
-  const hasValidAvatar = profile?.avatar_url && profile.avatar_url.startsWith('http');
-
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white font-sans">
       <Header />
-      <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      <main style={{ marginTop: '100px', paddingBottom: '100px', maxWidth: '800px', margin: '100px auto 0', padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* PROFILE CARD */}
-        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', position: 'relative' }}>
+        {/* --- PROFILE HEADER CARD --- */}
+        <section style={{ 
+          background: 'linear-gradient(180deg, #09090b 0%, #000 100%)', 
+          border: '1px solid #27272a', 
+          borderRadius: '28px', 
+          padding: '40px 20px', 
+          textAlign: 'center', 
+          position: 'relative',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+        }}>
             {isOwnProfile && (
-              <button onClick={() => setShowEditProfile(true)} style={{ position: 'absolute', top: '20px', right: '20px', background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', zIndex: 10 }}>EDIT PROFILE</button>
+              <button onClick={() => setShowEditProfile(true)} style={{ position: 'absolute', top: '24px', right: '24px', background: 'rgba(255,255,255,0.05)', border: '1px solid #27272a', color: '#fff', padding: '10px 18px', borderRadius: '14px', fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px', transition: '0.2s' }}>EDIT PROFILE</button>
             )}
             
-            <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
-              <div 
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  backgroundColor: '#18181b',
-                  borderRadius: '38%', 
-                  overflow: 'hidden',
-                  border: '4px solid #18181b',
-                  cursor: isOwnProfile ? 'pointer' : 'default'
-                }}
-                onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()}
-              >
+            <div style={{ position: 'relative', width: '130px', height: '130px', margin: '0 auto 28px' }}>
+              <div style={{ 
+                width: '100%', 
+                height: '100%', 
+                backgroundColor: '#18181b', 
+                borderRadius: '40%', 
+                overflow: 'hidden', 
+                border: '4px solid #18181b', 
+                cursor: isOwnProfile ? 'pointer' : 'default',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.4)'
+              }} onClick={() => isOwnProfile && document.getElementById('avatar-input')?.click()}>
                 <img 
-                  key={profile?.avatar_url || 'no-avatar'}
                   src={hasValidAvatar ? profile.avatar_url : tierIconPath} 
-                  crossOrigin="anonymous"
-                  onError={(e) => { 
-                    const target = e.target as HTMLImageElement;
-                    if (target.src !== window.location.origin + tierIconPath) {
-                      target.src = tierIconPath;
-                      target.style.padding = '28px';
-                      target.style.objectFit = 'contain';
-                    }
-                  }}
                   style={{ 
                     width: '100%', 
                     height: '100%', 
                     objectFit: hasValidAvatar ? 'cover' : 'contain', 
-                    padding: hasValidAvatar ? '0' : '28px'
+                    padding: hasValidAvatar ? '0' : '32px',
+                    transition: '0.3s'
                   }} 
                 />
               </div>
               {isOwnProfile && <input type="file" id="avatar-input" hidden accept="image/*" onChange={handleAvatarUpload} />}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '32px', fontWeight: '800' }}>{profile?.display_url || profile?.username}</h1>
-              {renderRankIcon()}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: '36px', fontWeight: '900', letterSpacing: '-0.5px' }}>{profile?.display_url || profile?.username}</h1>
+              {userRank && <img src={`/${userRank}.png`} style={{ width: '34px', height: '34px', objectFit: 'contain' }} />}
+              
               {!isOwnProfile && currentUserId && (
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={toggleFollow} style={{ background: isFollowing ? 'transparent' : '#fff', color: isFollowing ? '#fff' : '#000', border: isFollowing ? '1px solid #27272a' : 'none', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>{isFollowing ? 'FOLLOWING' : 'FOLLOW'}</button>
-                  <button onClick={() => { setIsChatOpen(true); setHasNewMessage(false); }} style={{ position: 'relative', background: 'transparent', color: '#fff', border: '1px solid #fff', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: '900' }}>MESSAGE{hasNewMessage && <span style={{ position: 'absolute', top: '-5px', right: '-5px', width: '12px', height: '12px', background: '#ef4444', borderRadius: '50%', border: '2px solid #000' }} />}</button>
+                <div style={{ display: 'flex', gap: '12px', marginLeft: '8px' }}>
+                  <button onClick={toggleFollow} style={{ background: isFollowing ? 'transparent' : '#fff', color: isFollowing ? '#fff' : '#000', border: '1.5px solid #fff', padding: '10px 24px', borderRadius: '24px', fontWeight: '900', fontSize: '14px' }}>{isFollowing ? 'FOLLOWING' : 'FOLLOW'}</button>
+                  <button onClick={() => { setIsChatOpen(true); setHasNewMessage(false); }} style={{ position: 'relative', background: 'transparent', border: '1.5px solid #27272a', color: '#fff', padding: '10px 24px', borderRadius: '24px', fontWeight: '900', fontSize: '14px' }}>
+                    MESSAGE
+                    {hasNewMessage && <span style={{ position: 'absolute', top: '-4px', right: '-4px', width: '14px', height: '14px', background: '#ef4444', borderRadius: '50%', border: '2px solid #000' }} />}
+                  </button>
                 </div>
               )}
             </div>
-            <p style={{ color: '#818cf8', fontWeight: 'bold' }}>@{profile?.username}</p>
-            <p style={{ color: '#a1a1aa', margin: '4px 0 12px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
-            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', margin: '10px 0 20px' }}>
+            <p style={{ color: '#818cf8', fontWeight: '700', fontSize: '16px', margin: '4px 0 12px' }}>@{profile?.username}</p>
+            <p style={{ color: '#a1a1aa', maxWidth: '500px', margin: '0 auto 20px', lineHeight: '1.5', fontSize: '15px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
+
+            <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', margin: '24px 0' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: '18px', fontWeight: '900' }}>{followerCount}</p>
-                  <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWERS</p>
+                  <p style={{ fontSize: '22px', fontWeight: '900' }}>{followerCount}</p>
+                  <p style={{ fontSize: '11px', color: '#71717a', fontWeight: '900', letterSpacing: '1px' }}>FOLLOWERS</p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: '18px', fontWeight: '900' }}>{followingCount}</p>
-                  <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWING</p>
+                  <p style={{ fontSize: '22px', fontWeight: '900' }}>{followingCount}</p>
+                  <p style={{ fontSize: '11px', color: '#71717a', fontWeight: '900', letterSpacing: '1px' }}>FOLLOWING</p>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px', alignItems: 'center', minHeight: '32px' }}>
-               {profile?.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" style={{ color: '#E4405F', display: 'flex', alignItems: 'center' }}><InstagramIcon /></a>}
-               {profile?.ebay_url && <a href={profile.ebay_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}><FixedEbayLogo /></a>}
-               {profile?.discord_handle && <span style={{ color: '#5865F2' }}><DiscordIcon /></span>}
-               {profile?.twitch_handle && <span style={{ color: '#9146FF' }}><TwitchIcon /></span>}
+            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '32px', alignItems: 'center' }}>
+               {profile?.instagram_url && <a href={profile.instagram_url} target="_blank" style={{ opacity: 0.8, transition: '0.2s' }}><InstagramIcon /></a>}
+               {profile?.ebay_url && <a href={profile.ebay_url} target="_blank" style={{ opacity: 0.8, transition: '0.2s' }}><FixedEbayLogo /></a>}
+               {profile?.discord_handle && <span style={{ color: '#5865F2', opacity: 0.8 }}><DiscordIcon /></span>}
+               {profile?.twitch_handle && <span style={{ color: '#9146FF', opacity: 0.8 }}><TwitchIcon /></span>}
             </div>
 
-            <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
-
-            {isOwnProfile && (
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button 
-                  onClick={() => { setFiles([]); setShowSmartDrop(true); }} 
-                  style={{ width: '100%', background: '#fff', color: '#000', padding: '16px', borderRadius: '16px', fontWeight: '900' }}
-                >
-                  + SMART DROP
-                </button>
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+              <Link href={`/collections?user=${userId}`} style={{ flex: 1, background: '#fff', color: '#000', fontWeight: '900', padding: '18px', borderRadius: '18px', textDecoration: 'none', textAlign: 'center', fontSize: '15px' }}>VIEW COLLECTIONS</Link>
+              {isOwnProfile && (
+                <button onClick={() => { setFiles([]); setShowSmartDrop(true); }} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid #27272a', padding: '18px', borderRadius: '18px', fontWeight: '900', fontSize: '15px' }}>+ SMART DROP</button>
+              )}
+            </div>
         </section>
 
-        {/* STATS */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>
-          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center', cursor: isOwnProfile ? 'pointer' : 'default' }} onClick={() => isOwnProfile && setShowEditCollection(true)}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS {isOwnProfile && '⚙️'}</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p></div>
-          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p><p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p></div>
+        {/* --- QUICK STATS GRID --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '24px', borderRadius: '24px', textAlign: 'center' }}>
+            <p style={{ fontSize: '11px', color: '#71717a', fontWeight: '900', letterSpacing: '1px', marginBottom: '8px' }}>TOTAL ITEMS</p>
+            <p style={{ fontSize: '24px', fontWeight: '900' }}>{itemCount}</p>
+          </div>
+          <div 
+            onClick={() => isOwnProfile && setShowEditCollection(true)} 
+            style={{ background: '#09090b', border: '1px solid #27272a', padding: '24px', borderRadius: '24px', textAlign: 'center', cursor: isOwnProfile ? 'pointer' : 'default', transition: '0.2s' }}
+          >
+            <p style={{ fontSize: '11px', color: '#71717a', fontWeight: '900', letterSpacing: '1px', marginBottom: '8px' }}>COLLECTIONS {isOwnProfile && '⚙️'}</p>
+            <p style={{ fontSize: '24px', fontWeight: '900' }}>{collectionCount}</p>
+          </div>
+          <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '24px', borderRadius: '24px', textAlign: 'center' }}>
+            <p style={{ fontSize: '11px', color: '#71717a', fontWeight: '900', letterSpacing: '1px', marginBottom: '8px' }}>EST. VALUE</p>
+            <p style={{ fontSize: '24px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue.toLocaleString()}</p>
+          </div>
         </div>
 
-        {/* GLOBAL RECENT DROPS */}
-        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        {/* --- GLOBAL FEED SECTION --- */}
+        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '28px', padding: '28px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>GLOBAL RECENT DROPS</h2>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 10px #4ade80' }} />
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px' }}>
             {recentDrops.map((drop, index) => (
               <div 
                 key={drop.id} 
@@ -474,326 +450,251 @@ export default function ProfilePage() {
                 style={{ 
                   aspectRatio: '1/1', 
                   background: '#18181b', 
-                  borderRadius: '12px', 
+                  borderRadius: '16px', 
                   overflow: 'hidden', 
                   cursor: 'pointer', 
-                  position: 'relative' 
+                  position: 'relative',
+                  border: '1px solid transparent',
+                  transition: '0.2s'
                 }}
               >
-                <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={drop.image_url} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 
                 {drop.profiles?.username && (
                   <Link 
-                    href={`/profile/${drop.profiles.id}`}
-                    onClick={(e) => e.stopPropagation()}
+                    href={`/profile/${drop.profiles.id}`} 
+                    onClick={e => e.stopPropagation()} 
                     style={{ 
                       position: 'absolute', 
-                      top: '5px', 
-                      left: '5px', 
+                      top: '8px', 
+                      left: '8px', 
                       background: 'rgba(0,0,0,0.7)', 
-                      padding: '3px 8px', 
-                      borderRadius: '6px', 
+                      backdropFilter: 'blur(4px)',
+                      padding: '4px 8px', 
+                      borderRadius: '8px', 
                       fontSize: '10px', 
-                      fontWeight: 'bold',
-                      color: '#fff',
+                      fontWeight: '800',
+                      color: '#fff', 
                       textDecoration: 'none',
-                      zIndex: 10
+                      zIndex: 5
                     }}
                   >
                     @{drop.profiles.username}
                   </Link>
                 )}
-
-                {likedItems.has(drop.id) && <div style={{ position: 'absolute', bottom: '5px', right: '5px', fontSize: '14px' }}>⭐</div>}
+                {likedItems.has(drop.id) && (
+                  <div style={{ position: 'absolute', bottom: '8px', right: '8px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>⭐️</div>
+                )}
               </div>
             ))}
           </div>
         </section>
 
-        {isOwnProfile && <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}>LOGOUT</button>}
-        
-        {/* SUGGESTED USERS */}
+        {/* --- SUGGESTED SECTION --- */}
         <div style={{ marginTop: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '13px', fontWeight: '900', color: '#52525b', textTransform: 'uppercase', letterSpacing: '1px' }}>Suggested Users</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: '900', color: '#52525b', letterSpacing: '1px', textTransform: 'uppercase' }}>Discover Collectors</h2>
             <Link href="/suggested" style={{ textDecoration: 'none' }}>
-              <span style={{ 
-                fontSize: '11px', 
-                fontWeight: '900', 
-                color: '#818cf8', 
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                VIEW ALL
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </span>
+              <span style={{ fontSize: '12px', color: '#818cf8', fontWeight: '900' }}>VIEW ALL</span>
             </Link>
           </div>
           <SuggestedUsers />
         </div>
+
+        {isOwnProfile && (
+          <button 
+            onClick={handleLogout} 
+            style={{ 
+              width: '100%', 
+              padding: '20px', 
+              borderRadius: '20px', 
+              background: '#09090b', 
+              border: '1px solid #27272a', 
+              color: '#ef4444', 
+              fontWeight: '900',
+              fontSize: '14px',
+              letterSpacing: '1px',
+              cursor: 'pointer',
+              marginTop: '20px'
+            }}
+          >
+            LOGOUT ACCOUNT
+          </button>
+        )}
       </main>
 
-      {/* LIGHTBOX */}
+      {/* --- MODALS (SMART DROP, EDITING, LIGHTBOX) --- */}
+      
+      {/* 1. LIGHTBOX MODAL */}
       {selectedItemIndex !== null && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '40px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '30px', cursor: 'pointer' }}>✕</button>
-            <button onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}>‹</button>
-            <div style={{ maxWidth: '90%', maxHeight: '80%', textAlign: 'center' }}>
-                <img src={recentDrops[selectedItemIndex].image_url} style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #27272a' }} />
-                <p style={{ marginTop: '20px', fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</p>
-                
-                {recentDrops[selectedItemIndex].profiles?.id && (
-                  <Link 
-                    href={`/profile/${recentDrops[selectedItemIndex].profiles.id}`}
-                    style={{ color: '#818cf8', fontWeight: 'bold', textDecoration: 'none' }}
-                  >
-                    @{recentDrops[selectedItemIndex].profiles.username}
-                  </Link>
-                )}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '40px', right: '40px', background: 'none', border: 'none', color: '#fff', fontSize: '32px', cursor: 'pointer' }}>✕</button>
+            
+            <button 
+              onClick={() => setSelectedItemIndex(p => p! > 0 ? p! - 1 : recentDrops.length - 1)} 
+              style={{ position: 'absolute', left: '30px', background: 'rgba(255,255,255,0.05)', border: 'none', width: '60px', height: '60px', borderRadius: '50%', color: '#fff', fontSize: '28px' }}
+            >‹</button>
+            
+            <div style={{ width: '90%', maxWidth: '550px', textAlign: 'center' }}>
+                <img 
+                  src={recentDrops[selectedItemIndex].image_url} 
+                  style={{ width: '100%', borderRadius: '32px', border: '1px solid #27272a', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }} 
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '24px 10px' }}>
+                    <div style={{ textAlign: 'left' }}>
+                        <p style={{ fontSize: '20px', fontWeight: '900', marginBottom: '4px' }}>{recentDrops[selectedItemIndex].title || "Untitled Drop"}</p>
+                        <Link href={`/profile/${recentDrops[selectedItemIndex].profiles?.id}`} style={{ color: '#818cf8', fontSize: '15px', fontWeight: '700', textDecoration: 'none' }}>
+                          @{recentDrops[selectedItemIndex].profiles?.username}
+                        </Link>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button 
+                          onClick={() => toggleStar(recentDrops[selectedItemIndex].id)} 
+                          style={{ background: '#18181b', border: '1px solid #27272a', padding: '12px 20px', borderRadius: '16px', color: '#fff', fontSize: '20px' }}
+                        >
+                          {likedItems.has(recentDrops[selectedItemIndex].id) ? '⭐️' : '☆'}
+                        </button>
+                    </div>
+                </div>
+                <div style={{ background: '#09090b', borderRadius: '20px', padding: '16px', border: '1px solid #27272a' }}>
+                    <input placeholder="Add a comment..." style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', outline: 'none', fontSize: '15px' }} />
+                </div>
             </div>
-            <button onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}>›</button>
+
+            <button 
+              onClick={() => setSelectedItemIndex(p => p! < recentDrops.length - 1 ? p! + 1 : 0)} 
+              style={{ position: 'absolute', right: '30px', background: 'rgba(255,255,255,0.05)', border: 'none', width: '60px', height: '60px', borderRadius: '50%', color: '#fff', fontSize: '28px' }}
+            >›</button>
         </div>
       )}
 
-      {/* EDIT PROFILE MODAL */}
+      {/* 2. EDIT PROFILE MODAL */}
       {showEditProfile && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '24px', textAlign: 'center' }}>EDIT PROFILE</h2>
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>DISPLAY NAME</p>
-            <input 
-              value={profile?.display_url || ""} 
-              onChange={e => setProfile({...profile, display_url: e.target.value})} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} 
-            />
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>BIO</p>
-            <textarea 
-              value={profile?.bio || ""} 
-              onChange={e => setProfile({...profile, bio: e.target.value})} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '80px', resize: 'none', marginBottom: '20px' }} 
-            />
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>INSTAGRAM URL</p>
-                <input 
-                  placeholder="https://instagram.com/..." 
-                  value={profile?.instagram_url || ""} 
-                  onChange={e => setProfile({...profile, instagram_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>EBAY URL</p>
-                <input 
-                  placeholder="https://ebay.com/..." 
-                  value={profile?.ebay_url || ""} 
-                  onChange={e => setProfile({...profile, ebay_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '40px', borderRadius: '32px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '900', marginBottom: '32px', textAlign: 'center' }}>EDIT PROFILE</h2>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ fontSize: '11px', color: '#71717a', fontWeight: '900', marginBottom: '8px' }}>DISPLAY NAME</p>
+              <input value={profile?.display_url || ""} onChange={e => setProfile({...profile, display_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '14px' }} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>X URL</p>
-                <input 
-                  placeholder="https://x.com/..." 
-                  value={profile?.x_url || ""} 
-                  onChange={e => setProfile({...profile, x_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>YOUTUBE URL</p>
-                <input 
-                  placeholder="https://youtube.com/..." 
-                  value={profile?.youtube_url || ""} 
-                  onChange={e => setProfile({...profile, youtube_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>WHATNOT URL</p>
-                <input 
-                  placeholder="https://whatnot.com/..." 
-                  value={profile?.whatnot_url || ""} 
-                  onChange={e => setProfile({...profile, whatnot_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>FACEBOOK URL</p>
-                <input 
-                  placeholder="https://facebook.com/..." 
-                  value={profile?.facebook_url || ""} 
-                  onChange={e => setProfile({...profile, facebook_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>DISCORD HANDLE</p>
-                <input 
-                  placeholder="username#0000" 
-                  value={profile?.discord_handle || ""} 
-                  onChange={e => setProfile({...profile, discord_handle: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>TWITCH USERNAME</p>
-                <input 
-                  placeholder="twitch.tv/username" 
-                  value={profile?.twitch_handle || ""} 
-                  onChange={e => setProfile({...profile, twitch_handle: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
+            <div style={{ marginBottom: '24px' }}>
+              <p style={{ fontSize: '11px', color: '#71717a', fontWeight: '900', marginBottom: '8px' }}>BIO</p>
+              <textarea value={profile?.bio || ""} onChange={e => setProfile({...profile, bio: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '14px', borderRadius: '14px', height: '100px', resize: 'none' }} />
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa', background: '#27272a', padding: '12px', borderRadius: '12px' }}>CANCEL</button>
-              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE CHANGES'}</button>
+            <p style={{ fontSize: '11px', color: '#71717a', fontWeight: '900', marginBottom: '16px', textAlign: 'center', borderTop: '1px solid #27272a', paddingTop: '20px' }}>SOCIAL LINKS</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+                <input placeholder="Instagram URL" value={profile?.instagram_url || ""} onChange={e => setProfile({...profile, instagram_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', padding: '12px', color: '#fff', borderRadius: '12px', fontSize: '13px' }} />
+                <input placeholder="eBay Store URL" value={profile?.ebay_url || ""} onChange={e => setProfile({...profile, ebay_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', padding: '12px', color: '#fff', borderRadius: '12px', fontSize: '13px' }} />
+                <input placeholder="X (Twitter) URL" value={profile?.x_url || ""} onChange={e => setProfile({...profile, x_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', padding: '12px', color: '#fff', borderRadius: '12px', fontSize: '13px' }} />
+                <input placeholder="YouTube URL" value={profile?.youtube_url || ""} onChange={e => setProfile({...profile, youtube_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', padding: '12px', color: '#fff', borderRadius: '12px', fontSize: '13px' }} />
+                <input placeholder="TikTok URL" value={profile?.tiktok_url || ""} onChange={e => setProfile({...profile, tiktok_url: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', padding: '12px', color: '#fff', borderRadius: '12px', fontSize: '13px' }} />
+                <input placeholder="Discord ID" value={profile?.discord_handle || ""} onChange={e => setProfile({...profile, discord_handle: e.target.value})} style={{ background: '#000', border: '1px solid #27272a', padding: '12px', color: '#fff', borderRadius: '12px', fontSize: '13px' }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#71717a', fontWeight: '800', fontSize: '14px' }}>CANCEL</button>
+              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px' }}>{uploading ? 'SAVING...' : 'SAVE CHANGES'}</button>
             </div>
           </div>
         </div>
       )}
 
-     {/* SMART DROP MODAL */}
+      {/* 3. SMART DROP MODAL */}
       {showSmartDrop && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>New Drop</h2>
-
-            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '16px' }}>
-              <span style={{ fontSize: '28px' }}>📸</span><br/>
-              {files.length > 0 ? `${files.length} photos selected` : "Tap to add photos"}
-              <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []))} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '36px', borderRadius: '32px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', position: 'relative' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '900', marginBottom: '24px', textAlign: 'center' }}>NEW SMART DROP</h2>
+            
+            <label style={{ 
+              display: 'block', 
+              background: '#09090b', 
+              textAlign: 'center', 
+              padding: '40px 20px', 
+              borderRadius: '20px', 
+              cursor: 'pointer', 
+              border: '2px dashed #27272a', 
+              marginBottom: '20px',
+              transition: '0.2s'
+            }}>
+              <span style={{ fontSize: '32px', display: 'block', marginBottom: '8px' }}>📸</span>
+              <span style={{ fontWeight: '800', fontSize: '14px' }}>{files.length > 0 ? `${files.length} Photos Ready` : "Upload Item Photos"}</span>
+              <input type="file" multiple accept="image/*" hidden onChange={e => setFiles(Array.from(e.target.files || []))} />
             </label>
 
-            <input 
-              placeholder="Item title" 
-              value={itemName} 
-              onChange={e => setItemName(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
-            />
-
-            <input 
-              type="number" 
-              placeholder="Estimated total value (£)" 
-              value={itemValue} 
-              onChange={e => setItemValue(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
-            />
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Collection</p>
+            <input placeholder="Drop Title (e.g. 1st Edition Charizard)" value={itemName} onChange={e => setItemName(e.target.value)} style={{ width: '100%', background: '#000', color: '#fff', padding: '14px', borderRadius: '14px', border: '1px solid #27272a', marginBottom: '14px' }} />
+            <input type="number" placeholder="Estimated Total Value (£)" value={itemValue} onChange={e => setItemValue(e.target.value)} style={{ width: '100%', background: '#000', color: '#fff', padding: '14px', borderRadius: '14px', border: '1px solid #27272a', marginBottom: '14px' }} />
             
-            <select 
-              value={selectedCollectionId} 
-              onChange={e => setSelectedCollectionId(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}
-            >
-              <option value="">Choose existing collection...</option>
+            <select value={selectedCollectionId} onChange={e => setSelectedCollectionId(e.target.value)} style={{ width: '100%', background: '#000', color: '#fff', padding: '14px', borderRadius: '14px', border: '1px solid #27272a', marginBottom: '14px', fontSize: '14px' }}>
+              <option value="">Select Existing Collection...</option>
               {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
 
-            <input 
-              placeholder="Or create new collection name" 
-              value={newCollName} 
-              onChange={e => setNewCollName(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
-            />
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Niche</p>
-            <select 
-              value={selectedNiche} 
-              onChange={e => setSelectedNiche(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '8px' }}
-            >
-              <option value="">Select niche...</option>
-              {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
-              <option value="Other">Other...</option>
-            </select>
-
-            {selectedNiche === "Other" && (
-              <input 
-                placeholder="Specify niche" 
-                value={customNiche} 
-                onChange={e => setCustomNiche(e.target.value)} 
-                style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
-              />
+            {!selectedCollectionId && (
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '16px', marginBottom: '24px' }}>
+                <p style={{ fontSize: '10px', color: '#71717a', fontWeight: '900', marginBottom: '10px' }}>OR CREATE NEW</p>
+                <input placeholder="New Collection Name" value={newCollName} onChange={e => setNewCollName(e.target.value)} style={{ width: '100%', background: '#000', color: '#fff', padding: '12px', borderRadius: '10px', border: '1px solid #27272a', marginBottom: '10px' }} />
+                <select value={selectedNiche} onChange={e => setSelectedNiche(e.target.value)} style={{ width: '100%', background: '#000', color: '#fff', padding: '12px', borderRadius: '10px', border: '1px solid #27272a' }}>
+                  <option value="">Select Niche...</option>
+                  {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
             )}
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => { 
-                  setShowSmartDrop(false); 
-                  setFiles([]); 
-                  setItemName(""); 
-                  setNewCollName(""); 
-                  setSelectedNiche(""); 
-                  setCustomNiche(""); 
-                }} 
-                style={{ flex: 1, color: '#a1a1aa', padding: '12px' }}
-              >
-                CANCEL
-              </button>
-              <button 
-                onClick={handleSmartDrop} 
-                disabled={uploading || files.length === 0 || (!selectedCollectionId && !newCollName.trim())}
-                style={{ 
-                  flex: 2, 
-                  background: (files.length > 0 && (selectedCollectionId || newCollName.trim())) ? '#fff' : '#27272a', 
-                  color: (files.length > 0 && (selectedCollectionId || newCollName.trim())) ? '#000' : '#666', 
-                  fontWeight: '900', 
-                  padding: '12px', 
-                  borderRadius: '12px' 
-                }}
-              >
-                {uploading ? 'DROPPING...' : 'DROP NOW'}
-              </button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setShowSmartDrop(false)} style={{ flex: 1, color: '#71717a', fontWeight: '800' }}>CANCEL</button>
+              <button onClick={handleSmartDrop} disabled={uploading} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px' }}>{uploading ? 'PROCESSING...' : 'CONFIRM DROP'}</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* 4. MANAGE COLLECTIONS MODAL */}
       {showEditCollection && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
-             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>MANAGE COLLECTIONS</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 9000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#18181b', padding: '36px', borderRadius: '32px', width: '100%', maxWidth: '520px', border: '1px solid #27272a', maxHeight: '85vh', overflowY: 'auto' }}>
+             <h2 style={{ fontSize: '22px', fontWeight: '900', marginBottom: '24px' }}>MANAGE COLLECTIONS</h2>
              {collectionsList.map(c => (
-               <div key={c.id} style={{ background: '#000', padding: '15px', borderRadius: '15px', marginBottom: '10px', border: '1px solid #27272a' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 'bold' }}>{c.title} ({c.niche})</span>
+               <div key={c.id} style={{ background: '#09090b', padding: '20px', borderRadius: '20px', marginBottom: '16px', border: '1px solid #27272a' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontWeight: '900', fontSize: '16px', display: 'block' }}>{c.title}</span>
+                      <span style={{ fontSize: '11px', color: '#71717a', textTransform: 'uppercase', fontWeight: '800' }}>{c.niche}</span>
+                    </div>
                     <button onClick={async () => {
-                      const { data } = await supabase.from("items").select("*").eq("collection", c.id);
+                      const { data } = await supabase.from("items").select("*").eq("collection", c.id).order('created_at', {ascending: false});
                       setEditingColl(c); setCollItems(data || []);
-                    }} style={{ color: '#818cf8', fontSize: '12px' }}>VIEW ITEMS</button>
+                    }} style={{ color: '#818cf8', fontSize: '13px', fontWeight: '800', background: 'rgba(129, 140, 248, 0.1)', padding: '8px 16px', borderRadius: '10px' }}>EDIT ITEMS</button>
                   </div>
+                  
                   {editingColl?.id === c.id && (
-                    <div style={{ marginTop: '15px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                      {collItems.map(item => (
-                        <div key={item.id} style={{ position: 'relative' }}>
-                          <img src={item.image_url} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
-                          <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: -5, right: -5, background: 'red', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px' }}>✕</button>
-                        </div>
-                      ))}
+                    <div style={{ marginTop: '20px', borderTop: '1px solid #27272a', paddingTop: '20px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                        {collItems.map(item => (
+                          <div key={item.id} style={{ position: 'relative', aspectRatio: '1/1' }}>
+                            <img src={item.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />
+                            <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#ef4444', color: '#fff', border: '2px solid #18181b', borderRadius: '50%', width: '22px', height: '22px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                </div>
              ))}
-             <button onClick={() => setShowEditCollection(false)} style={{ width: '100%', marginTop: '20px', color: '#a1a1aa' }}>CLOSE</button>
+             <button onClick={() => setShowEditCollection(false)} style={{ width: '100%', marginTop: '20px', padding: '16px', color: '#71717a', fontWeight: '800' }}>DONE & CLOSE</button>
           </div>
         </div>
       )}
 
-      <ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} receiverId={userId} receiverName={profile?.display_url || profile?.username || "Collector"} />
+      {/* --- EXTERNAL COMPONENTS --- */}
+      <ChatDrawer 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        receiverId={userId} 
+        receiverName={profile?.display_url || profile?.username || "Collector"} 
+      />
       <Footer />
     </div>
   );

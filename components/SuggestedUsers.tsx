@@ -54,8 +54,15 @@ export default function SuggestedUsers() {
     }} className="no-scrollbar">
       {users.filter(u => u.id !== currentUserId).map((user) => {
         const tierIcon = getTierIcon(user.id);
-        const isCustom = user.avatar_url && user.avatar_url.includes('http');
-        const displayImg = isCustom ? user.avatar_url : tierIcon;
+        
+        // STRICTOR CHECK: 
+        // If it doesn't contain 'supabase' or 'item-images', we assume it's a placeholder.
+        const isActualPhoto = user.avatar_url && 
+                             user.avatar_url.includes('http') && 
+                             !user.avatar_url.includes('placeholder') && 
+                             !user.avatar_url.includes('default');
+
+        const displayImg = isActualPhoto ? user.avatar_url : tierIcon;
 
         return (
           <div key={user.id} style={{
@@ -64,41 +71,53 @@ export default function SuggestedUsers() {
             border: '1px solid #27272a',
             borderRadius: '24px',
             padding: '24px 16px',
-            textAlign: 'center'
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
           }}>
-            <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', display: 'block' }}>
-              <img 
-                src={displayImg} 
-                alt={user.username}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = tierIcon;
-                }}
-                style={{ 
-                  width: '80px', 
-                  height: '80px', 
-                  borderRadius: '20px', 
-                  objectFit: isCustom ? 'cover' : 'contain',
-                  background: '#18181b',
-                  margin: '0 auto 16px',
-                  display: 'block',
-                  // This ensures icons don't touch the edges but photos do
-                  padding: isCustom ? '0' : '20px',
-                  boxSizing: 'border-box'
-                }} 
-              />
+            <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%' }}>
+              <div style={{ 
+                width: '80px', 
+                height: '80px', 
+                margin: '0 auto 12px',
+                background: '#18181b',
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden'
+              }}>
+                <img 
+                  src={displayImg} 
+                  alt={user.username}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = tierIcon;
+                    target.style.padding = '20px';
+                  }}
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: isActualPhoto ? 'cover' : 'contain',
+                    padding: isActualPhoto ? '0' : '20px',
+                    boxSizing: 'border-box'
+                  }} 
+                />
+              </div>
               
               <p style={{ 
                 color: '#fff', 
-                fontSize: '15px', 
+                fontSize: '14px', 
                 fontWeight: '900', 
-                margin: '0 0 4px',
+                margin: '0',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
               }}>
                 {user.display_url || user.username}
               </p>
-              <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold', marginBottom: '20px' }}>
+              <p style={{ color: '#818cf8', fontSize: '11px', fontWeight: 'bold', marginBottom: '16px' }}>
                 @{user.username}
               </p>
             </Link>
@@ -108,10 +127,11 @@ export default function SuggestedUsers() {
               background: '#fff',
               color: '#000',
               border: 'none',
-              borderRadius: '14px',
-              padding: '10px 0',
-              fontSize: '12px',
+              borderRadius: '12px',
+              padding: '8px 0',
+              fontSize: '11px',
               fontWeight: '900',
+              cursor: 'pointer',
               textTransform: 'uppercase'
             }}>
               Follow

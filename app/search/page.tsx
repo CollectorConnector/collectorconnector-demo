@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
-import { ArrowRight, Search, Loader2 } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -14,41 +13,13 @@ type Profile = {
   tier: string | null;
 };
 
-// --- SLEEK COLLECTOR CARD COMPONENT ---
-const CollectorCard = ({ user }: { user: Profile }) => (
-  <Link
-    href={`/profile/${user.id}`}
-    className="group relative flex flex-col overflow-hidden bg-neutral-900/40 border border-neutral-800 rounded-2xl p-4 transition-all duration-300 hover:border-neutral-500 hover:bg-neutral-900/70 hover:-translate-y-1 active:scale-[0.98]"
-  >
-    {/* Standardized Avatar - ENFORCES SQUARE ASPECT */}
-    <div className="w-full aspect-square rounded-xl overflow-hidden bg-neutral-800 border border-neutral-700 mb-4 flex-shrink-0">
-      <img
-        src={user.avatar_url || "/default-avatar.png"} // Update with your actual placeholder
-        alt={user.display_url || user.username || "Collector"}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-    </div>
+// --- RAW SVG ICONS (No NPM needed) ---
+const SearchIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+);
 
-    {/* User Metadata */}
-    <div className="flex-1 min-w-0 mb-3">
-      <div className="flex items-center gap-2 mb-1">
-        <p className="font-extrabold text-[15px] truncate tracking-tight text-white leading-tight">
-          {user.display_url || user.username || "Collector"}
-        </p>
-        {user.tier === "founder" && (
-          <span className="text-[9px] font-black bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded border border-indigo-500/20">
-            FOUNDER
-          </span>
-        )}
-      </div>
-      <p className="text-neutral-500 text-xs font-bold">@{user.username || "collector"}</p>
-    </div>
-
-    {/* Subtle Action Icon */}
-    <div className="absolute top-4 right-4 bg-black/60 p-2 rounded-full border border-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-      <ArrowRight className="w-4 h-4 text-neutral-400" strokeWidth={3} />
-    </div>
-  </Link>
+const ArrowIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
 );
 
 export default function SearchPage() {
@@ -67,7 +38,7 @@ export default function SearchPage() {
       .from("profiles")
       .select("id, display_url, username, avatar_url, tier")
       .or(`display_url.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`)
-      .limit(16); // Increased limit for grid display
+      .limit(16);
 
     if (!error) setResults(data || []);
     setLoading(false);
@@ -80,45 +51,86 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-indigo-500/30">
-      <div className="max-w-7xl mx-auto px-6 pt-32 pb-24">
+      <div className="max-w-6xl mx-auto px-6 pt-32 pb-24">
         
-        {/* TOP SECTION */}
+        {/* HEADER */}
         <div className="text-center mb-16">
-          <h1 className="text-xs font-black tracking-[0.3em] text-neutral-600 uppercase mb-3">
-            DIRECTORY
+          <p className="text-[10px] font-black tracking-[0.4em] text-zinc-600 uppercase mb-4">
+            Network Directory
+          </p>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
+            FIND COLLECTORS
           </h1>
-          <h2 className="text-4xl font-extrabold tracking-tighter text-white">Find Collectors</h2>
         </div>
 
-        {/* MODERN SEARCH BAR */}
-        <div className="relative mb-16 max-w-xl mx-auto">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-600" />
+        {/* SEARCH BAR */}
+        <div className="relative mb-20 max-w-xl mx-auto">
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600">
+            <SearchIcon />
+          </div>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Username or display name..."
-            className="w-full bg-neutral-900 border border-neutral-800 pl-14 p-5 rounded-2xl text-lg focus:outline-none focus:border-indigo-500/70 transition-all placeholder:text-neutral-700"
+            placeholder="Search name or @username..."
+            className="w-full bg-[#0d0d0d] border border-zinc-800 pl-14 p-5 rounded-2xl text-lg focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-800 font-medium"
           />
           {loading && (
             <div className="absolute right-5 top-1/2 -translate-y-1/2">
-              <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
+              <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </div>
 
-        {/* MODERN GRID LAYOUT */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {/* RESULTS GRID - Enforced uniformity */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {results.map((user) => (
-            <CollectorCard key={user.id} user={user} />
+            <Link
+              key={user.id}
+              href={`/profile/${user.id}`}
+              className="group relative flex flex-col bg-[#0d0d0d] border border-zinc-900 rounded-3xl p-3 md:p-4 transition-all duration-300 hover:border-zinc-500 hover:bg-[#111111]"
+            >
+              {/* IMAGE CONTAINER - This fixes the "different sizes" issue */}
+              <div className="aspect-square w-full rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 mb-4">
+                <img
+                  src={user.avatar_url || "/icons/tiers/collector.svg"}
+                  alt=""
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+              </div>
+
+              {/* USER DETAILS */}
+              <div className="px-1 flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-[15px] truncate text-white tracking-tight">
+                    {user.display_url || user.username}
+                  </p>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <p className="text-indigo-400 text-[11px] font-black tracking-wider uppercase">
+                    @{user.username}
+                  </p>
+                  {user.tier === 'founder' && (
+                    <span className="bg-indigo-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded">
+                      FOUNDER
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* FLOATING ACTION ARROW */}
+              <div className="absolute top-6 right-6 p-2 bg-black/80 rounded-full border border-zinc-800 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+                <ArrowIcon />
+              </div>
+            </Link>
           ))}
         </div>
 
-        {/* CLEAN EMPTY STATE */}
+        {/* EMPTY STATE */}
         {!loading && query && results.length === 0 && (
-          <div className="text-center py-24 bg-neutral-900/20 rounded-3xl border-2 border-dashed border-neutral-800">
-            <Search className="w-12 h-12 text-neutral-700 mx-auto mb-6" strokeWidth={1}/>
-            <p className="text-sm tracking-widest uppercase text-neutral-600 font-bold">No Results Found</p>
+          <div className="text-center py-24 opacity-30">
+            <p className="text-xs font-black tracking-[0.5em] uppercase">No Collectors Found</p>
           </div>
         )}
       </div>

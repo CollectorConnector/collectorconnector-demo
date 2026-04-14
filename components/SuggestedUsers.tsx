@@ -41,13 +41,6 @@ export default function SuggestedUsers() {
     return `hsl(${hue}, 85%, 60%)`;
   };
 
-  const getAvatarSrc = (user: any) => {
-    if (user.avatar_url && user.avatar_url.startsWith('http')) {
-      return user.avatar_url;
-    }
-    return null; 
-  };
-
   if (loading) return null;
 
   return (
@@ -64,8 +57,6 @@ export default function SuggestedUsers() {
       {users
         .filter(u => u.id !== currentUserId)
         .map((user) => {
-          const avatarSrc = getAvatarSrc(user);
-          const isUpload = !!avatarSrc;
           const gradientColor = stringToColor(user.username || user.id);
           const initial = (user.username || "N")[0].toUpperCase();
 
@@ -82,12 +73,11 @@ export default function SuggestedUsers() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                flexShrink: 0,
-                position: 'relative'
+                flexShrink: 0
               }}
             >
-              {/* Entire top area is now a link to the profile ID */}
-              <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%', cursor: 'pointer' }}>
+              {/* FIX: Always link to user.id, never user.username or display_url */}
+              <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%' }}>
                 <div 
                   style={{ 
                     width: '80px', 
@@ -96,46 +86,22 @@ export default function SuggestedUsers() {
                     borderRadius: '20px',
                     overflow: 'hidden',
                     position: 'relative',
-                    background: isUpload ? '#18181b' : gradientColor,
+                    background: user.avatar_url ? '#18181b' : gradientColor,
                   }}
                 >
-                  {isUpload ? (
+                  {user.avatar_url ? (
                     <img 
-                      src={avatarSrc} 
-                      alt={user.username}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover'
-                      }} 
+                      src={user.avatar_url} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                     />
                   ) : (
-                    <div 
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '32px',
-                        fontWeight: '900',
-                        color: '#fff',
-                      }}
-                    >
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: '900', color: '#fff' }}>
                       {initial}
                     </div>
                   )}
                 </div>
                 
-                <p style={{ 
-                  color: '#fff', 
-                  fontSize: '14px', 
-                  fontWeight: '900', 
-                  margin: '0',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
+                <p style={{ color: '#fff', fontSize: '14px', fontWeight: '900', margin: '0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {user.display_url || user.username || "New Collector"}
                 </p>
                 <p style={{ color: '#818cf8', fontSize: '11px', fontWeight: 'bold', marginBottom: '16px' }}>
@@ -143,18 +109,7 @@ export default function SuggestedUsers() {
                 </p>
               </Link>
 
-              <button style={{
-                width: '100%',
-                background: '#fff',
-                color: '#000',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '8px 0',
-                fontSize: '11px',
-                fontWeight: '900',
-                cursor: 'pointer',
-                textTransform: 'uppercase'
-              }}>
+              <button style={{ width: '100%', background: '#fff', color: '#000', border: 'none', borderRadius: '12px', padding: '8px 0', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }}>
                 Follow
               </button>
             </div>

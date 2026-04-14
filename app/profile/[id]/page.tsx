@@ -80,7 +80,6 @@ export default function ProfilePage() {
 
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
-  const [commentText, setCommentText] = useState("");
   
   const [files, setFiles] = useState<File[]>([]);
   const [userRank, setUserRank] = useState<string | null>(null);
@@ -103,7 +102,7 @@ export default function ProfilePage() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${currentUserId}` },
-        (payload) => {
+        () => {
           if (!isChatOpen) {
             setHasNewMessage(true);
             if ("vibrate" in navigator) {
@@ -173,16 +172,6 @@ export default function ProfilePage() {
       setIsFollowing(true);
     }
     loadFollowCounts();
-  }
-
-  async function toggleLike(itemId: string) {
-    if (!currentUserId) return alert("Log in to like items!");
-    setLikedItems(prev => {
-      const next = new Set(prev);
-      if (next.has(itemId)) next.delete(itemId);
-      else next.add(itemId);
-      return next;
-    });
   }
 
   async function determineRank() {
@@ -350,6 +339,7 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
+        {/* PROFILE CARD */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', position: 'relative' }}>
             {isOwnProfile && (
               <button onClick={() => setShowEditProfile(true)} style={{ position: 'absolute', top: '20px', right: '20px', background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', zIndex: 10 }}>EDIT PROFILE</button>
@@ -406,6 +396,8 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px', alignItems: 'center', minHeight: '32px' }}>
                {profile?.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" style={{ color: '#E4405F', display: 'flex', alignItems: 'center' }}><InstagramIcon /></a>}
                {profile?.ebay_url && <a href={profile.ebay_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}><FixedEbayLogo /></a>}
+               {profile?.discord_handle && <span style={{ color: '#5865F2' }}><DiscordIcon /></span>}
+               {profile?.twitch_handle && <span style={{ color: '#9146FF' }}><TwitchIcon /></span>}
             </div>
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
@@ -418,12 +410,14 @@ export default function ProfilePage() {
             )}
         </section>
 
+        {/* STATS */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center', cursor: isOwnProfile ? 'pointer' : 'default' }} onClick={() => isOwnProfile && setShowEditCollection(true)}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS {isOwnProfile && '⚙️'}</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p></div>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p><p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p></div>
         </div>
 
+        {/* RECENT DROPS GRID */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -478,7 +472,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* NEW COLLECTION MODAL */}
+      {/* ALL MODALS (RE-ADDED) */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -512,7 +506,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* EDIT PROFILE MODAL */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -524,11 +517,7 @@ export default function ProfilePage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                <div><p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>INSTAGRAM URL</p><input placeholder="https://..." value={profile?.instagram_url || ""} onChange={e => setProfile({...profile, instagram_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} /></div>
                <div><p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>EBAY URL</p><input placeholder="https://..." value={profile?.ebay_url || ""} onChange={e => setProfile({...profile, ebay_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} /></div>
-               <div><p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>FACEBOOK URL</p><input placeholder="https://..." value={profile?.facebook_url || ""} onChange={e => setProfile({...profile, facebook_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} /></div>
-               <div><p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>X / TWITTER URL</p><input placeholder="https://..." value={profile?.x_url || ""} onChange={e => setProfile({...profile, x_url: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} /></div>
             </div>
-            <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>DISCORD</p>
-            <input value={profile?.discord_handle || ""} onChange={e => setProfile({...profile, discord_handle: e.target.value})} style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} />
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa', fontWeight: 'bold' }}>CANCEL</button>
               <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE CHANGES'}</button>
@@ -537,7 +526,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* BATCH DROP MODAL */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a' }}>
@@ -565,7 +553,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* EDIT COLLECTIONS MODAL */}
       {showEditCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -601,3 +588,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

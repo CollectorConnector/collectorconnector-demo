@@ -330,6 +330,7 @@ export default function ProfilePage() {
 
   const isCollectionValid = newCollName.trim() !== "" && (selectedNiche !== "" && (selectedNiche !== "Other" || customNiche.trim() !== ""));
 
+  // FIXED: Logic to replace blue question marks with correct tier icons
   const tierIconPath = `/icons/tiers/${(userRank || 'collector').toLowerCase()}.svg`;
 
   if (loading) return <div className="min-h-screen bg-black" />;
@@ -346,6 +347,7 @@ export default function ProfilePage() {
             )}
             
             <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 24px' }}>
+              {/* FIXED: Replaced blue question mark default with tier-based default */}
               <img 
                 src={profile?.avatar_url || tierIconPath} 
                 onError={(e) => { 
@@ -433,8 +435,27 @@ export default function ProfilePage() {
 
         {isOwnProfile && <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}>LOGOUT</button>}
         
-        {/* FIX: SUGGESTED USERS CAROUSEL SECTION - Removed manual header and Link */}
+        {/* RESTORED: SUGGESTED USERS CAROUSEL SECTION WITH VIEW ALL BUTTON */}
         <div style={{ marginTop: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '13px', fontWeight: '900', color: '#52525b', textTransform: 'uppercase', letterSpacing: '1px' }}>Suggested Users</h2>
+            <Link href="/suggested" style={{ textDecoration: 'none' }}>
+              <span style={{ 
+                fontSize: '11px', 
+                fontWeight: '900', 
+                color: '#818cf8', 
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                VIEW ALL
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
+            </Link>
+          </div>
           <SuggestedUsers />
         </div>
       </main>
@@ -453,7 +474,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ALL MODALS (RE-ADDED) */}
+      {/* MODALS REMAIN UNCHANGED BELOW */}
       {showAddCollection && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>

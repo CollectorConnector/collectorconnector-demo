@@ -337,6 +337,13 @@ export default function ProfilePage() {
     }
   }
 
+  async function toggleLike(itemId: string) {
+    const newLiked = new Set(likedItems);
+    if (newLiked.has(itemId)) newLiked.delete(itemId);
+    else newLiked.add(itemId);
+    setLikedItems(newLiked);
+  }
+
   async function deleteItem(id: string) {
     if(!confirm("Delete this photo?")) return;
     try {
@@ -482,29 +489,34 @@ export default function ProfilePage() {
               >
                 <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 
-                {drop.profiles?.username && (
-                  <Link 
-                    href={`/profile/${drop.profiles.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ 
-                      position: 'absolute', 
-                      top: '5px', 
-                      left: '5px', 
-                      background: 'rgba(0,0,0,0.7)', 
-                      padding: '3px 8px', 
-                      borderRadius: '6px', 
-                      fontSize: '10px', 
-                      fontWeight: 'bold',
-                      color: '#fff',
-                      textDecoration: 'none',
-                      zIndex: 10
-                    }}
-                  >
-                    @{drop.profiles.username}
-                  </Link>
-                )}
+                <div style={{ position: 'absolute', top: '5px', left: '5px', display: 'flex', gap: '4px', zIndex: 10 }}>
+                  {drop.profiles?.username && (
+                    <Link 
+                      href={`/profile/${drop.profiles.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ 
+                        background: 'rgba(0,0,0,0.7)', 
+                        padding: '3px 8px', 
+                        borderRadius: '6px', 
+                        fontSize: '10px', 
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        textDecoration: 'none'
+                      }}
+                    >
+                      @{drop.profiles.username}
+                    </Link>
+                  )}
+                </div>
 
-                {likedItems.has(drop.id) && <div style={{ position: 'absolute', bottom: '5px', right: '5px', fontSize: '14px' }}>⭐</div>}
+                <div style={{ position: 'absolute', bottom: '8px', right: '8px', display: 'flex', gap: '8px', zIndex: 10 }}>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); toggleLike(drop.id); }}
+                    style={{ background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: likedItems.has(drop.id) ? '#fbbf24' : '#fff' }}
+                  >
+                    {likedItems.has(drop.id) ? '⭐' : '☆'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -542,24 +554,44 @@ export default function ProfilePage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '40px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '30px', cursor: 'pointer' }}>✕</button>
             <button onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}>‹</button>
-            <div style={{ maxWidth: '90%', maxHeight: '80%', textAlign: 'center' }}>
-                <img src={recentDrops[selectedItemIndex].image_url} style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #27272a' }} />
-                <p style={{ marginTop: '20px', fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</p>
-                
-                {recentDrops[selectedItemIndex].profiles?.id && (
-                  <Link 
-                    href={`/profile/${recentDrops[selectedItemIndex].profiles.id}`}
-                    style={{ color: '#818cf8', fontWeight: 'bold', textDecoration: 'none' }}
-                  >
-                    @{recentDrops[selectedItemIndex].profiles.username}
-                  </Link>
-                )}
+            
+            <div style={{ width: '100%', maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px' }}>
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <img src={recentDrops[selectedItemIndex].image_url} style={{ width: '100%', borderRadius: '12px', border: '1px solid #27272a', maxHeight: '70vh', objectFit: 'contain' }} />
+                  
+                  {/* Overlay Interaction Bar */}
+                  <div style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <button onClick={() => toggleLike(recentDrops[selectedItemIndex].id)} style={{ background: 'rgba(0,0,0,0.6)', border: 'none', width: '45px', height: '45px', borderRadius: '50%', fontSize: '20px', color: likedItems.has(recentDrops[selectedItemIndex].id) ? '#fbbf24' : '#fff' }}>
+                      {likedItems.has(recentDrops[selectedItemIndex].id) ? '⭐' : '☆'}
+                    </button>
+                    <button onClick={() => alert('Comments coming soon!')} style={{ background: 'rgba(0,0,0,0.6)', border: 'none', width: '45px', height: '45px', borderRadius: '50%', fontSize: '20px', color: '#fff' }}>
+                      💬
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                  <p style={{ fontSize: '22px', fontWeight: '900', marginBottom: '4px' }}>{recentDrops[selectedItemIndex].title}</p>
+                  
+                  {recentDrops[selectedItemIndex].profiles?.id && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <span style={{ color: '#a1a1aa', fontSize: '14px' }}>Dropped by</span>
+                      <Link 
+                        href={`/profile/${recentDrops[selectedItemIndex].profiles.id}`}
+                        style={{ color: '#818cf8', fontWeight: 'bold', textDecoration: 'none', fontSize: '16px' }}
+                      >
+                        @{recentDrops[selectedItemIndex].profiles.username}
+                      </Link>
+                    </div>
+                  )}
+                </div>
             </div>
+
             <button onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', fontSize: '24px' }}>›</button>
         </div>
       )}
 
-      {/* EDIT PROFILE MODAL */}
+      {/* EDIT PROFILE MODAL (Existing logic remains) */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -691,41 +723,6 @@ export default function ProfilePage() {
               onChange={e => setItemValue(e.target.value)} 
               style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
             />
-
-            {/* AUDIENCE SELECTOR */}
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Drop Visibility</p>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-              <button 
-                onClick={() => setSelectedAudience("everyone")}
-                style={{ 
-                  flex: 1, 
-                  padding: '10px', 
-                  borderRadius: '10px', 
-                  fontSize: '12px', 
-                  fontWeight: '900',
-                  background: selectedAudience === "everyone" ? '#fff' : '#000',
-                  color: selectedAudience === "everyone" ? '#000' : '#fff',
-                  border: '1px solid #27272a'
-                }}
-              >
-                PUBLIC
-              </button>
-              <button 
-                onClick={() => setSelectedAudience("private")}
-                style={{ 
-                  flex: 1, 
-                  padding: '10px', 
-                  borderRadius: '10px', 
-                  fontSize: '12px', 
-                  fontWeight: '900',
-                  background: selectedAudience === "private" ? '#fff' : '#000',
-                  color: selectedAudience === "private" ? '#000' : '#fff',
-                  border: '1px solid #27272a'
-                }}
-              >
-                PRIVATE
-              </button>
-            </div>
 
             <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Collection</p>
             

@@ -18,7 +18,6 @@ export default function SuggestedUsers() {
 
   async function fetchSuggestedUsers() {
     try {
-      // Fetching active collectors
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username, display_url, avatar_url")
@@ -33,7 +32,6 @@ export default function SuggestedUsers() {
     }
   }
 
-  // Helper to determine the tier icon based on ID (matching your profile logic)
   const getTierIcon = (userId: string) => {
     const stacyId = "8b594b57-fc82-477a-a709-45aec99a228f";
     const foundersIds = ["e0759f79-d113-4af6-a575-cee076037092", "bb088a77-ba12-4fe3-a357-03d13dc0019"];
@@ -41,7 +39,6 @@ export default function SuggestedUsers() {
     if (userId === stacyId) return "/icons/tiers/diamond.svg";
     if (foundersIds.includes(userId)) return "/icons/tiers/founder.svg";
     
-    // Default fallback for general collectors
     return "/icons/tiers/collector.svg";
   };
 
@@ -57,8 +54,16 @@ export default function SuggestedUsers() {
       msOverflowStyle: 'none'
     }} className="no-scrollbar">
       {users.filter(u => u.id !== currentUserId).map((user) => {
-        const fallbackIcon = getTierIcon(user.id);
+        const tierIcon = getTierIcon(user.id);
         
+        // CHECK: If avatar_url is null, empty, or contains the old blue question mark placeholder
+        const hasValidAvatar = user.avatar_url && 
+                               user.avatar_url !== "" && 
+                               !user.avatar_url.includes("placeholder") && 
+                               !user.avatar_url.includes("questionmark");
+
+        const displayImg = hasValidAvatar ? user.avatar_url : tierIcon;
+
         return (
           <div key={user.id} style={{
             minWidth: '160px',
@@ -72,14 +77,16 @@ export default function SuggestedUsers() {
             alignItems: 'center'
           }}>
             <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none' }}>
-              <div style={{ width: '80px', height: '80px', marginBottom: '12px', position: 'relative' }}>
+              <div style={{ width: '80px', height: '80px', marginBottom: '12px' }}>
                 <img 
-                  src={user.avatar_url || fallbackIcon} 
+                  src={displayImg} 
                   alt={user.username}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    if (target.src !== window.location.origin + fallbackIcon) {
-                      target.src = fallbackIcon;
+                    // If the user's uploaded photo fails, snap back to the tier icon
+                    if (target.src !== window.location.origin + tierIcon) {
+                      target.src = tierIcon;
+                      target.style.padding = '15px';
                     }
                   }}
                   style={{ 
@@ -88,7 +95,8 @@ export default function SuggestedUsers() {
                     borderRadius: '16px', 
                     objectFit: 'cover',
                     background: '#18181b',
-                    padding: user.avatar_url ? '0' : '15px' // Adds a little padding if it's an SVG icon
+                    // Apply padding only if we are showing the SVG icon
+                    padding: hasValidAvatar ? '0' : '15px'
                   }} 
                 />
               </div>
@@ -102,7 +110,7 @@ export default function SuggestedUsers() {
                 textOverflow: 'ellipsis',
                 maxWidth: '120px'
               }}>
-                {user.display_url || "New Collector"}
+                {user.display_url || user.username}
               </p>
               <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold', marginBottom: '16px' }}>
                 @{user.username}

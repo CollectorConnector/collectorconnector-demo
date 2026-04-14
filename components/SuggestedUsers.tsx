@@ -51,75 +51,54 @@ export default function SuggestedUsers() {
       gap: '12px', 
       paddingBottom: '10px',
       scrollbarWidth: 'none',
-      msOverflowStyle: 'none'
     }} className="no-scrollbar">
       {users.filter(u => u.id !== currentUserId).map((user) => {
         const tierIcon = getTierIcon(user.id);
-        
-        // AGGRESSIVE CHECK: 
-        // We only trust the avatar if it's a full URL and NOT the old default path.
-        const isCustomAvatar = user.avatar_url && 
-                               user.avatar_url.startsWith('http') && 
-                               !user.avatar_url.includes('default') &&
-                               !user.avatar_url.includes('ui-avatars');
-
-        const displayImg = isCustomAvatar ? user.avatar_url : tierIcon;
+        const isCustom = user.avatar_url && user.avatar_url.includes('http');
+        const displayImg = isCustom ? user.avatar_url : tierIcon;
 
         return (
-          <div key={`${user.id}-${isCustomAvatar}`} style={{
+          <div key={user.id} style={{
             minWidth: '160px',
             background: '#09090b',
             border: '1px solid #27272a',
             borderRadius: '24px',
-            padding: '20px',
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
+            padding: '24px 16px',
+            textAlign: 'center'
           }}>
-            <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none' }}>
-              <div style={{ 
-                width: '80px', 
-                height: '80px', 
-                marginBottom: '12px', 
-                background: '#18181b', 
-                borderRadius: '16px',
-                overflow: 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <img 
-                  src={displayImg} 
-                  alt={user.username}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    if (target.src !== window.location.origin + tierIcon) {
-                      target.src = tierIcon;
-                      target.style.padding = '18px';
-                    }
-                  }}
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: isCustomAvatar ? 'cover' : 'contain',
-                    padding: isCustomAvatar ? '0' : '18px'
-                  }} 
-                />
-              </div>
+            <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', display: 'block' }}>
+              <img 
+                src={displayImg} 
+                alt={user.username}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = tierIcon;
+                }}
+                style={{ 
+                  width: '80px', 
+                  height: '80px', 
+                  borderRadius: '20px', 
+                  objectFit: isCustom ? 'cover' : 'contain',
+                  background: '#18181b',
+                  margin: '0 auto 16px',
+                  display: 'block',
+                  // This ensures icons don't touch the edges but photos do
+                  padding: isCustom ? '0' : '20px',
+                  boxSizing: 'border-box'
+                }} 
+              />
+              
               <p style={{ 
                 color: '#fff', 
-                fontSize: '14px', 
+                fontSize: '15px', 
                 fontWeight: '900', 
-                margin: '0',
+                margin: '0 0 4px',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '120px'
+                textOverflow: 'ellipsis'
               }}>
                 {user.display_url || user.username}
               </p>
-              <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold', marginBottom: '16px' }}>
+              <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold', marginBottom: '20px' }}>
                 @{user.username}
               </p>
             </Link>
@@ -129,11 +108,10 @@ export default function SuggestedUsers() {
               background: '#fff',
               color: '#000',
               border: 'none',
-              borderRadius: '12px',
-              padding: '8px 0',
+              borderRadius: '14px',
+              padding: '10px 0',
               fontSize: '12px',
               fontWeight: '900',
-              cursor: 'pointer',
               textTransform: 'uppercase'
             }}>
               Follow

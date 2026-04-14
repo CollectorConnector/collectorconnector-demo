@@ -519,7 +519,7 @@ export default function ProfilePage() {
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p><p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p></div>
         </div>
 
-        {/* GLOBAL RECENT DROPS (With User Attribution) */}
+        {/* GLOBAL RECENT DROPS (With Fixed @user navigation) */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
@@ -538,11 +538,11 @@ export default function ProfilePage() {
               >
                 <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 
-                {/* User Attribution Overlay */}
+                {/* User Attribution Overlay - FIXED NAVIGATION */}
                 <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10 }}>
                   <Link 
                     href={`/profile/${drop.profiles?.id}`}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()} // Prevents the lightbox from opening
                     style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
@@ -620,15 +620,18 @@ export default function ProfilePage() {
                 {/* RIGHT: DETAILS & COMMENTS */}
                 <div style={{ flex: 0.8, display: 'flex', flexDirection: 'column', height: '100%' }}>
                   
-                  {/* Header / Attribution */}
+                  {/* Header / Attribution - FIXED NAVIGATION */}
                   <div style={{ padding: '20px', borderBottom: '1px solid #18181b' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                    <Link 
+                      href={`/profile/${recentDrops[selectedItemIndex].profiles?.id}`} 
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', textDecoration: 'none', color: 'inherit' }}
+                    >
                        <img src={recentDrops[selectedItemIndex].profiles?.avatar_url || '/icons/tiers/collector.svg'} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
                        <div>
                          <p style={{ fontWeight: '900', fontSize: '14px' }}>{recentDrops[selectedItemIndex].profiles?.display_url || recentDrops[selectedItemIndex].profiles?.username}</p>
                          <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
                        </div>
-                    </div>
+                    </Link>
                     <h3 style={{ fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</h3>
                   </div>
 
@@ -639,9 +642,13 @@ export default function ProfilePage() {
                     ) : (
                       comments.map(cmt => (
                         <div key={cmt.id} style={{ display: 'flex', gap: '10px' }}>
-                          <img src={cmt.profiles?.avatar_url || '/icons/tiers/collector.svg'} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                          <Link href={`/profile/${cmt.user_id}`}>
+                            <img src={cmt.profiles?.avatar_url || '/icons/tiers/collector.svg'} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                          </Link>
                           <div style={{ background: '#18181b', padding: '10px 14px', borderRadius: '15px', flex: 1 }}>
-                            <p style={{ fontSize: '12px', fontWeight: '900', color: '#fff', marginBottom: '2px' }}>{cmt.profiles?.username}</p>
+                            <Link href={`/profile/${cmt.user_id}`} style={{ textDecoration: 'none' }}>
+                               <p style={{ fontSize: '12px', fontWeight: '900', color: '#fff', marginBottom: '2px' }}>{cmt.profiles?.username}</p>
+                            </Link>
                             <p style={{ fontSize: '13px', color: '#a1a1aa', lineHeight: '1.4' }}>{cmt.content}</p>
                           </div>
                         </div>
@@ -683,7 +690,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* EDIT PROFILE MODAL (Logic Unchanged) */}
+      {/* EDIT PROFILE MODAL */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -789,7 +796,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-     {/* SMART DROP MODAL (Logic Unchanged) */}
+     {/* SMART DROP MODAL */}
       {showSmartDrop && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>

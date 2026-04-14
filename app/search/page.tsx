@@ -13,13 +13,9 @@ type Profile = {
   tier: string | null;
 };
 
-// --- RAW SVG ICONS (No NPM needed) ---
+// --- SVG ICONS ---
 const SearchIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-);
-
-const ArrowIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 );
 
 export default function SearchPage() {
@@ -38,7 +34,7 @@ export default function SearchPage() {
       .from("profiles")
       .select("id, display_url, username, avatar_url, tier")
       .or(`display_url.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`)
-      .limit(16);
+      .limit(20);
 
     if (!error) setResults(data || []);
     setLoading(false);
@@ -51,29 +47,25 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-indigo-500/30">
-      <div className="max-w-6xl mx-auto px-6 pt-32 pb-24">
+      <div className="max-w-5xl mx-auto px-6 pt-32 pb-24">
         
         {/* HEADER */}
-        <div className="text-center mb-16">
-          <p className="text-[10px] font-black tracking-[0.4em] text-zinc-600 uppercase mb-4">
-            Network Directory
-          </p>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
-            FIND COLLECTORS
-          </h1>
+        <div className="mb-12">
+          <h1 className="text-4xl font-black tracking-tighter mb-2">SEARCH</h1>
+          <p className="text-zinc-500 text-sm font-bold tracking-widest uppercase">Global Collector Directory</p>
         </div>
 
         {/* SEARCH BAR */}
-        <div className="relative mb-20 max-w-xl mx-auto">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600">
+        <div className="relative mb-16">
+          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500">
             <SearchIcon />
           </div>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name or @username..."
-            className="w-full bg-[#0d0d0d] border border-zinc-800 pl-14 p-5 rounded-2xl text-lg focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-800 font-medium"
+            placeholder="Find by name or @handle..."
+            className="w-full bg-[#0d0d0d] border border-zinc-800/50 pl-14 p-5 rounded-2xl text-lg focus:outline-none focus:border-zinc-500 transition-all placeholder:text-zinc-800 font-medium"
           />
           {loading && (
             <div className="absolute right-5 top-1/2 -translate-y-1/2">
@@ -82,46 +74,43 @@ export default function SearchPage() {
           )}
         </div>
 
-        {/* RESULTS GRID - Enforced uniformity */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* RESULTS GRID */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {results.map((user) => (
             <Link
               key={user.id}
               href={`/profile/${user.id}`}
-              className="group relative flex flex-col bg-[#0d0d0d] border border-zinc-900 rounded-3xl p-3 md:p-4 transition-all duration-300 hover:border-zinc-500 hover:bg-[#111111]"
+              className="group flex flex-col items-center text-center transition-transform duration-200 hover:-translate-y-1"
             >
-              {/* IMAGE CONTAINER - This fixes the "different sizes" issue */}
-              <div className="aspect-square w-full rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 mb-4">
+              {/* THE SQUIRCLE AVATAR */}
+              <div 
+                className="aspect-square w-full overflow-hidden bg-zinc-900 border border-zinc-800 transition-all duration-300 group-hover:border-zinc-400 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                style={{ 
+                  borderRadius: '35%', // This creates the squircle shape
+                  maskImage: 'paint(squircle)', // Optional: for true mathematical squircles if supported
+                }}
+              >
                 <img
                   src={user.avatar_url || "/icons/tiers/collector.svg"}
                   alt=""
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               </div>
 
               {/* USER DETAILS */}
-              <div className="px-1 flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-bold text-[15px] truncate text-white tracking-tight">
-                    {user.display_url || user.username}
-                  </p>
-                </div>
+              <div className="mt-4 w-full px-2">
+                <p className="font-bold text-[15px] truncate text-white tracking-tight leading-none mb-1">
+                  {user.display_url || user.username}
+                </p>
+                <p className="text-indigo-400 text-[10px] font-black tracking-tighter uppercase opacity-80">
+                  @{user.username}
+                </p>
                 
-                <div className="flex items-center justify-between">
-                  <p className="text-indigo-400 text-[11px] font-black tracking-wider uppercase">
-                    @{user.username}
-                  </p>
-                  {user.tier === 'founder' && (
-                    <span className="bg-indigo-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded">
-                      FOUNDER
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* FLOATING ACTION ARROW */}
-              <div className="absolute top-6 right-6 p-2 bg-black/80 rounded-full border border-zinc-800 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-                <ArrowIcon />
+                {user.tier === 'founder' && (
+                  <div className="mt-2 inline-block bg-white text-black text-[8px] font-black px-1.5 py-0.5 rounded-sm">
+                    FOUNDER
+                  </div>
+                )}
               </div>
             </Link>
           ))}
@@ -129,8 +118,8 @@ export default function SearchPage() {
 
         {/* EMPTY STATE */}
         {!loading && query && results.length === 0 && (
-          <div className="text-center py-24 opacity-30">
-            <p className="text-xs font-black tracking-[0.5em] uppercase">No Collectors Found</p>
+          <div className="text-center py-20 border border-dashed border-zinc-900 rounded-[35%] max-w-sm mx-auto">
+            <p className="text-xs font-black tracking-widest uppercase text-zinc-700">No matches found</p>
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
 type Profile = {
   id: string;
@@ -23,92 +24,96 @@ export default function SearchPage() {
       setResults([]);
       return;
     }
-
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
       .select("id, display_url, username, avatar_url, tier")
       .or(`display_url.ilike.%${searchTerm}%,username.ilike.%${searchTerm}%`)
-      .limit(20);
+      .limit(10); // Keeping it tight for quality
 
-    if (error) {
-      console.error("Search error:", error);
-    } else {
-      setResults(data || []);
-    }
+    if (!error) setResults(data || []);
     setLoading(false);
   };
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      searchUsers(query);
-    }, 300);
+    const timeout = setTimeout(() => searchUsers(query), 300);
     return () => clearTimeout(timeout);
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 pt-24">
-      <div className="max-w-xl mx-auto">
-        <h1 className="text-3xl font-black mb-2 text-center tracking-tighter">FIND COLLECTORS</h1>
-        <p className="text-zinc-500 text-center mb-10 text-sm font-medium">Search the global vault directory</p>
-
-        <div className="relative mb-12">
+    <div className="min-h-screen bg-[#050505] text-white selection:bg-indigo-500/30">
+      {/* HEADER SPACE */}
+      <div className="max-w-xl mx-auto px-6 pt-24 pb-12">
+        <h1 className="text-sm font-black tracking-[0.2em] text-zinc-500 mb-4 text-center">
+          DIRECTORY
+        </h1>
+        
+        {/* THE SEARCH BAR - Now with a glass/glow effect */}
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl blur opacity-25 group-focus-within:opacity-100 transition duration-1000"></div>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name or @username..."
-            className="w-full p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl text-lg focus:outline-none focus:border-white/50 transition-all placeholder:text-zinc-600"
+            placeholder="Search by name or @username..."
+            className="relative w-full p-5 bg-[#0d0d0d] border border-zinc-800 rounded-2xl text-lg focus:outline-none focus:border-zinc-400 transition-all placeholder:text-zinc-700 font-medium"
           />
           {loading && (
-             <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-             </div>
+            <div className="absolute right-5 top-1/2 -translate-y-1/2">
+              <div className="w-5 h-5 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
           )}
         </div>
+      </div>
 
-        {!loading && results.length === 0 && query && (
-          <div className="text-center py-20 bg-zinc-900/20 rounded-3xl border border-dashed border-zinc-800">
-            <p className="text-zinc-500 font-medium">No collectors found for "{query}"</p>
+      {/* RESULTS SECTION */}
+      <div className="max-w-xl mx-auto px-6 pb-20">
+        {!loading && query && results.length === 0 && (
+          <div className="text-center py-20 border border-dashed border-zinc-900 rounded-3xl">
+            <p className="text-zinc-600 font-medium">No collectors found in the vault.</p>
           </div>
         )}
 
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3">
           {results.map((user) => (
-            <div
+            <Link
               key={user.id}
-              onClick={() => router.push(`/profile/${user.id}`)}
-              className="flex items-center gap-4 bg-zinc-900/30 border border-zinc-800/50 hover:border-zinc-500 hover:bg-zinc-900/60 rounded-2xl p-4 cursor-pointer transition-all active:scale-[0.98]"
+              href={`/profile/${user.id}`}
+              className="group flex items-center gap-4 p-4 bg-[#0d0d0d] border border-zinc-900 hover:border-zinc-700 rounded-2xl transition-all duration-200 hover:bg-[#111111]"
             >
-              {/* FIXED SIZE AVATAR */}
-              <div className="w-14 h-14 rounded-xl overflow-hidden bg-zinc-800 flex-shrink-0 border border-zinc-700">
-                <img
-                  src={user.avatar_url || "/icons/tiers/collector.svg"}
-                  alt={user.display_url || ""}
-                  className="w-full h-full object-cover"
-                />
+              {/* AVATAR - Forced consistency */}
+              <div className="relative flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
+                  <img
+                    src={user.avatar_url || "/icons/tiers/collector.svg"}
+                    alt=""
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
+                {user.tier === 'founder' && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full border-2 border-[#050505] shadow-lg"></div>
+                )}
               </div>
 
-              {/* TEXT SECTION */}
-              <div className="flex-1 overflow-hidden">
+              {/* USER INFO */}
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-bold text-lg truncate leading-tight">
+                  <p className="font-bold text-[16px] text-white truncate tracking-tight">
                     {user.display_url || user.username}
                   </p>
-                  {user.tier === 'founder' && (
-                    <span className="bg-indigo-500/10 text-indigo-400 text-[10px] font-black px-2 py-0.5 rounded-full border border-indigo-500/20">
-                      FOUNDER
-                    </span>
-                  )}
                 </div>
-                <p className="text-indigo-400 text-sm font-bold">@{user.username || "collector"}</p>
+                <p className="text-indigo-400/80 text-xs font-black tracking-wider uppercase">
+                  @{user.username || "collector"}
+                </p>
               </div>
 
-              {/* ACTION ICON */}
-              <div className="text-zinc-600 ml-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              {/* END ICON */}
+              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#52525b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14m-7-7 7 7-7 7"/>
+                </svg>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

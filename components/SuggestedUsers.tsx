@@ -32,7 +32,6 @@ export default function SuggestedUsers() {
     }
   }
 
-  // Generate nice gradient color based on username
   const stringToColor = (str: string): string => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -42,12 +41,11 @@ export default function SuggestedUsers() {
     return `hsl(${hue}, 85%, 60%)`;
   };
 
-  // Get avatar source or gradient fallback
   const getAvatarSrc = (user: any) => {
-    if (user.avatar_url?.includes("item-images")) {
-      return `${user.avatar_url}?t=${Date.now()}`;
+    if (user.avatar_url && user.avatar_url.startsWith('http')) {
+      return user.avatar_url;
     }
-    return null; // null means use gradient placeholder
+    return null; 
   };
 
   if (loading) return null;
@@ -84,10 +82,12 @@ export default function SuggestedUsers() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                flexShrink: 0
+                flexShrink: 0,
+                position: 'relative'
               }}
             >
-              <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%' }}>
+              {/* Entire top area is now a link to the profile ID */}
+              <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%', cursor: 'pointer' }}>
                 <div 
                   style={{ 
                     width: '80px', 
@@ -108,26 +108,6 @@ export default function SuggestedUsers() {
                         height: '100%', 
                         objectFit: 'cover'
                       }} 
-                      onError={(e) => {
-                        // If uploaded image fails, fall back to gradient
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.style.background = gradientColor;
-                          const initialEl = document.createElement('div');
-                          initialEl.style.width = '100%';
-                          initialEl.style.height = '100%';
-                          initialEl.style.display = 'flex';
-                          initialEl.style.alignItems = 'center';
-                          initialEl.style.justifyContent = 'center';
-                          initialEl.style.fontSize = '32px';
-                          initialEl.style.fontWeight = '900';
-                          initialEl.style.color = '#fff';
-                          initialEl.textContent = initial;
-                          parent.appendChild(initialEl);
-                        }
-                      }}
                     />
                   ) : (
                     <div 

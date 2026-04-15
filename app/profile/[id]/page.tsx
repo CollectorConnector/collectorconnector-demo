@@ -570,12 +570,10 @@ export default function ProfilePage() {
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
             {recentDrops.map((drop, index) => {
-              // Check if the actual author of this specific drop has an avatar
+              // FIX: Use individual drop's profile data
               const itemHasValidAvatar = drop.profiles?.avatar_url && drop.profiles.avatar_url.startsWith('http');
-              // Ensure we have a valid username or fallback to 'collector'
               const itemUsername = drop.profiles?.username || "collector";
-              // Link directly to the author's profile
-              const authorProfileUrl = `/profile/${drop.profiles?.id || ''}`;
+              const authorProfileId = drop.profiles?.id;
 
               return (
                 <div 
@@ -595,7 +593,7 @@ export default function ProfilePage() {
                   {/* User Attribution Overlay */}
                   <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10 }}>
                     <Link 
-                      href={authorProfileUrl}
+                      href={`/profile/${authorProfileId}`}
                       onClick={(e) => e.stopPropagation()} 
                       style={{ 
                         display: 'flex', 
@@ -615,13 +613,14 @@ export default function ProfilePage() {
                           style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} 
                         />
                       ) : (
-                        /* Generic SVG Placeholder you preferred */
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                           <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                       )}
-                      <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>@{itemUsername}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>
+                        @{itemUsername}
+                      </span>
                     </Link>
                   </div>
 

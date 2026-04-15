@@ -586,7 +586,7 @@ export default function ProfilePage() {
                 >
                   <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   
-                  {/* User Attribution Overlay */}
+                  {/* User Attribution Overlay - UPDATED FOR CLEANER UI */}
                   <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10 }}>
                     <Link 
                       href={`/profile/${drop.profiles?.id}`}
@@ -597,15 +597,17 @@ export default function ProfilePage() {
                         gap: '4px', 
                         background: 'rgba(0,0,0,0.6)', 
                         backdropFilter: 'blur(4px)',
-                        padding: '2px 8px 2px 2px', 
+                        padding: itemHasValidAvatar ? '2px 8px 2px 2px' : '4px 10px', 
                         borderRadius: '20px',
                         textDecoration: 'none'
                       }}
                     >
-                      <img 
-                        src={itemHasValidAvatar ? drop.profiles.avatar_url : `/icons/tiers/collector.svg`} 
-                        style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} 
-                      />
+                      {itemHasValidAvatar && (
+                        <img 
+                          src={drop.profiles.avatar_url} 
+                          style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} 
+                        />
+                      )}
                       <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>@{drop.profiles?.username}</span>
                     </Link>
                   </div>
@@ -676,10 +678,14 @@ export default function ProfilePage() {
                         href={`/profile/${recentDrops[selectedItemIndex].profiles?.id}`} 
                         style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: 'inherit' }}
                       >
-                         <img 
-                            src={recentDrops[selectedItemIndex].profiles?.avatar_url?.startsWith('http') ? recentDrops[selectedItemIndex].profiles.avatar_url : '/icons/tiers/collector.svg'} 
-                            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
-                          />
+                         {recentDrops[selectedItemIndex].profiles?.avatar_url?.startsWith('http') ? (
+                           <img 
+                              src={recentDrops[selectedItemIndex].profiles.avatar_url} 
+                              style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                            />
+                         ) : (
+                           <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>👤</div>
+                         )}
                          <div>
                            <p style={{ fontWeight: '900', fontSize: '14px' }}>{recentDrops[selectedItemIndex].profiles?.display_url || recentDrops[selectedItemIndex].profiles?.username}</p>
                            <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
@@ -715,7 +721,11 @@ export default function ProfilePage() {
                       comments.map(cmt => (
                         <div key={cmt.id} style={{ display: 'flex', gap: '10px' }}>
                           <Link href={`/profile/${cmt.user_id}`}>
-                            <img src={cmt.profiles?.avatar_url?.startsWith('http') ? cmt.profiles.avatar_url : '/icons/tiers/collector.svg'} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                            {cmt.profiles?.avatar_url?.startsWith('http') ? (
+                              <img src={cmt.profiles.avatar_url} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>👤</div>
+                            )}
                           </Link>
                           <div style={{ background: '#18181b', padding: '10px 14px', borderRadius: '15px', flex: 1 }}>
                             <Link href={`/profile/${cmt.user_id}`} style={{ textDecoration: 'none' }}>

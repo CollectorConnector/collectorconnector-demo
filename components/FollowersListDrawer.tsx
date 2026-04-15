@@ -15,13 +15,27 @@ interface FollowersListDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
-  mode: "followers" | "following"; // Defines what data to fetch
-  userRankFallback?: string; // If you want to use the Tier icons for avatars
+  mode: "followers" | "following";
+  userRankFallback?: string;
 }
 
 export default function FollowersListDrawer({ isOpen, onClose, userId, mode, userRankFallback }: FollowersListDrawerProps) {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Helper to get a consistent gradient based on User ID
+  const getAvatarGradient = (id: string) => {
+    const gradients = [
+      'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', // Green/Blue
+      'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', // Yellow/Orange
+      'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', // Purple/Pink
+      'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', // Soft Red
+      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Deep Indigo
+    ];
+    // Simple logic to ensure the same user always gets the same color
+    const charSum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return gradients[charSum % gradients.length];
+  };
 
   useEffect(() => {
     if (!isOpen || !userId) return;
@@ -30,24 +44,13 @@ export default function FollowersListDrawer({ isOpen, onClose, userId, mode, use
 
   async function loadListData() {
     setLoading(true);
-    setUsers([]); // Clear previous list
+    setUsers([]);
 
-    let table = "";
-    let matchField = ""; // Field in follows table matching input userId
-    let fetchField = ""; // Field in follows table for the returned profileId
-
-    if (mode === "followers") {
-      table = "follows";
-      matchField = "following_id"; // I want the people following THIS user
-      fetchField = "follower_id";
-    } else {
-      table = "follows";
-      matchField = "follower_id"; // I want the people THIS user follows
-      fetchField = "following_id";
-    }
+    let table = "follows";
+    let matchField = mode === "followers" ? "following_id" : "follower_id";
+    let fetchField = mode === "followers" ? "follower_id" : "following_id";
 
     try {
-      // 1. Fetch the IDs from the follows table
       const { data: followData, error: followError } = await supabase
         .from(table)
         .select(`${fetchField}`)
@@ -58,7 +61,6 @@ export default function FollowersListDrawer({ isOpen, onClose, userId, mode, use
       if (followData && followData.length > 0) {
         const targetIds = followData.map((f: any) => f[fetchField]);
 
-        // 2. Fetch profile details for all those IDs in one efficient query
         const { data: profiles, error: profileError } = await supabase
           .from("profiles")
           .select("id, username, display_url, avatar_url")
@@ -74,12 +76,9 @@ export default function FollowersListDrawer({ isOpen, onClose, userId, mode, use
     }
   }
 
-  // --- DRAWER LAYOUT ---
   if (!isOpen) return null;
 
   const title = mode === "followers" ? "FOLLOWERS" : "FOLLOWING";
-  const tierIconPath = `/icons/tiers/${(userRankFallback || 'collector').toLowerCase()}.svg`;
-
 
   return (
     <div 
@@ -93,7 +92,7 @@ export default function FollowersListDrawer({ isOpen, onClose, userId, mode, use
         alignItems: 'center',
         padding: '20px'
       }}
-      onClick={onClose} // Clicking the background closes it
+      onClick={onClose}
     >
       <div 
         style={{
@@ -107,9 +106,9 @@ export default function FollowersListDrawer({ isOpen, onClose, userId, mode, use
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          cursor: 'default' // Don't trigger background close click
+          cursor: 'default'
         }}
-        onClick={(e) => e.stopPropagation()} // Stop propagation to background
+        onClick={(e) => e.stopPropagation()}
       >
         
         {/* Header */}
@@ -128,12 +127,13 @@ export default function FollowersListDrawer({ isOpen, onClose, userId, mode, use
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {users.map(u => {
                 const hasValidAvatar = u.avatar_url && u.avatar_url.startsWith('http');
+                const firstInitial = (u.display_url || u.username || '?').charAt(0).toUpperCase();
                 
                 return (
                   <Link 
                     key={u.id} 
                     href={`/profile/${u.id}`}
-                    onClick={onClose} // Clicking navigates AND closes drawer
+                    onClick={onClose}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -149,18 +149,35 @@ export default function FollowersListDrawer({ isOpen, onClose, userId, mode, use
                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#27272a')}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#18181b')}
                   >
-                    <div style={{ width: '40px', height: '40px', borderRadius: '38%', overflow: 'hidden', border: '2px solid #27272a', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#18181b' }}>
-                        <img 
-                          src={hasValidAvatar ? u.avatar_url : tierIconPath} 
-                          crossOrigin="anonymous"
-                          style={{ 
-                            width: '100%', 
-                            height: '100%', 
-                            objectFit: hasValidAvatar ? 'cover' : 'contain', 
-                            padding: hasValidAvatar ? '0' : '8px'
-                          }} 
-                        />
+                    {/* Avatar Container with Gradient Fallback */}
+                    <div style={{ 
+                      width: '44px', 
+                      height: '44px', 
+                      borderRadius: '38%', 
+                      overflow: 'hidden', 
+                      border: '2px solid #27272a', 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center', 
+                      background: hasValidAvatar ? '#18181b' : getAvatarGradient(u.id)
+                    }}>
+                        {hasValidAvatar ? (
+                          <img 
+                            src={u.avatar_url} 
+                            crossOrigin="anonymous"
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover'
+                            }} 
+                          />
+                        ) : (
+                          <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>
+                            {firstInitial}
+                          </span>
+                        )}
                     </div>
+
                     <div>
                       <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{u.display_url || u.username}</p>
                       <p style={{ fontSize: '12px', color: '#818cf8', fontWeight: 'bold' }}>@{u.username}</p>

@@ -570,10 +570,10 @@ export default function ProfilePage() {
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
             {recentDrops.map((drop, index) => {
-              // FIX: Use individual drop's profile data
+              // FIX: Pull data from the individual drop's profile context
               const itemHasValidAvatar = drop.profiles?.avatar_url && drop.profiles.avatar_url.startsWith('http');
               const itemUsername = drop.profiles?.username || "collector";
-              const authorProfileId = drop.profiles?.id;
+              const authorProfileId = drop.profiles?.id || "";
 
               return (
                 <div 

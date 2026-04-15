@@ -570,10 +570,10 @@ export default function ProfilePage() {
           <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
             {recentDrops.map((drop, index) => {
-              // FIX: Pull data from the individual drop's profile context
+              // FIX: Specific author data for this individual drop
               const itemHasValidAvatar = drop.profiles?.avatar_url && drop.profiles.avatar_url.startsWith('http');
               const itemUsername = drop.profiles?.username || "collector";
-              const authorProfileId = drop.profiles?.id || "";
+              const authorProfileId = drop.profiles?.id;
 
               return (
                 <div 
@@ -590,8 +590,8 @@ export default function ProfilePage() {
                 >
                   <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   
-                  {/* User Attribution Overlay */}
-                  <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 10 }}>
+                  {/* User Attribution Overlay - Minimalist style */}
+                  <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
                     <Link 
                       href={`/profile/${authorProfileId}`}
                       onClick={(e) => e.stopPropagation()} 
@@ -599,12 +599,12 @@ export default function ProfilePage() {
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '6px', 
-                        background: 'rgba(0,0,0,0.6)', 
-                        backdropFilter: 'blur(8px)',
-                        padding: '4px 10px 4px 6px', 
+                        background: 'rgba(0,0,0,0.4)', 
+                        backdropFilter: 'blur(10px)',
+                        padding: '6px 10px', 
                         borderRadius: '20px',
                         textDecoration: 'none',
-                        border: '1px solid rgba(255,255,255,0.1)'
+                        border: '1px solid rgba(255,255,255,0.08)'
                       }}
                     >
                       {itemHasValidAvatar ? (

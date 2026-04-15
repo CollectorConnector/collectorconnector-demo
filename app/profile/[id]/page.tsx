@@ -10,6 +10,8 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
+// --- NEW IMPORT ---
+import FollowersListDrawer from "@/components/FollowersListDrawer";
 
 // --- SVG ICONS ---
 const DiscordIcon = () => (
@@ -63,6 +65,10 @@ export default function ProfilePage() {
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
+  // --- NEW STATE: Followers Drawer ---
+  const [isFollowersListOpen, setIsFollowersListOpen] = useState(false);
+  const [followersListMode, setFollowersListMode] = useState<"followers" | "following">("followers");
+
   const [hasNewMessage, setHasNewMessage] = useState(false);
   
   const [recentDrops, setRecentDrops] = useState<any[]>([]);
@@ -527,11 +533,29 @@ export default function ProfilePage() {
             <p style={{ color: '#a1a1aa', margin: '4px 0 12px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', margin: '10px 0 20px' }}>
-                <div style={{ textAlign: 'center' }}>
+                {/* --- FOLLOWERS BUTTON --- */}
+                <div 
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                  onClick={() => {
+                    if (followerCount > 0) {
+                      setFollowersListMode("followers");
+                      setIsFollowersListOpen(true);
+                    }
+                  }}
+                >
                   <p style={{ fontSize: '18px', fontWeight: '900' }}>{followerCount}</p>
                   <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWERS</p>
                 </div>
-                <div style={{ textAlign: 'center' }}>
+                {/* --- FOLLOWING BUTTON --- */}
+                <div 
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                  onClick={() => {
+                    if (followingCount > 0) {
+                      setFollowersListMode("following");
+                      setIsFollowersListOpen(true);
+                    }
+                  }}
+                >
                   <p style={{ fontSize: '18px', fontWeight: '900' }}>{followingCount}</p>
                   <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWING</p>
                 </div>
@@ -1019,6 +1043,15 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* --- RENDER NEW FOLLOWERS DRAWER --- */}
+      <FollowersListDrawer 
+        isOpen={isFollowersListOpen} 
+        onClose={() => setIsFollowersListOpen(false)} 
+        userId={userId} 
+        mode={followersListMode}
+        userRankFallback={userRank} // Optionally pass rank for fallback icon
+      />
 
       <ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} receiverId={userId} receiverName={profile?.display_url || profile?.username || "Collector"} />
       <Footer />

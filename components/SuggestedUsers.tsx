@@ -6,15 +6,35 @@ import Link from "next/link";
 
 export default function SuggestedUsers() {
   const [users, setUsers] = useState<any[]>([]);
+  const [myFollowing, setMyFollowing] = useState<string[]>([]); // Track who you already follow
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
-    });
-    fetchSuggestedUsers();
+    async function init() {
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id || null;
+      setCurrentUserId(userId);
+
+      if (userId) {
+        fetchMyFollowing(userId);
+      }
+      fetchSuggestedUsers();
+    }
+    init();
   }, []);
+
+  // Fetch the current user's following list to check for existing relationships
+  async function fetchMyFollowing(userId: string) {
+    const { data } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', userId);
+
+    if (data) {
+      setMyFollowing(data.map(f => f.following_id));
+    }
+  }
 
   async function fetchSuggestedUsers() {
     try {
@@ -29,6 +49,35 @@ export default function SuggestedUsers() {
       console.error("Error fetching suggested users:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Handle clicking Follow/Following
+  async function handleFollowToggle(targetUserId: string) {
+    if (!currentUserId) return;
+
+    const isFollowing = myFollowing.includes(targetUserId);
+
+    if (isFollowing) {
+      // Unfollow logic
+      const { error } = await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', currentUserId)
+        .eq('following_id', targetUserId);
+
+      if (!error) {
+        setMyFollowing(prev => prev.filter(id => id !== targetUserId));
+      }
+    } else {
+      // Follow logic
+      const { error } = await supabase
+        .from('follows')
+        .insert({ follower_id: currentUserId, following_id: targetUserId });
+
+      if (!error) {
+        setMyFollowing(prev => [...prev, targetUserId]);
+      }
     }
   }
 
@@ -57,6 +106,7 @@ export default function SuggestedUsers() {
       {users
         .filter(u => u.id !== currentUserId)
         .map((user) => {
+          const isFollowing = myFollowing.includes(user.id);
           const gradientColor = stringToColor(user.username || user.id);
           const initial = (user.username || "N")[0].toUpperCase();
 
@@ -76,7 +126,6 @@ export default function SuggestedUsers() {
                 flexShrink: 0
               }}
             >
-              {/* FIX: Always link to user.id, never user.username or display_url */}
               <Link href={`/profile/${user.id}`} style={{ textDecoration: 'none', width: '100%' }}>
                 <div 
                   style={{ 
@@ -109,8 +158,23 @@ export default function SuggestedUsers() {
                 </p>
               </Link>
 
-              <button style={{ width: '100%', background: '#fff', color: '#000', border: 'none', borderRadius: '12px', padding: '8px 0', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }}>
-                Follow
+              <button 
+                onClick={() => handleFollowToggle(user.id)}
+                style={{ 
+                  width: '100%', 
+                  background: isFollowing ? '#18181b' : '#fff', 
+                  color: isFollowing ? '#fff' : '#000', 
+                  border: isFollowing ? '1px solid #27272a' : 'none', 
+                  borderRadius: '12px', 
+                  padding: '8px 0', 
+                  fontSize: '11px', 
+                  fontWeight: '900', 
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {isFollowing ? 'Following' : 'Follow'}
               </button>
             </div>
           );

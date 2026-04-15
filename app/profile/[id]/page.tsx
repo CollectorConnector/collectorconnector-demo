@@ -678,7 +678,7 @@ export default function ProfilePage() {
                 
                 {/* LEFT: IMAGE */}
                 <div style={{ flex: 1.2, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', borderRight: '1px solid #27272a' }}>
-                   <img src={recentDrops[selectedItemIndex].image_url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                   <img src={recentDrops[selectedItemIndex].image_url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="Lightbox" />
                    
                    <button onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>‹</button>
                    <button onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>›</button>
@@ -690,20 +690,21 @@ export default function ProfilePage() {
                   {/* Header / Attribution */}
                   <div style={{ padding: '20px', borderBottom: '1px solid #18181b' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', marginBottom: '16px' }}>
-                     
-                         {recentDrops[selectedItemIndex].profiles?.avatar_url?.startsWith('http') ? (
-                           <img 
-                              src={recentDrops[selectedItemIndex].profiles.avatar_url} 
-                              style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
-                            />
-                         ) : (
-                           <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>👤</div>
-                         )}
-                         <div>
-                           <p style={{ fontWeight: '900', fontSize: '14px' }}>{recentDrops[selectedItemIndex].profiles?.display_url || recentDrops[selectedItemIndex].profiles?.username}</p>
-                           <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {recentDrops[selectedItemIndex].profiles?.avatar_url?.startsWith('http') ? (
+                              <img 
+                                 src={recentDrops[selectedItemIndex].profiles.avatar_url} 
+                                 style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
+                                 alt="Avatar"
+                               />
+                            ) : (
+                              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>👤</div>
+                            )}
+                            <div>
+                              <p style={{ fontWeight: '900', fontSize: '14px' }}>{recentDrops[selectedItemIndex].profiles?.display_url || recentDrops[selectedItemIndex].profiles?.username}</p>
+                              <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
+                            </div>
                          </div>
-                      </Link>
                       
                       {/* --- FOLLOW BUTTON IN LIGHTBOX --- */}
                       {currentUserId && recentDrops[selectedItemIndex].profiles?.id !== currentUserId && (
@@ -735,7 +736,7 @@ export default function ProfilePage() {
                         <div key={cmt.id} style={{ display: 'flex', gap: '10px' }}>
                           <Link href={`/profile/${cmt.user_id}`}>
                             {cmt.profiles?.avatar_url?.startsWith('http') ? (
-                              <img src={cmt.profiles.avatar_url} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                              <img src={cmt.profiles.avatar_url} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} alt="Comment Avatar" />
                             ) : (
                               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>👤</div>
                             )}
@@ -1006,7 +1007,7 @@ export default function ProfilePage() {
                     <div style={{ marginTop: '15px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                       {collItems.map(item => (
                         <div key={item.id} style={{ position: 'relative' }}>
-                          <img src={item.image_url} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} />
+                          <img src={item.image_url} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} alt="Coll Item" />
                           <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: -5, right: -5, background: 'red', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px' }}>✕</button>
                         </div>
                       ))}

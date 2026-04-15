@@ -1046,12 +1046,13 @@ export default function ProfilePage() {
 
       {/* --- RENDER NEW FOLLOWERS DRAWER --- */}
       <FollowersListDrawer 
-        isOpen={isFollowersListOpen} 
-        onClose={() => setIsFollowersListOpen(false)} 
-        userId={userId} 
-        mode={followersListMode}
-        userRankFallback={userRank} // Optionally pass rank for fallback icon
-      />
+  isOpen={isFollowersListOpen} 
+  onClose={() => setIsFollowersListOpen(false)} 
+  userId={userId} 
+  mode={followersListMode}
+  userRankFallback={userRank ?? undefined} // This converts null to undefined
+/>
+
 
       <ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} receiverId={userId} receiverName={profile?.display_url || profile?.username || "Collector"} />
       <Footer />

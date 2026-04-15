@@ -565,78 +565,68 @@ export default function ProfilePage() {
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p><p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p></div>
         </div>
 
-        {/* GLOBAL RECENT DROPS */}
-        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {recentDrops.map((drop, index) => {
-              // FIX: Specific author data for this individual drop
-              const itemHasValidAvatar = drop.profiles?.avatar_url && drop.profiles.avatar_url.startsWith('http');
-              const itemUsername = drop.profiles?.username || "collector";
-              const authorProfileId = drop.profiles?.id;
+       {/* GLOBAL RECENT DROPS */}
+<section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
+  <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+    {recentDrops.map((drop, index) => {
+      const authorProfileId = drop.profiles?.id;
 
-              return (
-                <div 
-                  key={drop.id} 
-                  onClick={() => setSelectedItemIndex(index)} 
-                  style={{ 
-                    aspectRatio: '1/1', 
-                    background: '#18181b', 
-                    borderRadius: '12px', 
-                    overflow: 'hidden', 
-                    cursor: 'pointer', 
-                    position: 'relative' 
-                  }}
-                >
-                  <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  
-                  {/* User Attribution Overlay - Minimalist style */}
-                  <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
-                    <Link 
-                      href={`/profile/${authorProfileId}`}
-                      onClick={(e) => e.stopPropagation()} 
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '6px', 
-                        background: 'rgba(0,0,0,0.4)', 
-                        backdropFilter: 'blur(10px)',
-                        padding: '6px 10px', 
-                        borderRadius: '20px',
-                        textDecoration: 'none',
-                        border: '1px solid rgba(255,255,255,0.08)'
-                      }}
-                    >
-                      {itemHasValidAvatar ? (
-                        <img 
-                          src={drop.profiles.avatar_url} 
-                          style={{ width: '18px', height: '18px', borderRadius: '50%', objectFit: 'cover' }} 
-                        />
-                      ) : (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                      )}
-                      <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>
-                        @{itemUsername}
-                      </span>
-                    </Link>
-                  </div>
-
-                  <div style={{ position: 'absolute', bottom: '8px', right: '8px', display: 'flex', gap: '8px', zIndex: 10 }}>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); toggleLike(drop.id); }}
-                      style={{ background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: likedItems.has(drop.id) ? '#fbbf24' : '#fff' }}
-                    >
-                      {likedItems.has(drop.id) ? '⭐' : '☆'}
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+      return (
+        <div 
+          key={drop.id} 
+          onClick={() => setSelectedItemIndex(index)} 
+          style={{ 
+            aspectRatio: '1/1', 
+            background: '#18181b', 
+            borderRadius: '12px', 
+            overflow: 'hidden', 
+            cursor: 'pointer', 
+            position: 'relative' 
+          }}
+        >
+          <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          
+          {/* Minimalist @ Icon Overlay */}
+          <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
+            <Link 
+              href={`/profile/${authorProfileId}`}
+              onClick={(e) => e.stopPropagation()} 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                background: 'rgba(0,0,0,0.4)', 
+                backdropFilter: 'blur(10px)',
+                width: '32px',
+                height: '32px', 
+                borderRadius: '50%',
+                textDecoration: 'none',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+              </svg>
+            </Link>
           </div>
-        </section>
+
+          {/* Star Interaction */}
+          <div style={{ position: 'absolute', bottom: '8px', right: '8px', zIndex: 10 }}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); toggleLike(drop.id); }}
+              style={{ background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: likedItems.has(drop.id) ? '#fbbf24' : '#fff' }}
+            >
+              {likedItems.has(drop.id) ? '⭐' : '☆'}
+            </button>
+          </div>
+        </div>
+      )
+    })}
+  </div>
+</section>
+
 
 
         {isOwnProfile && <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}>LOGOUT</button>}

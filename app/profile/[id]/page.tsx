@@ -570,7 +570,8 @@ export default function ProfilePage() {
   <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
     {recentDrops.map((drop, index) => {
-      const authorProfileId = drop.profiles?.id;
+      // FIX: Ensure we use the actual user_id from the item if the joined profile object is flaky
+      const authorId = drop.profiles?.id || drop.user_id;
 
       return (
         <div 
@@ -585,44 +586,56 @@ export default function ProfilePage() {
             position: 'relative' 
           }}
         >
-          <img src={drop.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={drop.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           
           {/* Minimalist @ Icon Overlay */}
           <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
-            <Link 
-              href={`/profile/${authorProfileId}`}
-              onClick={(e) => e.stopPropagation()} 
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                background: 'rgba(0,0,0,0.4)', 
-                backdropFilter: 'blur(10px)',
-                width: '32px',
-                height: '32px', 
-                borderRadius: '50%',
-                textDecoration: 'none',
-                border: '1px solid rgba(255,255,255,0.1)'
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="4"></circle>
-                <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
-              </svg>
-            </Link>
+            {authorId ? (
+              <Link 
+                href={`/profile/${authorId}`}
+                onClick={(e) => e.stopPropagation()} 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  background: 'rgba(0,0,0,0.4)', 
+                  backdropFilter: 'blur(10px)',
+                  width: '32px',
+                  height: '32px', 
+                  borderRadius: '50%',
+                  textDecoration: 'none',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                </svg>
+              </Link>
+            ) : null}
           </div>
 
           {/* Star Interaction */}
           <div style={{ position: 'absolute', bottom: '8px', right: '8px', zIndex: 10 }}>
             <button 
               onClick={(e) => { e.stopPropagation(); toggleLike(drop.id); }}
-              style={{ background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: likedItems.has(drop.id) ? '#fbbf24' : '#fff' }}
+              style={{ 
+                background: 'rgba(0,0,0,0.5)', 
+                border: 'none', 
+                borderRadius: '50%', 
+                width: '30px', 
+                height: '30px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                color: likedItems.has(drop.id) ? '#fbbf24' : '#fff' 
+              }}
             >
               {likedItems.has(drop.id) ? '⭐' : '☆'}
             </button>
           </div>
         </div>
-      )
+      );
     })}
   </div>
 </section>

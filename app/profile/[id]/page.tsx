@@ -690,10 +690,7 @@ export default function ProfilePage() {
                   {/* Header / Attribution */}
                   <div style={{ padding: '20px', borderBottom: '1px solid #18181b' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', marginBottom: '16px' }}>
-                      <Link 
-                        href={`/profile/${recentDrops[selectedItemIndex].profiles?.id}`} 
-                        style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: 'inherit' }}
-                      >
+                     
                          {recentDrops[selectedItemIndex].profiles?.avatar_url?.startsWith('http') ? (
                            <img 
                               src={recentDrops[selectedItemIndex].profiles.avatar_url} 

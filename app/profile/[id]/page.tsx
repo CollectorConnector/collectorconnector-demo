@@ -26,6 +26,12 @@ const InstagramIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204 0 3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
 );
 
+const TikTokIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.89-.6-4.13-1.47V15.5c0 1.93-1.46 3.65-3.39 3.81-2.31.19-4.32-1.47-4.52-3.75-.23-2.36 1.54-4.63 3.91-4.99.34-.05.69-.07 1.02-.06l.01-4.07c-2.09.12-3.97.91-5.48 2.36C8.34 10.4 7.72 12.3 7.72 14.33c0 4.24 3.44 7.67 7.68 7.67 4.25 0 7.67-3.44 7.67-7.67V0h-4.43c-.04.01-.08.01-.12.02H12.525z"/>
+  </svg>
+);
+
 const FixedEbayLogo = () => (
   <span style={{ 
     fontSize: '22px', 
@@ -65,7 +71,6 @@ export default function ProfilePage() {
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
-  // --- NEW STATE: Followers Drawer ---
   const [isFollowersListOpen, setIsFollowersListOpen] = useState(false);
   const [followersListMode, setFollowersListMode] = useState<"followers" | "following">("followers");
 
@@ -92,7 +97,6 @@ export default function ProfilePage() {
 
   const [selectedAudience, setSelectedAudience] = useState<"everyone" | "private">("everyone");
 
-  // --- COMMENTS STATE ---
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -105,7 +109,7 @@ export default function ProfilePage() {
       setCurrentUserId(uid);
       if (uid) {
         supabase.from("profiles").select("*").eq("id", uid).single().then(({ data: p }) => setCurrentUserProfile(p));
-        loadLikedItems(uid); // Load persistent likes
+        loadLikedItems(uid); 
       }
     });
     loadGlobalNiches();
@@ -160,7 +164,6 @@ export default function ProfilePage() {
     }
   }, [userId, currentUserId]);
 
-  // --- NEW PERSISTENT LIKES LOAD ---
   async function loadLikedItems(uid: string) {
     const { data } = await supabase
       .from("likes")
@@ -223,7 +226,6 @@ export default function ProfilePage() {
     setIsFollowing(!!data);
   }
 
-  // --- LIGHTBOX FOLLOW CHECK ---
   const [lightboxIsFollowing, setLightboxIsFollowing] = useState(false);
   async function checkFollowStatusForLightbox() {
     if (selectedItemIndex === null || !currentUserId) return;
@@ -252,7 +254,6 @@ export default function ProfilePage() {
     loadFollowCounts();
   }
 
-  // --- DYNAMIC FOLLOW FOR LIGHTBOX ---
   async function toggleFollowUser(targetUserId: string) {
     if (!currentUserId) return alert("Please log in to follow collectors!");
     if (lightboxIsFollowing) {
@@ -262,7 +263,7 @@ export default function ProfilePage() {
       await supabase.from("follows").insert({ follower_id: currentUserId, following_id: targetUserId });
       setLightboxIsFollowing(true);
     }
-    if (targetUserId === userId) checkFollowStatus(); // Update main profile UI if same person
+    if (targetUserId === userId) checkFollowStatus(); 
   }
 
   async function determineRank() {
@@ -341,7 +342,7 @@ export default function ProfilePage() {
         x_url: profile.x_url,
         whatnot_url: profile.whatnot_url,
         youtube_url: profile.youtube_url,
-        tiktok_url: profile.tiktok_url, // Added tiktok_url here
+        tiktok_url: profile.tiktok_url, 
         discord_handle: profile.discord_handle,
         twitch_handle: profile.twitch_handle
       }).eq("id", userId);
@@ -431,7 +432,6 @@ export default function ProfilePage() {
     }
   }
 
-  // --- UPDATED PERSISTENT TOGGLE LIKE ---
   async function toggleLike(itemId: string) {
     if (!currentUserId) return alert("Please log in to like items!");
     
@@ -478,7 +478,6 @@ export default function ProfilePage() {
       <Header />
       <main style={{ marginTop: '100px', paddingBottom: '80px', maxWidth: '800px', margin: '100px auto 0', padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
-        {/* PROFILE CARD */}
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '32px', textAlign: 'center', position: 'relative' }}>
             {isOwnProfile && (
               <button onClick={() => setShowEditProfile(true)} style={{ position: 'absolute', top: '20px', right: '20px', background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', zIndex: 10 }}>EDIT PROFILE</button>
@@ -534,7 +533,6 @@ export default function ProfilePage() {
             <p style={{ color: '#a1a1aa', margin: '4px 0 12px' }}>{profile?.bio || "Digital Vault Explorer."}</p>
 
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', margin: '10px 0 20px' }}>
-                {/* --- FOLLOWERS BUTTON --- */}
                 <div 
                   style={{ textAlign: 'center', cursor: 'pointer' }}
                   onClick={() => {
@@ -547,7 +545,6 @@ export default function ProfilePage() {
                   <p style={{ fontSize: '18px', fontWeight: '900' }}>{followerCount}</p>
                   <p style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', letterSpacing: '1px' }}>FOLLOWERS</p>
                 </div>
-                {/* --- FOLLOWING BUTTON --- */}
                 <div 
                   style={{ textAlign: 'center', cursor: 'pointer' }}
                   onClick={() => {
@@ -565,6 +562,7 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px', alignItems: 'center', minHeight: '32px' }}>
                {profile?.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" style={{ color: '#E4405F', display: 'flex', alignItems: 'center' }}><InstagramIcon /></a>}
                {profile?.ebay_url && <a href={profile.ebay_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}><FixedEbayLogo /></a>}
+               {profile?.tiktok_url && <a href={profile.tiktok_url} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'flex', alignItems: 'center' }}><TikTokIcon /></a>}
                {profile?.discord_handle && <span style={{ color: '#5865F2' }}><DiscordIcon /></span>}
                {profile?.twitch_handle && <span style={{ color: '#9146FF' }}><TwitchIcon /></span>}
             </div>
@@ -583,93 +581,85 @@ export default function ProfilePage() {
             )}
         </section>
 
-        {/* STATS */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center', cursor: isOwnProfile ? 'pointer' : 'default' }} onClick={() => isOwnProfile && setShowEditCollection(true)}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>COLLECTIONS {isOwnProfile && '⚙️'}</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{collectionCount}</p></div>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>VALUE</p><p style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>£{vaultValue}</p></div>
         </div>
 
-       {/* GLOBAL RECENT DROPS */}
-<section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-  <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
-  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-    {recentDrops.map((drop, index) => {
-      // FIX: Ensure we use the actual user_id from the item if the joined profile object is flaky
-      const authorId = drop.profiles?.id || drop.user_id;
+        <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+            {recentDrops.map((drop, index) => {
+              const authorId = drop.profiles?.id || drop.user_id;
 
-      return (
-        <div 
-          key={drop.id} 
-          onClick={() => setSelectedItemIndex(index)} 
-          style={{ 
-            aspectRatio: '1/1', 
-            background: '#18181b', 
-            borderRadius: '12px', 
-            overflow: 'hidden', 
-            cursor: 'pointer', 
-            position: 'relative' 
-          }}
-        >
-          <img src={drop.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          
-          {/* Minimalist @ Icon Overlay */}
-          <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
-            {authorId ? (
-              <Link 
-                href={`/profile/${authorId}`}
-                onClick={(e) => e.stopPropagation()} 
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  background: 'rgba(0,0,0,0.4)', 
-                  backdropFilter: 'blur(10px)',
-                  width: '32px',
-                  height: '32px', 
-                  borderRadius: '50%',
-                  textDecoration: 'none',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4"></circle>
-                  <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
-                </svg>
-              </Link>
-            ) : null}
+              return (
+                <div 
+                  key={drop.id} 
+                  onClick={() => setSelectedItemIndex(index)} 
+                  style={{ 
+                    aspectRatio: '1/1', 
+                    background: '#18181b', 
+                    borderRadius: '12px', 
+                    overflow: 'hidden', 
+                    cursor: 'pointer', 
+                    position: 'relative' 
+                  }}
+                >
+                  <img src={drop.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  
+                  <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10 }}>
+                    {authorId ? (
+                      <Link 
+                        href={`/profile/${authorId}`}
+                        onClick={(e) => e.stopPropagation()} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          background: 'rgba(0,0,0,0.4)', 
+                          backdropFilter: 'blur(10px)',
+                          width: '32px',
+                          height: '32px', 
+                          borderRadius: '50%',
+                          textDecoration: 'none',
+                          border: '1px solid rgba(255,255,255,0.1)'
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="4"></circle>
+                          <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                        </svg>
+                      </Link>
+                    ) : null}
+                  </div>
+
+                  <div style={{ position: 'absolute', bottom: '8px', right: '8px', zIndex: 10 }}>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleLike(drop.id); }}
+                      style={{ 
+                        background: 'rgba(0,0,0,0.5)', 
+                        border: 'none', 
+                        borderRadius: '50%', 
+                        width: '30px', 
+                        height: '30px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        color: likedItems.has(drop.id) ? '#fbbf24' : '#fff' 
+                      }}
+                    >
+                      {likedItems.has(drop.id) ? '⭐' : '☆'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-
-          {/* Star Interaction */}
-          <div style={{ position: 'absolute', bottom: '8px', right: '8px', zIndex: 10 }}>
-            <button 
-              onClick={(e) => { e.stopPropagation(); toggleLike(drop.id); }}
-              style={{ 
-                background: 'rgba(0,0,0,0.5)', 
-                border: 'none', 
-                borderRadius: '50%', 
-                width: '30px', 
-                height: '30px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                color: likedItems.has(drop.id) ? '#fbbf24' : '#fff' 
-              }}
-            >
-              {likedItems.has(drop.id) ? '⭐' : '☆'}
-            </button>
-          </div>
-        </div>
-      );
-    })}
-  </div>
-</section>
-
-
+        </section>
 
         {isOwnProfile && <button onClick={handleLogout} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#18181b', border: '1px solid #27272a', color: '#ef4444', fontWeight: '900', cursor: 'pointer', letterSpacing: '1px' }}>LOGOUT</button>}
         
-        {/* SUGGESTED USERS */}
         <div style={{ marginTop: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontSize: '13px', fontWeight: '900', color: '#52525b', textTransform: 'uppercase', letterSpacing: '1px' }}>Suggested Users</h2>
@@ -694,14 +684,12 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* LIGHTBOX WITH COMMENTS */}
       {selectedItemIndex !== null && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '30px', right: '30px', background: '#18181b', border: '1px solid #27272a', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', zIndex: 5001 }}>✕</button>
             
             <div style={{ width: '100%', maxWidth: '900px', height: '80vh', display: 'flex', background: '#09090b', borderRadius: '24px', overflow: 'hidden', border: '1px solid #27272a' }}>
                 
-                {/* LEFT: IMAGE */}
                 <div style={{ flex: 1.2, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', borderRight: '1px solid #27272a' }}>
                    <img src={recentDrops[selectedItemIndex].image_url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="Lightbox" />
                    
@@ -709,10 +697,7 @@ export default function ProfilePage() {
                    <button onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>›</button>
                 </div>
 
-                {/* RIGHT: DETAILS & COMMENTS */}
                 <div style={{ flex: 0.8, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  
-                  {/* Header / Attribution */}
                   <div style={{ padding: '20px', borderBottom: '1px solid #18181b' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', marginBottom: '16px' }}>
                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -731,7 +716,6 @@ export default function ProfilePage() {
                             </div>
                          </div>
                       
-                      {/* --- FOLLOW BUTTON IN LIGHTBOX --- */}
                       {currentUserId && recentDrops[selectedItemIndex].profiles?.id !== currentUserId && (
                         <button
                           onClick={() => toggleFollowUser(recentDrops[selectedItemIndex].profiles?.id)}
@@ -752,7 +736,6 @@ export default function ProfilePage() {
                     <h3 style={{ fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</h3>
                   </div>
 
-                  {/* Comments List */}
                   <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {comments.length === 0 ? (
                       <p style={{ color: '#52525b', textAlign: 'center', marginTop: '40px', fontSize: '13px' }}>No comments yet. Be the first!</p>
@@ -777,7 +760,6 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-                  {/* Comment Input */}
                   <div style={{ padding: '20px', borderTop: '1px solid #18181b' }}>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                       <input 
@@ -797,7 +779,6 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Footer Interaction */}
                   <div style={{ padding: '10px 20px 20px', display: 'flex', gap: '20px' }}>
                     <button onClick={() => toggleLike(recentDrops[selectedItemIndex].id)} style={{ background: 'none', border: 'none', color: likedItems.has(recentDrops[selectedItemIndex].id) ? '#fbbf24' : '#fff', fontSize: '20px', cursor: 'pointer' }}>
                       {likedItems.has(recentDrops[selectedItemIndex].id) ? '⭐' : '☆'}
@@ -811,7 +792,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* EDIT PROFILE MODAL */}
       {showEditProfile && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -926,7 +906,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-     {/* SMART DROP MODAL */}
       {showSmartDrop && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>
@@ -1054,18 +1033,17 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* --- RENDER NEW FOLLOWERS DRAWER --- */}
       <FollowersListDrawer 
-  isOpen={isFollowersListOpen} 
-  onClose={() => setIsFollowersListOpen(false)} 
-  userId={userId} 
-  mode={followersListMode}
-  userRankFallback={userRank ?? undefined} // This converts null to undefined
-/>
-
+        isOpen={isFollowersListOpen} 
+        onClose={() => setIsFollowersListOpen(false)} 
+        userId={userId} 
+        mode={followersListMode}
+        userRankFallback={userRank ?? undefined} 
+      />
 
       <ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} receiverId={userId} receiverName={profile?.display_url || profile?.username || "Collector"} />
       <Footer />
     </div>
   );
 }
+

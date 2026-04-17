@@ -341,6 +341,7 @@ export default function ProfilePage() {
         x_url: profile.x_url,
         whatnot_url: profile.whatnot_url,
         youtube_url: profile.youtube_url,
+        tiktok_url: profile.tiktok_url, // Added tiktok_url here
         discord_handle: profile.discord_handle,
         twitch_handle: profile.twitch_handle
       }).eq("id", userId);
@@ -885,6 +886,15 @@ export default function ProfilePage() {
                   placeholder="https://facebook.com/..." 
                   value={profile?.facebook_url || ""} 
                   onChange={e => setProfile({...profile, facebook_url: e.target.value})} 
+                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>TIKTOK URL</p>
+                <input 
+                  placeholder="https://tiktok.com/@..." 
+                  value={profile?.tiktok_url || ""} 
+                  onChange={e => setProfile({...profile, tiktok_url: e.target.value})} 
                   style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
                 />
               </div>

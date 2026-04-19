@@ -10,7 +10,6 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
-// --- NEW IMPORT ---
 import FollowersListDrawer from "@/components/FollowersListDrawer";
 
 // --- SVG ICONS ---

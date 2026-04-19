@@ -10,6 +10,7 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
+// --- NEW IMPORT ---
 import FollowersListDrawer from "@/components/FollowersListDrawer";
 
 // --- SVG ICONS ---
@@ -101,6 +102,18 @@ export default function ProfilePage() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const isOwnProfile = currentUserId === userId;
+
+  // ====================== FIX: COPY TO CLIPBOARD HELPER ======================
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert(`${label} copied to clipboard!`);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to copy – please try again");
+    }
+  };
+  // ===========================================================================
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -558,12 +571,32 @@ export default function ProfilePage() {
                 </div>
             </div>
 
+            {/* FIXED SOCIAL ICONS - ONLY THIS BLOCK WAS CHANGED */}
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px', alignItems: 'center', minHeight: '32px' }}>
                {profile?.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" style={{ color: '#E4405F', display: 'flex', alignItems: 'center' }}><InstagramIcon /></a>}
                {profile?.ebay_url && <a href={profile.ebay_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}><FixedEbayLogo /></a>}
                {profile?.tiktok_url && <a href={profile.tiktok_url} target="_blank" rel="noopener noreferrer" style={{ color: '#fff', display: 'flex', alignItems: 'center' }}><TikTokIcon /></a>}
-               {profile?.discord_handle && <span style={{ color: '#5865F2' }}><DiscordIcon /></span>}
-               {profile?.twitch_handle && <span style={{ color: '#9146FF' }}><TwitchIcon /></span>}
+               
+               {profile?.discord_handle && (
+                 <span
+                   onClick={() => copyToClipboard(profile.discord_handle, "Discord handle")}
+                   style={{ color: '#5865F2', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                   title={`Copy ${profile.discord_handle}`}
+                 >
+                   <DiscordIcon />
+                 </span>
+               )}
+               
+               {profile?.twitch_handle && (
+                 <a
+                   href={`https://www.twitch.tv/${profile.twitch_handle.replace(/^https?:\/\/(?:www\.)?twitch\.tv\/?/i, '')}`}
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   style={{ color: '#9146FF', display: 'flex', alignItems: 'center' }}
+                 >
+                   <TwitchIcon />
+                 </a>
+               )}
             </div>
 
             <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>

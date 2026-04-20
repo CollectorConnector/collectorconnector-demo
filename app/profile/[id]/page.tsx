@@ -12,6 +12,7 @@ import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
 // --- NEW IMPORT ---
 import FollowersListDrawer from "@/components/FollowersListDrawer";
+import BecomeSeller from "@/components/BecomeSeller";
 
 // --- SVG ICONS ---
 const DiscordIcon = () => (
@@ -102,6 +103,11 @@ export default function ProfilePage() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const isOwnProfile = currentUserId === userId;
+
+  const user = {
+    name: "Stacy",
+    email: "your-real-user-email-here"
+  };
 
   // ====================== FIX: COPY TO CLIPBOARD HELPER ======================
   const copyToClipboard = async (text: string, label: string) => {
@@ -714,6 +720,8 @@ export default function ProfilePage() {
           </div>
           <SuggestedUsers />
         </div>
+
+        <BecomeSeller user={user} />
       </main>
 
       {selectedItemIndex !== null && (

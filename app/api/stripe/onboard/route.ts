@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const link = await stripeClient.v2.core.accountLinks.create({
+    const link = await stripeClient.accountLinks.create({
       account: accountId,
       use_case: {
         type: "account_onboarding",

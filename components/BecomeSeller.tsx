@@ -3,37 +3,43 @@
 export default function BecomeSeller({ user, status }: { user: any, status: "active" | "incomplete" | "none" }) {
 
   const handleBecomeSeller = async () => {
-    let accountId = user.stripe_account_id; // FIXED FIELD NAME
+    try {
+      let accountId = user.stripe_account_id;
 
-    // STEP 1 — Create Stripe account if missing
-    if (!accountId) {
-      const res = await fetch("/api/stripe/create-account", {
-        method: "POST",
-        body: JSON.stringify({ userId: user.id }),
-      });
+      // STEP 1 — Create Stripe account if missing
+      if (!accountId) {
+        const res = await fetch("/api/stripe/create-account", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!data.accountId) {
-        alert("Could not create Stripe account");
-        return;
+        if (!res.ok) {
+          throw new Error(data.message || data.error || "Failed to create Stripe account");
+        }
+
+        accountId = data.accountId;
       }
 
-      accountId = data.accountId;
-    }
+      // STEP 2 — Start onboarding
+      const onboardRes = await fetch("/api/stripe/onboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId }),
+      });
 
-    // STEP 2 — Start onboarding
-    const onboardRes = await fetch("/api/stripe/onboard", {
-      method: "POST",
-      body: JSON.stringify({ accountId }),
-    });
+      const onboardData = await onboardRes.json();
 
-    const onboardData = await onboardRes.json();
-
-    if (onboardData.link?.url) {
-      window.location.href = onboardData.link.url;
-    } else {
-      alert("Could not start onboarding");
+      if (onboardRes.ok && onboardData.link?.url) {
+        window.location.href = onboardData.link.url;
+      } else {
+        throw new Error(onboardData.message || onboardData.error || "Could not start onboarding");
+      }
+    } catch (err: any) {
+      console.error("Stripe Onboarding Error:", err);
+      alert(err.message || "An unexpected error occurred during onboarding setup.");
     }
   };
 

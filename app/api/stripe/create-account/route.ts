@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { stripeClient } from "@/lib/stripe";
+import Stripe from "stripe";
+
+const stripeClient = new Stripe({
+  apiKey: process.env.STRIPE_SECRET_KEY as string,
+});
 
 export async function POST(req: Request) {
   const { displayName, email } = await req.json();

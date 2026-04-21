@@ -22,9 +22,9 @@ export async function POST(req: Request) {
       type: "express",
     });
 
-    // 2. Save account.id to your user in Supabase
+    // 2. Save Stripe account ID into the REAL user table (profiles)
     await supabase
-      .from("users")
+      .from("profiles")
       .update({ stripe_account_id: account.id })
       .eq("id", userId);
 

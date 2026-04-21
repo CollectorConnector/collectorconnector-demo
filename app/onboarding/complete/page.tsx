@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function OnboardingComplete() {
-  // Optional: auto‑redirect after 4 seconds
+  // Optional auto‑redirect after 4 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       window.location.href = "/";
@@ -26,6 +27,17 @@ export default function OnboardingComplete() {
         textAlign: "center",
       }}
     >
+      {/* Logo */}
+      <div style={{ marginBottom: "2rem" }}>
+        <Image
+          src="/CC-main-logo.png"
+          alt="Collector Connector Logo"
+          width={180}
+          height={180}
+          style={{ objectFit: "contain" }}
+        />
+      </div>
+
       <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
         Onboarding Complete
       </h1>
@@ -35,10 +47,11 @@ export default function OnboardingComplete() {
         You can now list items for sale.
       </p>
 
+      {/* White button */}
       <Link
         href="/"
         style={{
-          background: "#ffcc00",
+          background: "#fff",
           color: "#000",
           padding: "0.8rem 1.6rem",
           borderRadius: "8px",

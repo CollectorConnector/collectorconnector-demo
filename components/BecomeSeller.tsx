@@ -43,20 +43,39 @@ export default function BecomeSeller({ user, status }: { user: any, status: "act
     }
   };
 
-  // Fully onboarded
+  // Fully onboarded: Gold Toggle State
   if (status === "active") {
     return (
-      <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px', textAlign: 'center' }}>
-        <h3 style={{ fontWeight: '900', marginBottom: '16px' }}>Seller Dashboard</h3>
-        <button className="w-full bg-white text-black p-4 rounded-xl font-black">GO TO DASHBOARD</button>
-      </section>
+      <div style={{ 
+        background: 'linear-gradient(135deg, #F5AF02 0%, #D49600 100%)', 
+        padding: '1px', 
+        borderRadius: '16px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ 
+          background: '#09090b', 
+          borderRadius: '15px', 
+          padding: '16px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          gap: '10px',
+          color: '#F5AF02',
+          fontWeight: '900'
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          SELLER
+        </div>
+      </div>
     );
   }
 
   // Incomplete onboarding
   if (status === "incomplete") {
     return (
-      <section style={{ background: '#09090b', border: '1px solid #f59e0b', borderRadius: '24px', padding: '24px', textAlign: 'center' }}>
+      <section style={{ background: '#09090b', border: '1px solid #f59e0b', borderRadius: '24px', padding: '24px', textAlign: 'center', marginBottom: '20px' }}>
         <p style={{ fontWeight: 'bold', marginBottom: '16px', color: '#f59e0b' }}>⚠️ Your seller account is incomplete</p>
         <button 
           onClick={handleBecomeSeller}
@@ -70,7 +89,7 @@ export default function BecomeSeller({ user, status }: { user: any, status: "act
 
   // Default: Start selling
   return (
-    <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px', textAlign: 'center' }}>
+    <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px', textAlign: 'center', marginBottom: '20px' }}>
       <p style={{ fontWeight: 'bold', marginBottom: '16px' }}>Start selling on CollectorConnector</p>
       <button 
         onClick={handleBecomeSeller}

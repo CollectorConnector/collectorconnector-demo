@@ -107,8 +107,11 @@ export default function ProfilePage() {
   const isOwnProfile = currentUserId === userId;
 
   const user = {
-    name: "Stacy",
-    email: "your-real-user-email-here"
+    id: profile?.id,
+    username: profile?.username,
+    display_name: profile?.display_url,
+    avatar_url: profile?.avatar_url,
+    bio: profile?.bio
   };
 
   // ====================== FIX: COPY TO CLIPBOARD HELPER ======================
@@ -635,7 +638,7 @@ export default function ProfilePage() {
         {/* --- INTEGRATED BECOME SELLER COMPONENT --- */}
         {isOwnProfile && (
             <BecomeSeller 
-              user={profile} 
+              user={user} 
               status={stripeStatus} 
             />
         )}

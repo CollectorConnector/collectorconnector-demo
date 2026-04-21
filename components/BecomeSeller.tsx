@@ -1,12 +1,14 @@
-import BecomeSeller from "@/components/BecomeSeller";
+interface BecomeSellerProps {
+  user: {
+    name: string;
+    email: string;
+  };
+}
 
-export default function Page() {
-  const user = { name: "Stacy", email: "stacy@example.com" }; // replace with real user
-
+export default function BecomeSeller({ user }: BecomeSellerProps) {
   return (
     <div>
-      <h1>Your Account</h1>
-      <BecomeSeller user={user} />
+      {/* your component logic */}
     </div>
   );
 }

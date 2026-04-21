@@ -1,8 +1,23 @@
 "use client";
 
 export default function BecomeSeller({ user, status }: { user: any, status: "active" | "incomplete" | "none" }) {
-  
-  // Logic for fully onboarded sellers
+
+  const startOnboarding = async () => {
+    const res = await fetch("/api/stripe/onboard", {
+      method: "POST",
+      body: JSON.stringify({ accountId: user.stripeAccountId }),
+    });
+
+    const data = await res.json();
+
+    if (data.link?.url) {
+      window.location.href = data.link.url;
+    } else {
+      alert("Could not start onboarding");
+    }
+  };
+
+  // Fully onboarded
   if (status === "active") {
     return (
       <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px', textAlign: 'center' }}>
@@ -12,13 +27,13 @@ export default function BecomeSeller({ user, status }: { user: any, status: "act
     );
   }
 
-  // Logic for incomplete onboarding
+  // Incomplete onboarding
   if (status === "incomplete") {
     return (
       <section style={{ background: '#09090b', border: '1px solid #f59e0b', borderRadius: '24px', padding: '24px', textAlign: 'center' }}>
         <p style={{ fontWeight: 'bold', marginBottom: '16px', color: '#f59e0b' }}>⚠️ Your seller account is incomplete</p>
         <button 
-          onClick={() => window.location.href = '/api/stripe/onboard'} 
+          onClick={startOnboarding}
           className="w-full bg-[#f59e0b] text-black p-4 rounded-xl font-black"
         >
           CONTINUE ONBOARDING
@@ -27,12 +42,12 @@ export default function BecomeSeller({ user, status }: { user: any, status: "act
     );
   }
 
-  // Default: Prompt to start
+  // Default: Start selling
   return (
     <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px', textAlign: 'center' }}>
       <p style={{ fontWeight: 'bold', marginBottom: '16px' }}>Start selling on CollectorConnector</p>
       <button 
-        onClick={() => window.location.href = '/api/stripe/onboard'} 
+        onClick={startOnboarding}
         style={{ width: '100%', background: '#fff', color: '#000', padding: '16px', borderRadius: '16px', fontWeight: '900' }}
       >
         BECOME A SELLER

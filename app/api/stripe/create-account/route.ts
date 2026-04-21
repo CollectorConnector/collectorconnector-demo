@@ -6,29 +6,24 @@ const stripeClient = new Stripe(
 );
 
 export async function POST(req: Request) {
-  const { displayName, email } = await req.json();
+  const { accountId } = await req.json();
 
-  if (!displayName || !email) {
+  if (!accountId) {
     return NextResponse.json(
-      { error: "Missing displayName or email" },
+      { error: "Missing accountId" },
       { status: 400 }
     );
   }
 
   try {
-    const account = await stripeClient.accounts.create({
-      type: "express",
-      email: email,
-      business_profile: {
-        name: displayName,
-      },
-      capabilities: {
-        transfers: { requested: true },
-      },
-      country: "GB"
+    const link = await stripeClient.accountLinks.create({
+      account: accountId,
+      type: "account_onboarding",
+      refresh_url: `${process.env.NEXT_PUBLIC_BASE_URL}/onboarding/refresh`,
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/onboarding/complete`,
     });
 
-    return NextResponse.json({ account });
+    return NextResponse.json({ link });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

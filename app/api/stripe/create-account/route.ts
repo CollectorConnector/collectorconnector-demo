@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+// Ensure the apiVersion matches the version required by your installed stripe package
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: "2024-06-20",
+});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

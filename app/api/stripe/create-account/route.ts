@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripeClient = new Stripe({
-  apiKey: process.env.STRIPE_SECRET_KEY as string,
-});
+const stripeClient = new Stripe(
+  process.env.STRIPE_SECRET_KEY as string
+);
 
 export async function POST(req: Request) {
   const { displayName, email } = await req.json();
@@ -17,13 +17,15 @@ export async function POST(req: Request) {
 
   try {
     const account = await stripeClient.accounts.create({
-      display_name: displayName,
-      email: email,
-      country: "GB",
       type: "express",
+      email: email,
+      business_profile: {
+        name: displayName,
+      },
       capabilities: {
         transfers: { requested: true },
       },
+      country: "GB"
     });
 
     return NextResponse.json({ account });

@@ -10,7 +10,6 @@ import SuggestedUsers from "@/components/SuggestedUsers";
 import Header from "@/components/Header";
 import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
-// --- NEW IMPORT ---
 import FollowersListDrawer from "@/components/FollowersListDrawer";
 import BecomeSeller from "@/components/BecomeSeller";
 
@@ -56,6 +55,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
+  
+  // --- STRIPE INTEGRATION STATE ---
+  const [stripeStatus, setStripeStatus] = useState<"active" | "incomplete" | "none">("none");
   
   const [itemCount, setItemCount] = useState(0);
   const [collectionCount, setCollectionCount] = useState(0);
@@ -127,11 +129,23 @@ export default function ProfilePage() {
       setCurrentUserId(uid);
       if (uid) {
         supabase.from("profiles").select("*").eq("id", uid).single().then(({ data: p }) => setCurrentUserProfile(p));
-        loadLikedItems(uid); 
+        loadLikedItems(uid);
+        if (uid === userId) checkStripeStatus(uid);
       }
     });
     loadGlobalNiches();
-  }, []);
+  }, [userId]);
+
+  // --- NEW: STRIPE STATUS FETCH ---
+  async function checkStripeStatus(uid: string) {
+    try {
+      const res = await fetch(`/api/stripe/status?userId=${uid}`);
+      const data = await res.json();
+      setStripeStatus(data.status || "none");
+    } catch (err) {
+      console.error("Failed to fetch stripe status", err);
+    }
+  }
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -577,7 +591,6 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {/* FIXED SOCIAL ICONS - ONLY THIS BLOCK WAS CHANGED */}
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '24px', alignItems: 'center', minHeight: '32px' }}>
                {profile?.instagram_url && <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" style={{ color: '#E4405F', display: 'flex', alignItems: 'center' }}><InstagramIcon /></a>}
                {profile?.ebay_url && <a href={profile.ebay_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center' }}><FixedEbayLogo /></a>}
@@ -618,6 +631,14 @@ export default function ProfilePage() {
               </div>
             )}
         </section>
+
+        {/* --- INTEGRATED BECOME SELLER COMPONENT --- */}
+        {isOwnProfile && (
+            <BecomeSeller 
+              user={profile} 
+              status={stripeStatus} 
+            />
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>
@@ -720,8 +741,6 @@ export default function ProfilePage() {
           </div>
           <SuggestedUsers />
         </div>
-
-        <BecomeSeller user={user} />
       </main>
 
       {selectedItemIndex !== null && (

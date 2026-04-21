@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-// Initialize Stripe with your secret key
-const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2025-02-24.alpha", // Ensure this matches your installed version
-});
+// Initialize Stripe without the explicit apiVersion. 
+// The SDK will default to the version it is built for.
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 export async function POST(req: Request) {
   try {
@@ -17,21 +16,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verify that the environment variable exists
+    // Ensure we have the base URL from your .env file
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!baseUrl || !baseUrl.startsWith("https://")) {
-      console.error("Invalid or missing NEXT_PUBLIC_APP_URL:", baseUrl);
+
+    if (!baseUrl) {
+      console.error("Configuration Error: NEXT_PUBLIC_APP_URL is not defined in environment variables.");
       return NextResponse.json(
-        { error: "Invalid configuration: NEXT_PUBLIC_APP_URL must be an HTTPS URL" },
+        { error: "Server configuration error" },
         { status: 500 }
       );
     }
 
-    // Create the account link
+    // Create the account link with absolute, secure HTTPS URLs
     const link = await stripeClient.accountLinks.create({
       account: accountId,
       type: "account_onboarding",
-      // Using the correct environment variable and ensuring full absolute URLs
       refresh_url: `${baseUrl}/onboarding/refresh`,
       return_url: `${baseUrl}/onboarding/complete`,
     });

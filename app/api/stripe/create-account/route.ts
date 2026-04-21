@@ -1,29 +1,35 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 
-const stripeClient = new Stripe(
-  process.env.STRIPE_SECRET_KEY as string
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
-  const { accountId } = await req.json();
+  const { userId } = await req.json();
 
-  if (!accountId) {
-    return NextResponse.json(
-      { error: "Missing accountId" },
-      { status: 400 }
-    );
+  if (!userId) {
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
   try {
-    const link = await stripeClient.accountLinks.create({
-      account: accountId,
-      type: "account_onboarding",
-      refresh_url: `${process.env.NEXT_PUBLIC_BASE_URL}/onboarding/refresh`,
-      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/onboarding/complete`,
+    // 1. Create Stripe Express account
+    const account = await stripeClient.accounts.create({
+      type: "express",
     });
 
-    return NextResponse.json({ link });
+    // 2. Save account.id to your user in Supabase
+    await supabase
+      .from("users")
+      .update({ stripe_account_id: account.id })
+      .eq("id", userId);
+
+    // 3. Return the account ID
+    return NextResponse.json({ accountId: account.id });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

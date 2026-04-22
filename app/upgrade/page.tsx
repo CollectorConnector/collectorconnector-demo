@@ -3,7 +3,7 @@
 import React from "react";
 
 export default function UpgradePage() {
-  async function subscribe(tier) {
+  async function subscribe(tier: "bronze" | "silver" | "gold") {
     const res = await fetch("/api/subscribe", {
       method: "POST",
       body: JSON.stringify({ tier }),

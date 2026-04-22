@@ -31,39 +31,38 @@ export default function UpgradePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-16">
+    <div className="max-w-5xl mx-auto px-6 py-20">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-20">
-        <div className="relative w-56 h-16 mb-8">
-          <Image
-            src="/CC-main-logo.png"
-            alt="CollectorConnector Logo"
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
+        <Image
+          src="/CC-main-logo.png"
+          alt="CollectorConnector Logo"
+          width={220}
+          height={70}
+          className="object-contain mb-10 opacity-95"
+          priority
+        />
 
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
           Upgrade Your Selling Power
         </h1>
 
-        <p className="text-lg md:text-xl text-gray-600 max-w-2xl">
+        <p className="text-lg md:text-xl text-gray-600 max-w-2xl leading-relaxed">
           Lower fees. More perks. Bigger reach.  
           Support the platform and unlock more selling tools over time.
         </p>
       </div>
 
       {/* Tier Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
         {/* Bronze */}
-        <div className="border border-gray-200 rounded-3xl p-8 bg-white shadow-sm hover:shadow-lg transition-all flex flex-col items-center">
+        <div className="border border-gray-200 rounded-3xl p-10 bg-white shadow-sm hover:shadow-xl transition-all flex flex-col items-center">
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Bronze</h3>
           <p className="text-4xl font-extrabold text-orange-500 mb-6">
             £4.99<span className="text-lg font-normal text-gray-500">/mo</span>
           </p>
 
-          <ul className="text-gray-700 mb-8 space-y-3 text-center">
+          <ul className="text-gray-700 mb-10 space-y-3">
             <li className="flex items-center justify-center"><CheckIcon /> 7% selling fee</li>
             <li className="flex items-center justify-center"><CheckIcon /> Early access to features</li>
             <li className="flex items-center justify-center"><CheckIcon /> Support the platform</li>
@@ -78,8 +77,8 @@ export default function UpgradePage() {
         </div>
 
         {/* Silver */}
-        <div className="border-2 border-gray-900 rounded-3xl p-8 bg-gray-900 shadow-xl relative flex flex-col items-center md:-mt-4">
-          <div className="absolute -top-3 bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-widest">
+        <div className="border-2 border-gray-900 rounded-3xl p-10 bg-gray-900 shadow-2xl relative flex flex-col items-center md:-mt-6">
+          <div className="absolute -top-4 bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-md">
             Best Value
           </div>
 
@@ -88,7 +87,7 @@ export default function UpgradePage() {
             £9.99<span className="text-lg font-normal text-gray-400">/mo</span>
           </p>
 
-          <ul className="text-gray-200 mb-8 space-y-3 text-center">
+          <ul className="text-gray-200 mb-10 space-y-3">
             <li className="flex items-center justify-center"><CheckIcon /> 6% selling fee</li>
             <li className="flex items-center justify-center"><CheckIcon /> Priority support</li>
             <li className="flex items-center justify-center"><CheckIcon /> Early access to features</li>
@@ -103,13 +102,13 @@ export default function UpgradePage() {
         </div>
 
         {/* Gold */}
-        <div className="border border-gray-200 rounded-3xl p-8 bg-white shadow-sm hover:shadow-lg transition-all flex flex-col items-center">
+        <div className="border border-gray-200 rounded-3xl p-10 bg-white shadow-sm hover:shadow-xl transition-all flex flex-col items-center">
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Gold</h3>
           <p className="text-4xl font-extrabold text-yellow-500 mb-6">
             £19.99<span className="text-lg font-normal text-gray-500">/mo</span>
           </p>
 
-          <ul className="text-gray-700 mb-8 space-y-3 text-center">
+          <ul className="text-gray-700 mb-10 space-y-3">
             <li className="flex items-center justify-center"><CheckIcon /> 5% selling fee</li>
             <li className="flex items-center justify-center"><CheckIcon /> Priority support</li>
             <li className="flex items-center justify-center"><CheckIcon /> Listing boost</li>
@@ -125,9 +124,9 @@ export default function UpgradePage() {
       </div>
 
       {/* Why Upgrade */}
-      <div className="mt-24 bg-white border border-gray-200 rounded-3xl p-10 shadow-sm mx-auto max-w-3xl text-center">
+      <div className="mt-24 bg-white border border-gray-200 rounded-3xl p-12 shadow-sm mx-auto max-w-3xl text-center">
         <h2 className="text-3xl font-bold mb-4 text-gray-900">Why upgrade?</h2>
-        <p className="text-gray-600 leading-relaxed text-lg">
+        <p className="text-gray-600 leading-relaxed text-lg max-w-2xl mx-auto">
           CollectorConnector is built for collectors, by collectors.  
           When you upgrade, you’re not just getting lower fees —  
           you’re directly supporting the growth, sustainability, and future of the platform.

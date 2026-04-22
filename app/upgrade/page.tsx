@@ -34,18 +34,13 @@ export default function UpgradePage() {
     <div className="max-w-5xl mx-auto px-6 py-20">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-20">
-        <Image
-          src="/CC-main-logo.png"
-          alt="CollectorConnector Logo"
-          width={220}
-          height={70}
-          className="object-contain mb-10 opacity-95"
-          priority
-        />
-
-        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-2">
           Upgrade Your Selling Power
         </h1>
+
+        <p className="text-md md:text-lg text-gray-500 mb-6">
+          Choose the tier that matches your goals
+        </p>
 
         <p className="text-lg md:text-xl text-gray-600 max-w-2xl leading-relaxed">
           Lower fees. More perks. Bigger reach.  
@@ -57,6 +52,14 @@ export default function UpgradePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
         {/* Bronze */}
         <div className="border border-gray-200 rounded-3xl p-10 bg-white shadow-sm hover:shadow-xl transition-all flex flex-col items-center">
+          <Image
+            src="/bronze.png"
+            alt="Bronze Tier"
+            width={70}
+            height={70}
+            className="mb-4"
+          />
+
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Bronze</h3>
           <p className="text-4xl font-extrabold text-orange-500 mb-6">
             £4.99<span className="text-lg font-normal text-gray-500">/mo</span>
@@ -82,6 +85,14 @@ export default function UpgradePage() {
             Best Value
           </div>
 
+          <Image
+            src="/silver.png"
+            alt="Silver Tier"
+            width={70}
+            height={70}
+            className="mb-4"
+          />
+
           <h3 className="text-2xl font-bold text-white mb-2">Silver</h3>
           <p className="text-4xl font-extrabold text-white mb-6">
             £9.99<span className="text-lg font-normal text-gray-400">/mo</span>
@@ -103,6 +114,14 @@ export default function UpgradePage() {
 
         {/* Gold */}
         <div className="border border-gray-200 rounded-3xl p-10 bg-white shadow-sm hover:shadow-xl transition-all flex flex-col items-center">
+          <Image
+            src="/gold.png"
+            alt="Gold Tier"
+            width={70}
+            height={70}
+            className="mb-4"
+          />
+
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Gold</h3>
           <p className="text-4xl font-extrabold text-yellow-500 mb-6">
             £19.99<span className="text-lg font-normal text-gray-500">/mo</span>

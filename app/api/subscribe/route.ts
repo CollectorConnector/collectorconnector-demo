@@ -5,6 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-06-20",
 });
 
+// Your 3 subscription tiers
 const PRICES = {
   bronze: "price_1TOjY6AcUN8e3s6cwArJilaR",
   silver: "price_1TOjWfAcUN8e3s6crElb2AtF",
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error(error);
+    console.error("Subscription error:", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }

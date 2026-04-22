@@ -16,16 +16,24 @@ export async function POST(req: NextRequest) {
   try {
     const { itemId, priceInPence, sellerId } = await req.json();
 
-    // Fetch seller profile to determine their subscription tier
+    // Fetch seller profile to determine their subscription tier + stripe account
     const { data: seller, error } = await supabase
       .from("profiles")
-      .select("subscription_tier")
+      .select("subscription_tier, stripe_account_id")
       .eq("id", sellerId)
       .single();
 
     if (error || !seller) {
       console.error("Seller not found:", error);
       return NextResponse.json({ error: "Seller not found" }, { status: 404 });
+    }
+
+    if (!seller.stripe_account_id) {
+      console.error("Seller has no connected Stripe account");
+      return NextResponse.json(
+        { error: "Seller has no connected Stripe account" },
+        { status: 400 }
+      );
     }
 
     // Default fee = 8% (non-subscriber)

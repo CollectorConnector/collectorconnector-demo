@@ -2,15 +2,15 @@
 
 import { useRouter } from "next/navigation";
 
-// Updated interface to accept the items prop
+// Define the interface that matches the props you are passing
 interface CollectionsGridProps {
-  items: any[] | null;
+  items: any[] | null; 
 }
 
 export default function CollectionsGrid({ items }: CollectionsGridProps) {
   const router = useRouter();
 
-  // If items are null, render an empty state or loading
+  // If items are null, show loading
   if (!items) {
     return <div className="text-center py-20 font-black text-[#27272a]">SYNCING VAULTS...</div>;
   }
@@ -24,7 +24,7 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
           style={{ 
             background: '#18181b', 
             aspectRatio: '1/1', 
-            borderRadius: '32px', // THE SQUIRCLE
+            borderRadius: '32px', 
             border: '1px solid #27272a', 
             position: 'relative', 
             overflow: 'hidden', 
@@ -37,8 +37,8 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
           {col.items?.[0] && (
             <img 
               src={col.items[0].image_url} 
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} 
               alt={col.name}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} 
             />
           )}
           <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: '0 10px' }}>

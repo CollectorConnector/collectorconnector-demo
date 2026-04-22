@@ -15,11 +15,9 @@ export default function Header() {
     });
   }, []);
 
-  // GLOBAL MESSAGE LISTENER
   useEffect(() => {
     if (!userId) return;
 
-    // 1. Initial check: Do we have any unread messages right now?
     const checkInitialMessages = async () => {
       const { count } = await supabase
         .from('messages')
@@ -32,7 +30,6 @@ export default function Header() {
     
     checkInitialMessages();
 
-    // 2. Realtime subscription for incoming messages
     const channel = supabase
       .channel("global-message-channel")
       .on(
@@ -52,9 +49,7 @@ export default function Header() {
           }
         }
       )
-      .subscribe((status) => {
-        console.log("Realtime status:", status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
@@ -99,15 +94,33 @@ export default function Header() {
         />
       </div>
 
-      {/* RIGHT: UTILITY NAVIGATION */}
+      {/* RIGHT: NAVIGATION */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "24px", 
+          gap: "24px",
           color: "white",
         }}
       >
+
+        {/* ⭐ MARKETPLACE LINK */}
+        <button
+          onClick={() => router.push("/marketplace")}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#fff",
+            fontSize: "13px",
+            fontWeight: "700",
+            cursor: "pointer",
+            letterSpacing: "1px",
+            opacity: 0.9
+          }}
+        >
+          MARKETPLACE
+        </button>
+
         {/* SEARCH ICON */}
         <button
           onClick={() => router.push("/search")}
@@ -119,7 +132,7 @@ export default function Header() {
           </svg>
         </button>
 
-        {/* MESSAGES ICON WITH NOTIFICATION DOT */}
+        {/* MESSAGES ICON */}
         {userId && (
           <button
             onClick={() => {
@@ -160,7 +173,7 @@ export default function Header() {
           </button>
         )}
 
-        {/* LOGIC GATES FOR LOGGED IN / OUT */}
+        {/* AUTH BUTTONS */}
         {userId ? (
           <>
             <button 

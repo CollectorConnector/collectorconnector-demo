@@ -848,6 +848,33 @@ export default function ProfilePage() {
                     <span style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold', alignSelf: 'center' }}>
                       £{recentDrops[selectedItemIndex].estimated_value} EST. VALUE
                     </span>
+                    
+                    {/* --- ADDED UPDATE START --- */}
+                    <div style={{ marginLeft: 'auto' }}>
+                        {(() => {
+                          const item = recentDrops[selectedItemIndex];
+                          const isOwner = currentUserId === item.user_id;
+                          return (
+                            <>
+                              {item.for_sale && !isOwner && (
+                                <button 
+                                  onClick={() => alert("Handle payment logic")} 
+                                  className="bg-green-600 text-white px-6 py-2 rounded-lg"
+                                >
+                                  Buy for ${item.price}
+                                </button>
+                              )}
+                              {isOwner && (
+                                <p className="text-sm">
+                                  {item.for_sale ? "Listed for Sale" : "Not listed"}
+                                </p>
+                              )}
+                            </>
+                          );
+                        })()}
+                    </div>
+                    {/* --- ADDED UPDATE END --- */}
+
                   </div>
                 </div>
             </div>

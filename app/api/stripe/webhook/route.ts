@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: "2024-06-20",
 });
 
-// Supabase client (service role)
+// Supabase (service role)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   try {
     switch (event.type) {
       // ---------------------------------------------------------
-      // 1️⃣ CHECKOUT COMPLETED (subscription checkout)
+      // 1️⃣ CHECKOUT SESSION COMPLETED (subscription checkout)
       // ---------------------------------------------------------
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -133,7 +133,6 @@ export async function POST(req: Request) {
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
 
-        // Optional: add analytics, emails, etc.
         console.log("💰 Subscription renewal paid:", invoice.id);
 
         break;

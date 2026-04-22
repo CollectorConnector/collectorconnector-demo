@@ -1,58 +1,70 @@
+import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2023-10-16",
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-06-20",
 });
 
-export async function POST(req: Request) {
-  try {
-    const { itemId } = await req.json();
+// Supabase (service role)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-    // Fetch item + seller Stripe account
-    const { data: item, error } = await supabase
-      .from("items")
-      .select("*, profiles(stripe_account_id)")
-      .eq("id", itemId)
+export async function POST(req: NextRequest) {
+  try {
+    const { itemId, priceInPence, sellerId } = await req.json();
+
+    // Fetch seller profile to determine their subscription tier
+    const { data: seller, error } = await supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("id", sellerId)
       .single();
 
-    if (error || !item) {
-      return new Response(JSON.stringify({ error: "Item not found" }), { status: 404 });
+    if (error || !seller) {
+      console.error("Seller not found:", error);
+      return NextResponse.json({ error: "Seller not found" }, { status: 404 });
     }
 
-    const priceInPence = Math.round(item.price * 100);
+    // Default fee = 8% (non-subscriber)
+    let feePercentage = 0.08;
 
-    // Create Stripe Checkout session
+    if (seller.subscription_tier === "bronze") feePercentage = 0.07;
+    if (seller.subscription_tier === "silver") feePercentage = 0.06;
+    if (seller.subscription_tier === "gold") feePercentage = 0.05;
+
+    const applicationFee = Math.round(priceInPence * feePercentage);
+
+    // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
             currency: "gbp",
-            product_data: { name: item.title },
+            product_data: {
+              name: `Purchase of item ${itemId}`,
+            },
             unit_amount: priceInPence,
           },
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_URL}/success?item=${itemId}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL}/cancel`,
       payment_intent_data: {
-        application_fee_amount: Math.round(priceInPence * 0.08), // ⭐ 8% fee to YOU
+        application_fee_amount: applicationFee,
         transfer_data: {
-          destination: item.profiles.stripe_account_id, // ⭐ payout to seller
+          destination: seller.stripe_account_id, // seller’s connected account
         },
       },
-      metadata: {
-        itemId,
-      },
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cancel`,
     });
 
-    return new Response(JSON.stringify({ url: session.url }), { status: 200 });
-  } catch (err: any) {
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
     console.error("Checkout error:", err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return NextResponse.json({ error: "Checkout failed" }, { status: 500 });
   }
 }
-

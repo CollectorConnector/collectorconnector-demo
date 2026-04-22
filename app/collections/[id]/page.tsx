@@ -20,6 +20,11 @@ export default function CollectionDetails() {
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [commentText, setCommentText] = useState("");
 
+  // ⭐ NEW: Price modal state
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [priceInput, setPriceInput] = useState("");
+  const [itemToSell, setItemToSell] = useState<any | null>(null);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
@@ -51,39 +56,68 @@ export default function CollectionDetails() {
     }
   }
 
-  // ⭐ NEW: Toggle sale status
-  async function toggleSale(item: any, e: React.MouseEvent) {
+  // ⭐ UPDATED: SELL button now opens price modal
+  function handleSellClick(item: any, e: React.MouseEvent) {
     e.stopPropagation();
 
+    if (!item.for_sale) {
+      setItemToSell(item);
+      setPriceInput("");
+      setShowPriceModal(true);
+    } else {
+      toggleSaleOff(item);
+    }
+  }
+
+  // ⭐ Turn OFF sale
+  async function toggleSaleOff(item: any) {
     const { error } = await supabase
       .from("items")
-      .update({ for_sale: !item.for_sale })
+      .update({ for_sale: false, price: null })
       .eq("id", item.id);
 
     if (!error) {
-      setItems(items.map(i => i.id === item.id ? { ...i, for_sale: !i.for_sale } : i));
+      setItems(items.map(i => i.id === item.id ? { ...i, for_sale: false, price: null } : i));
     }
+  }
+
+  // ⭐ Confirm price + set item for sale
+  async function confirmPrice() {
+    const priceValue = Number(priceInput);
+    if (isNaN(priceValue) || priceValue <= 0) {
+      alert("Please enter a valid price");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("items")
+      .update({ for_sale: true, price: priceValue })
+      .eq("id", itemToSell.id);
+
+    if (!error) {
+      setItems(items.map(i =>
+        i.id === itemToSell.id
+          ? { ...i, for_sale: true, price: priceValue }
+          : i
+      ));
+    }
+
+    setShowPriceModal(false);
+    setItemToSell(null);
+    setPriceInput("");
   }
 
   // SWIPE LOGIC
   const showNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     const currentIndex = items.findIndex(i => i.id === selectedItem.id);
-    if (currentIndex < items.length - 1) {
-      setSelectedItem(items[currentIndex + 1]);
-    } else {
-      setSelectedItem(items[0]);
-    }
+    setSelectedItem(items[(currentIndex + 1) % items.length]);
   };
 
   const showPrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     const currentIndex = items.findIndex(i => i.id === selectedItem.id);
-    if (currentIndex > 0) {
-      setSelectedItem(items[currentIndex - 1]);
-    } else {
-      setSelectedItem(items[items.length - 1]);
-    }
+    setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
   };
 
   // SOCIAL LOGIC
@@ -92,8 +126,7 @@ export default function CollectionDetails() {
     if (!currentUserId) return alert("Log in to like items!");
     setLikedItems(prev => {
       const next = new Set(prev);
-      if (next.has(itemId)) next.delete(itemId);
-      else next.add(itemId);
+      next.has(itemId) ? next.delete(itemId) : next.add(itemId);
       return next;
     });
   }
@@ -107,7 +140,7 @@ export default function CollectionDetails() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff' }}>
       <Header />
 
       <main style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '110px', paddingLeft: '16px', paddingRight: '16px', paddingBottom: '100px' }}>
@@ -131,56 +164,49 @@ export default function CollectionDetails() {
           </div>
         </div>
 
-        {items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 0', border: '2px dashed #18181b', borderRadius: '32px' }}>
-            <p style={{ color: '#52525b', fontWeight: 'bold', fontSize: '14px' }}>THIS VAULT IS CURRENTLY EMPTY</p>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px', justifyContent: 'center' }}>
-            {items.map((item) => (
-              <div 
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                style={{ aspectRatio: '1/1', cursor: 'pointer', position: 'relative', overflow: 'hidden', borderRadius: '24%', border: '1px solid #27272a', background: '#09090b', transition: 'transform 0.2s ease' }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
+        {/* GRID */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' }}>
+          {items.map((item) => (
+            <div 
+              key={item.id}
+              onClick={() => setSelectedItem(item)}
+              style={{ aspectRatio: '1/1', cursor: 'pointer', position: 'relative', overflow: 'hidden', borderRadius: '24%', border: '1px solid #27272a', background: '#09090b' }}
+            >
 
-                {/* ⭐ FOR SALE BUTTON (owner only) */}
-                {currentUserId === collection.user_id && (
-                  <button
-                    onClick={(e) => toggleSale(item, e)}
-                    style={{
-                      position: "absolute",
-                      top: "8px",
-                      left: "8px",
-                      zIndex: 20,
-                      background: item.for_sale ? "#22c55e" : "#3b82f6",
-                      color: "#fff",
-                      fontSize: "10px",
-                      fontWeight: "700",
-                      padding: "6px 10px",
-                      borderRadius: "16px",
-                      border: "none",
-                      cursor: "pointer"
-                    }}
-                  >
-                    {item.for_sale ? "FOR SALE" : "SELL"}
-                  </button>
-                )}
+              {/* SELL / FOR SALE BUTTON */}
+              {currentUserId === collection.user_id && (
+                <button
+                  onClick={(e) => handleSellClick(item, e)}
+                  style={{
+                    position: "absolute",
+                    top: "8px",
+                    left: "8px",
+                    zIndex: 20,
+                    background: item.for_sale ? "#22c55e" : "#3b82f6",
+                    color: "#fff",
+                    fontSize: "10px",
+                    fontWeight: "700",
+                    padding: "6px 10px",
+                    borderRadius: "16px",
+                    border: "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  {item.for_sale ? `£${item.price}` : "SELL"}
+                </button>
+              )}
 
-                <img 
-                  src={item.image_url} 
-                  alt={item.title} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                />
-              </div>
-            ))}
-          </div>
-        )}
+              <img 
+                src={item.image_url} 
+                alt={item.title} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+            </div>
+          ))}
+        </div>
       </main>
 
-      {/* MODAL */}
+      {/* ITEM MODAL */}
       {selectedItem && (
         <div 
           onClick={() => setSelectedItem(null)}
@@ -188,8 +214,8 @@ export default function CollectionDetails() {
         >
           <div style={{ position: 'absolute', top: '30px', right: '30px', color: '#fff', fontSize: '20px', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer' }}>✕</div>
 
-          <button onClick={showPrev} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', padding: '20px', borderRadius: '50%', cursor: 'pointer', zIndex: 10000 }}>‹</button>
-          <button onClick={showNext} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', padding: '20px', borderRadius: '50%', cursor: 'pointer', zIndex: 10000 }}>›</button>
+          <button onClick={showPrev} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', padding: '20px', borderRadius: '50%', cursor: 'pointer' }}>‹</button>
+          <button onClick={showNext} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', padding: '20px', borderRadius: '50%', cursor: 'pointer' }}>›</button>
 
           <img 
             src={selectedItem.image_url} 
@@ -204,7 +230,7 @@ export default function CollectionDetails() {
                 {likedItems.has(selectedItem.id) ? '⭐' : '☆'}
               </button>
             </div>
-            
+
             <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
               <input 
                 value={commentText} 
@@ -214,6 +240,72 @@ export default function CollectionDetails() {
               />
               <button onClick={() => { alert("Commented!"); setCommentText(""); }} style={{ background: '#fff', color: '#000', padding: '0 20px', borderRadius: '12px', fontWeight: 'bold' }}>SEND</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ⭐ PRICE MODAL */}
+      {showPriceModal && itemToSell && (
+        <div 
+          onClick={() => setShowPriceModal(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.85)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#18181b",
+              padding: "24px",
+              borderRadius: "20px",
+              width: "90%",
+              maxWidth: "360px",
+              border: "1px solid #27272a"
+            }}
+          >
+            <h2 style={{ fontSize: "20px", fontWeight: "900", marginBottom: "16px" }}>
+              Set Your Price
+            </h2>
+
+            <input
+              type="number"
+              placeholder="Enter price (£)"
+              value={priceInput}
+              onChange={(e) => setPriceInput(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "12px",
+                border: "1px solid #333",
+                background: "#000",
+                color: "#fff",
+                marginBottom: "16px",
+                fontSize: "16px"
+              }}
+            />
+
+            <button
+              onClick={confirmPrice}
+              style={{
+                width: "100%",
+                background: "#22c55e",
+                color: "#000",
+                padding: "12px",
+                borderRadius: "12px",
+                fontWeight: "900",
+                fontSize: "16px",
+                cursor: "pointer"
+              }}
+            >
+              Confirm Price
+            </button>
           </div>
         </div>
       )}

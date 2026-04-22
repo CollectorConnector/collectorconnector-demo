@@ -43,13 +43,9 @@ export default function Header() {
           table: "messages",
           filter: `receiver_id=eq.${userId}`,
         },
-        (payload) => {
-          console.log("New message received!", payload);
+        () => {
           setHasNewMessage(true);
-
-          if ("vibrate" in navigator) {
-            navigator.vibrate([200, 100, 200]);
-          }
+          if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
         }
       )
       .subscribe();
@@ -61,7 +57,6 @@ export default function Header() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    setUserId(null);
     router.push("/");
     router.refresh();
   };
@@ -232,4 +227,46 @@ export default function Header() {
               padding: "8px 16px",
               borderRadius: "6px",
               fontSize: "13px",
-              fontWeight: "700
+              fontWeight: "700",
+              cursor: "pointer",
+            }}
+          >
+            LOGIN
+          </button>
+        )}
+      </div>
+    </header>
+  );
+}
+
+/* MENU ITEM COMPONENT */
+function MenuItem({
+  label,
+  onClick,
+  highlight = false,
+  danger = false,
+}: {
+  label: string;
+  onClick: () => void;
+  highlight?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: "100%",
+        textAlign: "left",
+        padding: "10px 16px",
+        background: "none",
+        border: "none",
+        color: danger ? "#f87171" : highlight ? "#f97316" : "#fff",
+        fontWeight: highlight ? "700" : "500",
+        cursor: "pointer",
+        fontSize: 14,
+      }}
+    >
+      {label}
+    </button>
+  );
+}

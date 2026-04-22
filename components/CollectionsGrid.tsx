@@ -16,7 +16,6 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
   return (
     <div className="grid grid-cols-2 gap-4">
       {items.map((col) => {
-        // Check if any item in this collection is for sale
         const isForSale = col.items?.some((i: any) => i.for_sale);
 
         return (
@@ -33,14 +32,24 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
               cursor: 'pointer'
             }}
           >
+            {/* Updated For Sale Button Area */}
             {isForSale && (
-              <div style={{ 
-                position: 'absolute', top: '12px', left: '12px', zIndex: 20, 
-                background: '#818cf8', color: '#000', fontSize: '8px', 
-                fontWeight: '900', padding: '4px 8px', borderRadius: '10px' 
-              }}>
+              <button 
+                onClick={(e) => { e.stopPropagation(); /* Add your sale-view navigation or logic here */ }}
+                style={{ 
+                  position: 'absolute', top: '12px', left: '12px', zIndex: 20, 
+                  background: '#22c55e', color: '#fff', fontSize: '10px', 
+                  fontWeight: '700', padding: '6px 10px', borderRadius: '16px',
+                  display: 'flex', alignItems: 'center', gap: '4px', border: 'none'
+                }}
+              >
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1" />
+                  <circle cx="20" cy="21" r="1" />
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                </svg>
                 FOR SALE
-              </div>
+              </button>
             )}
             
             {col.items?.[0] && (

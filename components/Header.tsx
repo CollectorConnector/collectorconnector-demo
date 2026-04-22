@@ -10,12 +10,14 @@ export default function Header() {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Load user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id || null);
     });
   }, []);
 
+  // Realtime messages
   useEffect(() => {
     if (!userId) return;
 
@@ -31,7 +33,6 @@ export default function Header() {
 
     checkInitialMessages();
 
-    // ✅ FIXED SUPABASE REALTIME LISTENER (v2 syntax)
     const channel = supabase
       .channel("global-message-channel")
       .on(
@@ -174,5 +175,61 @@ export default function Header() {
           </button>
         )}
 
-        {/* DROPDOWN MENU BUTTON */}
-       
+        {/* DROPDOWN */}
+        {userId && (
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                background: "#1f1f1f",
+                border: "1px solid #333",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <span style={{ fontSize: 18 }}>☰</span>
+            </button>
+
+            {menuOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  marginTop: 8,
+                  width: 180,
+                  background: "#111",
+                  border: "1px solid #333",
+                  borderRadius: 8,
+                  padding: "8px 0",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+                }}
+              >
+                <MenuItem label="Profile" onClick={() => router.push(`/profile/${userId}`)} />
+                <MenuItem label="Marketplace" onClick={() => router.push("/marketplace")} />
+                <MenuItem label="My Listings" onClick={() => router.push("/my-listings")} />
+                <MenuItem label="My Purchases" onClick={() => router.push("/my-purchases")} />
+                <MenuItem label="Upgrade" onClick={() => router.push("/upgrade")} highlight />
+                <MenuItem label="Settings" onClick={() => router.push("/settings")} />
+                <MenuItem label="Logout" onClick={handleSignOut} danger />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* LOGIN */}
+        {!userId && (
+          <button
+            onClick={() => router.push("/auth/login")}
+            style={{
+              background: "#fff",
+              color: "#000",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "6px",
+              fontSize: "13px",
+              fontWeight: "700

@@ -35,8 +35,8 @@ export default function UpgradePage() {
     <div className="max-w-5xl mx-auto px-4 py-16 text-center">
       {/* Header with Logo */}
       <div className="flex flex-col items-center mb-16">
-        <div className="mb-8 w-[180px] h-[60px] relative">
-          {/* Note: Ensure the path in public/ matches your project structure exactly */}
+        <div className="mb-8 relative w-64 h-20">
+          {/* Path fixed to /CC-main-logo.png */}
           <Image
             src="/CC-main-logo.png"
             alt="CollectorConnector Logo"
@@ -54,7 +54,7 @@ export default function UpgradePage() {
         </p>
       </div>
 
-      {/* Tier Cards - Centrally Aligned Grid */}
+      {/* Tier Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
         {/* Bronze */}
         <div className="border border-gray-200 rounded-3xl p-8 bg-white shadow-sm hover:shadow-lg transition-all flex flex-col items-center">
@@ -62,7 +62,7 @@ export default function UpgradePage() {
           <div className="text-4xl font-extrabold text-orange-500 mb-6">
             £4.99<span className="text-lg font-normal text-gray-500">/mo</span>
           </div>
-          <ul className="text-gray-700 mb-8 space-y-4 w-full text-left inline-block">
+          <ul className="text-gray-700 mb-8 space-y-4 text-center">
             <li className="flex items-center justify-center"><CheckIcon /> 7% selling fee</li>
             <li className="flex items-center justify-center"><CheckIcon /> Early access</li>
             <li className="flex items-center justify-center"><CheckIcon /> Support platform</li>
@@ -84,7 +84,7 @@ export default function UpgradePage() {
           <div className="text-4xl font-extrabold text-white mb-6">
             £9.99<span className="text-lg font-normal text-gray-400">/mo</span>
           </div>
-          <ul className="text-gray-200 mb-8 space-y-4 w-full text-left inline-block">
+          <ul className="text-gray-200 mb-8 space-y-4 text-center">
             <li className="flex items-center justify-center"><CheckIcon /> 6% selling fee</li>
             <li className="flex items-center justify-center"><CheckIcon /> Priority support</li>
             <li className="flex items-center justify-center"><CheckIcon /> Early access</li>
@@ -103,7 +103,7 @@ export default function UpgradePage() {
           <div className="text-4xl font-extrabold text-yellow-500 mb-6">
             £19.99<span className="text-lg font-normal text-gray-500">/mo</span>
           </div>
-          <ul className="text-gray-700 mb-8 space-y-4 w-full text-left inline-block">
+          <ul className="text-gray-700 mb-8 space-y-4 text-center">
             <li className="flex items-center justify-center"><CheckIcon /> 5% selling fee</li>
             <li className="flex items-center justify-center"><CheckIcon /> Priority support</li>
             <li className="flex items-center justify-center"><CheckIcon /> Listing boost</li>

@@ -3,7 +3,6 @@
 import React from "react";
 import Image from "next/image";
 
-// SVG Checkmark icon
 const CheckIcon = () => (
   <svg
     className="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0"
@@ -32,11 +31,10 @@ export default function UpgradePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-16 text-center">
-      {/* Header with Logo */}
-      <div className="flex flex-col items-center mb-16">
-        <div className="mb-8 relative w-64 h-20">
-          {/* Path fixed to /CC-main-logo.png */}
+    <div className="max-w-5xl mx-auto px-4 py-16">
+      {/* Header */}
+      <div className="flex flex-col items-center text-center mb-20">
+        <div className="relative w-56 h-16 mb-8">
           <Image
             src="/CC-main-logo.png"
             alt="CollectorConnector Logo"
@@ -45,28 +43,32 @@ export default function UpgradePage() {
             priority
           />
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
+
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
           Upgrade Your Selling Power
         </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Lower fees, bigger reach, and exclusive tools. Support the platform and
-          unlock your full potential as a collector.
+
+        <p className="text-lg md:text-xl text-gray-600 max-w-2xl">
+          Lower fees. More perks. Bigger reach.  
+          Support the platform and unlock more selling tools over time.
         </p>
       </div>
 
       {/* Tier Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Bronze */}
         <div className="border border-gray-200 rounded-3xl p-8 bg-white shadow-sm hover:shadow-lg transition-all flex flex-col items-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-1">Bronze</h3>
-          <div className="text-4xl font-extrabold text-orange-500 mb-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Bronze</h3>
+          <p className="text-4xl font-extrabold text-orange-500 mb-6">
             £4.99<span className="text-lg font-normal text-gray-500">/mo</span>
-          </div>
-          <ul className="text-gray-700 mb-8 space-y-4 text-center">
+          </p>
+
+          <ul className="text-gray-700 mb-8 space-y-3 text-center">
             <li className="flex items-center justify-center"><CheckIcon /> 7% selling fee</li>
-            <li className="flex items-center justify-center"><CheckIcon /> Early access</li>
-            <li className="flex items-center justify-center"><CheckIcon /> Support platform</li>
+            <li className="flex items-center justify-center"><CheckIcon /> Early access to features</li>
+            <li className="flex items-center justify-center"><CheckIcon /> Support the platform</li>
           </ul>
+
           <button
             onClick={() => subscribe("bronze")}
             className="w-full bg-orange-500 text-white py-3 rounded-xl font-bold hover:bg-orange-600 transition-colors"
@@ -75,20 +77,23 @@ export default function UpgradePage() {
           </button>
         </div>
 
-        {/* Silver (Featured) */}
-        <div className="border-2 border-gray-900 rounded-3xl p-8 bg-gray-900 shadow-2xl relative md:-mt-4 flex flex-col items-center">
+        {/* Silver */}
+        <div className="border-2 border-gray-900 rounded-3xl p-8 bg-gray-900 shadow-xl relative flex flex-col items-center md:-mt-4">
           <div className="absolute -top-3 bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-widest">
             Best Value
           </div>
-          <h3 className="text-xl font-bold text-white mb-1">Silver</h3>
-          <div className="text-4xl font-extrabold text-white mb-6">
+
+          <h3 className="text-2xl font-bold text-white mb-2">Silver</h3>
+          <p className="text-4xl font-extrabold text-white mb-6">
             £9.99<span className="text-lg font-normal text-gray-400">/mo</span>
-          </div>
-          <ul className="text-gray-200 mb-8 space-y-4 text-center">
+          </p>
+
+          <ul className="text-gray-200 mb-8 space-y-3 text-center">
             <li className="flex items-center justify-center"><CheckIcon /> 6% selling fee</li>
             <li className="flex items-center justify-center"><CheckIcon /> Priority support</li>
-            <li className="flex items-center justify-center"><CheckIcon /> Early access</li>
+            <li className="flex items-center justify-center"><CheckIcon /> Early access to features</li>
           </ul>
+
           <button
             onClick={() => subscribe("silver")}
             className="w-full bg-white text-gray-900 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
@@ -99,15 +104,17 @@ export default function UpgradePage() {
 
         {/* Gold */}
         <div className="border border-gray-200 rounded-3xl p-8 bg-white shadow-sm hover:shadow-lg transition-all flex flex-col items-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-1">Gold</h3>
-          <div className="text-4xl font-extrabold text-yellow-500 mb-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Gold</h3>
+          <p className="text-4xl font-extrabold text-yellow-500 mb-6">
             £19.99<span className="text-lg font-normal text-gray-500">/mo</span>
-          </div>
-          <ul className="text-gray-700 mb-8 space-y-4 text-center">
+          </p>
+
+          <ul className="text-gray-700 mb-8 space-y-3 text-center">
             <li className="flex items-center justify-center"><CheckIcon /> 5% selling fee</li>
             <li className="flex items-center justify-center"><CheckIcon /> Priority support</li>
             <li className="flex items-center justify-center"><CheckIcon /> Listing boost</li>
           </ul>
+
           <button
             onClick={() => subscribe("gold")}
             className="w-full bg-yellow-500 text-white py-3 rounded-xl font-bold hover:bg-yellow-600 transition-colors"
@@ -117,14 +124,13 @@ export default function UpgradePage() {
         </div>
       </div>
 
-      {/* Why Upgrade Section */}
-      <div className="mt-20 bg-white border border-gray-200 rounded-3xl p-10 shadow-sm mx-auto max-w-3xl">
-        <h2 className="text-2xl font-bold mb-4 text-gray-900">Why upgrade?</h2>
-        <p className="text-gray-600 leading-relaxed">
-          CollectorConnector is built for collectors, by collectors. When you
-          upgrade, you aren't just getting lower fees and better tools—you're
-          directly contributing to the growth and sustainability of our
-          community.
+      {/* Why Upgrade */}
+      <div className="mt-24 bg-white border border-gray-200 rounded-3xl p-10 shadow-sm mx-auto max-w-3xl text-center">
+        <h2 className="text-3xl font-bold mb-4 text-gray-900">Why upgrade?</h2>
+        <p className="text-gray-600 leading-relaxed text-lg">
+          CollectorConnector is built for collectors, by collectors.  
+          When you upgrade, you’re not just getting lower fees —  
+          you’re directly supporting the growth, sustainability, and future of the platform.
         </p>
       </div>
     </div>

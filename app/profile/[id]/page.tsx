@@ -56,7 +56,6 @@ export default function ProfilePage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   
-  // --- STRIPE INTEGRATION STATE ---
   const [stripeStatus, setStripeStatus] = useState<"active" | "incomplete" | "none">("none");
   
   const [itemCount, setItemCount] = useState(0);
@@ -114,7 +113,6 @@ export default function ProfilePage() {
     bio: profile?.bio
   };
 
-  // ====================== FIX: COPY TO CLIPBOARD HELPER ======================
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -124,7 +122,6 @@ export default function ProfilePage() {
       alert("Failed to copy – please try again");
     }
   };
-  // ===========================================================================
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -139,7 +136,6 @@ export default function ProfilePage() {
     loadGlobalNiches();
   }, [userId]);
 
-  // --- NEW: STRIPE STATUS FETCH ---
   async function checkStripeStatus(uid: string) {
     try {
       const res = await fetch(`/api/stripe/status?userId=${uid}`);
@@ -635,7 +631,6 @@ export default function ProfilePage() {
             )}
         </section>
 
-        {/* --- INTEGRATED BECOME SELLER COMPONENT --- */}
         {isOwnProfile && (
             <BecomeSeller 
               user={user} 
@@ -841,40 +836,29 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div style={{ padding: '10px 20px 20px', display: 'flex', gap: '20px' }}>
+                  <div style={{ padding: '10px 20px 20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
                     <button onClick={() => toggleLike(recentDrops[selectedItemIndex].id)} style={{ background: 'none', border: 'none', color: likedItems.has(recentDrops[selectedItemIndex].id) ? '#fbbf24' : '#fff', fontSize: '20px', cursor: 'pointer' }}>
                       {likedItems.has(recentDrops[selectedItemIndex].id) ? '⭐' : '☆'}
                     </button>
-                    <span style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold', alignSelf: 'center' }}>
+                    <span style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold' }}>
                       £{recentDrops[selectedItemIndex].estimated_value} EST. VALUE
                     </span>
                     
-                    {/* --- ADDED UPDATE START --- */}
                     <div style={{ marginLeft: 'auto' }}>
-                        {(() => {
-                          const item = recentDrops[selectedItemIndex];
-                          const isOwner = currentUserId === item.user_id;
-                          return (
-                            <>
-                              {item.for_sale && !isOwner && (
-                                <button 
-                                  onClick={() => alert("Handle payment logic")} 
-                                  className="bg-green-600 text-white px-6 py-2 rounded-lg"
-                                >
-                                  Buy for ${item.price}
-                                </button>
-                              )}
-                              {isOwner && (
-                                <p className="text-sm">
-                                  {item.for_sale ? "Listed for Sale" : "Not listed"}
-                                </p>
-                              )}
-                            </>
-                          );
-                        })()}
+                      {recentDrops[selectedItemIndex].for_sale && currentUserId !== recentDrops[selectedItemIndex].user_id && (
+                        <button 
+                          onClick={() => alert(`Buying ${recentDrops[selectedItemIndex].title} for £${recentDrops[selectedItemIndex].price}`)} 
+                          style={{ background: '#22c55e', color: '#000', padding: '8px 16px', borderRadius: '12px', fontWeight: '900', fontSize: '12px', cursor: 'pointer' }}
+                        >
+                          BUY £{recentDrops[selectedItemIndex].price}
+                        </button>
+                      )}
+                      {recentDrops[selectedItemIndex].user_id === currentUserId && (
+                        <div style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                          {recentDrops[selectedItemIndex].for_sale ? `LISTED: £${recentDrops[selectedItemIndex].price}` : "NOT LISTED"}
+                        </div>
+                      )}
                     </div>
-                    {/* --- ADDED UPDATE END --- */}
-
                   </div>
                 </div>
             </div>

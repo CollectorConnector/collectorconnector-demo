@@ -1,28 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-export default function CollectionsGrid({ userId }: { userId: string }) {
-  const [collections, setCollections] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+// Updated interface to accept the items prop
+interface CollectionsGridProps {
+  items: any[] | null;
+}
+
+export default function CollectionsGrid({ items }: CollectionsGridProps) {
   const router = useRouter();
 
-  useEffect(() => {
-    async function load() {
-      const { data } = await supabase.from("collections").select(`*, items (image_url)`).eq("user_id", userId);
-      setCollections(data || []);
-      setLoading(false);
-    }
-    load();
-  }, [userId]);
-
-  if (loading) return <div className="text-center py-20 font-black text-[#27272a]">SYNCING VAULTS...</div>;
+  // If items are null, render an empty state or loading
+  if (!items) {
+    return <div className="text-center py-20 font-black text-[#27272a]">SYNCING VAULTS...</div>;
+  }
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      {collections.map((col) => (
+      {items.map((col) => (
         <div 
           key={col.id} 
           onClick={() => router.push(`/collections/${col.id}`)} 
@@ -40,7 +35,11 @@ export default function CollectionsGrid({ userId }: { userId: string }) {
           }}
         >
           {col.items?.[0] && (
-            <img src={col.items[0].image_url} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} />
+            <img 
+              src={col.items[0].image_url} 
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.4 }} 
+              alt={col.name}
+            />
           )}
           <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: '0 10px' }}>
             <p style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>{col.name}</p>

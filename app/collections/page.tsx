@@ -15,9 +15,10 @@ function List() {
 
   useEffect(() => {
     if (userId) {
+      // UPDATED: Now selecting 'for_sale' for each item
       supabase
         .from("collections")
-        .select(`*, items (image_url)`)
+        .select(`*, items (image_url, for_sale)`)
         .eq("user_id", userId)
         .order("created_at", { ascending: false }) 
         .then(({ data }) => setCollections(data || []));
@@ -65,9 +66,16 @@ function List() {
                 <p style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '14px', letterSpacing: '1px', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                   {c.title}
                 </p>
-                <span style={{ fontSize: '10px', color: '#818cf8', fontWeight: 'bold' }}>
+                <span style={{ fontSize: '10px', color: '#818cf8', fontWeight: 'bold', display: 'block' }}>
                     {c.items?.length || 0} ITEMS
                 </span>
+
+                {/* FOR SALE INDICATOR */}
+                {c.items?.some((i: any) => i.for_sale) && (
+                  <div style={{ marginTop: '8px', background: '#22c55e', color: '#000', fontSize: '9px', fontWeight: '900', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                    FOR SALE
+                  </div>
+                )}
               </div>
             </div>
           </Link>

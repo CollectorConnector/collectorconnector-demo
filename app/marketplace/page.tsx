@@ -17,7 +17,8 @@ export default function MarketplacePage() {
       const { data } = await supabase
         .from("items")
         .select("*")
-        .eq("for_sale", true);
+        .eq("for_sale", true)
+        .eq("sold", false); // optional: hide sold items if you track this
 
       setItems(data || []);
       setLoading(false);
@@ -113,7 +114,7 @@ export default function MarketplacePage() {
                 />
 
                 {/* PRICE BADGE */}
-                {item.price && (
+                {item.price !== null && item.price !== undefined && (
                   <div
                     style={{
                       position: "absolute",
@@ -131,6 +132,30 @@ export default function MarketplacePage() {
                     £{item.price}
                   </div>
                 )}
+
+                {/* BUY BUTTON */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/buy/${item.id}`);
+                  }}
+                  style={{
+                    position: "absolute",
+                    bottom: "8px",
+                    right: "8px",
+                    background: "#22c55e",
+                    color: "#000",
+                    padding: "6px 12px",
+                    borderRadius: "12px",
+                    fontWeight: "900",
+                    fontSize: "12px",
+                    zIndex: 30,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  BUY
+                </button>
 
                 {/* TITLE BAR */}
                 <div

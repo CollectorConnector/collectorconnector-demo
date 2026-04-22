@@ -34,7 +34,6 @@ export default function Header() {
     const channel = supabase
       .channel("global-message-channel")
       .on(
-        "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
@@ -96,7 +95,14 @@ export default function Header() {
       </div>
 
       {/* RIGHT SIDE */}
-      <div style={{ display: "flex", alignItems: "center", gap: "24px", color: "white" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "24px",
+          color: "white",
+        }}
+      >
         {/* MARKETPLACE */}
         <button
           onClick={() => router.push("/marketplace")}
@@ -128,8 +134,19 @@ export default function Header() {
             opacity: 0.8,
           }}
         >
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 01-14 0 7 7 0 0114 0z" />
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-6-6m2-5a7 7 0 01-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </button>
 
@@ -152,8 +169,19 @@ export default function Header() {
               opacity: 0.8,
             }}
           >
-            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            <svg
+              width="22"
+              height="22"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
             </svg>
 
             {hasNewMessage && (
@@ -207,10 +235,22 @@ export default function Header() {
                   boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
                 }}
               >
-                <MenuItem label="Profile" onClick={() => router.push(`/profile/${userId}`)} />
-                <MenuItem label="Marketplace" onClick={() => router.push("/marketplace")} />
-                <MenuItem label="My Listings" onClick={() => router.push("/my-listings")} />
-                <MenuItem label="My Purchases" onClick={() => router.push("/my-purchases")} />
+                <MenuItem
+                  label="Profile"
+                  onClick={() => router.push(`/profile/${userId}`)}
+                />
+                <MenuItem
+                  label="Marketplace"
+                  onClick={() => router.push("/marketplace")}
+                />
+                <MenuItem
+                  label="My Listings"
+                  onClick={() => router.push("/my-listings")}
+                />
+                <MenuItem
+                  label="My Purchases"
+                  onClick={() => router.push("/my-purchases")}
+                />
 
                 <MenuItem
                   label="Upgrade"
@@ -218,7 +258,10 @@ export default function Header() {
                   onClick={() => router.push("/upgrade")}
                 />
 
-                <MenuItem label="Settings" onClick={() => router.push("/settings")} />
+                <MenuItem
+                  label="Settings"
+                  onClick={() => router.push("/settings")}
+                />
                 <MenuItem label="Logout" onClick={handleSignOut} danger />
               </div>
             )}
@@ -248,7 +291,18 @@ export default function Header() {
   );
 }
 
-function MenuItem({ label, onClick, highlight, danger }) {
+/* ✅ FIXED MenuItem with proper TypeScript types + default values */
+function MenuItem({
+  label,
+  onClick,
+  highlight = false,
+  danger = false,
+}: {
+  label: string;
+  onClick: () => void;
+  highlight?: boolean;
+  danger?: boolean;
+}) {
   return (
     <button
       onClick={onClick}

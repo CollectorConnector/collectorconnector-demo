@@ -10,14 +10,12 @@ export default function Header() {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Load user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id || null);
     });
   }, []);
 
-  // Realtime messages
   useEffect(() => {
     if (!userId) return;
 
@@ -78,7 +76,6 @@ export default function Header() {
         padding: "0 24px",
       }}
     >
-      {/* LEFT: LOGO */}
       <div
         onClick={() => router.push(userId ? `/profile/${userId}` : "/")}
         style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
@@ -92,10 +89,8 @@ export default function Header() {
         />
       </div>
 
-      {/* RIGHT SIDE */}
       <div style={{ display: "flex", alignItems: "center", gap: "24px", color: "white" }}>
 
-        {/* SEARCH */}
         <button
           onClick={() => router.push("/search")}
           style={{
@@ -114,7 +109,6 @@ export default function Header() {
           </svg>
         </button>
 
-        {/* MESSAGES */}
         {userId && (
           <button
             onClick={() => {
@@ -154,14 +148,13 @@ export default function Header() {
           </button>
         )}
 
-        {/* DROPDOWN */}
         {userId && (
           <div style={{ position: "relative" }}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               style={{
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 borderRadius: "50%",
                 background: "#1f1f1f",
                 border: "1px solid #333",
@@ -180,12 +173,12 @@ export default function Header() {
                   position: "absolute",
                   right: 0,
                   marginTop: 10,
-                  width: 220,
-                  background: "#151515",
-                  border: "1px solid #444",
+                  width: 240,
+                  background: "#222",        // <-- TEST COLOUR
+                  border: "1px solid #555",  // <-- TEST BORDER
                   borderRadius: 10,
-                  padding: "10px 0",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+                  padding: "12px 0",
+                  boxShadow: "0 12px 32px rgba(0,0,0,0.7)", // <-- STRONG SHADOW
                 }}
               >
                 <MenuItem label="Profile" onClick={() => router.push(`/profile/${userId}`)} />
@@ -200,7 +193,6 @@ export default function Header() {
           </div>
         )}
 
-        {/* LOGIN */}
         {!userId && (
           <button
             onClick={() => router.push("/auth/login")}
@@ -223,7 +215,6 @@ export default function Header() {
   );
 }
 
-/* MENU ITEM COMPONENT */
 function MenuItem({
   label,
   onClick,
@@ -241,7 +232,7 @@ function MenuItem({
       style={{
         width: "100%",
         textAlign: "left",
-        padding: "12px 18px",
+        padding: "14px 20px",
         background: "none",
         border: "none",
         color: danger ? "#f87171" : highlight ? "#f97316" : "#fff",

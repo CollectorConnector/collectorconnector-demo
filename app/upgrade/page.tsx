@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { createClient } from "@supabase/supabase-js";
 
 const CheckIcon = () => (
   <svg
@@ -21,8 +22,26 @@ const CheckIcon = () => (
 
 export default function UpgradePage() {
   async function subscribe(tier: "bronze" | "silver" | "gold") {
+    // Create Supabase client
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    // Get logged‑in user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert("You must be logged in to upgrade.");
+      return;
+    }
+
+    // Call backend with user ID
     const res = await fetch(`/api/stripe/upgrade?plan=${tier}`, {
       method: "POST",
+      headers: {
+        "x-user-id": user.id,
+      },
     });
 
     const data = await res.json();

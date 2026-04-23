@@ -21,16 +21,17 @@ const CheckIcon = () => (
 
 export default function UpgradePage() {
   async function subscribe(tier: "bronze" | "silver" | "gold") {
-    const res = await fetch("/api/subscribe", {
+    const res = await fetch(`/api/stripe/upgrade?plan=${tier}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ tier }),
     });
 
     const data = await res.json();
-    window.location.href = data.url;
+
+    if (data?.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Unable to start subscription. Please try again.");
+    }
   }
 
   return (

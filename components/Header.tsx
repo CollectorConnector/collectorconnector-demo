@@ -94,22 +94,6 @@ export default function Header() {
 
       {/* RIGHT SIDE */}
       <div style={{ display: "flex", alignItems: "center", gap: "24px", color: "white" }}>
-        {/* MARKETPLACE */}
-        <button
-          onClick={() => router.push("/marketplace")}
-          style={{
-            background: "none",
-            border: "none",
-            color: "#fff",
-            fontSize: "13px",
-            fontWeight: "700",
-            cursor: "pointer",
-            letterSpacing: "1px",
-            opacity: 0.9,
-          }}
-        >
-          MARKETPLACE
-        </button>
 
         {/* SEARCH */}
         <button

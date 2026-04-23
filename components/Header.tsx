@@ -160,8 +160,8 @@ export default function Header() {
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               style={{
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 borderRadius: "50%",
                 background: "#1f1f1f",
                 border: "1px solid #333",
@@ -179,13 +179,13 @@ export default function Header() {
                 style={{
                   position: "absolute",
                   right: 0,
-                  marginTop: 8,
-                  width: 180,
-                  background: "#111",
-                  border: "1px solid #333",
-                  borderRadius: 8,
-                  padding: "8px 0",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+                  marginTop: 10,
+                  width: 220,
+                  background: "#151515",
+                  border: "1px solid #444",
+                  borderRadius: 10,
+                  padding: "10px 0",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
                 }}
               >
                 <MenuItem label="Profile" onClick={() => router.push(`/profile/${userId}`)} />
@@ -241,7 +241,7 @@ function MenuItem({
       style={{
         width: "100%",
         textAlign: "left",
-        padding: "10px 16px",
+        padding: "12px 18px",
         background: "none",
         border: "none",
         color: danger ? "#f87171" : highlight ? "#f97316" : "#fff",

@@ -11,7 +11,7 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { tier } = await req.json();
+    const { tier, userId } = await req.json();
 
     const prices: Record<string, string> = {
       bronze: process.env.STRIPE_PRICE_BRONZE!,
@@ -24,8 +24,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
     }
 
+    // 1. Get user from DB
+    const { data: userData, error: userError } = await supabase
+      .from("profiles")
+      .select("stripe_customer_id, email")
+      .eq("id", userId)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ error: "User not found" }, { status: 400 });
+    }
+
+    let customerId = userData.stripe_customer_id;
+
+    // 2. Create customer if missing
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: userData.email,
+      });
+
+      customerId = customer.id;
+
+      await supabase
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", userId);
+    }
+
+    // 3. Create checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade`,

@@ -103,8 +103,6 @@ export default function ProfilePage() {
   const [newComment, setNewComment] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
-  const [shareSheetOpen, setShareSheetOpen] = useState(false);
-
   const isOwnProfile = currentUserId === userId;
 
   const user = {
@@ -842,12 +840,6 @@ export default function ProfilePage() {
                     <button onClick={() => toggleLike(recentDrops[selectedItemIndex].id)} style={{ background: 'none', border: 'none', color: likedItems.has(recentDrops[selectedItemIndex].id) ? '#fbbf24' : '#fff', fontSize: '20px', cursor: 'pointer' }}>
                       {likedItems.has(recentDrops[selectedItemIndex].id) ? '⭐' : '☆'}
                     </button>
-                    <button 
-                      onClick={() => setShareSheetOpen(true)}
-                      style={{ background: 'none', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer' }}
-                    >
-                      🔗
-                    </button>
                     <span style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold' }}>
                       £{recentDrops[selectedItemIndex].estimated_value} EST. VALUE
                     </span>
@@ -870,19 +862,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
             </div>
-        </div>
-      )}
-
-      {/* SHARE SHEET */}
-      {shareSheetOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 6000, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ width: '100%', background: '#18181b', padding: '24px', borderTopLeftRadius: '24px', borderTopRightRadius: '24px' }}>
-            <h3 style={{ textAlign: 'center', fontWeight: '900', marginBottom: '20px' }}>Share Item</h3>
-            <div style={{ display: 'flex', justifyContent: 'space-around', paddingBottom: '20px' }}>
-                <button onClick={() => { navigator.clipboard.writeText(window.location.href); alert("Link copied!"); setShareSheetOpen(false); }} style={{ background: '#27272a', padding: '16px', borderRadius: '16px', color: '#fff' }}>Copy Link</button>
-                <button onClick={() => setShareSheetOpen(false)} style={{ background: '#27272a', padding: '16px', borderRadius: '16px', color: '#ef4444' }}>Cancel</button>
-            </div>
-          </div>
         </div>
       )}
 
@@ -1139,4 +1118,3 @@ export default function ProfilePage() {
       <Footer />
     </div>
   );
-}

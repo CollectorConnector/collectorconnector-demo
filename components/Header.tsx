@@ -10,8 +10,6 @@ export default function Header() {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // 🔧 FORCE DROPDOWN OVERRIDE (diagnostic)
-  // This will tell us whether global CSS is overriding your inline styles.
   const debugStyles = `
     .cc-dropdown {
       background: #222 !important;
@@ -27,14 +25,12 @@ export default function Header() {
     }
   `;
 
-  // Load user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id || null);
     });
   }, []);
 
-  // Realtime messages
   useEffect(() => {
     if (!userId) return;
 
@@ -80,7 +76,6 @@ export default function Header() {
 
   return (
     <>
-      {/* Inject forced dropdown CSS */}
       <style>{debugStyles}</style>
 
       <header
@@ -99,7 +94,6 @@ export default function Header() {
           padding: "0 24px",
         }}
       >
-        {/* LEFT: LOGO */}
         <div
           onClick={() => router.push(userId ? `/profile/${userId}` : "/")}
           style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
@@ -113,10 +107,7 @@ export default function Header() {
           />
         </div>
 
-        {/* RIGHT SIDE */}
         <div style={{ display: "flex", alignItems: "center", gap: "24px", color: "white" }}>
-
-          {/* SEARCH */}
           <button
             onClick={() => router.push("/search")}
             style={{
@@ -135,7 +126,6 @@ export default function Header() {
             </svg>
           </button>
 
-          {/* MESSAGES */}
           {userId && (
             <button
               onClick={() => {
@@ -175,7 +165,6 @@ export default function Header() {
             </button>
           )}
 
-          {/* DROPDOWN */}
           {userId && (
             <div style={{ position: "relative" }}>
               <button
@@ -198,9 +187,12 @@ export default function Header() {
               {menuOpen && (
                 <div className="cc-dropdown">
                   <MenuItem label="Profile" onClick={() => router.push(`/profile/${userId}`)} />
-                  <MenuItem label="Marketplace" onClick={() => router.push("/marketplace")} />
-                  <MenuItem label="My Listings" onClick={() => router.push("/my-listings")} />
-                  <MenuItem label="My Purchases" onClick={() => router.push("/my-purchases")} />
+
+                  {/* Marketplace temporarily disabled */}
+                  {/* <MenuItem label="Marketplace" onClick={() => router.push("/marketplace")} /> */}
+                  {/* <MenuItem label="My Listings" onClick={() => router.push("/my-listings")} /> */}
+                  {/* <MenuItem label="My Purchases" onClick={() => router.push("/my-purchases")} /> */}
+
                   <MenuItem label="Upgrade" onClick={() => router.push("/upgrade")} highlight />
                   <MenuItem label="Settings" onClick={() => router.push("/settings")} />
                   <MenuItem label="Logout" onClick={handleSignOut} danger />
@@ -209,7 +201,6 @@ export default function Header() {
             </div>
           )}
 
-          {/* LOGIN */}
           {!userId && (
             <button
               onClick={() => router.push("/auth/login")}
@@ -233,18 +224,7 @@ export default function Header() {
   );
 }
 
-/* MENU ITEM COMPONENT */
-function MenuItem({
-  label,
-  onClick,
-  highlight = false,
-  danger = false,
-}: {
-  label: string;
-  onClick: () => void;
-  highlight?: boolean;
-  danger?: boolean;
-}) {
+function MenuItem({ label, onClick, highlight = false, danger = false }) {
   return (
     <button
       onClick={onClick}

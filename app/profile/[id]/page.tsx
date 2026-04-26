@@ -11,7 +11,6 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
 import FollowersListDrawer from "@/components/FollowersListDrawer";
-import BecomeSeller from "@/components/BecomeSeller";
 
 // --- SVG ICONS ---
 const DiscordIcon = () => (
@@ -54,9 +53,6 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
-  
-  const [stripeStatus, setStripeStatus] = useState<"active" | "incomplete" | "none">("none");
   
   const [itemCount, setItemCount] = useState(0);
   const [collectionCount, setCollectionCount] = useState(0);
@@ -105,14 +101,6 @@ export default function ProfilePage() {
 
   const isOwnProfile = currentUserId === userId;
 
-  const user = {
-    id: profile?.id,
-    username: profile?.username,
-    display_name: profile?.display_url,
-    avatar_url: profile?.avatar_url,
-    bio: profile?.bio
-  };
-
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -128,23 +116,11 @@ export default function ProfilePage() {
       const uid = data.user?.id || null;
       setCurrentUserId(uid);
       if (uid) {
-        supabase.from("profiles").select("*").eq("id", uid).single().then(({ data: p }) => setCurrentUserProfile(p));
         loadLikedItems(uid);
-        if (uid === userId) checkStripeStatus(uid);
       }
     });
     loadGlobalNiches();
   }, [userId]);
-
-  async function checkStripeStatus(uid: string) {
-    try {
-      const res = await fetch(`/api/stripe/status?userId=${uid}`);
-      const data = await res.json();
-      setStripeStatus(data.status || "none");
-    } catch (err) {
-      console.error("Failed to fetch stripe status", err);
-    }
-  }
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -630,13 +606,6 @@ export default function ProfilePage() {
               </div>
             )}
         </section>
-
-        {isOwnProfile && (
-            <BecomeSeller 
-              user={user} 
-              status={stripeStatus} 
-            />
-        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>

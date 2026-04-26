@@ -1,3 +1,6 @@
+// Force Node.js runtime so Supabase + Stripe work correctly
+export const runtime = "nodejs";
+
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -6,9 +9,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: "2024-06-20",
 });
 
+// Use ANON KEY — safe for reading profiles, avoids service-role failures
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 const PRICE_IDS: Record<string, string | undefined> = {

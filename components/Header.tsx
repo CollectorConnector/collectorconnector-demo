@@ -25,12 +25,14 @@ export default function Header() {
     }
   `;
 
+  // Load user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id || null);
     });
   }, []);
 
+  // Realtime messages
   useEffect(() => {
     if (!userId) return;
 
@@ -94,6 +96,7 @@ export default function Header() {
           padding: "0 24px",
         }}
       >
+        {/* LEFT: LOGO */}
         <div
           onClick={() => router.push(userId ? `/profile/${userId}` : "/")}
           style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
@@ -107,7 +110,10 @@ export default function Header() {
           />
         </div>
 
+        {/* RIGHT SIDE */}
         <div style={{ display: "flex", alignItems: "center", gap: "24px", color: "white" }}>
+
+          {/* SEARCH */}
           <button
             onClick={() => router.push("/search")}
             style={{
@@ -126,6 +132,7 @@ export default function Header() {
             </svg>
           </button>
 
+          {/* MESSAGES */}
           {userId && (
             <button
               onClick={() => {
@@ -165,6 +172,7 @@ export default function Header() {
             </button>
           )}
 
+          {/* DROPDOWN */}
           {userId && (
             <div style={{ position: "relative" }}>
               <button
@@ -201,46 +209,7 @@ export default function Header() {
             </div>
           )}
 
+          {/* LOGIN */}
           {!userId && (
             <button
-              onClick={() => router.push("/auth/login")}
-              style={{
-                background: "#fff",
-                color: "#000",
-                border: "none",
-                padding: "8px 16px",
-                borderRadius: "6px",
-                fontSize: "13px",
-                fontWeight: "700",
-                cursor: "pointer",
-              }}
-            >
-              LOGIN
-            </button>
-          )}
-        </div>
-      </header>
-    </>
-  );
-}
-
-function MenuItem({ label, onClick, highlight = false, danger = false }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: "100%",
-        textAlign: "left",
-        padding: "14px 20px",
-        background: "none",
-        border: "none",
-        color: danger ? "#f87171" : highlight ? "#f97316" : "#fff",
-        fontWeight: highlight ? "700" : "500",
-        cursor: "pointer",
-        fontSize: 14,
-      }}
-    >
-      {label}
-    </button>
-  );
-}
+              onClick={() => router

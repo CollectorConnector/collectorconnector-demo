@@ -40,7 +40,8 @@ export default function UpgradePage() {
     const res = await fetch(`/api/stripe/upgrade?plan=${tier}`, {
       method: "POST",
       headers: {
-        "x-user-id": user.id,
+        "Content-Type": "application/json",   // ⭐ REQUIRED FIX
+        "x-user-id": user.id,                 // now actually sent
       },
     });
 

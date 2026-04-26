@@ -20,11 +20,6 @@ export default function CollectionDetails() {
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [commentText, setCommentText] = useState("");
 
-  // ⭐ NEW: Price modal state
-  const [showPriceModal, setShowPriceModal] = useState(false);
-  const [priceInput, setPriceInput] = useState("");
-  const [itemToSell, setItemToSell] = useState<any | null>(null);
-
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
@@ -54,57 +49,6 @@ export default function CollectionDetails() {
     } finally {
       setLoading(false);
     }
-  }
-
-  // ⭐ UPDATED: SELL button now opens price modal
-  function handleSellClick(item: any, e: React.MouseEvent) {
-    e.stopPropagation();
-
-    if (!item.for_sale) {
-      setItemToSell(item);
-      setPriceInput("");
-      setShowPriceModal(true);
-    } else {
-      toggleSaleOff(item);
-    }
-  }
-
-  // ⭐ Turn OFF sale
-  async function toggleSaleOff(item: any) {
-    const { error } = await supabase
-      .from("items")
-      .update({ for_sale: false, price: null })
-      .eq("id", item.id);
-
-    if (!error) {
-      setItems(items.map(i => i.id === item.id ? { ...i, for_sale: false, price: null } : i));
-    }
-  }
-
-  // ⭐ Confirm price + set item for sale
-  async function confirmPrice() {
-    const priceValue = Number(priceInput);
-    if (isNaN(priceValue) || priceValue <= 0) {
-      alert("Please enter a valid price");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("items")
-      .update({ for_sale: true, price: priceValue })
-      .eq("id", itemToSell.id);
-
-    if (!error) {
-      setItems(items.map(i =>
-        i.id === itemToSell.id
-          ? { ...i, for_sale: true, price: priceValue }
-          : i
-      ));
-    }
-
-    setShowPriceModal(false);
-    setItemToSell(null);
-    setPriceInput("");
   }
 
   // SWIPE LOGIC
@@ -172,30 +116,6 @@ export default function CollectionDetails() {
               onClick={() => setSelectedItem(item)}
               style={{ aspectRatio: '1/1', cursor: 'pointer', position: 'relative', overflow: 'hidden', borderRadius: '24%', border: '1px solid #27272a', background: '#09090b' }}
             >
-
-              {/* SELL / FOR SALE BUTTON */}
-              {currentUserId === collection.user_id && (
-                <button
-                  onClick={(e) => handleSellClick(item, e)}
-                  style={{
-                    position: "absolute",
-                    top: "8px",
-                    left: "8px",
-                    zIndex: 20,
-                    background: item.for_sale ? "#22c55e" : "#3b82f6",
-                    color: "#fff",
-                    fontSize: "10px",
-                    fontWeight: "700",
-                    padding: "6px 10px",
-                    borderRadius: "16px",
-                    border: "none",
-                    cursor: "pointer"
-                  }}
-                >
-                  {item.for_sale ? `£${item.price}` : "SELL"}
-                </button>
-              )}
-
               <img 
                 src={item.image_url} 
                 alt={item.title} 
@@ -240,72 +160,6 @@ export default function CollectionDetails() {
               />
               <button onClick={() => { alert("Commented!"); setCommentText(""); }} style={{ background: '#fff', color: '#000', padding: '0 20px', borderRadius: '12px', fontWeight: 'bold' }}>SEND</button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ⭐ PRICE MODAL */}
-      {showPriceModal && itemToSell && (
-        <div 
-          onClick={() => setShowPriceModal(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.85)",
-            zIndex: 99999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px"
-          }}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#18181b",
-              padding: "24px",
-              borderRadius: "20px",
-              width: "90%",
-              maxWidth: "360px",
-              border: "1px solid #27272a"
-            }}
-          >
-            <h2 style={{ fontSize: "20px", fontWeight: "900", marginBottom: "16px" }}>
-              Set Your Price
-            </h2>
-
-            <input
-              type="number"
-              placeholder="Enter price (£)"
-              value={priceInput}
-              onChange={(e) => setPriceInput(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "12px",
-                border: "1px solid #333",
-                background: "#000",
-                color: "#fff",
-                marginBottom: "16px",
-                fontSize: "16px"
-              }}
-            />
-
-            <button
-              onClick={confirmPrice}
-              style={{
-                width: "100%",
-                background: "#22c55e",
-                color: "#000",
-                padding: "12px",
-                borderRadius: "12px",
-                fontWeight: "900",
-                fontSize: "16px",
-                cursor: "pointer"
-              }}
-            >
-              Confirm Price
-            </button>
           </div>
         </div>
       )}

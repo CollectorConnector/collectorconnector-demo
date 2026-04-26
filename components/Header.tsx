@@ -25,14 +25,12 @@ export default function Header() {
     }
   `;
 
-  // Load user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id || null);
     });
   }, []);
 
-  // Realtime messages
   useEffect(() => {
     if (!userId) return;
 
@@ -196,7 +194,7 @@ export default function Header() {
                 <div className="cc-dropdown">
                   <MenuItem label="Profile" onClick={() => router.push(`/profile/${userId}`)} />
 
-                  {/* Marketplace temporarily disabled */}
+                  {/* MARKETPLACE DISABLED */}
                   {/* <MenuItem label="Marketplace" onClick={() => router.push("/marketplace")} /> */}
                   {/* <MenuItem label="My Listings" onClick={() => router.push("/my-listings")} /> */}
                   {/* <MenuItem label="My Purchases" onClick={() => router.push("/my-purchases")} /> */}
@@ -212,4 +210,52 @@ export default function Header() {
           {/* LOGIN */}
           {!userId && (
             <button
-              onClick={() => router
+              onClick={() => router.push("/auth/login")}
+              style={{
+                background: "#fff",
+                color: "#000",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: "700",
+                cursor: "pointer",
+              }}
+            >
+              LOGIN
+            </button>
+          )}
+        </div>
+      </header>
+    </>
+  );
+}
+
+/* MENU ITEM COMPONENT */
+type MenuItemProps = {
+  label: string;
+  onClick: () => void;
+  highlight?: boolean;
+  danger?: boolean;
+};
+
+function MenuItem({ label, onClick, highlight = false, danger = false }: MenuItemProps) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: "100%",
+        textAlign: "left",
+        padding: "14px 20px",
+        background: "none",
+        border: "none",
+        color: danger ? "#f87171" : highlight ? "#f97316" : "#fff",
+        fontWeight: highlight ? "700" : "500",
+        cursor: "pointer",
+        fontSize: 14,
+      }}
+    >
+      {label}
+    </button>
+  );
+}

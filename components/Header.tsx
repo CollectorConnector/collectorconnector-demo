@@ -25,12 +25,14 @@ export default function Header() {
     }
   `;
 
+  // Load user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id || null);
     });
   }, []);
 
+  // Realtime messages
   useEffect(() => {
     if (!userId) return;
 
@@ -192,15 +194,6 @@ export default function Header() {
 
               {menuOpen && (
                 <div className="cc-dropdown">
-                  <MenuItem label="Profile" onClick={() => router.push(`/profile/${userId}`)} />
-
-                  {/* MARKETPLACE DISABLED */}
-                  {/* <MenuItem label="Marketplace" onClick={() => router.push("/marketplace")} /> */}
-                  {/* <MenuItem label="My Listings" onClick={() => router.push("/my-listings")} /> */}
-                  {/* <MenuItem label="My Purchases" onClick={() => router.push("/my-purchases")} /> */}
-
-                  <MenuItem label="Upgrade" onClick={() => router.push("/upgrade")} highlight />
-                  <MenuItem label="Settings" onClick={() => router.push("/settings")} />
                   <MenuItem label="Logout" onClick={handleSignOut} danger />
                 </div>
               )}

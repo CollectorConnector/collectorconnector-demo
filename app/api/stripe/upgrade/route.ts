@@ -9,16 +9,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: "2024-06-20",
 });
 
-// Use ANON KEY — safe for reading profiles, avoids service-role failures
+// Use ANON KEY — safe for reading profiles
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Match the variable names you already have in Vercel
 const PRICE_IDS: Record<string, string | undefined> = {
-  bronze: process.env.STRIPE_BRONZE_PRICE_ID,
-  silver: process.env.STRIPE_SILVER_PRICE_ID,
-  gold: process.env.STRIPE_GOLD_PRICE_ID,
+  bronze: process.env.STRIPE_PRICE_BRONZE,
+  silver: process.env.STRIPE_PRICE_SILVER,
+  gold: process.env.STRIPE_PRICE_GOLD,
 };
 
 export async function POST(req: Request) {
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error("Stripe upgrade error:", error);
+    console.error("Stripe upgrade error:", JSON.stringify(error, null, 2));
     return NextResponse.json(
       { error: "Unable to create checkout session" },
       { status: 500 }

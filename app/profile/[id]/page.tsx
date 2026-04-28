@@ -300,7 +300,18 @@ export default function ProfilePage() {
       const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).single();
       if (prof) setProfile(prof);
       
-      const { data: localItems } = await supabase.from("items").select("*").eq("user_id", userId);
+      const { data: localItems } = await supabase
+        .from("items")
+        .select(`
+          id,
+          title,
+          image_url,
+          estimated_value,
+          niche_families (
+            name
+          )
+        `)
+        .eq("user_id", userId);
       if (localItems) {
         setItemCount(localItems.length);
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
@@ -315,6 +326,9 @@ export default function ProfilePage() {
             username,
             display_url,
             avatar_url
+          ),
+          niche_families (
+            name
           )
         `)
         .order("created_at", { ascending: false })
@@ -760,6 +774,11 @@ export default function ProfilePage() {
                       )}
                     </div>
                     <h3 style={{ fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</h3>
+                    {recentDrops[selectedItemIndex].niche_families?.name && (
+                      <div style={{ fontSize: "11px", color: "#a1a1aa", marginTop: "4px" }}>
+                        {recentDrops[selectedItemIndex].niche_families.name}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>

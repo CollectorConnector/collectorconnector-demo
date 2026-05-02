@@ -432,7 +432,7 @@ export default function ProfilePage() {
           title: itemName || "New Drop",
           image_url: publicUrl,
           estimated_value: valuePerItem,
-          collection_id: targetCollectionId,
+          collection: targetCollectionId,
           status: "active",
           audience: selectedAudience
         });
@@ -1073,7 +1073,7 @@ export default function ProfilePage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontWeight: 'bold' }}>{c.title} ({c.niche})</span>
                     <button onClick={async () => {
-                      const { data } = await supabase.from("items").select("*").eq("collection_id", c.id);
+                      const { data } = await supabase.from("items").select("*").eq("collection", c.id);
                       setEditingColl(c); setCollItems(data || []);
                     }} style={{ color: '#818cf8', fontSize: '12px' }}>VIEW ITEMS</button>
                   </div>

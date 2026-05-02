@@ -60,8 +60,9 @@ export default function CollectionDetails() {
     } finally {
       setLoading(false);
     }
-  }
+  } // ⭐ THIS BRACE WAS MISSING — NOW FIXED
 
+  // SWIPE LOGIC
   const showNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (items.length === 0) return;
@@ -202,7 +203,7 @@ export default function CollectionDetails() {
 
           <img src={selectedItem.image_url} onClick={(e) => e.stopPropagation()} style={{ maxWidth: "95%", maxHeight: "60vh", borderRadius: "16px", border: "1px solid #333", marginBottom: "20px" }} />
 
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "400px", background: "#18181b", borderRadius: "24px", padding: "20px", border: "1px solid "#27272a" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "400px", background: "#18181b", borderRadius: "24px", padding: "20px", border: "1px solid #27272a" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontWeight: "bold", fontSize: "18px" }}>{selectedItem.title}</span>
               <button onClick={(e) => toggleLike(selectedItem.id, e)} style={{ fontSize: "24px", background: "none", border: "none", cursor: "pointer" }}>

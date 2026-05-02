@@ -30,6 +30,8 @@ export default function CollectionDetails() {
   async function loadCollectionData() {
     try {
       setLoading(true);
+      
+      // 1. Get the Collection Info
       const { data: coll } = await supabase
         .from("collections")
         .select("*")
@@ -38,11 +40,14 @@ export default function CollectionDetails() {
 
       if (coll) setCollection(coll);
 
-      const { data: itemList } = await supabase
+      // 2. Get the Items (FIXED COLUMN NAME HERE)
+      const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
-        .eq("collection", collectionId);
+        .eq("collection_id", collectionId); // Changed from 'collection' to 'collection_id'
 
+      if (error) console.error("Query Error:", error);
+      
       setItems(itemList || []);
     } catch (err) {
       console.error("Error loading collection vault:", err);
@@ -54,12 +59,14 @@ export default function CollectionDetails() {
   // SWIPE LOGIC
   const showNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (items.length === 0) return;
     const currentIndex = items.findIndex(i => i.id === selectedItem.id);
     setSelectedItem(items[(currentIndex + 1) % items.length]);
   };
 
   const showPrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (items.length === 0) return;
     const currentIndex = items.findIndex(i => i.id === selectedItem.id);
     setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
   };
@@ -98,32 +105,38 @@ export default function CollectionDetails() {
           </button>
 
           <h1 style={{ fontSize: '28px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-1px', marginBottom: '8px' }}>
-            {collection?.title || "Collection Vault"}
+            {collection?.title || collection?.name || "Collection Vault"}
           </h1>
 
           <div style={{ display: 'inline-block', background: '#18181b', padding: '6px 16px', borderRadius: '20px', border: '1px solid #27272a' }}>
             <p style={{ color: '#818cf8', fontWeight: '900', fontSize: '12px', letterSpacing: '1px', margin: 0 }}>
-              {items.length} ITEMS — £{items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0)}
+              {items.length} {items.length === 1 ? 'ITEM' : 'ITEMS'} — £{items.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0)}
             </p>
           </div>
         </div>
 
         {/* GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' }}>
-          {items.map((item) => (
-            <div 
-              key={item.id}
-              onClick={() => setSelectedItem(item)}
-              style={{ aspectRatio: '1/1', cursor: 'pointer', position: 'relative', overflow: 'hidden', borderRadius: '24%', border: '1px solid #27272a', background: '#09090b' }}
-            >
-              <img 
-                src={item.image_url} 
-                alt={item.title} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-              />
-            </div>
-          ))}
-        </div>
+        {items.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' }}>
+            {items.map((item) => (
+              <div 
+                key={item.id}
+                onClick={() => setSelectedItem(item)}
+                style={{ aspectRatio: '1/1', cursor: 'pointer', position: 'relative', overflow: 'hidden', borderRadius: '24%', border: '1px solid #27272a', background: '#09090b' }}
+              >
+                <img 
+                  src={item.image_url} 
+                  alt={item.title} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#52525b', fontWeight: 'bold' }}>
+            THIS VAULT IS EMPTY
+          </div>
+        )}
       </main>
 
       {/* ITEM MODAL */}

@@ -44,7 +44,7 @@ export default function CollectionDetails() {
       const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
-        .eq("collection_id", collectionId); // Targeting the column shown in image_2.png
+        .eq("collection", collectionId); // Targeting the column shown in image_2.png
 
       if (error) throw error;
       setItems(itemList || []);

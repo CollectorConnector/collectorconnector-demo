@@ -20,14 +20,19 @@ export default function CollectionDetails() {
   const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
   const [commentText, setCommentText] = useState("");
 
+  // ⭐ Load user first, THEN load collection + items
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
+      const uid = data.user?.id || null;
+      setCurrentUserId(uid);
+
+      if (uid && collectionId) {
+        loadCollectionData(uid);
+      }
     });
-    if (collectionId) loadCollectionData();
   }, [collectionId]);
 
-  async function loadCollectionData() {
+  async function loadCollectionData(uid: string) {
     try {
       setLoading(true);
 
@@ -36,21 +41,22 @@ export default function CollectionDetails() {
         .from("collections")
         .select("*")
         .eq("id", collectionId)
+        .eq("user_id", uid) // ⭐ Only YOUR collection
         .single();
 
       if (coll) setCollection(coll);
 
-      // 2. Fetch the Items 
-      // We use collection_id to match your database schema
+      // 2. Fetch ONLY your items inside this collection
       const { data: itemList, error: itemError } = await supabase
         .from("items")
         .select("*")
-        .eq("collection_id", collectionId); 
+        .eq("collection_id", collectionId)
+        .eq("user_id", uid); // ⭐ Only YOUR items
 
       if (itemError) {
-        console.error("Database mismatch error:", itemError);
+        console.error("Item load error:", itemError);
       }
-      
+
       setItems(itemList || []);
 
     } catch (err) {
@@ -120,7 +126,7 @@ export default function CollectionDetails() {
           </button>
 
           <h1 style={{ fontSize: '28px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-1px', marginBottom: '8px' }}>
-            {collection?.title || collection?.name || "Collection Vault"}
+            {collection?.title || "Collection Vault"}
           </h1>
 
           <div style={{ display: 'inline-block', background: '#18181b', padding: '6px 16px', borderRadius: '20px', border: '1px solid #27272a' }}>

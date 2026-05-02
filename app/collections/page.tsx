@@ -20,7 +20,9 @@ function List() {
       .select(`
         id,
         title,
-        name,
+        niche,
+        cover_url,
+        item_count,
         created_at,
         items (
           id,
@@ -40,7 +42,6 @@ function List() {
           return;
         }
 
-        // Only show collections that actually have items
         const cleaned = (data || []).filter(
           (col) => col.items && col.items.length > 0
         );

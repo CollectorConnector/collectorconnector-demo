@@ -15,40 +15,50 @@ function List() {
   useEffect(() => {
     setLoading(true);
 
-    supabase
-      .from("collections")
-      .select(`
-        id,
-        title,
-        niche,
-        cover_url,
-        item_count,
-        created_at,
-        items (
-          id,
-          image_url,
-          for_sale,
-          status,
-          audience,
-          collection_id
-        )
-      `)
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Error fetching collections:", error);
-          setCollections([]);
-          setLoading(false);
-          return;
-        }
+    // ⭐ Get the logged‑in user
+    supabase.auth.getUser().then(({ data }) => {
+      const currentUserId = data.user?.id;
 
-        const cleaned = (data || []).filter(
-          (col) => col.items && col.items.length > 0
-        );
-
-        setCollections(cleaned);
+      if (!currentUserId) {
+        setCollections([]);
         setLoading(false);
-      });
+        return;
+      }
+
+      // ⭐ Fetch ONLY this user's collections
+      supabase
+        .from("collections")
+        .select(`
+          id,
+          title,
+          niche,
+          cover_url,
+          item_count,
+          created_at,
+          items (
+            id,
+            image_url,
+            for_sale,
+            status,
+            audience,
+            collection_id
+          )
+        `)
+        .eq("user_id", currentUserId)
+        .order("created_at", { ascending: false })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Error fetching collections:", error);
+            setCollections([]);
+            setLoading(false);
+            return;
+          }
+
+          // ⭐ Do NOT filter out empty collections
+          setCollections(data || []);
+          setLoading(false);
+        });
+    });
   }, []);
 
   if (!loading && collections.length === 0) {

@@ -8,9 +8,8 @@ import Footer from "@/components/Footer";
 
 export default function CollectionDetails() {
   const params = useParams();
+  const collectionId = params?.id as string;
   const router = useRouter();
-
-  const rawParam = params?.id as string;
 
   const [collection, setCollection] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
@@ -25,57 +24,43 @@ export default function CollectionDetails() {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
-
-    if (rawParam) loadCollectionData();
-  }, [rawParam]);
+    if (collectionId) loadCollectionData();
+  }, [collectionId]);
 
   async function loadCollectionData() {
     try {
       setLoading(true);
 
-      console.log("Incoming route param:", rawParam);
+      // 1. Fetch the Collection info
+      const { data: coll } = await supabase
+        .from("collections")
+        .select("*")
+        .eq("id", collectionId)
+        .single();
 
-      // Detect if param is UUID or slug
-      const isUUID = /^[0-9a-fA-F-]{36}$/.test(rawParam);
+      if (coll) setCollection(coll);
 
-      let collQuery;
-      if (isUUID) {
-        collQuery = supabase.from("collections").select("*").eq("id", rawParam).single();
-      } else {
-        collQuery = supabase.from("collections").select("*").eq("slug", rawParam).single();
-      }
-
-      const { data: coll, error: collError } = await collQuery;
-
-      if (collError || !coll) {
-        console.error("Collection Fetch Error:", collError);
-        return;
-      }
-
-      setCollection(coll);
-      console.log("Collection loaded:", coll);
-
-      // Now fetch items using the REAL collection ID
+      // 2. Fetch the Items 
+      // We use collection_id to match your database schema
       const { data: itemList, error: itemError } = await supabase
         .from("items")
         .select("*")
-        .eq("collection_id", coll.id);
+        .eq("collection_id", collectionId); 
 
       if (itemError) {
-        console.error("Item Fetch Error:", itemError);
-      } else {
-        console.log("Items found:", itemList?.length || 0);
-        setItems(itemList || []);
+        console.error("Database mismatch error:", itemError);
       }
+      
+      setItems(itemList || []);
 
     } catch (err) {
-      console.error("Critical Error:", err);
+      console.error("System Error:", err);
     } finally {
       setLoading(false);
     }
   }
 
-  // Swipe logic
+  // SWIPE LOGIC
   const showNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (items.length === 0) return;
@@ -90,6 +75,7 @@ export default function CollectionDetails() {
     setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
   };
 
+  // SOCIAL LOGIC
   async function toggleLike(itemId: string, e: React.MouseEvent) {
     e.stopPropagation();
     if (!currentUserId) return alert("Log in to like items!");
@@ -117,7 +103,18 @@ export default function CollectionDetails() {
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <button 
             onClick={() => router.back()} 
-            style={{ color: '#71717a', fontSize: '11px', fontWeight: '900', marginBottom: '16px', border: '1px solid #27272a', background: '#09090b', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', textTransform: 'uppercase' }}
+            style={{ 
+              color: '#71717a', 
+              fontSize: '11px', 
+              fontWeight: '900', 
+              marginBottom: '16px', 
+              border: '1px solid #27272a', 
+              background: '#09090b', 
+              padding: '6px 12px', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              textTransform: 'uppercase' 
+            }}
           >
             ← Back
           </button>
@@ -133,13 +130,22 @@ export default function CollectionDetails() {
           </div>
         </div>
 
+        {/* GRID */}
         {items.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' }}>
             {items.map((item) => (
               <div 
                 key={item.id}
                 onClick={() => setSelectedItem(item)}
-                style={{ aspectRatio: '1/1', cursor: 'pointer', position: 'relative', overflow: 'hidden', borderRadius: '24%', border: '1px solid #27272a', background: '#09090b' }}
+                style={{ 
+                  aspectRatio: '1/1', 
+                  cursor: 'pointer', 
+                  position: 'relative', 
+                  overflow: 'hidden', 
+                  borderRadius: '24%', 
+                  border: '1px solid #27272a', 
+                  background: '#09090b' 
+                }}
               >
                 <img 
                   src={item.image_url} 
@@ -155,6 +161,54 @@ export default function CollectionDetails() {
           </div>
         )}
       </main>
+
+      {/* ITEM MODAL */}
+      {selectedItem && (
+        <div 
+          onClick={() => setSelectedItem(null)}
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0,0,0,0.95)', 
+            zIndex: 9999, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '20px' 
+          }}
+        >
+          <div style={{ position: 'absolute', top: '30px', right: '30px', color: '#fff', fontSize: '20px', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer' }}>✕</div>
+
+          <button onClick={showPrev} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', padding: '20px', borderRadius: '50%', cursor: 'pointer' }}>‹</button>
+          <button onClick={showNext} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', padding: '20px', borderRadius: '50%', cursor: 'pointer' }}>›</button>
+
+          <img 
+            src={selectedItem.image_url} 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ maxWidth: '95%', maxHeight: '60vh', borderRadius: '16px', border: '1px solid #333', marginBottom: '20px' }} 
+          />
+
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '400px', background: '#18181b', borderRadius: '24px', padding: '20px', border: '1px solid #27272a' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{selectedItem.title}</span>
+              <button onClick={(e) => toggleLike(selectedItem.id, e)} style={{ fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer' }}>
+                {likedItems.has(selectedItem.id) ? '⭐' : '☆'}
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+              <input 
+                value={commentText} 
+                onChange={e => setCommentText(e.target.value)} 
+                placeholder="Add a comment..." 
+                style={{ flex: 1, background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', fontSize: '14px' }} 
+              />
+              <button onClick={() => { alert("Commented!"); setCommentText(""); }} style={{ background: '#fff', color: '#000', padding: '0 20px', borderRadius: '12px', fontWeight: 'bold' }}>SEND</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

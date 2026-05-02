@@ -1,29 +1,23 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 
 function List() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const userId = searchParams.get("user");
-
   const [collections, setCollections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
-
     setLoading(true);
 
     supabase
       .from("collections")
-      .select(
-        `
+      .select(`
         id,
         title,
         name,
@@ -36,9 +30,7 @@ function List() {
           audience,
           collection_id
         )
-      `
-      )
-      .eq("user_id", userId)
+      `)
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
         if (error) {
@@ -48,10 +40,7 @@ function List() {
           return;
         }
 
-        // 🔥 Remove any collections that:
-        // - have no items
-        // - have broken item links
-        // - were deleted but still cached
+        // Only show collections that actually have items
         const cleaned = (data || []).filter(
           (col) => col.items && col.items.length > 0
         );
@@ -59,7 +48,7 @@ function List() {
         setCollections(cleaned);
         setLoading(false);
       });
-  }, [userId]);
+  }, []);
 
   if (!loading && collections.length === 0) {
     return (

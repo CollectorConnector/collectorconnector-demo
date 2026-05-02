@@ -30,6 +30,8 @@ export default function CollectionDetails() {
   async function loadCollectionData() {
     try {
       setLoading(true);
+      
+      // 1. Fetch Collection Metadata
       const { data: coll } = await supabase
         .from("collections")
         .select("*")
@@ -38,12 +40,15 @@ export default function CollectionDetails() {
 
       if (coll) setCollection(coll);
 
-      const { data: itemList } = await supabase
+      // 2. Fetch Items - Using 'collection_id' to match your schema
+      const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
-        .eq("collection", collectionId);
+        .eq("collection_id", collectionId); // Targeting the column shown in image_2.png
 
+      if (error) throw error;
       setItems(itemList || []);
+
     } catch (err) {
       console.error("Error loading collection vault:", err);
     } finally {
@@ -54,12 +59,14 @@ export default function CollectionDetails() {
   // SWIPE LOGIC
   const showNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (items.length === 0) return;
     const currentIndex = items.findIndex(i => i.id === selectedItem.id);
     setSelectedItem(items[(currentIndex + 1) % items.length]);
   };
 
   const showPrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (items.length === 0) return;
     const currentIndex = items.findIndex(i => i.id === selectedItem.id);
     setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
   };
@@ -77,14 +84,14 @@ export default function CollectionDetails() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>
+      <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '900', letterSpacing: '2px' }}>
         LOADING VAULT...
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#000', color: '#fff' }}>
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'inherit' }}>
       <Header />
 
       <main style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '110px', paddingLeft: '16px', paddingRight: '16px', paddingBottom: '100px' }}>
@@ -109,21 +116,27 @@ export default function CollectionDetails() {
         </div>
 
         {/* GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' }}>
-          {items.map((item) => (
-            <div 
-              key={item.id}
-              onClick={() => setSelectedItem(item)}
-              style={{ aspectRatio: '1/1', cursor: 'pointer', position: 'relative', overflow: 'hidden', borderRadius: '24%', border: '1px solid #27272a', background: '#09090b' }}
-            >
-              <img 
-                src={item.image_url} 
-                alt={item.title} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-              />
-            </div>
-          ))}
-        </div>
+        {items.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' }}>
+            {items.map((item) => (
+              <div 
+                key={item.id}
+                onClick={() => setSelectedItem(item)}
+                style={{ aspectRatio: '1/1', cursor: 'pointer', position: 'relative', overflow: 'hidden', borderRadius: '24%', border: '1px solid #27272a', background: '#09090b' }}
+              >
+                <img 
+                  src={item.image_url} 
+                  alt={item.title || "Collection Item"} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#3f3f46', fontWeight: 'bold' }}>
+            THIS VAULT IS CURRENTLY EMPTY
+          </div>
+        )}
       </main>
 
       {/* ITEM MODAL */}
@@ -132,7 +145,10 @@ export default function CollectionDetails() {
           onClick={() => setSelectedItem(null)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
         >
-          <div style={{ position: 'absolute', top: '30px', right: '30px', color: '#fff', fontSize: '20px', fontWeight: 'bold', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer' }}>✕</div>
+          {/* Close Icon - Using SVG for consistency */}
+          <div style={{ position: 'absolute', top: '30px', right: '30px', color: '#fff', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer' }}>
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </div>
 
           <button onClick={showPrev} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', padding: '20px', borderRadius: '50%', cursor: 'pointer' }}>‹</button>
           <button onClick={showNext} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '24px', padding: '20px', borderRadius: '50%', cursor: 'pointer' }}>›</button>
@@ -145,7 +161,7 @@ export default function CollectionDetails() {
 
           <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '400px', background: '#18181b', borderRadius: '24px', padding: '20px', border: '1px solid #27272a' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{selectedItem.title}</span>
+              <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{selectedItem.title || "Untitled Item"}</span>
               <button onClick={(e) => toggleLike(selectedItem.id, e)} style={{ fontSize: '24px', background: 'none', border: 'none', cursor: 'pointer' }}>
                 {likedItems.has(selectedItem.id) ? '⭐' : '☆'}
               </button>

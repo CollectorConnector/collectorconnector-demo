@@ -12,18 +12,47 @@ function List() {
   const router = useRouter();
   const userId = searchParams.get("user");
   const [collections, setCollections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (userId) {
-      // UPDATED: Now selecting 'for_sale' for each item
+      setLoading(true);
+      // FETCH: Selecting all collection data and joining the items table
+      // We include status and audience to ensure visibility logic is handled
       supabase
         .from("collections")
-        .select(`*, items (image_url, for_sale)`)
+        .select(`
+          *, 
+          items (
+            id,
+            image_url, 
+            for_sale,
+            status,
+            audience
+          )
+        `)
         .eq("user_id", userId)
         .order("created_at", { ascending: false }) 
-        .then(({ data }) => setCollections(data || []));
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Error fetching collections:", error);
+          } else {
+            console.log("Collection Data Loaded:", data); // For debugging
+            setCollections(data || []);
+          }
+          setLoading(false);
+        });
     }
   }, [userId]);
+
+  if (!loading && collections.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', paddingTop: '100px' }}>
+        <p style={{ color: '#52525b', fontWeight: '900' }}>NO COLLECTIONS FOUND</p>
+        <button onClick={() => router.back()} style={{ color: '#818cf8', background: 'none', border: 'none', cursor: 'pointer', marginTop: '10px' }}>GO BACK</button>
+      </div>
+    );
+  }
 
   return (
     <main style={{ maxWidth: '800px', margin: '100px auto 0', padding: '0 16px 80px' }}>
@@ -40,46 +69,55 @@ function List() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        {collections.map((c) => (
-          <Link href={`/collections/${c.id}`} key={c.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ 
-              background: '#111', 
-              aspectRatio: '1/1', 
-              borderRadius: '24px', 
-              border: '1px solid #27272a', 
-              position: 'relative', 
-              overflow: 'hidden', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center' 
-            }}>
-              {c.items?.[0] ? (
-                <img 
-                  src={c.items[0].image_url} 
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} 
-                />
-              ) : (
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, #18181b, #27272a)' }} />
-              )}
-              
-              <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '16px' }}>
-                <p style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '14px', letterSpacing: '1px', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                  {c.title}
-                </p>
-                <span style={{ fontSize: '10px', color: '#818cf8', fontWeight: 'bold', display: 'block' }}>
-                    {c.items?.length || 0} ITEMS
-                </span>
+        {collections.map((c) => {
+          // Calculate if any item in this specific collection is for sale
+          const hasItemsForSale = c.items?.some((i: any) => i.for_sale);
+          const itemCount = c.items?.length || 0;
+          const previewImage = c.items?.[0]?.image_url;
 
-                {/* FOR SALE INDICATOR */}
-                {c.items?.some((i: any) => i.for_sale) && (
-                  <div style={{ marginTop: '8px', background: '#22c55e', color: '#000', fontSize: '9px', fontWeight: '900', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                    FOR SALE
-                  </div>
+          return (
+            <Link href={`/collections/${c.id}`} key={c.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div style={{ 
+                background: '#111', 
+                aspectRatio: '1/1', 
+                borderRadius: '24px', 
+                border: '1px solid #27272a', 
+                position: 'relative', 
+                overflow: 'hidden', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                {/* Background Image logic */}
+                {previewImage ? (
+                  <img 
+                    src={previewImage} 
+                    alt={c.title}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} 
+                  />
+                ) : (
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(45deg, #18181b, #27272a)' }} />
                 )}
+                
+                <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '16px' }}>
+                  <p style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '14px', letterSpacing: '1px', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                    {c.title}
+                  </p>
+                  <span style={{ fontSize: '10px', color: '#818cf8', fontWeight: 'bold', display: 'block' }}>
+                      {itemCount} {itemCount === 1 ? 'ITEM' : 'ITEMS'}
+                  </span>
+
+                  {/* For Sale badge only shows if the join returned for_sale items */}
+                  {hasItemsForSale && (
+                    <div style={{ marginTop: '8px', background: '#22c55e', color: '#000', fontSize: '9px', fontWeight: '900', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                      FOR SALE
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </main>
   );

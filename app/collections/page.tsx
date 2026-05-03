@@ -24,7 +24,7 @@ function List() {
         return;
       }
 
-      // ⭐ FIXED QUERY — items!inner ensures items.collection_id = collections.id
+      // ⭐ FIXED: LEFT JOIN so collections ALWAYS show, even with 0 items
       supabase
         .from("collections")
         .select(`
@@ -34,7 +34,7 @@ function List() {
           cover_url,
           item_count,
           created_at,
-          items!inner (
+          items (
             id,
             image_url,
             for_sale,

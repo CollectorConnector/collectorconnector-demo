@@ -24,7 +24,6 @@ function List() {
         return;
       }
 
-      // ⭐ FIX: Fetch items with BOTH possible column names
       supabase
         .from("collections")
         .select(`
@@ -135,11 +134,13 @@ function List() {
         }}
       >
         {collections.map((c) => {
-          // ⭐ FIX: Filter items by BOTH possible fields
-          const filteredItems = c.items?.filter(
-            (i: any) =>
-              i.collection_id === c.id || i.collection === c.id
-          ) || [];
+          // ⭐ FIX: Type-safe filtering for mixed schema
+          const filteredItems =
+            c.items?.filter(
+              (i: any) =>
+                String(i.collection_id) === String(c.id) ||
+                String(i.collection) === String(c.id)
+            ) || [];
 
           const itemCount = filteredItems.length;
           const previewImage = filteredItems[0]?.image_url;

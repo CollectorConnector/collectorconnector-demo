@@ -17,8 +17,6 @@ export default function CollectionDetails() {
 
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-  const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -31,7 +29,7 @@ export default function CollectionDetails() {
     try {
       setLoading(true);
 
-      // Fetch collection metadata
+      // 1. Fetch collection metadata
       const { data: coll } = await supabase
         .from("collections")
         .select("*")
@@ -40,13 +38,25 @@ export default function CollectionDetails() {
 
       if (coll) setCollection(coll);
 
-      // ⭐ Load items using BOTH schemas
+      // 2. Build flexible OR filters to catch legacy items
+      const orFilters = [
+        `collection_id.eq.${collectionId}`,   // new schema
+        `collection.eq.${collectionId}`,      // legacy schema (id stored in text field)
+      ];
+
+      // If the collection has a title, include that too (legacy £2 coins)
+      if (coll?.title) {
+        orFilters.push(`collection.eq.${coll.title}`);
+      }
+
+      // 3. Fetch items using all possible legacy + new links
       const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
-        .or(`collection_id.eq.${collectionId},collection.eq.${collectionId}`);
+        .or(orFilters.join(","));
 
       if (error) throw error;
+
       setItems(itemList || []);
 
     } catch (err) {
@@ -72,30 +82,6 @@ export default function CollectionDetails() {
 
     // Remove from UI instantly
     setItems(prev => prev.filter(i => i.id !== itemId));
-  }
-
-  const showNext = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (items.length === 0) return;
-    const currentIndex = items.findIndex(i => i.id === selectedItem.id);
-    setSelectedItem(items[(currentIndex + 1) % items.length]);
-  };
-
-  const showPrev = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (items.length === 0) return;
-    const currentIndex = items.findIndex(i => i.id === selectedItem.id);
-    setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
-  };
-
-  async function toggleLike(itemId: string, e: React.MouseEvent) {
-    e.stopPropagation();
-    if (!currentUserId) return alert("Log in to like items!");
-    setLikedItems(prev => {
-      const next = new Set(prev);
-      next.has(itemId) ? next.delete(itemId) : next.add(itemId);
-      return next;
-    });
   }
 
   if (loading) {

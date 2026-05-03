@@ -14,18 +14,21 @@ export default function CollectionDetails() {
   const [collection, setCollection] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
-    });
-    if (collectionId) loadCollectionData();
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id || null;
+      setCurrentUserId(userId);
+      if (collectionId && userId) {
+        loadCollectionData(userId);
+      }
+    };
+    getUser();
   }, [collectionId]);
 
-  async function loadCollectionData() {
+  async function loadCollectionData(userId: string) {
     try {
       setLoading(true);
 
@@ -38,26 +41,29 @@ export default function CollectionDetails() {
 
       if (coll) setCollection(coll);
 
-      // 2. Build flexible OR filters to catch legacy items
+      // 2. Build strict filters
+      // We only want items that belong to THIS user AND match this collection
       const orFilters = [
-        `collection_id.eq.${collectionId}`,   // new schema
-        `collection.eq.${collectionId}`,      // legacy schema (id stored in text field)
+        `collection_id.eq.${collectionId}`,
       ];
 
-      // If the collection has a title, include that too (legacy £2 coins)
       if (coll?.title) {
         orFilters.push(`collection.eq.${coll.title}`);
       }
 
-      // 3. Fetch items using all possible legacy + new links
+      // 3. Fetch items - Adding the .eq("user_id", userId) is critical
+      // to prevent "Duplicate" images from other users appearing
       const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
-        .or(orFilters.join(","));
+        .or(orFilters.join(","))
+        .eq("user_id", userId); // Strict ownership check
 
       if (error) throw error;
 
-      setItems(itemList || []);
+      // Filter out any potential accidental duplicates by ID in the state
+      const uniqueItems = itemList ? Array.from(new Map(itemList.map(item => [item.id, item])).values()) : [];
+      setItems(uniqueItems);
 
     } catch (err) {
       console.error("Error loading collection vault:", err);
@@ -66,21 +72,23 @@ export default function CollectionDetails() {
     }
   }
 
-  // ⭐ DELETE ITEM (uniform behaviour)
   async function deleteItem(itemId: string, e: React.MouseEvent) {
     e.stopPropagation();
+    
+    // Safety check: ensure we have a user
+    if (!currentUserId) return;
 
     const { error } = await supabase
       .from("items")
       .delete()
-      .eq("id", itemId);
+      .eq("id", itemId)
+      .eq("user_id", currentUserId); // Safety: only delete if it's yours
 
     if (error) {
       alert("Error deleting item: " + error.message);
       return;
     }
 
-    // Remove from UI instantly
     setItems(prev => prev.filter(i => i.id !== itemId));
   }
 
@@ -122,10 +130,8 @@ export default function CollectionDetails() {
             {items.map((item) => (
               <div 
                 key={item.id}
-                onClick={() => setSelectedItem(item)}
-                style={{ aspectRatio: "1/1", cursor: "pointer", position: "relative", overflow: "hidden", borderRadius: "24%", border: "1px solid #27272a", background: "#09090b" }}
+                style={{ aspectRatio: "1/1", position: "relative", overflow: "hidden", borderRadius: "24%", border: "1px solid #27272a", background: "#09090b" }}
               >
-                {/* ⭐ DELETE BUTTON (uniform red X) */}
                 <button
                   onClick={(e) => deleteItem(item.id, e)}
                   style={{

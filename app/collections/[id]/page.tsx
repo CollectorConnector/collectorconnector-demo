@@ -40,7 +40,7 @@ export default function CollectionDetails() {
 
       if (coll) setCollection(coll);
 
-      // ⭐ FIX: Read BOTH possible column names
+      // ⭐ Load items using BOTH schemas
       const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
@@ -54,6 +54,24 @@ export default function CollectionDetails() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // ⭐ DELETE ITEM (uniform behaviour)
+  async function deleteItem(itemId: string, e: React.MouseEvent) {
+    e.stopPropagation();
+
+    const { error } = await supabase
+      .from("items")
+      .delete()
+      .eq("id", itemId);
+
+    if (error) {
+      alert("Error deleting item: " + error.message);
+      return;
+    }
+
+    // Remove from UI instantly
+    setItems(prev => prev.filter(i => i.id !== itemId));
   }
 
   const showNext = (e?: React.MouseEvent) => {
@@ -121,6 +139,31 @@ export default function CollectionDetails() {
                 onClick={() => setSelectedItem(item)}
                 style={{ aspectRatio: "1/1", cursor: "pointer", position: "relative", overflow: "hidden", borderRadius: "24%", border: "1px solid #27272a", background: "#09090b" }}
               >
+                {/* ⭐ DELETE BUTTON (uniform red X) */}
+                <button
+                  onClick={(e) => deleteItem(item.id, e)}
+                  style={{
+                    position: "absolute",
+                    top: "6px",
+                    right: "6px",
+                    zIndex: 20,
+                    background: "#ef4444",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "22px",
+                    height: "22px",
+                    fontSize: "12px",
+                    fontWeight: "900",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  ×
+                </button>
+
                 <img 
                   src={item.image_url} 
                   alt={item.title || "Collection Item"} 

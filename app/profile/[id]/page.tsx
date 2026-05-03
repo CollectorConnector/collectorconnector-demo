@@ -472,7 +472,12 @@ export default function ProfilePage() {
   async function deleteItem(id: string) {
     if(!confirm("Delete this photo?")) return;
     try {
-      const { error } = await supabase.from("items").delete().eq("id", id);
+      const { error } = await supabase
+        .from("items")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", currentUserId);
+
       if (error) throw error;
       
       setCollItems(prev => prev.filter(i => i.id !== id));
@@ -1073,8 +1078,14 @@ export default function ProfilePage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontWeight: 'bold' }}>{c.title} ({c.niche})</span>
                     <button onClick={async () => {
-                      const { data } = await supabase.from("items").select("*").eq("collection", c.id);
-                      setEditingColl(c); setCollItems(data || []);
+                      // Fix: check both collection_id (UUID) and collection (Legacy Text)
+                      const { data } = await supabase
+                        .from("items")
+                        .select("*")
+                        .or(`collection_id.eq.${c.id},collection.eq.${c.id}`);
+
+                      setEditingColl(c); 
+                      setCollItems(data || []);
                     }} style={{ color: '#818cf8', fontSize: '12px' }}>VIEW ITEMS</button>
                   </div>
                   {editingColl?.id === c.id && (

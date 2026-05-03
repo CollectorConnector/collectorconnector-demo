@@ -58,14 +58,14 @@ export default function CollectionDetails() {
 
   const showNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (items.length === 0) return;
+    if (items.length === 0 || !selectedItem) return;
     const currentIndex = items.findIndex(i => i.id === selectedItem.id);
     setSelectedItem(items[(currentIndex + 1) % items.length]);
   };
 
   const showPrev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (items.length === 0) return;
+    if (items.length === 0 || !selectedItem) return;
     const currentIndex = items.findIndex(i => i.id === selectedItem.id);
     setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
   };
@@ -132,6 +132,36 @@ export default function CollectionDetails() {
         ) : (
           <div style={{ textAlign: "center", padding: "40px", color: "#3f3f46", fontWeight: "bold" }}>
             THIS VAULT IS CURRENTLY EMPTY
+          </div>
+        )}
+
+        {/* LIGHTBOX OVERLAY */}
+        {selectedItem && (
+          <div 
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={() => setSelectedItem(null)}
+          >
+            <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '30px', cursor: 'pointer' }}>✕</button>
+            
+            <button 
+              onClick={showPrev} 
+              style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '40px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', zIndex: 1001 }}
+            >‹</button>
+
+            <div style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+              <img 
+                src={selectedItem.image_url} 
+                style={{ maxHeight: '80vh', maxWidth: '90vw', objectFit: 'contain', borderRadius: '12px' }} 
+              />
+              <p style={{ marginTop: '15px', fontWeight: '900', textTransform: 'uppercase', color: '#fff' }}>
+                {selectedItem.name || selectedItem.title}
+              </p>
+            </div>
+
+            <button 
+              onClick={showNext} 
+              style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '40px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', zIndex: 1001 }}
+            >›</button>
           </div>
         )}
       </main>

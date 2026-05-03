@@ -15,9 +15,10 @@ export default function CollectionDetails() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // LIGHTBOX STATE
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
+  const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -30,7 +31,7 @@ export default function CollectionDetails() {
     try {
       setLoading(true);
 
-      // 1. Fetch collection metadata using the ID from the URL
+      // 1. Fetch collection metadata
       const { data: coll } = await supabase
         .from("collections")
         .select("*")
@@ -40,9 +41,8 @@ export default function CollectionDetails() {
       if (coll) {
         setCollection(coll);
 
-        // 2. Fetch items 
-        // We match by the collection_id (UUID) OR the collection name (Title)
-        // CRITICAL: We wrap the title in double quotes so names like "Retro Games" work!
+        // 2. ⭐ THE FIX: Match by UUID OR by the actual Title string from the collection object
+        // We use "coll.title" inside double quotes so spaces don't break the query.
         const { data: itemList, error } = await supabase
           .from("items")
           .select("*")
@@ -59,17 +59,18 @@ export default function CollectionDetails() {
     }
   }
 
-  // Arrow Navigation Logic
-  const showNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (items.length === 0) return;
-    setSelectedIndex((prev) => (prev !== null && prev < items.length - 1 ? prev + 1 : 0));
+  const showNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (items.length === 0 || !selectedItem) return;
+    const currentIndex = items.findIndex(i => i.id === selectedItem.id);
+    setSelectedItem(items[(currentIndex + 1) % items.length]);
   };
 
-  const showPrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (items.length === 0) return;
-    setSelectedIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : items.length - 1));
+  const showPrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (items.length === 0 || !selectedItem) return;
+    const currentIndex = items.findIndex(i => i.id === selectedItem.id);
+    setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
   };
 
   if (loading) {
@@ -107,10 +108,10 @@ export default function CollectionDetails() {
 
         {items.length > 0 ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "14px" }}>
-            {items.map((item, index) => (
+            {items.map((item) => (
               <div 
                 key={item.id}
-                onClick={() => setSelectedIndex(index)}
+                onClick={() => setSelectedItem(item)}
                 style={{ aspectRatio: "1/1", cursor: "pointer", position: "relative", overflow: "hidden", borderRadius: "24%", border: "1px solid #27272a", background: "#09090b" }}
               >
                 <img 
@@ -127,32 +128,30 @@ export default function CollectionDetails() {
           </div>
         )}
 
-        {/* LIGHTBOX OVERLAY */}
-        {selectedIndex !== null && items[selectedIndex] && (
+        {/* LIGHTBOX / ENLARGE FEATURE */}
+        {selectedItem && (
           <div 
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={() => setSelectedIndex(null)}
+            onClick={() => setSelectedItem(null)}
           >
-            <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '32px', cursor: 'pointer' }}>✕</button>
+            <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '30px', cursor: 'pointer' }}>✕</button>
             
             <button 
-                onClick={showPrev}
-                style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '40px', padding: '15px', borderRadius: '50%', cursor: 'pointer', zIndex: 1001 }}
+              onClick={showPrev} 
+              style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '40px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}
             >‹</button>
-            
+
             <div style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
               <img 
-                src={items[selectedIndex].image_url} 
-                style={{ maxHeight: '80vh', maxWidth: '90vw', objectFit: 'contain', borderRadius: '8px', marginBottom: '10px' }} 
+                src={selectedItem.image_url} 
+                style={{ maxHeight: '80vh', maxWidth: '90vw', objectFit: 'contain', borderRadius: '12px' }} 
               />
-              <p style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '14px', color: '#fff' }}>
-                {items[selectedIndex].name || items[selectedIndex].title}
-              </p>
+              <p style={{ marginTop: '15px', fontWeight: '900', textTransform: 'uppercase' }}>{selectedItem.name || selectedItem.title}</p>
             </div>
 
             <button 
-                onClick={showNext}
-                style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '40px', padding: '15px', borderRadius: '50%', cursor: 'pointer', zIndex: 1001 }}
+              onClick={showNext} 
+              style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '40px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}
             >›</button>
           </div>
         )}

@@ -15,10 +15,9 @@ export default function CollectionDetails() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  // Use Index for the Lightbox (makes arrows much easier)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-  const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -31,23 +30,25 @@ export default function CollectionDetails() {
     try {
       setLoading(true);
 
-      // Fetch collection metadata
+      // 1. Fetch collection metadata
       const { data: coll } = await supabase
         .from("collections")
         .select("*")
-        .eq("id", collectionId)
-        .single();
+        .or(`id.eq.${collectionId},title.eq.${decodeURIComponent(collectionId)}`)
+        .maybeSingle();
 
-      if (coll) setCollection(coll);
+      if (coll) {
+        setCollection(coll);
 
-      // ⭐ FIX: Read BOTH possible column names
-      const { data: itemList, error } = await supabase
-        .from("items")
-        .select("*")
-        .or(`collection_id.eq.${collectionId},collection.eq.${collectionId}`);
+        // 2. Fetch items (Adding quotes to handle titles with spaces like "Retro Games")
+        const { data: itemList, error } = await supabase
+          .from("items")
+          .select("*")
+          .or(`collection_id.eq.${coll.id},collection.eq."${coll.title}"`);
 
-      if (error) throw error;
-      setItems(itemList || []);
+        if (error) throw error;
+        setItems(itemList || []);
+      }
 
     } catch (err) {
       console.error("Error loading collection vault:", err);
@@ -56,29 +57,18 @@ export default function CollectionDetails() {
     }
   }
 
-  const showNext = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (items.length === 0) return;
-    const currentIndex = items.findIndex(i => i.id === selectedItem.id);
-    setSelectedItem(items[(currentIndex + 1) % items.length]);
-  };
-
-  const showPrev = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (items.length === 0) return;
-    const currentIndex = items.findIndex(i => i.id === selectedItem.id);
-    setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
-  };
-
-  async function toggleLike(itemId: string, e: React.MouseEvent) {
+  // Navigation logic
+  const showNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!currentUserId) return alert("Log in to like items!");
-    setLikedItems(prev => {
-      const next = new Set(prev);
-      next.has(itemId) ? next.delete(itemId) : next.add(itemId);
-      return next;
-    });
-  }
+    if (items.length === 0) return;
+    setSelectedIndex((prev) => (prev !== null && prev < items.length - 1 ? prev + 1 : 0));
+  };
+
+  const showPrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (items.length === 0) return;
+    setSelectedIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : items.length - 1));
+  };
 
   if (loading) {
     return (
@@ -89,7 +79,7 @@ export default function CollectionDetails() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#000", color: "#fff", fontFamily: "inherit" }}>
+    <div style={{ minHeight: "100vh", background: "#000", color: "#fff" }}>
       <Header />
 
       <main style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "110px", paddingLeft: "16px", paddingRight: "16px", paddingBottom: "100px" }}>
@@ -114,16 +104,16 @@ export default function CollectionDetails() {
         </div>
 
         {items.length > 0 ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "14px" }}>
-            {items.map((item) => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px" }}>
+            {items.map((item, index) => (
               <div 
                 key={item.id}
-                onClick={() => setSelectedItem(item)}
-                style={{ aspectRatio: "1/1", cursor: "pointer", position: "relative", overflow: "hidden", borderRadius: "24%", border: "1px solid #27272a", background: "#09090b" }}
+                onClick={() => setSelectedIndex(index)}
+                style={{ aspectRatio: "1/1", cursor: "pointer", position: "relative", overflow: "hidden", borderRadius: "12px", border: "1px solid #27272a", background: "#09090b" }}
               >
                 <img 
                   src={item.image_url} 
-                  alt={item.title || "Collection Item"} 
+                  alt={item.name || "Item"} 
                   style={{ width: "100%", height: "100%", objectFit: "cover" }} 
                 />
               </div>
@@ -134,44 +124,34 @@ export default function CollectionDetails() {
             THIS VAULT IS CURRENTLY EMPTY
           </div>
         )}
-        {/* The Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px" }}>
-          {items.map((item, index) => (
-            <div 
-              key={item.id} 
-              onClick={() => setSelectedIndex(index)} // This triggers the enlarge
-              style={{ aspectRatio: "1/1", borderRadius: "12px", overflow: "hidden", border: "1px solid #27272a", cursor: "pointer" }}
-            >
-              <img src={item.image_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-          ))}
-        </div>
 
         {/* The Enlarge Overlay (Lightbox) */}
-        {selectedIndex !== null && (
+        {selectedIndex !== null && items[selectedIndex] && (
           <div 
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={() => setSelectedIndex(null)}
           >
-            {/* Close Button */}
-            <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '40px', cursor: 'pointer' }}>✕</button>
+            {/* Close */}
+            <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'none', border: 'none', color: '#fff', fontSize: '32px', cursor: 'pointer' }}>✕</button>
             
-            {/* Left Arrow */}
+            {/* Left */}
             <button 
-                onClick={prevImage}
-                style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '50px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}
+                onClick={showPrev}
+                style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '40px', padding: '15px', borderRadius: '50%', cursor: 'pointer', zIndex: 1001 }}
             >‹</button>
             
-            <img 
-              src={items[selectedIndex].image_url} 
-              style={{ maxHeight: '85vh', maxWidth: '85vw', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }} 
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+              <img 
+                src={items[selectedIndex].image_url} 
+                style={{ maxHeight: '80vh', maxWidth: '90vw', objectFit: 'contain', borderRadius: '8px', marginBottom: '10px' }} 
+              />
+              <p style={{ fontWeight: '900', textTransform: 'uppercase', fontSize: '14px' }}>{items[selectedIndex].name}</p>
+            </div>
 
-            {/* Right Arrow */}
+            {/* Right */}
             <button 
-                onClick={nextImage}
-                style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '50px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}
+                onClick={showNext}
+                style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontSize: '40px', padding: '15px', borderRadius: '50%', cursor: 'pointer', zIndex: 1001 }}
             >›</button>
           </div>
         )}

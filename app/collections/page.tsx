@@ -24,7 +24,7 @@ function List() {
         return;
       }
 
-      // ⭐ FIXED: LEFT JOIN so collections ALWAYS show, even with 0 items
+      // ⭐ FIX: Fetch items with BOTH possible column names
       supabase
         .from("collections")
         .select(`
@@ -40,7 +40,8 @@ function List() {
             for_sale,
             status,
             audience,
-            collection_id
+            collection_id,
+            collection
           )
         `)
         .eq("user_id", currentUserId)
@@ -134,9 +135,15 @@ function List() {
         }}
       >
         {collections.map((c) => {
-          const hasItemsForSale = c.items?.some((i: any) => i.for_sale);
-          const itemCount = c.items?.length || 0;
-          const previewImage = c.items?.[0]?.image_url;
+          // ⭐ FIX: Filter items by BOTH possible fields
+          const filteredItems = c.items?.filter(
+            (i: any) =>
+              i.collection_id === c.id || i.collection === c.id
+          ) || [];
+
+          const itemCount = filteredItems.length;
+          const previewImage = filteredItems[0]?.image_url;
+          const hasItemsForSale = filteredItems.some((i: any) => i.for_sale);
 
           return (
             <Link

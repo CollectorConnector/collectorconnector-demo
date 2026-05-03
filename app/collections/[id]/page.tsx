@@ -40,11 +40,11 @@ export default function CollectionDetails() {
 
       if (coll) setCollection(coll);
 
-      // Fetch items using correct column name
+      // ⭐ FIX: Read BOTH possible column names
       const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
-        .eq("collection_id", collectionId);
+        .or(`collection_id.eq.${collectionId},collection.eq.${collectionId}`);
 
       if (error) throw error;
       setItems(itemList || []);
@@ -135,45 +135,6 @@ export default function CollectionDetails() {
           </div>
         )}
       </main>
-
-      {selectedItem && (
-        <div 
-          onClick={() => setSelectedItem(null)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.95)", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px" }}
-        >
-          <div style={{ position: "absolute", top: "30px", right: "30px", color: "#fff", background: "rgba(255,255,255,0.1)", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", cursor: "pointer" }}>
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </div>
-
-          <button onClick={showPrev} style={{ position: "absolute", left: "20px", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: "24px", padding: "20px", borderRadius: "50%", cursor: "pointer" }}>‹</button>
-          <button onClick={showNext} style={{ position: "absolute", right: "20px", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: "24px", padding: "20px", borderRadius: "50%", cursor: "pointer" }}>›</button>
-
-          <img 
-            src={selectedItem.image_url} 
-            onClick={(e) => e.stopPropagation()} 
-            style={{ maxWidth: "95%", maxHeight: "60vh", borderRadius: "16px", border: "1px solid #333", marginBottom: "20px" }} 
-          />
-
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "400px", background: "#18181b", borderRadius: "24px", padding: "20px", border: "1px solid #27272a" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: "bold", fontSize: "18px" }}>{selectedItem.title || "Untitled Item"}</span>
-              <button onClick={(e) => toggleLike(selectedItem.id, e)} style={{ fontSize: "24px", background: "none", border: "none", cursor: "pointer" }}>
-                {likedItems.has(selectedItem.id) ? "⭐" : "☆"}
-              </button>
-            </div>
-
-            <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-              <input 
-                value={commentText} 
-                onChange={e => setCommentText(e.target.value)} 
-                placeholder="Add a comment..." 
-                style={{ flex: 1, background: "#000", border: "1px solid #27272a", color: "#fff", padding: "12px", borderRadius: "12px", fontSize: "14px" }} 
-              />
-              <button onClick={() => { alert("Commented!"); setCommentText(""); }} style={{ background: "#fff", color: "#000", padding: "0 20px", borderRadius: "12px", fontWeight: "bold" }}>SEND</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Footer />
     </div>

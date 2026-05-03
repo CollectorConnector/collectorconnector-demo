@@ -19,20 +19,22 @@ export default function CollectionDetails() {
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      // Even if no user is logged in, we want to try loading the collection 
+      // if your app allows public viewing. If it's private, keep the user check.
       if (user) {
         setCurrentUserId(user.id);
-        if (collectionId) loadCollectionData(user.id);
       }
+      if (collectionId) loadCollectionData(user?.id || null);
     };
     init();
   }, [collectionId]);
 
-  async function loadCollectionData(userId: string) {
+  async function loadCollectionData(userId: string | null) {
     try {
       setLoading(true);
 
       // 1. Fetch collection metadata
-      // Try ID first, if that fails (for legacy naming), try title
+      // Try ID first, then fallback to title for legacy compatibility
       let { data: coll } = await supabase
         .from("collections")
         .select("*")
@@ -44,26 +46,36 @@ export default function CollectionDetails() {
           .from("collections")
           .select("*")
           .eq("title", decodeURIComponent(collectionId))
-          .eq("user_id", userId)
-          .maybeSingle();
+          .single(); // Removed strict user_id check here to ensure we find the collection first
         coll = collByTitle;
       }
 
-      if (coll) setCollection(coll);
+      if (coll) {
+        setCollection(coll);
 
-      // 2. Fetch items with strict ownership
-      // We use a combination of collection_id (new) and collection title (legacy)
-      const { data: itemList, error } = await supabase
-        .from("items")
-        .select("*")
-        .or(`collection_id.eq.${coll?.id},collection.eq.${coll?.title}`)
-        .eq("user_id", userId);
+        // 2. Fetch items matching this collection
+        // We look for items matching the UUID (collection_id) OR the legacy title (collection)
+        let query = supabase
+          .from("items")
+          .select("*")
+          .or(`collection_id.eq.${coll.id},collection.eq."${coll.title}"`);
 
-      if (error) throw error;
+        // Only apply user_id filter if we want to restrict viewing to the owner
+        if (userId) {
+          query = query.eq("user_id", coll.user_id); 
+        }
 
-      // Deduplicate by ID to prevent UI glitches with "duplicate" pictures
-      const uniqueItems = itemList ? Array.from(new Map(itemList.map(item => [item.id, item])).values()) : [];
-      setItems(uniqueItems);
+        const { data: itemList, error } = await query;
+
+        if (error) throw error;
+
+        // Deduplicate by ID to prevent UI glitches
+        const uniqueItems = itemList 
+          ? Array.from(new Map(itemList.map(item => [item.id, item])).values()) 
+          : [];
+          
+        setItems(uniqueItems);
+      }
 
     } catch (err) {
       console.error("Error loading vault:", err);
@@ -74,6 +86,7 @@ export default function CollectionDetails() {
 
   async function deleteItem(itemId: string, e: React.MouseEvent) {
     e.stopPropagation();
+    if (!currentUserId) return;
     if (!confirm("Are you sure you want to remove this item?")) return;
 
     const { error } = await supabase
@@ -89,7 +102,11 @@ export default function CollectionDetails() {
     }
   }
 
-  if (loading) return <div style={{ background: "#000", color: "#fff", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>LOADING...</div>;
+  if (loading) return (
+    <div style={{ background: "#000", color: "#fff", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", letterSpacing: "2px" }}>
+      LOADING...
+    </div>
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "#000", color: "#fff" }}>
@@ -97,22 +114,43 @@ export default function CollectionDetails() {
       <main style={{ maxWidth: "800px", margin: "0 auto", padding: "120px 16px" }}>
         
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <button onClick={() => router.back()} style={{ background: "#18181b", color: "#fff", border: "1px solid #27272a", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", marginBottom: "20px" }}>← BACK</button>
-          <h1 style={{ fontSize: "32px", fontWeight: "900", textTransform: "uppercase" }}>{collection?.title || "Vault"}</h1>
-          <p style={{ color: "#818cf8", fontWeight: "bold" }}>{items.length} ITEMS</p>
+          <button 
+            onClick={() => router.back()} 
+            style={{ background: "#18181b", color: "#fff", border: "1px solid #27272a", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", marginBottom: "20px", fontWeight: "bold" }}
+          >
+            ← BACK
+          </button>
+          <h1 style={{ fontSize: "32px", fontWeight: "900", textTransform: "uppercase", margin: "10px 0" }}>
+            {collection?.title || "Vault"}
+          </h1>
+          <p style={{ color: "#818cf8", fontWeight: "bold", textTransform: "uppercase", fontSize: "14px" }}>
+            {items.length} {items.length === 1 ? 'ITEM' : 'ITEMS'}
+          </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "16px" }}>
-          {items.map((item) => (
-            <div key={item.id} style={{ position: "relative", aspectRatio: "1/1", borderRadius: "20%", overflow: "hidden", border: "1px solid #27272a" }}>
-              <button
-                onClick={(e) => deleteItem(item.id, e)}
-                style={{ position: "absolute", top: "5px", right: "5px", zIndex: 10, background: "#ef4444", color: "#fff", border: "none", borderRadius: "50%", width: "24px", height: "24px", cursor: "pointer", fontWeight: "bold" }}
-              >✕</button>
-              <img src={item.image_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-          ))}
-        </div>
+        {items.length > 0 ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "20px" }}>
+            {items.map((item) => (
+              <div key={item.id} style={{ position: "relative", aspectRatio: "1/1", borderRadius: "16px", overflow: "hidden", border: "1px solid #27272a", background: "#111" }}>
+                {currentUserId === collection?.user_id && (
+                  <button
+                    onClick={(e) => deleteItem(item.id, e)}
+                    style={{ position: "absolute", top: "8px", right: "8px", zIndex: 10, background: "rgba(239, 68, 68, 0.9)", color: "#fff", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px" }}
+                  >✕</button>
+                )}
+                <img 
+                  src={item.image_url} 
+                  alt={item.name || "Collector Item"}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "40px", color: "#52525b" }}>
+            <p>No items found in this collection.</p>
+          </div>
+        )}
       </main>
       <Footer />
     </div>

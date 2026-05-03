@@ -15,10 +15,9 @@ export default function CollectionDetails() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // LIGHTBOX STATE
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-  const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -31,7 +30,7 @@ export default function CollectionDetails() {
     try {
       setLoading(true);
 
-      // 1. Fetch collection metadata
+      // 1. Fetch collection metadata first to get the actual Title
       const { data: coll } = await supabase
         .from("collections")
         .select("*")
@@ -41,8 +40,8 @@ export default function CollectionDetails() {
       if (coll) {
         setCollection(coll);
 
-        // 2. ⭐ THE FIX: Match by UUID OR by the actual Title string from the collection object
-        // We use "coll.title" inside double quotes so spaces don't break the query.
+        // 2. Fetch items using BOTH the UUID and the Title string
+        // We wrap the title in double quotes so spaces like "Retro Games" don't break the query
         const { data: itemList, error } = await supabase
           .from("items")
           .select("*")
@@ -128,7 +127,7 @@ export default function CollectionDetails() {
           </div>
         )}
 
-        {/* LIGHTBOX / ENLARGE FEATURE */}
+        {/* LIGHTBOX OVERLAY */}
         {selectedItem && (
           <div 
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -138,7 +137,7 @@ export default function CollectionDetails() {
             
             <button 
               onClick={showPrev} 
-              style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '40px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}
+              style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '40px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', zIndex: 1001 }}
             >‹</button>
 
             <div style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
@@ -146,12 +145,14 @@ export default function CollectionDetails() {
                 src={selectedItem.image_url} 
                 style={{ maxHeight: '80vh', maxWidth: '90vw', objectFit: 'contain', borderRadius: '12px' }} 
               />
-              <p style={{ marginTop: '15px', fontWeight: '900', textTransform: 'uppercase' }}>{selectedItem.name || selectedItem.title}</p>
+              <p style={{ marginTop: '15px', fontWeight: '900', textTransform: 'uppercase', color: '#fff' }}>
+                {selectedItem.name || selectedItem.title}
+              </p>
             </div>
 
             <button 
               onClick={showNext} 
-              style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '40px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }}
+              style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: '40px', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', zIndex: 1001 }}
             >›</button>
           </div>
         )}

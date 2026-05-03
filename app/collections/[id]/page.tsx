@@ -31,7 +31,7 @@ export default function CollectionDetails() {
     try {
       setLoading(true);
       
-      // 1. Fetch Collection Metadata
+      // Fetch Collection Metadata
       const { data: coll } = await supabase
         .from("collections")
         .select("*")
@@ -40,11 +40,11 @@ export default function CollectionDetails() {
 
       if (coll) setCollection(coll);
 
-      // 2. Fetch Items - Using 'collection_id' to match your schema
+      // ⭐ FIXED: Correct column name is collection_id
       const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
-        .eq("collection", collectionId); // Targeting the column shown in image_2.png
+        .eq("collection_id", collectionId);
 
       if (error) throw error;
       setItems(itemList || []);
@@ -56,7 +56,6 @@ export default function CollectionDetails() {
     }
   }
 
-  // SWIPE LOGIC
   const showNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (items.length === 0) return;
@@ -71,7 +70,6 @@ export default function CollectionDetails() {
     setSelectedItem(items[(currentIndex - 1 + items.length) % items.length]);
   };
 
-  // SOCIAL LOGIC
   async function toggleLike(itemId: string, e: React.MouseEvent) {
     e.stopPropagation();
     if (!currentUserId) return alert("Log in to like items!");
@@ -99,7 +97,7 @@ export default function CollectionDetails() {
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <button 
             onClick={() => router.back()} 
-            style={{ color: '#71717a', fontSize: '11px', fontWeight: '900', marginBottom: '16px', border: '1px solid #27272a', background: '#09090b', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', textTransform: 'uppercase' }}
+            style={{ color: '#71717a', fontSize: '11px', fontWeight: '900', marginBottom: '16px', border: '1px solid '#27272a', background: '#09090b', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', textTransform: 'uppercase' }}
           >
             ← Back
           </button>
@@ -115,7 +113,6 @@ export default function CollectionDetails() {
           </div>
         </div>
 
-        {/* GRID */}
         {items.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '14px' }}>
             {items.map((item) => (
@@ -139,13 +136,11 @@ export default function CollectionDetails() {
         )}
       </main>
 
-      {/* ITEM MODAL */}
       {selectedItem && (
         <div 
           onClick={() => setSelectedItem(null)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
         >
-          {/* Close Icon - Using SVG for consistency */}
           <div style={{ position: 'absolute', top: '30px', right: '30px', color: '#fff', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer' }}>
              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </div>

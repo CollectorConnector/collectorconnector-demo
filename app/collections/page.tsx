@@ -15,7 +15,6 @@ function List() {
   useEffect(() => {
     setLoading(true);
 
-    // ⭐ Get the logged‑in user
     supabase.auth.getUser().then(({ data }) => {
       const currentUserId = data.user?.id;
 
@@ -25,7 +24,7 @@ function List() {
         return;
       }
 
-      // ⭐ Fetch ONLY this user's collections
+      // ⭐ FIXED QUERY — items!inner ensures items.collection_id = collections.id
       supabase
         .from("collections")
         .select(`
@@ -35,7 +34,7 @@ function List() {
           cover_url,
           item_count,
           created_at,
-          items (
+          items!inner (
             id,
             image_url,
             for_sale,
@@ -54,7 +53,6 @@ function List() {
             return;
           }
 
-          // ⭐ Do NOT filter out empty collections
           setCollections(data || []);
           setLoading(false);
         });

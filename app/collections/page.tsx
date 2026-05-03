@@ -10,53 +10,42 @@ import Link from "next/link";
 function List() {
   const router = useRouter();
   const [collections, setCollections] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    async function load() {
+      setLoading(true);
 
-    supabase.auth.getUser().then(({ data }) => {
-      const currentUserId = data.user?.id;
+      const { data: userData } = await supabase.auth.getUser();
+      const currentUserId = userData.user?.id;
 
       if (!currentUserId) {
         setCollections([]);
+        setItems([]);
         setLoading(false);
         return;
       }
 
-      supabase
+      // 1️⃣ Fetch collections
+      const { data: collData } = await supabase
         .from("collections")
-        .select(`
-          id,
-          title,
-          niche,
-          cover_url,
-          item_count,
-          created_at,
-          items (
-            id,
-            image_url,
-            for_sale,
-            status,
-            audience,
-            collection_id,
-            collection
-          )
-        `)
+        .select("*")
         .eq("user_id", currentUserId)
-        .order("created_at", { ascending: false })
-        .then(({ data, error }) => {
-          if (error) {
-            console.error("Error fetching collections:", error);
-            setCollections([]);
-            setLoading(false);
-            return;
-          }
+        .order("created_at", { ascending: false });
 
-          setCollections(data || []);
-          setLoading(false);
-        });
-    });
+      // 2️⃣ Fetch ALL items for this user
+      const { data: itemData } = await supabase
+        .from("items")
+        .select("*")
+        .eq("user_id", currentUserId);
+
+      setCollections(collData || []);
+      setItems(itemData || []);
+      setLoading(false);
+    }
+
+    load();
   }, []);
 
   if (!loading && collections.length === 0) {
@@ -134,17 +123,16 @@ function List() {
         }}
       >
         {collections.map((c) => {
-          // ⭐ FIX: Type-safe filtering for mixed schema
-          const filteredItems =
-            c.items?.filter(
-              (i: any) =>
-                String(i.collection_id) === String(c.id) ||
-                String(i.collection) === String(c.id)
-            ) || [];
+          // 3️⃣ Group items manually
+          const filtered = items.filter(
+            (i) =>
+              String(i.collection_id) === String(c.id) ||
+              String(i.collection) === String(c.id)
+          );
 
-          const itemCount = filteredItems.length;
-          const previewImage = filteredItems[0]?.image_url;
-          const hasItemsForSale = filteredItems.some((i: any) => i.for_sale);
+          const itemCount = filtered.length;
+          const previewImage = filtered[0]?.image_url;
+          const hasItemsForSale = filtered.some((i) => i.for_sale);
 
           return (
             <Link

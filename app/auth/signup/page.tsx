@@ -25,8 +25,6 @@ export default function SignUpPage() {
         password,
         options: {
           data: { username },
-          // Redirect them to the profile creation page after they verify
-          emailRedirectTo: `${window.location.origin}/create-profile`,
         },
       });
 
@@ -46,43 +44,33 @@ export default function SignUpPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#000', color: '#fff', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
-      <header style={{ padding: '30px 20px', width: '100%', maxWidth: '1000px', display: 'flex', justifyContent: 'center' }}>
-        <img src="/CC-main-logo.png" style={{ height: '60px' }} alt="CollectorConnector Logo" />
+      {/* BRANDING HEADER */}
+      <header style={{ padding: '20px', borderBottom: '1px solid #18181b', width: '100%', maxWidth: '1000px', display: 'flex', justifyContent: 'center' }}>
+        <img src="/CC-main-logo.png" style={{ height: '50px' }} alt="CollectorConnector Logo" />
       </header>
       
-      <main style={{ flex: 1, width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0 20px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: '900', textAlign: 'center', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '-1px' }}>Create your account</h1>
-        <p style={{ color: '#a1a1aa', fontSize: '16px', textAlign: 'center', marginBottom: '40px', fontWeight: 'bold' }}>Start your CollectorConnector journey</p>
+      <main style={{ flex: 1, width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0 20px', marginTop: '60px' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: '900', textAlign: 'center', marginBottom: '8px' }}>Create your account</h1>
+        <p style={{ color: '#a1a1aa', fontSize: '18px', textAlign: 'center', marginBottom: '48px' }}>Start your CollectorConnector journey</p>
         
-        {error && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '12px', borderRadius: '8px', width: '100%', marginBottom: '20px', textAlign: 'center', fontSize: '14px' }}>
-            {error}
-          </div>
-        )}
+        {error && <p style={{ color: '#ef4444', textAlign: 'center', marginBottom: '20px' }}>{error}</p>}
 
-        <form onSubmit={handleSignUp} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <label style={{ fontSize: '11px', fontWeight: '900', color: '#71717a', marginLeft: '4px' }}>USERNAME</label>
-          <input type="text" placeholder="stacypearce123" value={username} onChange={e => setUsername(e.target.value)} required style={{ width: '100%', background: '#111', border: '1px solid #27272a', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold' }} />
+        <form onSubmit={handleSignUp} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <input type="text" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required style={{ width: '100%', background: '#111', border: '1px solid #18181b', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px' }} />
+          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%', background: '#111', border: '1px solid #18181b', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px' }} />
+          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%', background: '#111', border: '1px solid #18181b', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px' }} />
           
-          <label style={{ fontSize: '11px', fontWeight: '900', color: '#71717a', marginLeft: '4px', marginTop: '8px' }}>EMAIL ADDRESS</label>
-          <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%', background: '#111', border: '1px solid #27272a', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold' }} />
-          
-          <label style={{ fontSize: '11px', fontWeight: '900', color: '#71717a', marginLeft: '4px', marginTop: '8px' }}>PASSWORD</label>
-          <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%', background: '#111', border: '1px solid #27272a', color: '#fff', padding: '16px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold' }} />
-          
-          <button type="submit" disabled={loading} style={{ background: '#fff', color: '#000', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none', fontSize: '16px', cursor: 'pointer', marginTop: '24px', textTransform: 'uppercase', letterSpacing: '1px', opacity: loading ? 0.6 : 1 }}>
-            {loading ? "Creating Account..." : "Sign Up"}
+          <button type="submit" disabled={loading} style={{ background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '12px', border: 'none', fontSize: '16px', cursor: 'pointer', marginTop: '20px', opacity: loading ? 0.6 : 1 }}>
+            {loading ? "Signing up..." : "Sign Up"}
           </button>
         </form>
 
-        <p style={{ marginTop: '32px', color: '#a1a1aa', fontSize: '14px' }}>
+        <p style={{ marginTop: '32px', color: '#a1a1aa' }}>
           Already have an account? <Link href="/auth/login" style={{ color: '#818cf8', textDecoration: 'none', fontWeight: 'bold' }}>Log in</Link>
         </p>
       </main>
 
-      <div style={{ width: '100%', marginTop: '60px' }}>
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

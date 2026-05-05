@@ -11,7 +11,7 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
 import FollowersListDrawer from "@/components/FollowersListDrawer";
-import CollectionsGrid from "@/components/CollectionsGrid"; // Ensure this import exists
+import CollectionsGrid from "@/components/CollectionsGrid";
 
 // --- SVG ICONS ---
 const DiscordIcon = () => (
@@ -67,7 +67,7 @@ export default function ProfilePage() {
   const [showSmartDrop, setShowSmartDrop] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
-  const [showCollections, setShowCollections] = useState(false); // REVERT: Added state back
+  const [showCollections, setShowCollections] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
@@ -609,7 +609,6 @@ export default function ProfilePage() {
                )}
             </div>
 
-            {/* REVERTED: Replaced Link with Button + State Trigger */}
             <button 
               onClick={() => setShowCollections(!showCollections)}
               style={{ 
@@ -639,10 +638,10 @@ export default function ProfilePage() {
             )}
         </section>
 
-        {/* REVERTED: Conditionally render CollectionsGrid here */}
         {showCollections && (
           <div style={{ marginTop: '10px' }}>
-            <CollectionsGrid userId={userId} />
+            {/* Removed the userId prop causing compilation error */}
+            <CollectionsGrid />
           </div>
         )}
 

@@ -317,7 +317,6 @@ export default function ProfilePage() {
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-      // FIX: Query items specifically for the profile being viewed
       const { data: userDrops, error: dropError } = await supabase
         .from("items")
         .select(`
@@ -613,7 +612,6 @@ export default function ProfilePage() {
                )}
             </div>
 
-            {/* FIX: Link to the correct collections route */}
             <Link 
                href={`/profile/${userId}/collections`} 
                style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}
@@ -1103,7 +1101,6 @@ export default function ProfilePage() {
         <ChatDrawer 
           isOpen={isChatOpen} 
           onClose={() => setIsChatOpen(false)} 
-          currentUserId={currentUserId}
           targetUserId={userId === currentUserId ? null : userId}
         />
       )}

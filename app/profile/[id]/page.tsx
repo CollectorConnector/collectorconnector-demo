@@ -287,9 +287,10 @@ export default function ProfilePage() {
     const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
     if (allUsers) {
       const index = allUsers.findIndex(u => u.id === userId);
-      if (index >= 3 && index < 13) setUserRank("gold");
-      else if (index >= 13 && index < 23) setUserRank("silver");
-      else if (index >= 23 && index < 33) setUserRank("bronze");
+      // Fixed: logic updated to catch first 3 users correctly
+      if (index >= 0 && index < 10) setUserRank("gold");
+      else if (index >= 10 && index < 20) setUserRank("silver");
+      else if (index >= 20 && index < 30) setUserRank("bronze");
       else setUserRank("collector");
     }
   }

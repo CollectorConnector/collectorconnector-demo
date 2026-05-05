@@ -640,8 +640,8 @@ export default function ProfilePage() {
 
         {showCollections && (
           <div style={{ marginTop: '10px' }}>
-            {/* Removed the userId prop causing compilation error */}
-            <CollectionsGrid />
+            {/* Added the required items prop to CollectionsGrid */}
+            <CollectionsGrid items={collectionsList} />
           </div>
         )}
 

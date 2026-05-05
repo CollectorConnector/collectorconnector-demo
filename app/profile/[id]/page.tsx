@@ -317,7 +317,8 @@ export default function ProfilePage() {
         setVaultValue(localItems.reduce((sum, i) => sum + (Number(i.estimated_value) || 0), 0));
       }
 
-      const { data: globalDrops, error: dropError } = await supabase
+      // FIX: Query items specifically for the profile being viewed
+      const { data: userDrops, error: dropError } = await supabase
         .from("items")
         .select(`
           *,
@@ -331,14 +332,14 @@ export default function ProfilePage() {
             name
           )
         `)
+        .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(20);
       
       if (dropError) {
-        const { data: fallback } = await supabase.from("items").select("*").limit(20).order("created_at", { ascending: false });
-        if (fallback) setRecentDrops(fallback);
-      } else if (globalDrops) {
-        setRecentDrops(globalDrops);
+        console.error(dropError);
+      } else if (userDrops) {
+        setRecentDrops(userDrops);
       }
 
       const { data: colls } = await supabase
@@ -612,7 +613,13 @@ export default function ProfilePage() {
                )}
             </div>
 
-            <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
+            {/* FIX: Link to the correct collections route */}
+            <Link 
+               href={`/profile/${userId}/collections`} 
+               style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}
+            >
+                VIEW COLLECTIONS
+            </Link>
 
             {isOwnProfile && (
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -633,7 +640,7 @@ export default function ProfilePage() {
         </div>
 
         <section style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>GLOBAL RECENT DROPS</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '20px' }}>RECENT DROPS</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
             {recentDrops.map((drop, index) => {
               const authorId = drop.profiles?.id || drop.user_id;
@@ -729,391 +736,385 @@ export default function ProfilePage() {
         </div>
       </main>
 
+      {/* --- LIGHTBOX MODAL --- */}
       {selectedItemIndex !== null && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '30px', right: '30px', background: '#18181b', border: '1px solid #27272a', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', zIndex: 5001 }}>✕</button>
-            
-            <div style={{ width: '100%', maxWidth: '900px', height: '80vh', display: 'flex', background: '#09090b', borderRadius: '24px', overflow: 'hidden', border: '1px solid #27272a' }}>
-                
-                <div style={{ flex: 1.2, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', borderRight: '1px solid #27272a' }}>
-                   <img src={recentDrops[selectedItemIndex].image_url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="Lightbox" />
-                   
-                   <button onClick={() => setSelectedItemIndex((prev) => (prev! > 0 ? prev! - 1 : recentDrops.length - 1))} style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>‹</button>
-                   <button onClick={() => setSelectedItemIndex((prev) => (prev! < recentDrops.length - 1 ? prev! + 1 : 0))} style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>›</button>
-                </div>
+        <div 
+          onClick={() => setSelectedItemIndex(null)}
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0,0,0,0.95)', 
+            zIndex: 999, 
+            display: 'flex', 
+            flexDirection: 'column' 
+          }}
+        >
+          <button 
+            onClick={(e) => { e.stopPropagation(); setSelectedItemIndex(null); }} 
+            style={{ 
+              position: 'absolute', 
+              top: '20px', 
+              right: '20px', 
+              background: 'transparent', 
+              border: 'none', 
+              color: '#fff', 
+              fontSize: '32px', 
+              zIndex: 1001,
+              cursor: 'pointer'
+            }}
+          >
+            ✕
+          </button>
+          
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+             <img 
+               src={recentDrops[selectedItemIndex].image_url} 
+               style={{ maxHeight: '85vh', maxWidth: '100%', objectFit: 'contain' }} 
+               onClick={(e) => e.stopPropagation()} 
+             />
+             
+             {selectedItemIndex > 0 && (
+               <button 
+                onClick={(e) => { e.stopPropagation(); setSelectedItemIndex(selectedItemIndex - 1); }}
+                style={{ position: 'absolute', left: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '20px', borderRadius: '50%', fontSize: '24px' }}
+               >
+                 ←
+               </button>
+             )}
+             
+             {selectedItemIndex < recentDrops.length - 1 && (
+               <button 
+                onClick={(e) => { e.stopPropagation(); setSelectedItemIndex(selectedItemIndex + 1); }}
+                style={{ position: 'absolute', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '20px', borderRadius: '50%', fontSize: '24px' }}
+               >
+                 →
+               </button>
+             )}
+          </div>
 
-                <div style={{ flex: 0.8, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  <div style={{ padding: '20px', borderBottom: '1px solid #18181b' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', marginBottom: '16px' }}>
-                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            {recentDrops[selectedItemIndex].profiles?.avatar_url?.startsWith('http') ? (
-                              <img 
-                                 src={recentDrops[selectedItemIndex].profiles.avatar_url} 
-                                 style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} 
-                                 alt="Avatar"
-                               />
-                            ) : (
-                              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>👤</div>
-                            )}
-                            <div>
-                              <p style={{ fontWeight: '900', fontSize: '14px' }}>{recentDrops[selectedItemIndex].profiles?.display_url || recentDrops[selectedItemIndex].profiles?.username}</p>
-                              <p style={{ color: '#818cf8', fontSize: '12px', fontWeight: 'bold' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
-                            </div>
-                         </div>
-                      
-                      {currentUserId && recentDrops[selectedItemIndex].profiles?.id !== currentUserId && (
-                        <button
-                          onClick={() => toggleFollowUser(recentDrops[selectedItemIndex].profiles?.id)}
-                          style={{
-                            background: lightboxIsFollowing ? 'transparent' : '#fff',
-                            color: lightboxIsFollowing ? '#fff' : '#000',
-                            border: lightboxIsFollowing ? '1px solid #27272a' : 'none',
-                            padding: '6px 14px',
-                            borderRadius: '16px',
-                            fontSize: '11px',
-                            fontWeight: 'bold'
-                          }}
-                        >
-                          {lightboxIsFollowing ? 'FOLLOWING' : 'FOLLOW'}
-                        </button>
-                      )}
-                    </div>
-                    <h3 style={{ fontSize: '20px', fontWeight: '900' }}>{recentDrops[selectedItemIndex].title}</h3>
-                    {recentDrops[selectedItemIndex].niche_families?.name && (
-                      <div style={{ fontSize: "11px", color: "#a1a1aa", marginTop: "4px" }}>
-                        {recentDrops[selectedItemIndex].niche_families.name}
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{ 
+              background: '#09090b', 
+              borderTop: '1px solid #27272a', 
+              padding: '24px', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'flex-start',
+              maxHeight: '40vh',
+              overflowY: 'auto'
+            }}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <Link href={`/profile/${recentDrops[selectedItemIndex].profiles?.id}`}>
+                  <img 
+                    src={recentDrops[selectedItemIndex].profiles?.avatar_url || tierIconPath} 
+                    style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }} 
+                  />
+                </Link>
+                <div>
+                  <Link href={`/profile/${recentDrops[selectedItemIndex].profiles?.id}`} style={{ textDecoration: 'none' }}>
+                    <p style={{ fontWeight: '900', fontSize: '16px', color: '#fff' }}>@{recentDrops[selectedItemIndex].profiles?.username}</p>
+                  </Link>
+                  <p style={{ color: '#4ade80', fontWeight: 'bold' }}>£{recentDrops[selectedItemIndex].estimated_value}</p>
+                </div>
+                {recentDrops[selectedItemIndex].profiles?.id !== currentUserId && currentUserId && (
+                  <button 
+                    onClick={() => toggleFollowUser(recentDrops[selectedItemIndex].profiles?.id)}
+                    style={{ marginLeft: '12px', background: lightboxIsFollowing ? 'transparent' : '#fff', color: lightboxIsFollowing ? '#fff' : '#000', border: lightboxIsFollowing ? '1px solid #27272a' : 'none', padding: '6px 14px', borderRadius: '15px', fontSize: '12px', fontWeight: '900' }}
+                  >
+                    {lightboxIsFollowing ? 'FOLLOWING' : 'FOLLOW'}
+                  </button>
+                )}
+              </div>
+              <h3 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '8px' }}>{recentDrops[selectedItemIndex].title}</h3>
+              <p style={{ color: '#a1a1aa' }}>Collection: {recentDrops[selectedItemIndex].niche_families?.name || "General"}</p>
+
+              <div style={{ marginTop: '24px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: '900', marginBottom: '16px', color: '#52525b' }}>COMMENTS ({comments.length})</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                  {comments.map((c: any) => (
+                    <div key={c.id} style={{ display: 'flex', gap: '10px' }}>
+                      <img src={c.profiles?.avatar_url || tierIconPath} style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
+                      <div>
+                        <p style={{ fontSize: '13px' }}>
+                          <span style={{ fontWeight: '900', marginRight: '6px' }}>{c.profiles?.username}</span>
+                          <span style={{ color: '#a1a1aa' }}>{c.content}</span>
+                        </p>
                       </div>
-                    )}
-                  </div>
-
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {comments.length === 0 ? (
-                      <p style={{ color: '#52525b', textAlign: 'center', marginTop: '40px', fontSize: '13px' }}>No comments yet. Be the first!</p>
-                    ) : (
-                      comments.map(cmt => (
-                        <div key={cmt.id} style={{ display: 'flex', gap: '10px' }}>
-                          <Link href={`/profile/${cmt.user_id}`}>
-                            {cmt.profiles?.avatar_url?.startsWith('http') ? (
-                              <img src={cmt.profiles.avatar_url} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} alt="Comment Avatar" />
-                            ) : (
-                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#18181b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>👤</div>
-                            )}
-                          </Link>
-                          <div style={{ background: '#18181b', padding: '10px 14px', borderRadius: '15px', flex: 1 }}>
-                            <Link href={`/profile/${cmt.user_id}`} style={{ textDecoration: 'none' }}>
-                               <p style={{ fontSize: '12px', fontWeight: '900', color: '#fff', marginBottom: '2px' }}>{cmt.profiles?.username}</p>
-                            </Link>
-                            <p style={{ fontSize: '13px', color: '#a1a1aa', lineHeight: '1.4' }}>{cmt.content}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  <div style={{ padding: '20px', borderTop: '1px solid #18181b' }}>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <input 
-                        placeholder="Add a comment..." 
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                        style={{ flex: 1, background: '#18181b', border: '1px solid #27272a', padding: '12px 16px', borderRadius: '25px', color: '#fff', fontSize: '14px' }}
-                      />
-                      <button 
-                        onClick={handleAddComment}
-                        disabled={isSubmittingComment || !newComment.trim()}
-                        style={{ background: 'transparent', border: 'none', color: '#818cf8', fontWeight: '900', cursor: 'pointer' }}
-                      >
-                        POST
-                      </button>
                     </div>
-                  </div>
-
-                  <div style={{ padding: '10px 20px 20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-                    <button onClick={() => toggleLike(recentDrops[selectedItemIndex].id)} style={{ background: 'none', border: 'none', color: likedItems.has(recentDrops[selectedItemIndex].id) ? '#fbbf24' : '#fff', fontSize: '20px', cursor: 'pointer' }}>
-                      {likedItems.has(recentDrops[selectedItemIndex].id) ? '⭐' : '☆'}
-                    </button>
-                    <span style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold' }}>
-                      £{recentDrops[selectedItemIndex].estimated_value} EST. VALUE
-                    </span>
-                    
-                    <div style={{ marginLeft: 'auto' }}>
-                      {recentDrops[selectedItemIndex].for_sale && currentUserId !== recentDrops[selectedItemIndex].user_id && (
-                        <button 
-                          onClick={() => alert(`Buying ${recentDrops[selectedItemIndex].title} for £${recentDrops[selectedItemIndex].price}`)} 
-                          style={{ background: '#22c55e', color: '#000', padding: '8px 16px', borderRadius: '12px', fontWeight: '900', fontSize: '12px', cursor: 'pointer' }}
-                        >
-                          BUY £{recentDrops[selectedItemIndex].price}
-                        </button>
-                      )}
-                      {recentDrops[selectedItemIndex].user_id === currentUserId && (
-                        <div style={{ fontSize: '10px', color: '#a1a1aa', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                          {recentDrops[selectedItemIndex].for_sale ? `LISTED: £${recentDrops[selectedItemIndex].price}` : "NOT LISTED"}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                    style={{ flex: 1, background: '#18181b', border: '1px solid #27272a', borderRadius: '10px', padding: '10px', color: '#fff', fontSize: '14px' }} 
+                  />
+                  <button 
+                    disabled={isSubmittingComment}
+                    onClick={handleAddComment}
+                    style={{ background: '#fff', color: '#000', border: 'none', padding: '0 20px', borderRadius: '10px', fontWeight: '900', fontSize: '12px' }}
+                  >
+                    POST
+                  </button>
+                </div>
+              </div>
             </div>
+            
+            <button 
+              onClick={() => toggleLike(recentDrops[selectedItemIndex].id)}
+              style={{ background: 'rgba(255,255,255,0.05)', border: 'none', padding: '12px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <span style={{ fontSize: '20px' }}>{likedItems.has(recentDrops[selectedItemIndex].id) ? '⭐' : '☆'}</span>
+              <span style={{ fontWeight: '900' }}>{likedItems.has(recentDrops[selectedItemIndex].id) ? 'LIKED' : 'LIKE'}</span>
+            </button>
+          </div>
         </div>
       )}
 
+      {/* --- EDIT PROFILE MODAL --- */}
       {showEditProfile && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '460px', border: '1px solid #27272a', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '24px', textAlign: 'center' }}>EDIT PROFILE</h2>
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>DISPLAY NAME</p>
-            <input 
-              value={profile?.display_url || ""} 
-              onChange={e => setProfile({...profile, display_url: e.target.value})} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '16px' }} 
-            />
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>BIO</p>
-            <textarea 
-              value={profile?.bio || ""} 
-              onChange={e => setProfile({...profile, bio: e.target.value})} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', height: '80px', resize: 'none', marginBottom: '20px' }} 
-            />
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>INSTAGRAM URL</p>
-                <input 
-                  placeholder="https://instagram.com/..." 
-                  value={profile?.instagram_url || ""} 
-                  onChange={e => setProfile({...profile, instagram_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>EBAY URL</p>
-                <input 
-                  placeholder="https://ebay.com/..." 
-                  value={profile?.ebay_url || ""} 
-                  onChange={e => setProfile({...profile, ebay_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', width: '100%', maxWidth: '500px', padding: '32px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '900' }}>Edit Profile</h2>
+              <button onClick={() => setShowEditProfile(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', fontSize: '24px' }}>✕</button>
             </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#a1a1aa', marginBottom: '8px' }}>DISPLAY NAME</label>
+                <input type="text" value={profile.display_url || ""} onChange={(e) => setProfile({...profile, display_url: e.target.value})} style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '14px', color: '#fff' }} />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#a1a1aa', marginBottom: '8px' }}>BIO</label>
+                <textarea value={profile.bio || ""} onChange={(e) => setProfile({...profile, bio: e.target.value})} style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '14px', color: '#fff', minHeight: '100px' }} />
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>X URL</p>
-                <input 
-                  placeholder="https://x.com/..." 
-                  value={profile?.x_url || ""} 
-                  onChange={e => setProfile({...profile, x_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
+              <div style={{ borderTop: '1px solid #27272a', paddingTop: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '900', marginBottom: '16px', color: '#52525b' }}>SOCIAL LINKS</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <input type="text" placeholder="Instagram URL" value={profile.instagram_url || ""} onChange={(e) => setProfile({...profile, instagram_url: e.target.value})} style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '12px', color: '#fff' }} />
+                  <input type="text" placeholder="eBay Store URL" value={profile.ebay_url || ""} onChange={(e) => setProfile({...profile, ebay_url: e.target.value})} style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '12px', color: '#fff' }} />
+                  <input type="text" placeholder="TikTok URL" value={profile.tiktok_url || ""} onChange={(e) => setProfile({...profile, tiktok_url: e.target.value})} style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '12px', color: '#fff' }} />
+                  <input type="text" placeholder="Discord Username (e.g. user#1234)" value={profile.discord_handle || ""} onChange={(e) => setProfile({...profile, discord_handle: e.target.value})} style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '12px', color: '#fff' }} />
+                  <input type="text" placeholder="Twitch URL" value={profile.twitch_handle || ""} onChange={(e) => setProfile({...profile, twitch_handle: e.target.value})} style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '12px', color: '#fff' }} />
+                </div>
               </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>YOUTUBE URL</p>
-                <input 
-                  placeholder="https://youtube.com/..." 
-                  value={profile?.youtube_url || ""} 
-                  onChange={e => setProfile({...profile, youtube_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>WHATNOT URL</p>
-                <input 
-                  placeholder="https://whatnot.com/..." 
-                  value={profile?.whatnot_url || ""} 
-                  onChange={e => setProfile({...profile, whatnot_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>FACEBOOK URL</p>
-                <input 
-                  placeholder="https://facebook.com/..." 
-                  value={profile?.facebook_url || ""} 
-                  onChange={e => setProfile({...profile, facebook_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>TIKTOK URL</p>
-                <input 
-                  placeholder="https://tiktok.com/@..." 
-                  value={profile?.tiktok_url || ""} 
-                  onChange={e => setProfile({...profile, tiktok_url: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>DISCORD HANDLE</p>
-                <input 
-                  placeholder="username#0000" 
-                  value={profile?.discord_handle || ""} 
-                  onChange={e => setProfile({...profile, discord_handle: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '10px', color: '#a1a1aa', marginBottom: '4px', fontWeight: 'bold' }}>TWITCH USERNAME</p>
-                <input 
-                  placeholder="twitch.tv/username" 
-                  value={profile?.twitch_handle || ""} 
-                  onChange={e => setProfile({...profile, twitch_handle: e.target.value})} 
-                  style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '10px', borderRadius: '10px' }} 
-                />
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => setShowEditProfile(false)} style={{ flex: 1, color: '#a1a1aa', background: '#27272a', padding: '12px', borderRadius: '12px' }}>CANCEL</button>
-              <button onClick={handleUpdateProfile} style={{ flex: 2, background: '#fff', color: '#000', fontWeight: '900', padding: '12px', borderRadius: '12px' }}>{uploading ? 'SAVING...' : 'SAVE CHANGES'}</button>
+              <button 
+                onClick={handleUpdateProfile} 
+                disabled={uploading} 
+                style={{ width: '100%', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', marginTop: '10px' }}
+              >
+                {uploading ? 'SAVING...' : 'SAVE CHANGES'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* --- SMART DROP MODAL --- */}
       {showSmartDrop && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '440px', border: '1px solid #27272a' }}>
-            <h2 style={{ fontWeight: '900', marginBottom: '20px', textAlign: 'center' }}>New Drop</h2>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', width: '100%', maxWidth: '500px', padding: '32px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '900' }}>New Smart Drop</h2>
+              <button onClick={() => setShowSmartDrop(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', fontSize: '24px' }}>✕</button>
+            </div>
 
-            <label style={{ display: 'block', background: '#27272a', color: '#fff', textAlign: 'center', padding: '30px', borderRadius: '12px', cursor: 'pointer', border: '2px dashed #3f3f46', marginBottom: '16px' }}>
-              <span style={{ fontSize: '28px' }}>📸</span><br/>
-              {files.length > 0 ? `${files.length} photos selected` : "Tap to add photos"}
-              <input type="file" multiple accept="image/*" hidden onChange={(e) => setFiles(Array.from(e.target.files || []))} />
-            </label>
-
-            <input 
-              placeholder="Item title" 
-              value={itemName} 
-              onChange={e => setItemName(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
-            />
-
-            <input 
-              type="number" 
-              placeholder="Estimated total value (£)" 
-              value={itemValue} 
-              onChange={e => setItemValue(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
-            />
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Collection</p>
-            
-            <select 
-              value={selectedCollectionId} 
-              onChange={e => setSelectedCollectionId(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}
-            >
-              <option value="">Choose existing collection...</option>
-              {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-            </select>
-
-            <input 
-              placeholder="Or create new collection name" 
-              value={newCollName} 
-              onChange={e => setNewCollName(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '12px' }} 
-            />
-
-            <p style={{ fontSize: '11px', color: '#a1a1aa', marginBottom: '6px', fontWeight: 'bold' }}>Niche</p>
-            <select 
-              value={selectedNiche} 
-              onChange={e => setSelectedNiche(e.target.value)} 
-              style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '8px' }}
-            >
-              <option value="">Select niche...</option>
-              {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
-              <option value="Other">Other...</option>
-            </select>
-
-            {selectedNiche === "Other" && (
-              <input 
-                placeholder="Specify niche" 
-                value={customNiche} 
-                onChange={e => setCustomNiche(e.target.value)} 
-                style={{ width: '100%', background: '#000', border: '1px solid #27272a', color: '#fff', padding: '12px', borderRadius: '12px', marginBottom: '20px' }} 
-              />
-            )}
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => { 
-                  setShowSmartDrop(false); 
-                  setFiles([]); 
-                  setItemName(""); 
-                  setNewCollName(""); 
-                  setSelectedNiche(""); 
-                  setCustomNiche(""); 
-                }} 
-                style={{ flex: 1, color: '#a1a1aa', padding: '12px' }}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div 
+                style={{ 
+                  border: '2px dashed #27272a', 
+                  borderRadius: '16px', 
+                  padding: '40px', 
+                  textAlign: 'center', 
+                  cursor: 'pointer',
+                  background: files.length > 0 ? '#18181b' : 'transparent'
+                }}
+                onClick={() => document.getElementById('drop-files')?.click()}
               >
-                CANCEL
-              </button>
+                <p style={{ fontWeight: 'bold', color: files.length > 0 ? '#4ade80' : '#a1a1aa' }}>
+                  {files.length > 0 ? `${files.length} PHOTOS SELECTED` : 'CLICK TO UPLOAD PHOTOS'}
+                </p>
+                <input 
+                  type="file" 
+                  id="drop-files" 
+                  multiple 
+                  hidden 
+                  accept="image/*" 
+                  onChange={(e) => setFiles(Array.from(e.target.files || []))} 
+                />
+              </div>
+
+              <input 
+                type="text" 
+                placeholder="Item Name (e.g. Pikachu Holo)" 
+                value={itemName} 
+                onChange={(e) => setItemName(e.target.value)} 
+                style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '14px', color: '#fff' }} 
+              />
+
+              <input 
+                type="number" 
+                placeholder="Total Estimated Value (£)" 
+                value={itemValue} 
+                onChange={(e) => setItemValue(e.target.value)} 
+                style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '14px', color: '#fff' }} 
+              />
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#a1a1aa', marginBottom: '8px' }}>SELECT VAULT</label>
+                <select 
+                  value={selectedCollectionId} 
+                  onChange={(e) => setSelectedCollectionId(e.target.value)}
+                  style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '14px', color: '#fff' }}
+                >
+                  <option value="">-- Choose Existing Vault --</option>
+                  {collectionsList.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ height: '1px', background: '#27272a', flex: 1 }} />
+                <span style={{ fontSize: '10px', color: '#52525b', fontWeight: 'bold' }}>OR CREATE NEW</span>
+                <div style={{ height: '1px', background: '#27272a', flex: 1 }} />
+              </div>
+
+              <input 
+                type="text" 
+                placeholder="New Vault Name" 
+                value={newCollName} 
+                onChange={(e) => setNewCollName(e.target.value)} 
+                style={{ width: '100%', background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '14px', color: '#fff' }} 
+              />
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <select 
+                  value={selectedNiche} 
+                  onChange={(e) => setSelectedNiche(e.target.value)}
+                  style={{ flex: 1, background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '14px', color: '#fff' }}
+                >
+                  <option value="">Select Niche</option>
+                  {availableNiches.map(n => <option key={n} value={n}>{n}</option>)}
+                  <option value="Other">Other...</option>
+                </select>
+                
+                {selectedNiche === "Other" && (
+                  <input 
+                    type="text" 
+                    placeholder="Custom Niche" 
+                    value={customNiche} 
+                    onChange={(e) => setCustomNiche(e.target.value)}
+                    style={{ flex: 1, background: '#18181b', border: '1px solid #27272a', borderRadius: '12px', padding: '14px', color: '#fff' }} 
+                  />
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button 
+                  onClick={() => setSelectedAudience("everyone")}
+                  style={{ flex: 1, padding: '12px', borderRadius: '12px', fontWeight: 'bold', border: '1px solid #27272a', background: selectedAudience === "everyone" ? '#fff' : 'transparent', color: selectedAudience === "everyone" ? '#000' : '#fff' }}
+                >
+                  PUBLIC
+                </button>
+                <button 
+                  onClick={() => setSelectedAudience("private")}
+                  style={{ flex: 1, padding: '12px', borderRadius: '12px', fontWeight: 'bold', border: '1px solid #27272a', background: selectedAudience === "private" ? '#fff' : 'transparent', color: selectedAudience === "private" ? '#000' : '#fff' }}
+                >
+                  PRIVATE
+                </button>
+              </div>
+
               <button 
                 onClick={handleSmartDrop} 
-                disabled={uploading || files.length === 0 || (!selectedCollectionId && !newCollName.trim())}
-                style={{ 
-                  flex: 2, 
-                  background: (files.length > 0 && (selectedCollectionId || newCollName.trim())) ? '#fff' : '#27272a', 
-                  color: (files.length > 0 && (selectedCollectionId || newCollName.trim())) ? '#000' : '#666', 
-                  fontWeight: '900', 
-                  padding: '12px', 
-                  borderRadius: '12px' 
-                }}
+                disabled={uploading} 
+                style={{ width: '100%', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', marginTop: '10px' }}
               >
-                {uploading ? 'DROPPING...' : 'DROP NOW'}
+                {uploading ? 'UPLOADING...' : 'CONFIRM DROP'}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* --- EDIT COLLECTIONS MODAL --- */}
       {showEditCollection && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#18181b', padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '500px', border: '1px solid #27272a', maxHeight: '80vh', overflowY: 'auto' }}>
-             <h2 style={{ fontWeight: '900', marginBottom: '20px' }}>MANAGE COLLECTIONS</h2>
-             {collectionsList.map(c => (
-               <div key={c.id} style={{ background: '#000', padding: '15px', borderRadius: '15px', marginBottom: '10px', border: '1px solid #27272a' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 'bold' }}>{c.title} ({c.niche})</span>
-                    <button onClick={async () => {
-                      // Fix: check both collection_id (UUID) and collection (Legacy Text)
-                      const { data } = await supabase
-                        .from("items")
-                        .select("*")
-                        .or(`collection_id.eq.${c.id},collection.eq.${c.id}`);
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', width: '100%', maxWidth: '600px', padding: '32px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '900' }}>Manage Vaults</h2>
+              <button onClick={() => setShowEditCollection(false)} style={{ background: 'none', border: 'none', color: '#a1a1aa', fontSize: '24px' }}>✕</button>
+            </div>
 
-                      setEditingColl(c); 
+            {!editingColl ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {collectionsList.map(c => (
+                  <div 
+                    key={c.id} 
+                    onClick={async () => {
+                      setEditingColl(c);
+                      const { data } = await supabase.from("items").select("*").eq("collection", c.id);
                       setCollItems(data || []);
-                    }} style={{ color: '#818cf8', fontSize: '12px' }}>VIEW ITEMS</button>
-                  </div>
-                  {editingColl?.id === c.id && (
-                    <div style={{ marginTop: '15px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                      {collItems.map(item => (
-                        <div key={item.id} style={{ position: 'relative' }}>
-                          <img src={item.image_url} style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: '8px' }} alt="Coll Item" />
-                          <button onClick={() => deleteItem(item.id)} style={{ position: 'absolute', top: -5, right: -5, background: 'red', borderRadius: '50%', width: '20px', height: '20px', fontSize: '10px' }}>✕</button>
-                        </div>
-                      ))}
+                    }}
+                    style={{ background: '#18181b', border: '1px solid #27272a', padding: '20px', borderRadius: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <div>
+                      <p style={{ fontWeight: '900' }}>{c.title}</p>
+                      <p style={{ fontSize: '12px', color: '#a1a1aa' }}>{c.niche}</p>
                     </div>
-                  )}
-               </div>
-             ))}
-             <button onClick={() => setShowEditCollection(false)} style={{ width: '100%', marginTop: '20px', color: '#a1a1aa' }}>CLOSE</button>
+                    <span>→</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div>
+                <button onClick={() => setEditingColl(null)} style={{ color: '#818cf8', fontWeight: 'bold', marginBottom: '20px', background: 'none', border: 'none' }}>← BACK TO VAULTS</button>
+                <h3 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '4px' }}>{editingColl.title}</h3>
+                <p style={{ color: '#a1a1aa', marginBottom: '24px' }}>Managing items in this collection</p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  {collItems.map(item => (
+                    <div key={item.id} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden' }}>
+                      <img src={item.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button 
+                        onClick={() => deleteItem(item.id)}
+                        style={{ position: 'absolute', top: '5px', right: '5px', background: 'rgba(239, 68, 68, 0.9)', border: 'none', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', fontSize: '12px' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      <FollowersListDrawer 
-        isOpen={isFollowersListOpen} 
-        onClose={() => setIsFollowersListOpen(false)} 
-        userId={userId} 
+      {currentUserId && (
+        <ChatDrawer 
+          isOpen={isChatOpen} 
+          onClose={() => setIsChatOpen(false)} 
+          currentUserId={currentUserId}
+          targetUserId={userId === currentUserId ? null : userId}
+        />
+      )}
+
+      <FollowersListDrawer
+        isOpen={isFollowersListOpen}
+        onClose={() => setIsFollowersListOpen(true)}
+        userId={userId}
         mode={followersListMode}
-        userRankFallback={userRank ?? undefined} 
       />
 
-      <ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} receiverId={userId} receiverName={profile?.display_url || profile?.username || "Collector"} />
       <Footer />
     </div>
   );

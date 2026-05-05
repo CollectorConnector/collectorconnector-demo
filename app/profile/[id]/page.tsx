@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
 import FollowersListDrawer from "@/components/FollowersListDrawer";
+import CollectionsGrid from "@/components/CollectionsGrid"; // Ensure this import exists
 
 // --- SVG ICONS ---
 const DiscordIcon = () => (
@@ -66,6 +67,7 @@ export default function ProfilePage() {
   const [showSmartDrop, setShowSmartDrop] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
+  const [showCollections, setShowCollections] = useState(false); // REVERT: Added state back
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
@@ -287,10 +289,9 @@ export default function ProfilePage() {
     const { data: allUsers } = await supabase.from("profiles").select("id").order("created_at", { ascending: true });
     if (allUsers) {
       const index = allUsers.findIndex(u => u.id === userId);
-      // Fixed: logic updated to catch first 3 users correctly
-      if (index >= 0 && index < 10) setUserRank("gold");
-      else if (index >= 10 && index < 20) setUserRank("silver");
-      else if (index >= 20 && index < 30) setUserRank("bronze");
+      if (index >= 3 && index < 13) setUserRank("gold");
+      else if (index >= 13 && index < 23) setUserRank("silver");
+      else if (index >= 23 && index < 33) setUserRank("bronze");
       else setUserRank("collector");
     }
   }
@@ -608,7 +609,23 @@ export default function ProfilePage() {
                )}
             </div>
 
-            <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
+            {/* REVERTED: Replaced Link with Button + State Trigger */}
+            <button 
+              onClick={() => setShowCollections(!showCollections)}
+              style={{ 
+                display: 'block', 
+                background: '#fff', 
+                color: '#000', 
+                fontWeight: '900', 
+                padding: '16px', 
+                borderRadius: '16px', 
+                textDecoration: 'none', 
+                marginBottom: '20px',
+                width: '100%'
+              }}
+            >
+              {showCollections ? 'HIDE COLLECTIONS' : 'VIEW COLLECTIONS'}
+            </button>
 
             {isOwnProfile && (
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -621,6 +638,13 @@ export default function ProfilePage() {
               </div>
             )}
         </section>
+
+        {/* REVERTED: Conditionally render CollectionsGrid here */}
+        {showCollections && (
+          <div style={{ marginTop: '10px' }}>
+            <CollectionsGrid userId={userId} />
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>

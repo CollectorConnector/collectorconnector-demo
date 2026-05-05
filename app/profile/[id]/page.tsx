@@ -11,7 +11,6 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import ChatDrawer from "@/components/ChatDrawer";
 import FollowersListDrawer from "@/components/FollowersListDrawer";
-import CollectionsGrid from "@/components/CollectionsGrid";
 
 // --- SVG ICONS ---
 const DiscordIcon = () => (
@@ -67,7 +66,6 @@ export default function ProfilePage() {
   const [showSmartDrop, setShowSmartDrop] = useState(false);
   const [showEditCollection, setShowEditCollection] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false); 
-  const [showCollections, setShowCollections] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null); 
   const [isChatOpen, setIsChatOpen] = useState(false);
   
@@ -609,22 +607,7 @@ export default function ProfilePage() {
                )}
             </div>
 
-            <button 
-              onClick={() => setShowCollections(!showCollections)}
-              style={{ 
-                display: 'block', 
-                background: '#fff', 
-                color: '#000', 
-                fontWeight: '900', 
-                padding: '16px', 
-                borderRadius: '16px', 
-                textDecoration: 'none', 
-                marginBottom: '20px',
-                width: '100%'
-              }}
-            >
-              {showCollections ? 'HIDE COLLECTIONS' : 'VIEW COLLECTIONS'}
-            </button>
+            <Link href={`/collections?user=${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
 
             {isOwnProfile && (
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -637,13 +620,6 @@ export default function ProfilePage() {
               </div>
             )}
         </section>
-
-        {showCollections && (
-          <div style={{ marginTop: '10px' }}>
-            {/* Added the required items prop to CollectionsGrid */}
-            <CollectionsGrid items={collectionsList} />
-          </div>
-        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
           <div style={{ background: '#09090b', border: '1px solid #27272a', padding: '20px', borderRadius: '20px', textAlign: 'center' }}><p style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: 'bold' }}>ITEMS</p><p style={{ fontSize: '20px', fontWeight: '900' }}>{itemCount}</p></div>

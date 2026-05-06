@@ -24,7 +24,7 @@ export default function UserCollectionsPage() {
 
       const { data, error } = await supabase
         .from("collections")
-        .select("*, items(*)")   // ⭐ CRITICAL: load items for cover + count
+        .select("*, items(*)")   // ⭐ THIS FIXES THE £2 COLLECTION
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 

@@ -20,12 +20,8 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
   return (
     <div className="grid grid-cols-2 gap-4 p-4">
       {items.map((col) => {
-        // Use collection cover_url as primary source
-        const coverImage = col.cover_url || null;
-
-        // Use item_count from collections table
-        const count =
-          typeof col.item_count === "number" ? col.item_count : 0;
+        const coverImage = col.items?.[0]?.image_url || null;
+        const count = col.items?.length || 0;
 
         return (
           <div
@@ -45,7 +41,6 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
               padding: "16px",
             }}
           >
-            {/* Background Image Overlay */}
             {coverImage && (
               <img
                 src={coverImage}
@@ -61,7 +56,6 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
               />
             )}
 
-            {/* Gradient Overlay for text readability */}
             <div
               style={{
                 position: "absolute",
@@ -72,7 +66,6 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
               }}
             />
 
-            {/* Collection Title + Count */}
             <div
               style={{
                 position: "relative",

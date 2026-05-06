@@ -607,8 +607,13 @@ export default function ProfilePage() {
                )}
             </div>
 
-            {/* RESTORED THE CORRECT DYNAMIC ROUTE LINK HERE */}
-            <Link href={`/collections/${userId}`} style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}>VIEW COLLECTIONS</Link>
+            {/* FIXED LINK: Always use the profile owner's ID (userId) */}
+            <Link 
+              href={`/profile/${userId}/collections`} 
+              style={{ display: 'block', background: '#fff', color: '#000', fontWeight: '900', padding: '16px', borderRadius: '16px', textDecoration: 'none', marginBottom: '20px' }}
+            >
+              VIEW COLLECTIONS
+            </Link>
 
             {isOwnProfile && (
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -725,7 +730,7 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      {/* Lightbox / Modals / Drawers remain the same... */}
+      {/* Lightbox / Modals / Drawers... */}
       {selectedItemIndex !== null && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.98)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <button onClick={() => setSelectedItemIndex(null)} style={{ position: 'absolute', top: '30px', right: '30px', background: '#18181b', border: '1px solid #27272a', color: '#fff', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', zIndex: 5001 }}>✕</button>

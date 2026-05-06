@@ -17,12 +17,12 @@ export default function CollectionDetails() {
 
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
+
     if (collectionId) loadCollectionData();
   }, [collectionId]);
 
@@ -30,7 +30,7 @@ export default function CollectionDetails() {
     try {
       setLoading(true);
 
-      // Fetch collection metadata
+      // Load collection metadata
       const { data: coll } = await supabase
         .from("collections")
         .select("*")
@@ -39,13 +39,14 @@ export default function CollectionDetails() {
 
       if (coll) setCollection(coll);
 
-      // ⭐ FINAL FIX: Use ONLY the correct FK column
+      // ⭐ FIX: Load items from BOTH possible FK columns
       const { data: itemList, error } = await supabase
         .from("items")
         .select("*")
-        .eq("collection", collectionId);
+        .or(`collection.eq.${collectionId},collection_id.eq.${collectionId}`);
 
       if (error) throw error;
+
       setItems(itemList || []);
 
     } catch (err) {

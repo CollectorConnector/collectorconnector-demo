@@ -47,8 +47,8 @@ export default function DeleteItemPage() {
       return;
     }
 
-    // Redirect back to the collection
-    router.push(`/collections/${item.collection_id}`);
+    // ⭐ FIX: Redirect using the correct FK column
+    router.push(`/collections/${item.collection}`);
   };
 
   if (loading) {
@@ -109,4 +109,3 @@ export default function DeleteItemPage() {
     </div>
   );
 }
-

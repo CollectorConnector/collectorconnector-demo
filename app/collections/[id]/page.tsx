@@ -32,11 +32,11 @@ export default function IndividualVaultPage() {
 
       if (vData?.title) setVaultTitle(vData.title);
 
-      // 2️⃣ Fetch items using BOTH possible link columns
+      // 2️⃣ Fetch items using the REAL column name: "collection"
       const { data: itemData, error: itemErr } = await supabase
         .from("items")
         .select("*")
-        .or(`collection_id.eq.${vaultId},collection.eq.${vaultId}`);
+        .eq("collection", vaultId);
 
       if (itemErr) throw itemErr;
 

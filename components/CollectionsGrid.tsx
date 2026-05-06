@@ -20,14 +20,18 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
   return (
     <div className="grid grid-cols-2 gap-4 p-4">
       {items.map((col) => {
+        // Checking if any items within this specific collection are marked for sale
         const isForSale = col.items?.some((i: any) => i.for_sale);
+        
+        // Use the first item's image as the cover, or a fallback if empty
         const coverImage = col.items?.[0]?.image_url;
 
         return (
           <div 
             key={col.id} 
-            // FIX: Pass the collection ID as a query param so the page knows to filter by folder
-            onClick={() => router.push(`/collections/${col.user_id}?collection=${col.id}`)} 
+            // CRITICAL FIX: This path must match your app/collections/[id]/page.tsx
+            // Ensure we are passing the COLLECTION ID (col.id)
+            onClick={() => router.push(`/collections/${col.id}`)} 
             style={{ 
               background: '#18181b', 
               aspectRatio: '1/1', 
@@ -42,6 +46,7 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
               padding: '16px'
             }}
           >
+            {/* For Sale Badge */}
             {isForSale && (
               <div 
                 style={{ 
@@ -60,6 +65,7 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
               </div>
             )}
             
+            {/* Background Image Overlay */}
             {coverImage && (
               <img 
                 src={coverImage} 
@@ -70,21 +76,23 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
                   width: '100%', 
                   height: '100%', 
                   objectFit: 'cover', 
-                  opacity: 0.6 
+                  opacity: 0.5 
                 }} 
               />
             )}
             
+            {/* Gradient Overlay for text readability */}
             <div style={{ 
               position: 'absolute', 
               inset: 0, 
-              background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 70%)',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)',
               zIndex: 5 
             }} />
             
+            {/* Collection Title */}
             <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
               <p style={{ 
-                fontSize: '13px', 
+                fontSize: '12px', 
                 fontWeight: '900', 
                 textTransform: 'uppercase', 
                 letterSpacing: '1px',
@@ -93,6 +101,7 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
               }}>
                 {col.title || "Untitled Vault"}
               </p>
+              {/* Item Count Subtitle */}
               <p style={{ fontSize: '10px', color: '#818cf8', fontWeight: 'bold', marginTop: '2px' }}>
                 {col.items?.length || 0} ITEMS
               </p>

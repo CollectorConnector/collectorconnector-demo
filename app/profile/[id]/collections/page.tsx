@@ -38,23 +38,26 @@ export default function UserCollectionsPage() {
 
       const collectionIds = collData.map((c) => c.id);
 
-      // 2️⃣ Fetch items belonging to these collections
+      // 2️⃣ Fetch items linked via the REAL FK: "collection"
       const { data: itemData, error: itemErr } = await supabase
         .from("items")
         .select("*")
-        .in("collection_id", collectionIds);
+        .in("collection", collectionIds);
 
       if (itemErr) throw itemErr;
 
-      // 3️⃣ Attach items to their collections
+      // 3️⃣ Attach items to their collections using "collection"
       const merged = collData.map((c) => ({
         ...c,
-        items: itemData.filter((i) => String(i.collection_id) === String(c.id)),
+        items: (itemData || []).filter(
+          (i) => String(i.collection) === String(c.id)
+        ),
       }));
 
       setCollections(merged);
     } catch (err) {
       console.error("Grid Load Error:", err);
+      setCollections([]);
     } finally {
       setLoading(false);
     }

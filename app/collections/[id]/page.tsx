@@ -24,20 +24,19 @@ export default function IndividualVaultPage() {
       setLoading(true);
 
       // 1️⃣ Fetch vault title
-      const { data: vData, error: vError } = await supabase
+      const { data: vData } = await supabase
         .from("collections")
         .select("title")
         .eq("id", vaultId)
         .single();
 
       if (vData?.title) setVaultTitle(vData.title);
-      if (vError) console.log("Collection Title Error:", vError.message);
 
-      // 2️⃣ Fetch items using the correct column name
+      // 2️⃣ Fetch items using BOTH possible link columns
       const { data: itemData, error: itemErr } = await supabase
         .from("items")
         .select("*")
-        .eq("collection_id", vaultId);
+        .or(`collection_id.eq.${vaultId},collection.eq.${vaultId}`);
 
       if (itemErr) throw itemErr;
 

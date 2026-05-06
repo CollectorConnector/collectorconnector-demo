@@ -10,29 +10,43 @@ export default function CollectionVaultPage() {
   const params = useParams();
   const router = useRouter();
   
-  // Ensure we are grabbing the 'id' from the dynamic route [id]
-  const targetUserId = params?.id as string;
+  // The [id] from the URL
+  const vaultId = params?.id as string;
 
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalValue, setTotalValue] = useState(0);
 
   useEffect(() => {
-    if (targetUserId) {
+    if (vaultId) {
+      console.log("Fetching vault for ID:", vaultId);
       loadVaultData();
     }
-  }, [targetUserId]);
+  }, [vaultId]);
 
   async function loadVaultData() {
     try {
       setLoading(true);
       
-      // We query items WHERE user_id matches the ID from the URL
-      const { data, error } = await supabase
+      // Attempt 1: Fetch items where user_id matches the URL ID
+      let { data, error } = await supabase
         .from("items")
         .select("*")
-        .eq("user_id", targetUserId)
+        .eq("user_id", vaultId)
         .order("created_at", { ascending: false });
+
+      // Attempt 2: If empty, check if the ID refers to a specific Collection ID instead of a User ID
+      if (!data || data.length === 0) {
+        const { data: collData } = await supabase
+          .from("items")
+          .select("*")
+          .eq("collection", vaultId)
+          .order("created_at", { ascending: false });
+        
+        if (collData && collData.length > 0) {
+          data = collData;
+        }
+      }
 
       if (error) throw error;
 
@@ -42,7 +56,7 @@ export default function CollectionVaultPage() {
         setTotalValue(total);
       }
     } catch (err) {
-      console.error("Error loading vault:", err);
+      console.error("Vault Query Error:", err);
     } finally {
       setLoading(false);
     }
@@ -52,44 +66,50 @@ export default function CollectionVaultPage() {
     <div className="min-h-screen bg-black text-white">
       <Header />
       
-      <main style={{ marginTop: '100px', padding: '0 16px', maxWidth: '800px', margin: '100px auto 0' }}>
+      <main style={{ marginTop: '100px', padding: '0 16px', maxWidth: '800px', margin: '100px auto 0', minHeight: '70vh' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <button 
             onClick={() => router.back()} 
-            style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 16px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', marginBottom: '20px', cursor: 'pointer' }}
+            style={{ background: '#18181b', border: '1px solid #27272a', color: '#fff', padding: '8px 20px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', marginBottom: '24px', cursor: 'pointer', letterSpacing: '1px' }}
           >
             ← BACK
           </button>
           
-          <h1 style={{ fontSize: '32px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Collection Vault
+          <h1 style={{ fontSize: '38px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-1px', marginBottom: '8px' }}>
+            COLLECTION VAULT
           </h1>
           
-          <div style={{ display: 'inline-block', background: 'rgba(129, 140, 248, 0.1)', padding: '6px 16px', borderRadius: '20px', marginTop: '12px' }}>
-            <span style={{ fontSize: '14px', fontWeight: '900', color: '#818cf8' }}>
+          <div style={{ display: 'inline-block', background: 'rgba(129, 140, 248, 0.1)', border: '1px solid rgba(129, 140, 248, 0.2)', padding: '8px 20px', borderRadius: '24px' }}>
+            <span style={{ fontSize: '14px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '1px' }}>
               {items.length} ITEMS — £{totalValue}
             </span>
           </div>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', color: '#a1a1aa', marginTop: '40px' }}>Loading Vault...</div>
+          <div style={{ textAlign: 'center', padding: '100px 0' }}>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status"></div>
+            <p style={{ marginTop: '16px', color: '#a1a1aa', fontWeight: 'bold' }}>ACCESSING VAULT...</p>
+          </div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 0' }}>
-            <p style={{ color: '#3f3f46', fontWeight: '900', fontSize: '18px', textTransform: 'uppercase' }}>
-              This vault is currently empty
+          <div style={{ textAlign: 'center', padding: '100px 0', background: '#09090b', borderRadius: '24px', border: '1px dashed #27272a' }}>
+            <p style={{ color: '#52525b', fontWeight: '900', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              THIS VAULT IS CURRENTLY EMPTY
             </p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
             {items.map((item) => (
-              <div key={item.id} style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '20px', overflow: 'hidden' }}>
-                <div style={{ aspectRatio: '1/1', background: '#18181b' }}>
+              <div key={item.id} style={{ background: '#09090b', border: '1px solid #27272a', borderRadius: '24px', overflow: 'hidden', transition: 'transform 0.2s' }}>
+                <div style={{ aspectRatio: '1/1', background: '#18181b', position: 'relative' }}>
                   <img src={item.image_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <div style={{ padding: '16px' }}>
-                  <h3 style={{ fontWeight: '900', fontSize: '14px', marginBottom: '4px' }}>{item.title}</h3>
-                  <p style={{ color: '#4ade80', fontWeight: '900', fontSize: '12px' }}>£{item.estimated_value}</p>
+                <div style={{ padding: '20px' }}>
+                  <h3 style={{ fontWeight: '900', fontSize: '15px', marginBottom: '6px', color: '#fff' }}>{item.title}</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <p style={{ color: '#4ade80', fontWeight: '900', fontSize: '14px' }}>£{item.estimated_value}</p>
+                    <span style={{ fontSize: '10px', color: '#52525b', fontWeight: 'bold' }}>{item.status || 'COLLECTED'}</span>
+                  </div>
                 </div>
               </div>
             ))}

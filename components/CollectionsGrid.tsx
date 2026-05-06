@@ -20,11 +20,9 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
   return (
     <div className="grid grid-cols-2 gap-4 p-4">
       {items.map((col) => {
-        // Checking if any items within this specific collection are marked for sale
         const isForSale = col.items?.some((i: any) => i.for_sale);
-        
-        // Use the first item's image as the cover, or a fallback if empty
         const coverImage = col.items?.[0]?.image_url;
+        const itemCount = col.items?.length || 0;
 
         return (
           <div 
@@ -33,14 +31,14 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
             style={{ 
               background: '#18181b', 
               aspectRatio: '1/1', 
-              borderRadius: '24px', // Slightly tighter radius to match your mobile screenshots
+              borderRadius: '32px', // Matches the deep curves in your screenshot
               border: '1px solid #27272a', 
               position: 'relative', 
               overflow: 'hidden', 
               cursor: 'pointer',
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
+              alignItems: 'center', // Center text vertically
+              justifyContent: 'center', // Center text horizontally
               padding: '16px'
             }}
           >
@@ -48,13 +46,12 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
             {isForSale && (
               <div 
                 style={{ 
-                  position: 'absolute', top: '12px', left: '12px', zIndex: 20, 
+                  position: 'absolute', top: '16px', left: '16px', zIndex: 20, 
                   background: '#22c55e', color: '#fff', fontSize: '10px', 
                   fontWeight: '900', padding: '5px 10px', borderRadius: '20px',
                   display: 'flex', alignItems: 'center', gap: '4px'
                 }}
               >
-                {/* SVG icon as requested */}
                 <svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="9" cy="21" r="1" />
                   <circle cx="20" cy="21" r="1" />
@@ -75,30 +72,40 @@ export default function CollectionsGrid({ items }: CollectionsGridProps) {
                   width: '100%', 
                   height: '100%', 
                   objectFit: 'cover', 
-                  opacity: 0.5 // Dimmed so the title is readable
+                  opacity: 0.6 
                 }} 
               />
             )}
             
-            {/* Gradient Overlay for text readability */}
+            {/* Darkening Overlay */}
             <div style={{ 
               position: 'absolute', 
               inset: 0, 
-              background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)',
+              background: 'rgba(0,0,0,0.4)',
               zIndex: 5 
             }} />
             
-            {/* Collection Title */}
+            {/* Collection Info */}
             <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
               <p style={{ 
-                fontSize: '12px', 
+                fontSize: '14px', 
                 fontWeight: '900', 
                 textTransform: 'uppercase', 
-                letterSpacing: '1px',
+                letterSpacing: '0.5px',
                 margin: 0,
-                color: '#fff'
+                color: '#fff',
+                lineHeight: '1.2'
               }}>
                 {col.title || "Untitled Vault"}
+              </p>
+              <p style={{ 
+                fontSize: '11px', 
+                fontWeight: '800', 
+                textTransform: 'uppercase', 
+                color: '#818cf8', // Indigo/Purple color from the screenshot
+                margin: '4px 0 0 0'
+              }}>
+                {itemCount} ITEMS
               </p>
             </div>
           </div>

@@ -23,7 +23,9 @@ export default function UserCollectionsPage() {
   async function loadCollections() {
     try {
       setLoading(true);
-      // Fetch collections for this user, and include the items inside them to get cover images
+      
+      // We fetch from 'collections' table, not 'items'
+      // We use .select(`*, items(*)`) to get the items inside for the cover images
       const { data, error } = await supabase
         .from("collections")
         .select(`
@@ -44,17 +46,26 @@ export default function UserCollectionsPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
-      <main style={{ marginTop: '100px', minHeight: '70vh' }}>
+      
+      <main style={{ marginTop: '100px', minHeight: '70vh', paddingBottom: '40px' }}>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', textTransform: 'uppercase' }}>Vaults</h1>
+          <h1 style={{ fontSize: '32px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-1px' }}>
+            Vaults
+          </h1>
+          <p style={{ color: '#52525b', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+            {collections.length} Folders Found
+          </p>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', color: '#52525b' }}>LOADING VAULTS...</div>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#a1a1aa' }}>
+            SCANNING VAULTS...
+          </div>
         ) : (
           <CollectionsGrid items={collections} />
         )}
       </main>
+
       <Footer />
     </div>
   );

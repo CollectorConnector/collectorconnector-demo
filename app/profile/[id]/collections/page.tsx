@@ -22,41 +22,16 @@ export default function UserCollectionsPage() {
     try {
       setLoading(true);
 
-      // 1️⃣ Fetch collections for this user
-      const { data: collData, error: collErr } = await supabase
+      const { data, error } = await supabase
         .from("collections")
-        .select("*")
+        .select("*, items(*)")   // ⭐ CRITICAL: load items for cover + count
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (collErr) throw collErr;
-
-      if (!collData || collData.length === 0) {
-        setCollections([]);
-        return;
-      }
-
-      const collectionIds = collData.map((c) => c.id);
-
-      // 2️⃣ Fetch items linked via the REAL FK: "collection"
-      const { data: itemData, error: itemErr } = await supabase
-        .from("items")
-        .select("*")
-        .in("collection", collectionIds);
-
-      if (itemErr) throw itemErr;
-
-      // 3️⃣ Attach items to their collections using "collection"
-      const merged = collData.map((c) => ({
-        ...c,
-        items: (itemData || []).filter(
-          (i) => String(i.collection) === String(c.id)
-        ),
-      }));
-
-      setCollections(merged);
+      if (error) throw error;
+      setCollections(data || []);
     } catch (err) {
-      console.error("Grid Load Error:", err);
+      console.error("Collections load error:", err);
       setCollections([]);
     } finally {
       setLoading(false);
@@ -66,6 +41,7 @@ export default function UserCollectionsPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
+
       <main style={{ marginTop: "100px", minHeight: "70vh" }}>
         <h1
           style={{
@@ -75,7 +51,7 @@ export default function UserCollectionsPage() {
             textTransform: "uppercase",
           }}
         >
-          Vaults
+          All Collections
         </h1>
 
         {loading ? (
@@ -86,12 +62,13 @@ export default function UserCollectionsPage() {
               marginTop: "40px",
             }}
           >
-            LOADING FOLDERS...
+            LOADING COLLECTIONS...
           </div>
         ) : (
           <CollectionsGrid items={collections} />
         )}
       </main>
+
       <Footer />
     </div>
   );

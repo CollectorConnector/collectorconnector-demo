@@ -24,11 +24,12 @@ export default function UserCollectionsPage() {
 
       const { data, error } = await supabase
         .from("collections")
-        .select("*, items(*)")   // ⭐ THIS FIXES THE £2 COLLECTION
+        .select("*, items(*)")   // ⭐ REQUIRED FOR YOUR GRID
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+
       setCollections(data || []);
     } catch (err) {
       console.error("Collections load error:", err);
@@ -51,7 +52,7 @@ export default function UserCollectionsPage() {
             textTransform: "uppercase",
           }}
         >
-          All Collections
+          Vaults
         </h1>
 
         {loading ? (
@@ -62,7 +63,7 @@ export default function UserCollectionsPage() {
               marginTop: "40px",
             }}
           >
-            LOADING COLLECTIONS...
+            LOADING VAULTS...
           </div>
         ) : (
           <CollectionsGrid items={collections} />

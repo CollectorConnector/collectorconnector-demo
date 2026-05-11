@@ -132,6 +132,27 @@ export default function Header() {
             </svg>
           </button>
 
+          {/* PRICEPAL ICON */}
+          <button
+            onClick={() => router.push("/pricepal")}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <img
+              src="/PricePal-logo.png" // ← save your attached image as this file in /public
+              alt="PricePal"
+              width={110}
+              height={40}
+              style={{ objectFit: "contain" }}
+            />
+          </button>
+
           {/* MESSAGES */}
           {userId && (
             <button

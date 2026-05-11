@@ -145,7 +145,7 @@ export default function Header() {
             }}
           >
             <img
-              src="/PricePal-logo.png" // ← save your attached image as this file in /public
+              src="/PricePal-logo Small.png" // ← save your attached image as this file in /public
               alt="PricePal"
               width={110}
               height={40}
